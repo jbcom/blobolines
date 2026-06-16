@@ -303,7 +303,7 @@ Camera follow + shake, in-game deformation, wet glistening shader + color gradie
 - [x] Reset-progress action (confirm) clearing best/crystals/unlocks. (store.resetProgress + two-step confirm button in Settings)
 - [x] Separate SFX volume from music volume. (settings.sfxVolume + setSfxVolume on the Howler SFX channel; persisted + applied at boot)
 - [x] Gate/hide haptics control on non-touch; add intensity/test. (TOUCH_CAPABLE gate hides the control on pointer-only devices; a Test button fires a sample impact)
-- [ ] Slingshot sensitivity drag-to-test preview area.
+- [x] Slingshot sensitivity drag-to-test preview area. (drag strip under the slider; dot tracks the pointer scaled by sensitivity, snaps home on release)
 ### Tier 6 — responsive & cohesion
 - [ ] Hud wide/tall breakpoints: anchor readouts to safe-area corners, don't stretch.
 - [ ] TitleScreen/GameOver respect safe-left/right in landscape/notch.

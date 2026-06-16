@@ -79,6 +79,7 @@ export function SettingsModal({
             value={[settings.slingshotSensitivity]}
             onValueChange={([v]) => update({ slingshotSensitivity: v })}
           />
+          <SensitivityPreview sensitivity={settings.slingshotSensitivity} />
         </Row>
 
         {/* Haptics only on touch devices (a pointer-only desktop can't vibrate). When on,
@@ -181,6 +182,52 @@ function Toggle({
     <div className="flex items-center justify-between">
       <span className="font-semibold">{label}</span>
       <Switch checked={checked} onCheckedChange={onChange} aria-label={label} />
+    </div>
+  );
+}
+
+/**
+ * A drag-to-test strip under the sensitivity slider: drag the dot and it tracks your
+ * pointer scaled by the current sensitivity — so you can feel how far a given drag throws
+ * before committing to a value. Pure UI; clamps to the strip and snaps home on release.
+ */
+function SensitivityPreview({ sensitivity }: { sensitivity: number }) {
+  const [el, setEl] = useState<HTMLDivElement | null>(null);
+  const [dotX, setDotX] = useState(0); // px offset of the dot from center
+  const [dragging, setDragging] = useState(false);
+
+  const onMove = (clientX: number) => {
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    const center = rect.left + rect.width / 2;
+    const raw = (clientX - center) * sensitivity;
+    const half = rect.width / 2 - 12;
+    setDotX(Math.max(-half, Math.min(half, raw)));
+  };
+
+  return (
+    // biome-ignore lint/a11y/noStaticElementInteractions: a non-essential drag-feel preview; the slider above is the accessible control
+    <div
+      ref={setEl}
+      className="relative mt-1 h-8 select-none rounded-lg border border-border bg-bg/50 touch-none"
+      onPointerDown={(e) => {
+        setDragging(true);
+        (e.target as HTMLElement).setPointerCapture(e.pointerId);
+        onMove(e.clientX);
+      }}
+      onPointerMove={(e) => dragging && onMove(e.clientX)}
+      onPointerUp={() => {
+        setDragging(false);
+        setDotX(0);
+      }}
+    >
+      <span className="pointer-events-none absolute inset-0 flex items-center justify-center font-ui text-[10px] text-fg-subtle">
+        {dragging ? "" : "drag to test"}
+      </span>
+      <span
+        className="pointer-events-none absolute top-1/2 left-1/2 size-5 rounded-full bg-accent shadow-[var(--glow-blue)]"
+        style={{ transform: `translate(calc(-50% + ${dotX}px), -50%)` }}
+      />
     </div>
   );
 }
