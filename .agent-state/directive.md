@@ -382,3 +382,34 @@ Camera follow + shake, in-game deformation, wet glistening shader + color gradie
 - [ ] Missions/objectives/achievements layer (e.g. "reach 200m", "10-combo", "100 crystals").
 - [ ] Charge-time/overcharge nuance on the slingshot (hold penalty or perfect-release window).
 - [ ] Wire walls/misses to break combo if that's the intended rule (docs claim it; runtime only breaks on ice).
+
+## M16 — perf/architecture/quality (from perf audit, 2026-06-16)
+### More confirmed bugs
+- [ ] BUG: launchBridge module-singleton queues (aim/launch/rebound) not drained on game end → stale value fires next run. Drain on setPhase(menu|gameover) (mirror resetPowerups).
+- [ ] BUG/determinism: worldStore seeds fresh tower with performance.now() when no seed — non-deterministic, breaks replay + violates determinism doctrine. Use explicit seed source.
+### Quality tier (biggest mobile gap)
+- [ ] Runtime quality-tier system (low/med/high) in store.settings → DPR, raymarch steps, postfx passes, shadows, AA, pool/particle counts. Expose in SettingsModal.
+- [ ] Make raymarchSteps a uniform (u_maxSteps loop bound), not a compile-time #define, so tiers scale without rebuild.
+- [ ] Drive Canvas dpr from tier (mid/low → [1,1.5]); gate antialias off on mid/low.
+- [ ] Gate PostFX passes by tier (strip bloom + chromatic on low); gate shadows off low/mid + set explicit shadow-mapSize.
+### Hot-path / alloc
+- [ ] packMetaballField: write into caller-owned scratch buffers each frame instead of allocating Vec3[]+number[] (the one real per-frame GC offender).
+- [ ] GooField: set palette colors on change only, not every frame.
+- [ ] BlobEyes: cache lid/pupil/tear refs instead of per-frame traverse()+startsWith.
+- [ ] PowerUpField: skip collected entries (live-only list), no distance calc for hidden.
+- [ ] BiomeProps: early-out the star pass on opacity<0.01 like clouds.
+- [ ] metaball fieldNormal: forward-difference (4 evals) instead of central (6) to cut normal cost ~33%.
+- [ ] Instance/share trampoline geometry+materials (per-type), keep only splat texture per-pad; 64px splat on mobile.
+### Dead code / deps
+- [ ] Remove koota ECS (src/ecs/** + WorldProvider + koota dep) — 100% dead (nothing spawns/queries), OR migrate per-frame data into it. Fix ARCHITECTURE.md drift.
+- [ ] Remove src/engine/loop.ts (zero importers; references a non-existent hook). Keep core/math/clock.
+- [ ] Drop unused deps: maath, n8ao, three-bvh-csg, three-mesh-bvh (zero imports). Fix ARCHITECTURE.md N8AO claim.
+### Audio/asset loading
+- [ ] html5:true for music+ambient Howls (stream, not full-decode); keep html5:false for short SFX.
+- [ ] Preload SFX Howls on LoadingScreen behind the gesture unlock (no first-play hitch).
+- [ ] Re-encode theme.mp3 smaller (~96kbps mono / shorter loop) and/or lazy-load post-interaction.
+### Bundle/build
+- [ ] Lazy-load heavy modals (Manual/BlobCustomizer/Settings) + defer Rapier Physics chunk to first PLAY; address the large three chunk vs masking with chunkSizeWarningLimit.
+### Tests
+- [ ] Perf-regression e2e: Playwright frame-time budget over a scripted climb.
+- [ ] Broaden e2e: powerups, magnet collect, fragile/moving/super/ice pads, combo streak, gameover→retry remount, WebGL context-restore.
