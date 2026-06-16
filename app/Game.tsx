@@ -1,5 +1,6 @@
 import type { RootState } from "@react-three/fiber";
 import { Canvas } from "@react-three/fiber";
+import { ACESFilmicToneMapping } from "three";
 import { GameScene } from "./scene/GameScene";
 import { HudOverlay } from "./views/HudOverlay";
 
@@ -39,11 +40,18 @@ export function Game() {
         gl={{
           antialias: true,
           powerPreference: "high-performance",
+          // ACES filmic tonemapping rolls the wet-goo highlights + neon-soft pads off
+          // gracefully instead of clipping to flat white (the old matte look was partly
+          // unmanaged HDR). Slightly lifted exposure keeps the daytime palette bright.
+          toneMapping: ACESFilmicToneMapping,
+          toneMappingExposure: 1.1,
           // preserveDrawingBuffer is only needed so the dev harness can read the canvas
           // via toDataURL(); it carries a real mobile perf cost, so keep it OUT of prod.
           preserveDrawingBuffer: import.meta.env.DEV,
         }}
-        camera={{ position: [0, 6, 12], fov: 60, near: 0.1, far: 200 }}
+        // far was 200 — too tight: clipped the sky dome (scale 150) and high biome strata
+        // (to ~1400m), so the world vanished as the blob climbed. Pushed out to 2000.
+        camera={{ position: [0, 6, 12], fov: 60, near: 0.1, far: 2000 }}
         onCreated={handleCanvasCreated}
         // The 3D scene conveys nothing actionable a screen reader can't get from the DOM
         // HUD; hide it so AT users don't hit an empty, unlabeled focus stop / "graphic".

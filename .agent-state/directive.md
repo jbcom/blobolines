@@ -316,9 +316,9 @@ Camera follow + shake, in-game deformation, wet glistening shader + color gradie
 ## M13 — visual/render/VFX depth (from visual audit, 2026-06-16)
 - [ ] Enable Canvas shadows + shadow camera on key light; castShadow/receiveShadow blob+pads (castShadow set but Canvas has no shadows prop — dead).
 - [ ] Soft fake contact shadow under the blob, scaled by altitude+squash (BlobShadow).
-- [ ] ACESFilmic toneMapping + outputColorSpace on Canvas gl; drop the manual soft-clamp hack in metaballGoo.
-- [ ] Wire biome fog into the scene (biomeSkyAt.fog is computed but unused) — fogExp2 by altitude, hides far cutoff.
-- [ ] Fix camera far plane vs world scale (far:200 clips dome@150 + biomes to 1400m); attach dome to camera or push far.
+- [x] ACESFilmic toneMapping + outputColorSpace on Canvas gl; drop the manual soft-clamp hack in metaballGoo. (soft-clamp gone with metaballGoo's deletion; CSG goo uses GooMaterial)
+- [x] Wire biome fog into the scene (biomeSkyAt.fog is computed but unused) — fogExp2 by altitude, hides far cutoff.
+- [x] Fix camera far plane vs world scale (far:200 clips dome@150 + biomes to 1400m); attach dome to camera or push far.
 - [ ] Unify the two divergent goo shaders (menu GooMaterial vs in-game MetaballGoo) — shared wet/lighting GLSL so the blob matches menu↔play.
 - [ ] Biome-reactive goo lighting: feed biome key color + darkening as uniforms (blob warm at ground, cool/moody in space).
 - [ ] Goo refraction: sample backbuffer along normal×fresnel so the blob bends what's behind it (marquee jelly upgrade).
