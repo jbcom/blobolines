@@ -413,8 +413,12 @@ permeability (permeable one-way pads rejected by owner).
       tuning source (reachable.ts) shared by generator + proof, so they can never drift. This
       replaced the brittle fixed CANT_REACH constant (footprints shrink with altitude, so a
       fixed lateral threshold silently stranded small high pads).
-- [ ] Better aim/curve control (mid-air steer / hook-shot) so a skilled player can also
-      curve onto an offset pad — complements the canted-layout fix.
+- [x] Better aim/curve control: air-steer now shapes the drag→accel ramp with a response
+      curve (DEFAULT_STEER.responseCurve=1.7) — a small drag gives gentle accel for precise
+      micro-curving onto a near pad, a big drag commits to the full lean (the "hook" onto a
+      far offset pad). Peak accel stays maxAirSpeed so the climb-reachability budget is
+      unchanged. Mobile-first (it's the touch/drag air control). Tests: eased finer-than-
+      linear near center, monotonic, linear-curve sanity. Complements the canted-layout fix.
 ### Pad-variety types (owner feedback 2026-06-16 — more platform kinds for navigability + challenge)
 - [x] SLIDER pads: the `moving` pad now tracks its live slide velocity (cos(phase)·amp·speed)
       and tilts the rebound normal toward it, so catching it at the right moment flings the

@@ -59,17 +59,28 @@ export interface SteerConfig {
   deadzone: number;
   /** Max lateral acceleration applied. */
   maxAirSpeed: number;
+  /** Response curve exponent on the drag→accel ramp. 1 = linear; >1 = eased: a small drag
+   *  gives gentle accel (fine aim for curving onto a near pad) while a big drag still commits
+   *  to the full lean (the hook onto a far offset pad). The CAP stays maxAirSpeed, so the
+   *  reachability budget the world generator assumes (src/world/reachable) is unchanged. */
+  responseCurve: number;
 }
 
 export const DEFAULT_STEER: SteerConfig = {
   maxSteerDist: 90,
   deadzone: 8,
   maxAirSpeed: 15,
+  responseCurve: 1.7,
 };
 
 /**
  * Air-steer: drag (dx,dy) → a force on the world X (left/right) and Z (fwd/back) axes.
  * Drag up = forward (-Z), drag down = backward (+Z). Returns [0,0] inside the deadzone.
+ *
+ * The drag distance past the deadzone is normalized to [0,1] then shaped by responseCurve:
+ * fine control near center, a committed lean at the extreme — the "curve / hook" feel that
+ * lets a skilled player arc onto an offset pad (complements the canted-pad layout). The peak
+ * magnitude is still maxAirSpeed so the climb-reachability guarantee holds.
  */
 export function computeAirSteer(
   dx: number,
@@ -78,7 +89,10 @@ export function computeAirSteer(
 ): readonly [number, number] {
   const dist = Math.hypot(dx, dy);
   if (dist < config.deadzone) return [0, 0];
-  const factor = Math.min(1, dist / config.maxSteerDist);
+  // Normalize past the deadzone so the ramp starts at the edge of it, not at the origin.
+  const span = Math.max(1, config.maxSteerDist - config.deadzone);
+  const t = Math.min(1, (dist - config.deadzone) / span);
+  const factor = config.responseCurve === 1 ? t : t ** config.responseCurve;
   const angle = Math.atan2(dy, dx);
   return [
     Math.cos(angle) * factor * config.maxAirSpeed,
