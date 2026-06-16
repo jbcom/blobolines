@@ -140,7 +140,7 @@ tokens own palette.
 - [x] Design tokens (color/space/radius/shadow/motion/type) as CSS vars + TS token module + Tailwind theme; juicy gooey palette (Phase 1)
 - [x] Unique self-hosted Google Fonts: Fredoka Variable (display) + Nunito Variable (UI), wired to tokens + Tailwind (Phase 1)
 - [x] Brand-hex ban_patterns in gates.json (enforced); all render colors tokenized (Phase 1). STANDARDS.md brand section — Phase 2.
-- [ ] Loading screen, app icon / favicon, splash (blob identity) — Phase 2
+- [x] Loading screen (bouncing-blob Suspense fallback), app icon/favicon (public/icon.svg, gooey-eyed blob), web manifest (PWA, portrait fullscreen)
 
 ## M2 — Core engine & deterministic sim
 - [x] RNG facade + clock facade + unit tests (M0.5)
