@@ -47,18 +47,24 @@ export function Dialog({
             {/* Radix Content owns the -50%/-50% centering via CSS (static transform);
                 the inner motion.div animates only opacity + a numeric y/scale, so Motion
                 never has to interpolate a calc()↔% transform (which silently failed). */}
+            {/* No aria-label here: Radix auto-wires aria-labelledby to the Title below, so
+                the dialog's accessible name comes from the (sr-only) Title — not a second,
+                competing aria-label that would shadow it. */}
             <RadixDialog.Content
               forceMount
-              aria-label={ariaLabel}
               data-testid={testId}
               className="fixed left-1/2 top-1/2 z-[calc(var(--z-modal)+1)] w-[min(90vw,480px)] -translate-x-1/2 -translate-y-1/2 focus:outline-none"
             >
               <RadixDialog.Title asChild>
                 <span className="sr-only">{ariaLabel}</span>
               </RadixDialog.Title>
-              <RadixDialog.Description asChild>
-                <span className="sr-only">{ariaDescription ?? ariaLabel}</span>
-              </RadixDialog.Description>
+              {/* Only emit a description when one is given — defaulting it to the title is
+                  noise (title === description). Radix tolerates an absent description. */}
+              {ariaDescription ? (
+                <RadixDialog.Description asChild>
+                  <span className="sr-only">{ariaDescription}</span>
+                </RadixDialog.Description>
+              ) : null}
               <motion.div
                 initial={{
                   opacity: 0,

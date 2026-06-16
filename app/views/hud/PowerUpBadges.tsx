@@ -21,7 +21,7 @@ export function PowerUpBadges() {
   }, []);
 
   return (
-    <div className="mt-2 flex justify-center gap-2">
+    <div className="mt-2 flex justify-center gap-2" role="status" aria-live="polite">
       <AnimatePresence>
         {magnet && (
           <Badge
@@ -53,7 +53,7 @@ function Badge({ icon, label, tint }: { icon: React.ReactNode; label: string; ti
       transition={{ type: "spring", stiffness: 480, damping: 22 }}
       className={`flex items-center gap-1.5 rounded-full border px-3 py-1 font-ui text-xs font-bold backdrop-blur-md ${tint}`}
     >
-      {icon}
+      <span aria-hidden>{icon}</span>
       {label}
     </motion.div>
   );

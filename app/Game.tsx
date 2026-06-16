@@ -39,6 +39,10 @@ export function Game() {
         gl={{ antialias: true, powerPreference: "high-performance", preserveDrawingBuffer: true }}
         camera={{ position: [0, 6, 12], fov: 60, near: 0.1, far: 200 }}
         onCreated={handleCanvasCreated}
+        // The 3D scene conveys nothing actionable a screen reader can't get from the DOM
+        // HUD; hide it so AT users don't hit an empty, unlabeled focus stop / "graphic".
+        aria-hidden
+        tabIndex={-1}
       >
         <GameScene />
       </Canvas>

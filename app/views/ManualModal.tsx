@@ -40,7 +40,10 @@ export function ManualModal({
       <div className="mt-4 flex flex-col gap-3">
         {ENTRIES.map(({ icon: Icon, title, body }) => (
           <div key={title} className="flex gap-3">
-            <div className="flex size-9 shrink-0 items-center justify-center rounded-lg border border-border bg-surface text-accent">
+            <div
+              className="flex size-9 shrink-0 items-center justify-center rounded-lg border border-border bg-surface text-accent"
+              aria-hidden
+            >
               <Icon className="size-4" strokeWidth={2.5} />
             </div>
             <div>

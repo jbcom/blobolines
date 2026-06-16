@@ -24,12 +24,20 @@ export function ComboBadge() {
           exit={{ scale: 0.6, opacity: 0 }}
           transition={{ type: "spring", stiffness: 480, damping: 20 }}
           className="pointer-events-none flex flex-col items-center"
+          role="status"
+          aria-live="polite"
+          aria-atomic="true"
+          aria-label={`Clean combo ${multiplier} times`}
         >
-          <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-tramp-gold">
+          <span
+            aria-hidden
+            className="text-[10px] font-bold uppercase tracking-[0.18em] text-tramp-gold"
+          >
             Clean combo
           </span>
           <div
             ref={punchRef}
+            aria-hidden
             className="mt-1 flex items-center gap-1.5 rounded-full border border-tramp-gold/50 bg-tramp-gold/15 px-3.5 py-1 backdrop-blur-md"
           >
             <Flame className="size-4 text-tramp-gold" strokeWidth={2.5} />

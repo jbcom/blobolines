@@ -13,3 +13,18 @@ test("SettingsModal renders open with its controls", async () => {
   await expect.element(screen.getByText("Master volume")).toBeVisible();
   await expect.element(screen.getByText("Music")).toBeVisible();
 });
+
+// a11y: the Radix Slider/Switch controls must carry programmatic accessible names
+// (the visible <span> labels aren't tied to the controls otherwise).
+test("SettingsModal controls have accessible names", async () => {
+  const screen = await render(<SettingsModal open onOpenChange={() => {}} />);
+  await expect.element(screen.getByTestId("settings")).toBeVisible();
+  await expect.element(screen.getByRole("slider", { name: "Master volume" })).toBeInTheDocument();
+  await expect
+    .element(screen.getByRole("slider", { name: "Slingshot sensitivity" }))
+    .toBeInTheDocument();
+  await expect.element(screen.getByRole("switch", { name: "Music" })).toBeInTheDocument();
+  await expect
+    .element(screen.getByRole("switch", { name: "Haptics (mobile)" }))
+    .toBeInTheDocument();
+});

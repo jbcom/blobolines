@@ -23,6 +23,7 @@ export function SettingsModal({
       <div className="mt-5 flex flex-col gap-5 font-ui text-sm text-fg-muted">
         <Row label="Master volume" value={`${Math.round(settings.masterVolume * 100)}%`}>
           <Slider
+            aria-label="Master volume"
             min={0}
             max={1}
             step={0.05}
@@ -45,6 +46,7 @@ export function SettingsModal({
 
         <Row label="Slingshot sensitivity" value={`${settings.slingshotSensitivity.toFixed(1)}×`}>
           <Slider
+            aria-label="Slingshot sensitivity"
             min={0.5}
             max={2}
             step={0.1}
@@ -103,7 +105,7 @@ function Toggle({
   return (
     <div className="flex items-center justify-between">
       <span className="font-semibold">{label}</span>
-      <Switch checked={checked} onCheckedChange={onChange} />
+      <Switch checked={checked} onCheckedChange={onChange} aria-label={label} />
     </div>
   );
 }

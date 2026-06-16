@@ -40,7 +40,7 @@
 
   --fg: #f3efd6;
   --fg-muted: #aebfc9;
-  --fg-subtle: #6f8593;
+  --fg-subtle: #8095a3; /* ≥4.5:1 on surface for AA small-text (was #6f8593, 4.11) */
 
   --accent: var(--blob-blue);
   --accent-warm: var(--tramp-orange);
@@ -106,4 +106,17 @@
   --safe-bottom: env(safe-area-inset-bottom, 0px);
   --safe-left: env(safe-area-inset-left, 0px);
   --safe-right: env(safe-area-inset-right, 0px);
+}
+
+/* Reduced-motion safety net: kills CSS animations/transitions for users who ask for it
+   (e.g. LoadingScreen's infinite bounce, Tailwind transition-*). Motion components are
+   handled by <MotionConfig reducedMotion="user">; anime.js guards at its call sites. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }

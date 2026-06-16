@@ -29,6 +29,14 @@ export function usePunchOnChange<T extends HTMLElement>(
     }
     const el = ref.current;
     if (!el) return;
+    // Honor prefers-reduced-motion (Motion's config doesn't reach anime.js) — skip the
+    // punch entirely; the underlying value still updates, just without the kick.
+    if (
+      typeof window !== "undefined" &&
+      window.matchMedia?.("(prefers-reduced-motion: reduce)").matches
+    ) {
+      return;
+    }
     flip.current *= -1;
     const r = rotate * flip.current;
     animate(el, {

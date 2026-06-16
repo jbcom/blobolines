@@ -46,8 +46,11 @@ export function BlobCustomizer({
     <Dialog open={open} onOpenChange={onOpenChange} ariaLabel="Blob customizer" testId="customizer">
       <div className="flex items-center justify-between">
         <h2 className="font-display text-xl font-bold text-cream">Goo Customizer</h2>
-        <span className="flex items-center gap-1 font-display text-sm text-blob-blue">
-          <Gem className="size-4" strokeWidth={2.5} /> {crystals}
+        <span
+          className="flex items-center gap-1 font-display text-sm text-blob-blue"
+          aria-label={`${crystals} crystals available`}
+        >
+          <Gem className="size-4" strokeWidth={2.5} aria-hidden /> {crystals}
         </span>
       </div>
       <p className="mt-1 font-ui text-xs text-fg-subtle">
@@ -66,6 +69,16 @@ export function BlobCustomizer({
               type="button"
               onClick={() => pick(s.id)}
               disabled={!isUnlocked && !affordable}
+              aria-pressed={isEquipped}
+              aria-label={`${s.name} — ${
+                isEquipped
+                  ? "equipped"
+                  : isUnlocked
+                    ? "equip"
+                    : affordable
+                      ? `unlock for ${cost} crystals`
+                      : `locked, needs ${cost} crystals`
+              }`}
               className={`flex flex-col items-center gap-2 rounded-xl border p-3 transition-colors ${
                 isEquipped
                   ? "border-accent bg-accent/10"
@@ -73,18 +86,29 @@ export function BlobCustomizer({
               } ${!isUnlocked && !affordable ? "opacity-50" : ""}`}
             >
               <span
+                aria-hidden
                 className="size-12 rounded-full shadow-[var(--shadow-sm)]"
                 style={{ backgroundColor: palette.blob[s.id] }}
               />
-              <span className="font-display text-sm font-bold text-cream">{s.name}</span>
+              <span aria-hidden className="font-display text-sm font-bold text-cream">
+                {s.name}
+              </span>
               {isEquipped ? (
-                <span className="flex items-center gap-1 font-ui text-[11px] font-bold text-accent">
+                <span
+                  aria-hidden
+                  className="flex items-center gap-1 font-ui text-[11px] font-bold text-accent"
+                >
                   <Check className="size-3" /> Equipped
                 </span>
               ) : isUnlocked ? (
-                <span className="font-ui text-[11px] font-semibold text-fg-subtle">Equip</span>
+                <span aria-hidden className="font-ui text-[11px] font-semibold text-fg-subtle">
+                  Equip
+                </span>
               ) : (
-                <span className="flex items-center gap-1 font-ui text-[11px] font-bold text-blob-blue">
+                <span
+                  aria-hidden
+                  className="flex items-center gap-1 font-ui text-[11px] font-bold text-blob-blue"
+                >
                   {affordable ? <Gem className="size-3" /> : <Lock className="size-3" />} {cost}
                 </span>
               )}
