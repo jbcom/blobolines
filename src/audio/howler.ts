@@ -80,8 +80,10 @@ function playSfx(id: SfxId): void {
   const path = (audioCfg.sfx as Record<string, string>)[id];
   if (!path) return;
   const h = howlFor(path, false, vol.sfx);
-  h.volume(vol.sfx * sfxVolume); // apply the live SFX-channel level (config base × setting)
-  h.play();
+  // Set volume on THIS play instance (the play id), not globally on the cached Howl —
+  // overlapping SFX (rapid bounces) must not abruptly re-level each other's in-flight plays.
+  const playId = h.play();
+  h.volume(vol.sfx * sfxVolume, playId);
 }
 
 /** Set the SFX channel volume [0,1], independent of music. */

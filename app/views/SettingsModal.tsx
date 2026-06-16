@@ -1,5 +1,5 @@
 import { Dialog, Slider, Switch } from "@app/components/ui";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { setMasterVolume, setMusicEnabled, setSfxVolume } from "@/audio";
 import { ImpactStyle, impact } from "@/platform";
 import { useGameStore } from "@/state";
@@ -27,6 +27,11 @@ export function SettingsModal({
   const resetProgress = useGameStore((s) => s.resetProgress);
   // Two-step destructive confirm: first tap arms, second tap wipes (avoids a nested dialog).
   const [confirmReset, setConfirmReset] = useState(false);
+  // Disarm the reset confirm whenever the modal closes (Done, Escape, or outside-click) so
+  // it never reopens still-armed.
+  useEffect(() => {
+    if (!open) setConfirmReset(false);
+  }, [open]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange} ariaLabel="Settings" testId="settings">
