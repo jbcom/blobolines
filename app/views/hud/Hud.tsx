@@ -2,6 +2,7 @@ import { Altimeter } from "./Altimeter";
 import { ComboBadge } from "./ComboBadge";
 import { CrystalCounter } from "./CrystalCounter";
 import { LaunchInput } from "./LaunchInput";
+import { MilestoneBanner } from "./MilestoneBanner";
 import { PowerUpBadges } from "./PowerUpBadges";
 
 /**
@@ -14,6 +15,8 @@ export function Hud() {
     <>
       {/* full-screen drag-to-launch surface, behind the readouts */}
       <LaunchInput />
+      {/* transient 100m-milestone celebration, centered over the canvas */}
+      <MilestoneBanner />
       <div
         className="pointer-events-none flex h-full w-full flex-col p-4"
         style={{
