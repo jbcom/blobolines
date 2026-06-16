@@ -333,7 +333,10 @@ Camera follow + shake, in-game deformation, wet glistening shader + color gradie
       "Done/Got it", GameOver "Climb again" + "Share" as surface) to <Button cta size="lg">,
       and the TitleScreen hero Play to buttonVariants (kept as motion.button for the spring).
       Verified live (PLAY + Settings Done/Reset render identically). One button identity now.
-- [ ] anime.js squish-stretch on title Play press.
+- [x] Squish-stretch on title Play press (the stack is motion, not anime.js): whileTap now
+      SQUISHES the button (scaleX 1.08 / scaleY 0.82 — wide+short like pressing a goo blob) with
+      a springy overshoot on release, instead of a uniform shrink. Reduced-motion → a plain
+      scale 0.97 (no squish).
 - [ ] Reduced-motion guards on every new flourish (static cue fallback).
 
 ## M13 — visual/render/VFX depth (from visual audit, 2026-06-16)

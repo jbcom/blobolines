@@ -1,6 +1,6 @@
 import { buttonVariants } from "@app/components/ui";
 import { HelpCircle, Palette, Play, Settings } from "lucide-react";
-import { motion } from "motion/react";
+import { motion, useReducedMotion } from "motion/react";
 import { useEffect, useState } from "react";
 import { initAudio, startMusic } from "@/audio";
 import { cn } from "@/lib/utils";
@@ -18,6 +18,7 @@ export function TitleScreen() {
   const resetRun = useGameStore((s) => s.resetRun);
   const resetWorld = useWorldStore((s) => s.reset);
   const best = useGameStore((s) => s.progress.bestHeight);
+  const reduced = useReducedMotion();
   const [customizing, setCustomizing] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [manualOpen, setManualOpen] = useState(false);
@@ -70,13 +71,15 @@ export function TitleScreen() {
       </div>
 
       {/* The hero Play CTA reuses the shared button's variant styling (buttonVariants) so it
-          matches the modal/card CTAs, but stays a motion.button for the spring hover/tap. */}
+          matches the modal/card CTAs, but stays a motion.button for the spring squish. Press
+          SQUISHES it (wide + short, like pressing a goo blob) and a touch of overshoot on
+          release — gooier than a uniform shrink; honors reduced-motion (no squish). */}
       <motion.button
         type="button"
         onClick={play}
-        whileTap={{ scale: 0.94 }}
-        whileHover={{ scale: 1.04 }}
-        transition={{ type: "spring", stiffness: 400, damping: 18 }}
+        whileTap={reduced ? { scale: 0.97 } : { scaleX: 1.08, scaleY: 0.82 }}
+        whileHover={reduced ? undefined : { scale: 1.04 }}
+        transition={{ type: "spring", stiffness: 500, damping: 14 }}
         className={cn(
           buttonVariants({ variant: "default", size: "lg", cta: true }),
           "gap-3 rounded-2xl px-10 py-4 text-xl",
