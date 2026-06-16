@@ -29,6 +29,8 @@ export const MetaballGooMaterial = shaderMaterial(
     u_time: 0,
     u_heat: 0,
     u_wobble: 0,
+    u_center: new THREE.Vector3(),
+    u_deform: new THREE.Vector3(1, 1, 1),
   },
   /* glsl */ `
     varying vec3 vWorldPos;
@@ -54,8 +56,18 @@ export const MetaballGooMaterial = shaderMaterial(
     uniform float u_time;
     uniform float u_heat;
     uniform float u_wobble;
+    uniform vec3 u_center;
+    uniform vec3 u_deform;
 
     varying vec3 vWorldPos;
+
+    // Squash-and-stretch: warp the sample point in the blob's local frame by the inverse
+    // of the per-axis deform scale, so the isosurface stretches along velocity and squashes
+    // flat on impact. Correcting the distance by the min axis keeps the SDF ~Lipschitz.
+    vec3 deformPoint(vec3 p) {
+      vec3 local = p - u_center;
+      return u_center + local / u_deform;
+    }
 
     float smin(float a, float b, float k) {
       float h = clamp(0.5 + 0.5 * (b - a) / k, 0.0, 1.0);
@@ -74,14 +86,19 @@ export const MetaballGooMaterial = shaderMaterial(
       return w * (1.0 / 3.0) * u_wobble * 0.18;
     }
 
-    float field(vec3 p) {
+    float field(vec3 rawP) {
+      // Deform the whole field (squash/stretch) around the blob center, then march.
+      vec3 p = deformPoint(rawP);
       float d = MAX_DIST;
       for (int i = 0; i < MAX_BALLS; i++) {
         if (i >= u_count) break;
         float ball = length(p - u_balls[i]) - u_radii[i];
         d = smin(d, ball, 0.5);
       }
-      return d + wobbleField(p);
+      // Scale the distance back by the smallest deform axis so the warped SDF stays a
+      // conservative (≤1-Lipschitz) bound for the sphere-trace — no overstep/holes.
+      float minScale = min(u_deform.x, min(u_deform.y, u_deform.z));
+      return (d + wobbleField(p)) * minScale;
     }
 
     vec3 fieldNormal(vec3 p) {

@@ -5,6 +5,7 @@ import type { BlobSkin } from "@/core/types";
 import { packMetaballField } from "@/render/goo";
 import { MAX_GOO_BALLS, MetaballGooMaterial } from "@/render/materials";
 import type { Droplet } from "@/render/vfx";
+import { combineScale, impactSquash, speedStretch } from "@/sim/blob";
 import { getBlobDiagnostics, useGameStore } from "@/state";
 import { palette } from "@/styles/tokens";
 import { BlobEyes } from "./BlobEyes";
@@ -29,6 +30,8 @@ export function GooField({ skin, blobRadius, getDroplets }: GooFieldProps) {
   const eyesRef = useRef<Group>(null);
   /** Surface-tension wobble envelope [0,1] — spikes on impact, decays each frame. */
   const wobble = useRef(0);
+  /** Current squash/stretch deform, sprung toward the target each frame. */
+  const deform = useRef({ x: 1, y: 1, z: 1 });
   const camera = useThree((s) => s.camera);
   const material = useMemo(() => new MetaballGooMaterial() as unknown as ShaderMaterial, []);
   // Hand-built material isn't JSX-declared, so R3F won't auto-dispose it — release the
@@ -86,6 +89,22 @@ export function GooField({ skin, blobRadius, getDroplets }: GooFieldProps) {
     const imp = Math.min(1, Math.max(0, (1 - diag.squash) / 0.3));
     wobble.current = Math.max(wobble.current * Math.exp(-dt / 0.7), imp);
     material.uniforms.u_wobble.value = wobble.current;
+
+    // Squash-and-stretch: stretch along velocity while flying, flatten on impact — the
+    // same model as the hero blob, now driven into the in-game goo so it's alive (was a
+    // rigid sphere). Spring toward the target so it bounces rather than snaps.
+    const [vx, vy, vz] = diag.velocity;
+    const target = combineScale(speedStretch(vx, vy, vz), impactSquash(imp));
+    const sk = 1 - Math.exp(-dt / 0.06);
+    deform.current.x += (target.x - deform.current.x) * sk;
+    deform.current.y += (target.y - deform.current.y) * sk;
+    deform.current.z += (target.z - deform.current.z) * sk;
+    (material.uniforms.u_center.value as Vector3).set(bx, by, bz);
+    (material.uniforms.u_deform.value as Vector3).set(
+      deform.current.x,
+      deform.current.y,
+      deform.current.z,
+    );
   });
 
   return (

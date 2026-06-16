@@ -192,3 +192,26 @@ tokens own palette.
 - [x] STANDARDS.md, docs/STATE.md, CONTRIBUTING — present and substantive (verified, not stubs)
 - [x] Agentic: AGENTS.md (existed), per-system READMEs (src/sim, src/render, src/state, src/audio, app/scene), .github/copilot-instructions.md, .cursor/rules/blobolines.mdc
 - [x] HADS-format docs: docs/reference/ENGINEERING-NOTES.hads.md (AI manifest + [SPEC]/[BUG] blocks capturing verified facts + the real bugs hit this build)
+
+## M10 — "Make it ALIVE" (post-ship fixes; user feedback 2026-06-16)
+
+**Mandate (verbatim):** "no targeting, camera doesn't track the blob (zooms off camera),
+much more lifeless and dull vs the cyberpunk PoC, no real use of color (just blue+white),
+no deformation physics, no splat. + read the harness screenshots/diagnostics you've been
+capturing — close that loop."
+
+**Process fix:** READ artifacts/*.png + *.json after every change (I built capture but never
+read it back — write-only loop. That's why I missed all of the above).
+
+**Direction (user decision):** "Juice up the goo look" — keep the gooey daytime aesthetic,
+add the PoC's ENERGY (shake, follow-light, bloom, speed FX, color), NOT neon-cyberpunk.
+
+### Queue
+- [x] Camera follows the real blob x/y/z (was height-only, X/Z hard-locked) + impact shake — verified in artifacts/launch-up.png (blob now framed).
+- [ ] Goo deformation in-game: squash/stretch wired into GooField via u_deform/u_center (done in code) — VERIFY it reads alive airborne, fix the blob↔ground-droplet teardrop-merge artifact.
+- [ ] Real color: per-skin palette actually varied; vary trampoline/crystal/powerup/sky colors; warmer richer grade. Not blue+cream everywhere.
+- [ ] Splat: bigger, juicier World-of-Goo splat on landing (current is small dark blobs). More droplets, color, spread, decal punch.
+- [ ] Aim/targeting feedback: a visible trajectory/aim indicator while charging the slingshot (PoC had launch feedback; we have none).
+- [ ] Gameplay: blob dies too fast / launches off the pads — tune so a normal launch lands on the next pad (verify it's playable, not just renders).
+- [ ] Juice: blob-follow point light tinting the scene, stronger speed-reactive FX, punchier bloom/contrast.
+- [ ] Per change: drive harness, READ the capture, fix, repeat. Then PR.
