@@ -312,3 +312,55 @@ Camera follow + shake, in-game deformation, wet glistening shader + color gradie
 - [ ] Consolidate bespoke accent buttons onto the shared Button primitive.
 - [ ] anime.js squish-stretch on title Play press.
 - [ ] Reduced-motion guards on every new flourish (static cue fallback).
+
+## M13 — visual/render/VFX depth (from visual audit, 2026-06-16)
+- [ ] Enable Canvas shadows + shadow camera on key light; castShadow/receiveShadow blob+pads (castShadow set but Canvas has no shadows prop — dead).
+- [ ] Soft fake contact shadow under the blob, scaled by altitude+squash (BlobShadow).
+- [ ] ACESFilmic toneMapping + outputColorSpace on Canvas gl; drop the manual soft-clamp hack in metaballGoo.
+- [ ] Wire biome fog into the scene (biomeSkyAt.fog is computed but unused) — fogExp2 by altitude, hides far cutoff.
+- [ ] Fix camera far plane vs world scale (far:200 clips dome@150 + biomes to 1400m); attach dome to camera or push far.
+- [ ] Unify the two divergent goo shaders (menu GooMaterial vs in-game MetaballGoo) — shared wet/lighting GLSL so the blob matches menu↔play.
+- [ ] Biome-reactive goo lighting: feed biome key color + darkening as uniforms (blob warm at ground, cool/moody in space).
+- [ ] Goo refraction: sample backbuffer along normal×fresnel so the blob bends what's behind it (marquee jelly upgrade).
+- [ ] Thickness-based inner glow (Beer-Lambert) in the raymarch — deeper goo more saturated.
+- [ ] Fake caustics / moving light dapple cast under the goo on the pad.
+- [ ] Render the free (separated) droplets — currently culled from the field and shown nowhere; instanced wet spheres so flung goo arcs+falls.
+- [ ] Controlled drip/stretch strands (teardrop necks) that thin then snap over ~0.2s — the signature WoG look (re-tune smin per-droplet stretch weight).
+- [ ] Launch burst VFX: expanding ring/flash + radial speed streaks at the pad on release.
+- [ ] Landing impact rings on the membrane, sized by impact speed (ImpactRing).
+- [ ] Speed lines / motion streaks above a velocity threshold (PostFX/overlay).
+- [ ] Continuous tapered trail ribbon behind the airborne blob (igniting toward flame at high combo), replacing sparse trail dots.
+- [ ] Crystal sparkle glint + collect burst (CrystalField).
+- [ ] Powerup attract aura/halo + collect flash (PowerUpField/PowerUpModel).
+- [ ] Per-biome particle ambience (petals ground, ice/wind stratosphere, nebula dust space) — extend BiomeProps.
+- [ ] Per-biome color grade + bloom driven by biomeSkyAt (warm ground, cold high-contrast space) in PostFX.
+- [ ] Depth-of-field focused on the blob (quality-gated).
+- [ ] God rays + sun sprite in the sky bands (the shader paints shafts but there's no light source).
+- [ ] Wet/jelly trampoline membrane material (fresnel sheen + impact ripple) matching the goo.
+- [ ] Wet-shaded splat decals (normal/height + specular) instead of flat Canvas2D basic.
+- [ ] Distinct pad geometry/silhouette per type (ice translucent, super glowing frame, fragile cracked, booster chevrons, moving rails).
+- [ ] Biome environment geometry per stratum (parallax hills/islands/satellites), altitude-windowed (BiomeGeometry).
+- [ ] Expressive eyes: lit glossy sclera + tracking glint, lid/eyebrow shaping per expression, pupil dart toward velocity.
+- [ ] Quality-tier system (src/render/quality.ts): scale raymarch steps, pool sizes, DOF/god-rays/bloom by device/FPS — gate the heavy effects above.
+- [ ] Selective (emissive-channel) bloom instead of global luminance threshold — only goo hotspots/flame/crystals/powerups glow.
+- [ ] Low-amplitude perpetual idle jiggle (breathing) on the goo so it's always alive at rest.
+
+## M14 — audio depth (from audio audit, 2026-06-16)
+- [ ] Distinct bounce samples for ALL pad types (standard soft RR, booster springy, super heavy+whoosh, ice magic, fragile wood+crack, moving metal) — 4 of 6 currently share one sample.
+- [ ] Impact-strength → Howl rate(0.85-1.15)+volume scaling; pass sensor speed into playBounce.
+- [ ] Round-robin engine (playRandom with no-immediate-repeat) for per-cue variant sets.
+- [ ] Charged-launch whoosh by power (soft→fast→hard, rate scaled by charge) — playLaunch ignores charge today.
+- [ ] Combo-escalation rising-pitch blip per clean bounce (rate=1+combo*0.06), reset on break.
+- [ ] Combo-milestone fanfares (5/10/25) from the victory-stinger pack.
+- [ ] New personal-best stinger on gameover when maxY>best.
+- [ ] Real game-over death sting (downer + gooey explosion) instead of reusing the splat.
+- [ ] Powerup activate/expire cues distinct from pickup (thruster laser-charge loop, magnet buff, expire power-down).
+- [ ] Crystal pickup variation + multi-gather sparkle run (rate per gem); magnet "sweep" loop while active.
+- [ ] Near-miss whoosh when passing a pad close at speed without landing.
+- [ ] Three music tracks swapped by phase+altitude (menu / in-game / high-space) with crossfade.
+- [ ] Expand ambient beds per biome band (forest/wind/strong-wind/space/snow/magic) off biomeSkyAt.
+- [ ] UI sounds (hover/click/confirm/cancel/popup/coin) wired to the shadcn overlay.
+- [ ] Music ducking (sidechain) under super-bounce/death/milestone — duckMusic(ms) helper.
+- [ ] Three-bus mix (music/sfx/ambient/master) with independent enable+volume; retune ambient down to 0.25.
+- [ ] Audio thump layer mirroring the Light/Medium/Heavy haptic split.
+- [ ] Preload critical cues at startMusic to avoid first-play decode hitch (mobile).
