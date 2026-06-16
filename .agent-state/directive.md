@@ -154,7 +154,7 @@ tokens own palette.
 - [x] Squash-and-stretch deformation driven by velocity/impact; springy approach to target scale
 - [ ] Jiggle / surface-tension wobble secondary motion (vertex-level) — Phase 2 polish
 - [x] Gooey surface shader: fresnel rim, light-wrap, wet specular + shimmer
-- [ ] Blob skins/cores system: wire all 4 skins (blue/slime/ghost/ink) + customizer UI to store
+- [x] Blob skins: all 4 (blue/slime/ghost/ink) wired to store; BlobCustomizer modal (pick/unlock with crystals) on title — verified rendering. (Fixed a real shadcn Dialog bug: Motion can't interpolate calc()↔% transforms — split centering to CSS, animate only opacity/y/scale.)
 - [x] **Big expressive blinking eyes** — procedural geometry on the goo face (depthTest-on-top), idle/blink/squint/wide/tear via eyeShape; world-space goo+eye alignment fixed
 
 ## M4 — Trampolines & world

@@ -1,7 +1,9 @@
-import { Play } from "lucide-react";
+import { Palette, Play } from "lucide-react";
 import { motion } from "motion/react";
+import { useState } from "react";
 import { initAudio } from "@/audio";
 import { useGameStore, useWorldStore } from "@/state";
+import { BlobCustomizer } from "./BlobCustomizer";
 
 /**
  * Title / main menu. The blob identity, the one-line pitch, and the launch CTA into
@@ -12,6 +14,7 @@ export function TitleScreen() {
   const resetRun = useGameStore((s) => s.resetRun);
   const resetWorld = useWorldStore((s) => s.reset);
   const best = useGameStore((s) => s.progress.bestHeight);
+  const [customizing, setCustomizing] = useState(false);
 
   const play = () => {
     // This click is the user gesture that unlocks the AudioContext.
@@ -54,11 +57,21 @@ export function TitleScreen() {
         Play <Play className="size-5 fill-current" />
       </motion.button>
 
+      <button
+        type="button"
+        onClick={() => setCustomizing(true)}
+        className="flex items-center gap-2 font-ui text-sm font-semibold text-fg-muted hover:text-cream"
+      >
+        <Palette className="size-4" /> Customize blob
+      </button>
+
       {best > 0 && (
         <span className="font-ui text-xs font-semibold text-fg-subtle">
           Best climb · <span className="text-tramp-gold">{best}m</span>
         </span>
       )}
+
+      <BlobCustomizer open={customizing} onOpenChange={setCustomizing} />
     </motion.div>
   );
 }

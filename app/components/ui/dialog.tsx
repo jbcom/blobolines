@@ -13,36 +13,11 @@ export interface DialogProps {
   children: ReactNode;
 }
 
-const overlayVariants = {
-  hidden: { opacity: 0 },
-  visible: { opacity: 1, transition: { duration: 0.18 } },
-  exit: { opacity: 0, transition: { duration: 0.14 } },
-};
-
-const contentVariants = {
-  hidden: { opacity: 0, y: 24, scale: 0.96 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    scale: 1,
-    transition: { duration: 0.24, ease: [0.22, 1, 0.36, 1] },
-  },
-  exit: {
-    opacity: 0,
-    y: 16,
-    scale: 0.97,
-    transition: { duration: 0.16 },
-  },
-};
-
-const reducedVariants = {
-  hidden: { opacity: 0 },
-  visible: { opacity: 1, transition: { duration: 0.1 } },
-  exit: { opacity: 0, transition: { duration: 0.08 } },
-};
-
+// Centering: Tailwind left/top-1/2 + a static -50% translate baked into the motion
+// values (so Motion's animated transform doesn't fight a separate CSS translate, which
+// left the content off-center + stuck at opacity 0). Inline initial/animate/exit objects
+// are used instead of variant keys — variant strings didn't resolve on first forceMount.
 const MotionOverlay = motion.create(RadixDialog.Overlay);
-const MotionContent = motion.create(RadixDialog.Content);
 
 export function Dialog({
   open,
@@ -54,8 +29,7 @@ export function Dialog({
   children,
 }: DialogProps) {
   const prefersReduced = useReducedMotion();
-  const ov = prefersReduced ? reducedVariants : overlayVariants;
-  const cv = prefersReduced ? reducedVariants : contentVariants;
+  const dur = prefersReduced ? 0.1 : 0.24;
 
   return (
     <RadixDialog.Root open={open} onOpenChange={onOpenChange}>
@@ -64,24 +38,20 @@ export function Dialog({
           <RadixDialog.Portal forceMount>
             <MotionOverlay
               forceMount
-              variants={ov}
-              initial="hidden"
-              animate="visible"
-              exit="exit"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.18 }}
               className="fixed inset-0 z-[var(--z-modal)] bg-black/60 backdrop-blur-sm"
             />
-            <MotionContent
+            {/* Radix Content owns the -50%/-50% centering via CSS (static transform);
+                the inner motion.div animates only opacity + a numeric y/scale, so Motion
+                never has to interpolate a calc()↔% transform (which silently failed). */}
+            <RadixDialog.Content
               forceMount
               aria-label={ariaLabel}
               data-testid={testId}
-              variants={cv}
-              initial="hidden"
-              animate="visible"
-              exit="exit"
-              className={cn(
-                "fixed left-1/2 top-1/2 z-[calc(var(--z-modal)+1)] w-[min(90vw,480px)] -translate-x-1/2 -translate-y-1/2 rounded-[var(--radius-xl)] bg-[var(--bg-elevated)] border border-[var(--border)] shadow-[var(--shadow-lg)] p-6 focus:outline-none",
-                className,
-              )}
+              className="fixed left-1/2 top-1/2 z-[calc(var(--z-modal)+1)] w-[min(90vw,480px)] -translate-x-1/2 -translate-y-1/2 focus:outline-none"
             >
               <RadixDialog.Title asChild>
                 <span className="sr-only">{ariaLabel}</span>
@@ -89,8 +59,23 @@ export function Dialog({
               <RadixDialog.Description asChild>
                 <span className="sr-only">{ariaDescription ?? ariaLabel}</span>
               </RadixDialog.Description>
-              {children}
-            </MotionContent>
+              <motion.div
+                initial={{
+                  opacity: 0,
+                  y: prefersReduced ? 0 : 24,
+                  scale: prefersReduced ? 1 : 0.96,
+                }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: prefersReduced ? 0 : 16, scale: prefersReduced ? 1 : 0.97 }}
+                transition={{ duration: dur, ease: [0.22, 1, 0.36, 1] }}
+                className={cn(
+                  "rounded-[var(--radius-xl)] border border-[var(--border)] bg-[var(--bg-elevated)] p-6 shadow-[var(--shadow-lg)]",
+                  className,
+                )}
+              >
+                {children}
+              </motion.div>
+            </RadixDialog.Content>
           </RadixDialog.Portal>
         )}
       </AnimatePresence>
