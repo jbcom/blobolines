@@ -60,12 +60,15 @@ export function consumeSplats(): SplatBurst[] {
   return out;
 }
 
-/** A launch "pop" event: an expanding ring/flash blooms at the pad on release. Reported by
- *  the blob on a slingshot launch, drained by the LaunchRing VFX. `charge` [0,1] scales the
- *  ring's size + brightness so a big charged launch reads bigger. */
+/** A ground-ring "pop" event: an expanding ring blooms at the pad. `kind` "launch" is the
+ *  slingshot release pop (blue, blooms from small); "land" is the impact ring on touchdown
+ *  (gold, sized by impact). `charge` [0,1] scales the ring's size + brightness. Reported by
+ *  the blob, drained by the LaunchRing VFX. */
+export type GroundRingKind = "launch" | "land";
 export interface LaunchBurstEvent {
   position: readonly [number, number, number];
   charge: number;
+  kind: GroundRingKind;
 }
 
 let launchBurstQueue: LaunchBurstEvent[] = [];

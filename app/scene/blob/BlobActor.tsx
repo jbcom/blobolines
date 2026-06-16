@@ -85,16 +85,19 @@ export function BlobActor({
     // feedback) — but SUBTLE: the eyes are separate meshes that don't follow vertex-level
     // displacement, so a strong sag/lobe detaches them from the body. Keep it just enough to
     // read as a living goo droplet (a soft uneven wobble + faint hang) without the eyes
-    // drifting off the deformed mass. Same uniforms GooCsg drives harder in-game (no face
-    // registration issue there because the in-game face counter-scales with the body).
-    const t = state.clock.elapsedTime;
-    material.uniforms.uSag.value = 0.16;
-    material.uniforms.uLobe.value = 0.14 + 0.05 * Math.sin(t * 0.7);
-    (material.uniforms.uLobeDir.value as Vector3).set(
-      Math.cos(t * 0.5),
-      Math.sin(t * 0.31) * 0.4,
-      Math.sin(t * 0.5),
-    );
+    // drifting off the deformed mass. ONLY in the posed (non-live) hero/fixture path —
+    // in-game the GooCsg blob owns these uniforms off the physics settle, so we never clobber
+    // them here (this BlobActor instance is the menu hero; guarding keeps the contract clean).
+    if (!live) {
+      const t = state.clock.elapsedTime;
+      material.uniforms.uSag.value = 0.16;
+      material.uniforms.uLobe.value = 0.14 + 0.05 * Math.sin(t * 0.7);
+      (material.uniforms.uLobeDir.value as Vector3).set(
+        Math.cos(t * 0.5),
+        Math.sin(t * 0.31) * 0.4,
+        Math.sin(t * 0.5),
+      );
+    }
   });
 
   return (

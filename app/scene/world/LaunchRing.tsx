@@ -2,28 +2,34 @@ import { useFrame } from "@react-three/fiber";
 import { useMemo, useRef } from "react";
 import {
   AdditiveBlending,
+  Color,
   type Group,
   type Mesh,
   type MeshBasicMaterial,
   RingGeometry,
 } from "three";
-import { consumeLaunchBursts } from "@/state";
+import { consumeLaunchBursts, type GroundRingKind } from "@/state";
 import { hex, palette } from "@/styles/tokens";
 
 /**
- * LaunchRing — an expanding, fading flat ring that blooms at the pad on a slingshot launch:
- * the in-world "pop" that sells the release (the screen flash is the DOM side; this is the 3D
- * side). A small pool of ring meshes is cycled — each launch grabs the next slot, snaps it to
- * the pad, and animates it outward + transparent over ~0.45s. Driven imperatively off the
- * launch-burst bridge; no per-frame React re-render. Additive-blended so it reads as light.
+ * LaunchRing — expanding, fading flat rings that bloom at the pad on launch + landing (the
+ * in-world "pop"; the screen flash is the DOM side, this is the 3D side). A small pool of ring
+ * meshes is cycled — each event grabs the next slot, snaps it to the pad, recolors by kind
+ * (launch = blue bloom, land = gold impact), and animates it outward + transparent over
+ * ~0.45s. Driven imperatively off the ring-burst bridge; no per-frame React re-render.
+ * Additive-blended so it reads as light.
  */
 
-const POOL = 4;
+const POOL = 6;
 // Stable React keys for the fixed, never-reordered mesh pool (index-as-key lint guard).
 const RING_KEYS = Array.from({ length: POOL }, (_, i) => `launch-ring-${i}`);
 const LIFE = 0.45; // seconds for a ring to expand + fade out
 const BASE_RADIUS = 0.9; // ring start radius at charge 0
 const MAX_GROW = 5.5; // extra radius a full-charge ring expands to
+const KIND_COLOR: Record<GroundRingKind, Color> = {
+  launch: new Color(hex(palette.blob.blue)),
+  land: new Color(hex(palette.tramp.gold)),
+};
 
 interface RingSlot {
   age: number; // >= LIFE means idle
@@ -46,13 +52,14 @@ export function LaunchRing() {
     const group = groupRef.current;
     if (!group) return;
 
-    // Start any newly reported launches on the next free-cycled slot.
+    // Start any newly reported bursts on the next free-cycled slot, recoloring by kind.
     for (const ev of consumeLaunchBursts()) {
       const i = next.current;
       next.current = (next.current + 1) % POOL;
       slots.current[i] = { age: 0, charge: Math.max(0, Math.min(1, ev.charge)) };
       const m = group.children[i] as Mesh;
       m.position.set(ev.position[0], ev.position[1] + 0.05, ev.position[2]);
+      (m.material as MeshBasicMaterial).color.copy(KIND_COLOR[ev.kind]);
     }
 
     // Animate each live ring: grow outward + fade. Hidden when idle.

@@ -366,7 +366,12 @@ game — touch/drag is primary; keyboard is a minor desktop-only secondary, don'
       charge. Joins the existing downward goo-droplet burst + the DOM screen flash. Browser
       fixture proves it blooms real pixels on a reported burst. (Radial speed streaks are the
       separate "speed lines" item.)
-- [ ] Landing impact rings on the membrane, sized by impact speed (ImpactRing).
+- [x] Landing impact rings: the LaunchRing pool now also blooms a GOLD ring on touchdown
+      (kind:"land", sized by impact strength, gated >0.2 so micro-settles don't ping) — the
+      counterpart to the blue launch pop. Reused the ring-burst bridge + pool (grew to 6 slots),
+      recolor-by-kind on event. Browser fixture covers both kinds. (Also folded the review fix:
+      BlobActor's idle sag/lobe is now guarded `if (!live)` so it can't clobber GooCsg's
+      physics-driven sag.)
 - [ ] Speed lines / motion streaks above a velocity threshold (PostFX/overlay).
 - [ ] Continuous tapered trail ribbon behind the airborne blob (igniting toward flame at high combo), replacing sparse trail dots.
 - [ ] Crystal sparkle glint + collect burst (CrystalField).

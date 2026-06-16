@@ -12,6 +12,7 @@ export {
   consumeLaunchBursts,
   consumeRebound,
   consumeSplats,
+  type GroundRingKind,
   getAim,
   getAirSteer,
   type LaunchBurstEvent,

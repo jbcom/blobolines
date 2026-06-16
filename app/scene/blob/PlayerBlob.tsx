@@ -153,7 +153,11 @@ export function PlayerBlob() {
       // Kick a downward goo burst off the pad as the blob pops.
       launchBurst([p.x, p.y - BLOB.radius, p.z], req.charge);
       // Expanding launch RING at the pad — the in-world "pop" that sells the slingshot release.
-      reportLaunchBurst({ position: [p.x, p.y - BLOB.radius, p.z], charge: req.charge });
+      reportLaunchBurst({
+        position: [p.x, p.y - BLOB.radius, p.z],
+        charge: req.charge,
+        kind: "launch",
+      });
       // Blue flash on a big charged launch (the bigger the charge, the brighter the pop).
       if (req.charge > 0.6) flash("blue", req.charge);
     } else if (airborne) {
@@ -200,6 +204,15 @@ export function PlayerBlob() {
       if (p.y > safeY.current) safeY.current = p.y;
       // Fling a gooey splash from the contact point (just under the blob).
       splash([p.x, p.y - BLOB.radius, p.z], strength);
+      // Landing impact RING on the pad, sized by impact — the touchdown counterpart to the
+      // launch pop. Gated so micro-settles don't ping.
+      if (strength > 0.2) {
+        reportLaunchBurst({
+          position: [p.x, p.y - BLOB.radius, p.z],
+          charge: strength,
+          kind: "land",
+        });
+      }
       // On a meaningful impact, also fling REAL physics goo chunks that bounce/roll/settle
       // on the pad (the kinematic splash above is the metaball merge; this is the physical
       // mess). Gated so micro-bounces don't spawn bodies.
