@@ -2,6 +2,7 @@ import { useFrame } from "@react-three/fiber";
 import { CuboidCollider, RigidBody } from "@react-three/rapier";
 import { useMemo, useRef } from "react";
 import type { Group, Mesh } from "three";
+import { playBounce } from "@/audio";
 import { clamp } from "@/core/math";
 import type { TrampType } from "@/core/types";
 import {
@@ -85,6 +86,7 @@ export function Trampoline({ position, width, depth, type, onImpact }: Trampolin
           // slingshot drag adds an extra charged launch on top.
           const reboundSpeed = Math.max(speed, 8) * reboundMultiplier[type];
           reportRebound({ speed: reboundSpeed, type });
+          playBounce(type);
           onImpact?.(speed, relX, relZ);
         }}
       />

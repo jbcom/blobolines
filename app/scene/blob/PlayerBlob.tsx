@@ -1,6 +1,7 @@
 import { useFrame } from "@react-three/fiber";
 import { BallCollider, type RapierRigidBody, RigidBody } from "@react-three/rapier";
 import { useEffect, useRef } from "react";
+import { playLaunch, playSplat } from "@/audio";
 import { classifyExpression } from "@/sim/blob";
 import { launchVelocity } from "@/sim/launch";
 import { BLOB, DEATH_FALL_DISTANCE, MAX_IMPACT_SPEED, WORLD_BOUND_XZ } from "@/sim/physics";
@@ -77,6 +78,7 @@ export function PlayerBlob() {
       const lv = launchVelocity(req.dir, req.charge, "standard", useGameStore.getState().run.combo);
       body.wakeUp();
       body.setLinvel({ x: lv[0], y: lv[1], z: lv[2] }, true);
+      playLaunch(req.charge);
     } else if (airborne) {
       // Mid-air steering: nudge lateral velocity on the X/Z plane (PoC air control).
       const [sx, sz] = getAirSteer();
@@ -128,6 +130,7 @@ export function PlayerBlob() {
     // Death: fire exactly once (guard against firing every frame while still falling).
     if (!dead.current && fallDepth > DEATH_FALL_DISTANCE) {
       dead.current = true;
+      playSplat();
       commitBestHeight(maxY.current);
       setPhase("gameover");
     }

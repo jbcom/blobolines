@@ -1,5 +1,6 @@
 import { Play } from "lucide-react";
 import { motion } from "motion/react";
+import { initAudio } from "@/audio";
 import { useGameStore, useWorldStore } from "@/state";
 
 /**
@@ -13,6 +14,8 @@ export function TitleScreen() {
   const best = useGameStore((s) => s.progress.bestHeight);
 
   const play = () => {
+    // This click is the user gesture that unlocks the AudioContext.
+    void initAudio();
     resetRun();
     resetWorld();
     setPhase("playing");
