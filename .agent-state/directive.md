@@ -276,7 +276,7 @@ Camera follow + shake, in-game deformation, wet glistening shader + color gradie
 - [x] Altitude-milestone celebration: transient "100m/200m…" banner + number-pop + sound on each 100m crossing (Altimeter/Hud).
 - [x] ScreenFlash component on the unused --z-flash layer: gold on combo escalation, blue on big launch, red vignette near death (new app/views/hud/ScreenFlash.tsx).
 - [x] Escalate ComboBadge by tier: color/glow/size ramp gold→orange→goo.flame, "ON FIRE" state at 5×.
-- [ ] In-run personal-best flourish: pulse Best line gold + banner when height crosses best mid-run (Altimeter).
+- [x] In-run personal-best flourish: pulse Best line gold + banner when height crosses best mid-run (Altimeter).
 - [ ] Big-launch/max-charge flourish in LaunchInput: pulse bar + "MAX" label + edge glow near charge 1.0.
 - [ ] Near-miss danger feedback: escalating red screen-edge pulse + haptic while falling toward death (Hud).
 - [ ] PowerUpBadges countdown ring/bar per badge (use Progress primitive) instead of binary on/off.
