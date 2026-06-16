@@ -159,10 +159,16 @@ export const MetaballGooMaterial = shaderMaterial(
       float wrap = max(dot(n, L) * 0.5 + 0.5, 0.0);
       float subsurface = wrap * (0.35 + 0.5 * fres);
 
+      // Vertical color GRADIENT across the body (depth, not a flat fill): the goo is a bit
+      // deeper/saturated low and brighter/lighter toward the top, keyed on the hit point's
+      // height relative to the blob center. Reads as a glistening gradient, not a solid.
+      float vgrad = clamp((p.y - u_center.y) / 1.6 + 0.5, 0.0, 1.0);
+      vec3 bodyCol = mix(u_color * 0.72, mix(u_color, vec3(1.0), 0.22), vgrad);
+
       // Combo flame: as the streak heats up, the goo turns molten — its body color is
       // pushed toward the warm flame hue and the fresnel edge ignites with a pulsing glow.
       float flicker = 0.7 + 0.3 * sin(u_time * 14.0 + p.y * 6.0);
-      vec3 base = mix(u_color, u_flame, u_heat * 0.7);
+      vec3 base = mix(bodyCol, u_flame, u_heat * 0.7);
       vec3 rim = mix(u_rim, u_flame, u_heat);
 
       vec3 col = base * (0.45 + 0.4 * diff + 0.45 * subsurface)

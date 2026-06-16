@@ -226,7 +226,7 @@ add the PoC's ENERGY (shake, follow-light, bloom, speed FX, color), NOT neon-cyb
 - [x] BONUS trampolines: added ICE pad (cyan, very bouncy 1.55x but BREAKS the clean-combo — risk/reward) alongside super. Two distinct bonus mechanics now.
 - [x] Splat pieces REAL PHYSICS: SplatChunks — a pooled set of Rapier rigid bodies flung from the contact on a hard landing that bounce/roll/settle on pads, then recycle. Verified in harness (chunks scattered + rolled on the pad).
 - [ ] [feat/goo-depth] World STRATA / BIOMES geometry: real biome environment props/hazards per height band (backdrop colors done; geometry/strata next).
-- [ ] [feat/goo-depth] crystal/powerup color variety + blob color gradient across the body.
+- [x] Color richness: blob body now has a vertical color GRADIENT (deeper low, brighter top) in the goo shader; crystals cycle 5 gem hues (slime/blue/gold/violet/flame) via per-instance setColorAt (was all green).
 
 ### M10c — the blob IS goo, not a globe (user feedback 2026-06-16, batch 3) — HIGH PRIORITY
 The single biggest "it's not a blob" issue: right now it's a solid matte-colored GLOBE.
