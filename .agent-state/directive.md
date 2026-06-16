@@ -300,7 +300,7 @@ Camera follow + shake, in-game deformation, wet glistening shader + color gradie
 - [ ] Keyboard/gamepad grid nav for skins (roving tabindex or Tabs).
 ### Tier 5 — settings
 - [x] In-app reduced-motion toggle driving MotionConfig. (settings.reducedMotion → MotionConfig reducedMotion "always"/"user", moved into App so it's reactive)
-- [ ] Reset-progress action (confirm) clearing best/crystals/unlocks.
+- [x] Reset-progress action (confirm) clearing best/crystals/unlocks. (store.resetProgress + two-step confirm button in Settings)
 - [x] Separate SFX volume from music volume. (settings.sfxVolume + setSfxVolume on the Howler SFX channel; persisted + applied at boot)
 - [ ] Gate/hide haptics control on non-touch; add intensity/test.
 - [ ] Slingshot sensitivity drag-to-test preview area.

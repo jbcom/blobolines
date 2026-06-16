@@ -1,10 +1,12 @@
 import { Dialog, Slider, Switch } from "@app/components/ui";
+import { useState } from "react";
 import { setMasterVolume, setMusicEnabled, setSfxVolume } from "@/audio";
 import { useGameStore } from "@/state";
 
 /**
- * Settings — master volume, music toggle, slingshot sensitivity, haptics. Writes to the
- * persisted game store (Capacitor Preferences) and pushes audio changes to the engine.
+ * Settings — volumes, music/haptics/reduce-motion toggles, slingshot sensitivity, and a
+ * (confirmed) reset-progress action. Writes to the persisted game store (Capacitor
+ * Preferences) and pushes audio changes to the engine.
  */
 export function SettingsModal({
   open,
@@ -15,6 +17,9 @@ export function SettingsModal({
 }) {
   const settings = useGameStore((s) => s.settings);
   const update = useGameStore((s) => s.updateSettings);
+  const resetProgress = useGameStore((s) => s.resetProgress);
+  // Two-step destructive confirm: first tap arms, second tap wipes (avoids a nested dialog).
+  const [confirmReset, setConfirmReset] = useState(false);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange} ariaLabel="Settings" testId="settings">
@@ -80,11 +85,36 @@ export function SettingsModal({
           checked={settings.reducedMotion}
           onChange={(on) => update({ reducedMotion: on })}
         />
+
+        {/* Reset progress — destructive, so a two-step confirm: first tap arms ("Tap again
+            to confirm"), second tap wipes best height / crystals / unlocks / skin. */}
+        <div className="flex items-center justify-between gap-3 border-border/40 border-t pt-4">
+          <span className="font-semibold text-fg-subtle">Reset progress</span>
+          <button
+            type="button"
+            onClick={() => {
+              if (confirmReset) {
+                resetProgress();
+                setConfirmReset(false);
+              } else {
+                setConfirmReset(true);
+              }
+            }}
+            className={`rounded-lg px-3 py-1.5 font-display text-xs font-bold uppercase tracking-wide ${
+              confirmReset ? "bg-danger text-bg" : "border border-danger/60 text-danger"
+            }`}
+          >
+            {confirmReset ? "Tap to confirm" : "Reset"}
+          </button>
+        </div>
       </div>
 
       <button
         type="button"
-        onClick={() => onOpenChange(false)}
+        onClick={() => {
+          setConfirmReset(false);
+          onOpenChange(false);
+        }}
         className="mt-6 w-full rounded-xl bg-accent py-2.5 font-display font-bold uppercase tracking-wider text-bg"
       >
         Done

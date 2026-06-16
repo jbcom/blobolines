@@ -41,6 +41,8 @@ export interface GameState {
   markTutorialSeen: () => void;
   setSkin: (skin: BlobSkin) => void;
   unlockSkin: (skin: BlobSkin) => void;
+  /** Wipe all progress (best height, crystals, unlocks, skin) back to defaults. */
+  resetProgress: () => void;
 }
 
 export const DEFAULT_SETTINGS: GameSettings = {
@@ -97,6 +99,8 @@ export const useGameStore = create<GameState>((set) => ({
         progress: { ...s.progress, bestHeight: Math.max(s.progress.bestHeight, h) },
       };
     }),
+
+  resetProgress: () => set({ progress: { ...DEFAULT_PROGRESS } }),
 
   setSkin: (skin) => set((s) => ({ progress: { ...s.progress, skin } })),
 

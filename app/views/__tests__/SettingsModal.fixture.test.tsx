@@ -30,3 +30,12 @@ test("SettingsModal controls have accessible names", async () => {
     .toBeInTheDocument();
   await expect.element(screen.getByRole("switch", { name: "Reduce motion" })).toBeInTheDocument();
 });
+
+test("Reset progress requires a two-step confirm", async () => {
+  const screen = await render(<SettingsModal open onOpenChange={() => {}} />);
+  const btn = screen.getByRole("button", { name: "Reset" });
+  await expect.element(btn).toBeInTheDocument();
+  await btn.click();
+  // After the first tap it arms — the label flips to a confirm prompt.
+  await expect.element(screen.getByRole("button", { name: /tap to confirm/i })).toBeInTheDocument();
+});
