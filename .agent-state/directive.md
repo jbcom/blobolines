@@ -447,7 +447,13 @@ permeability (permeable one-way pads rejected by owner).
       weighting/monotonicity/super-linear-combo unit, store commit (score + separate records),
       GameOver score-record-without-height-record browser fixture.
 - [ ] Crystal depth: tiers/bonus/multiplier, not flat +1; consumable/upgrade sinks beyond cosmetic skins.
-- [ ] Altitude-weighted pad type distribution (super/booster rarer low, more bonus variety high) — currently uniform at all heights.
+- [x] Altitude-weighted pad type distribution: src/world/padType.ts blends per-type weights
+      across altitude bands (safe standard-heavy start → full toolkit mid → richer bonus/skill
+      mix high; standard's share thins as it gets harder, wobbler/super weighted in only up
+      top). Replaces the flat TYPE_BAG rng.pick. Pure + deterministic; never rolls canted (the
+      generator promotes those for reachability). The climb-proof sweep still passes against the
+      new mix. Tests: determinism, no-canted, low=mostly-standard, super/wobbler altitude gating,
+      standard-share-thins-with-altitude.
 - [ ] Make the `moving` pad meaningful (rebound 1.05 is nearly a dead type) — give it a real role/mechanic.
 - [ ] Hazards: add at least 2 (e.g. crumbling gap, spike pad, wind gust, drifting obstacle) gated by biome/height.
 - [ ] More powerups beyond magnet/thruster: shield/second-life, slow-mo, score-doubler, multi-bounce; allow stacking or distinct refresh.

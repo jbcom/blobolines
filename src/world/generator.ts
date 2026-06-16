@@ -1,5 +1,6 @@
 import type { Rng } from "@/core/math";
 import type { PowerUpType, TrampolineSpec, TrampType, Vec3 } from "@/core/types";
+import { pickPadType } from "./padType";
 import { reaches } from "./reachable";
 
 export interface PowerUpSpec {
@@ -24,19 +25,6 @@ export interface GeneratedChunk {
    *  ACROSS chunk boundaries (otherwise the first pad of each chunk could be unreachable). */
   lastPad: TrampolineSpec | null;
 }
-
-// `super` is the rare bonus mega-launch pad — one slot so it's a treat, not the norm.
-const TYPE_BAG: TrampType[] = [
-  "standard",
-  "standard",
-  "standard",
-  "booster",
-  "moving",
-  "fragile",
-  "super",
-  "ice",
-  "wobbler",
-];
 
 /** Below this altitude the start stays forgiving: pads are pulled into a flat-bounce reach
  *  rather than canted, so the first launches are gentle and don't demand the canted mechanic. */
@@ -141,7 +129,9 @@ export function generateUpTo(
       width *= 0.6;
     }
 
-    let type: TrampType = y < FORGIVING_Y ? "standard" : rng.pick(TYPE_BAG);
+    // Forgiving start is always standard; above it the type mix is altitude-weighted (safe
+    // low, full toolkit mid, richer bonus/skill types high) — pickPadType owns that curve.
+    let type: TrampType = y < FORGIVING_Y ? "standard" : pickPadType(rng, y);
 
     // GOLDEN-PATH REACHABILITY: GUARANTEE the previous pad can launch the blob to this one.
     // `reaches()` is the shipped-tuning predicate (launch speed, gravity, canted tilt, steer
