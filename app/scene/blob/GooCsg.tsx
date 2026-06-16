@@ -66,20 +66,24 @@ export function GooCsg({ skin, blobRadius, getDroplets }: GooCsgProps) {
     const blobBrush = new Brush(new SphereGeometry(blobRadius, blobSegments, blobSegments));
     // Droplet brushes are low-poly icospheres (cheap, round enough once unioned + wet-lit).
     // IcosahedronGeometry is non-indexed; three-bvh-csg's BVH needs an index, so weld it.
-    const dropletGeo = mergeVertices(new IcosahedronGeometry(1, dropletDetail));
-    const dropletBrushes = Array.from({ length: maxMerges }, () => new Brush(dropletGeo.clone()));
+    // mergeVertices returns a NEW geometry — dispose the temporary unindexed source so it
+    // doesn't leak. All droplet brushes share the one welded geometry.
+    const tmpIco = new IcosahedronGeometry(1, dropletDetail);
+    const dropletGeo = mergeVertices(tmpIco);
+    tmpIco.dispose();
+    const dropletBrushes = Array.from({ length: maxMerges }, () => new Brush(dropletGeo));
     const ping = new Brush();
     const pong = new Brush();
-    return { evaluator, blobBrush, dropletBrushes, ping, pong };
+    return { evaluator, blobBrush, dropletGeo, dropletBrushes, ping, pong };
   }, [blobRadius]);
 
   // Release GL programs + CSG geometry on unmount (respawn/skin-swap/HMR remounts this).
   useEffect(() => {
-    const { blobBrush, dropletBrushes, ping, pong } = csg;
+    const { blobBrush, dropletGeo, ping, pong } = csg;
     return () => {
       material.dispose();
       blobBrush.geometry.dispose();
-      for (const b of dropletBrushes) b.geometry.dispose();
+      dropletGeo.dispose(); // shared by every droplet brush
       ping.geometry?.dispose();
       pong.geometry?.dispose();
     };
@@ -132,6 +136,11 @@ export function GooCsg({ skin, blobRadius, getDroplets }: GooCsgProps) {
       // root cause; without this the whole CSG goo path errors out.)
       if (acc !== blobBrush) (acc as Brush & { _hash: string | null })._hash = null;
       const target = useping ? ping : pong;
+      // evaluate() overwrites target.geometry with a freshly-generated BufferGeometry and
+      // does NOT free the old one — a per-frame GPU leak. Dispose the outgoing geometry
+      // first, unless it's the one the mesh is currently rendering (last frame's result).
+      const old = target.geometry;
+      if (old && old !== result.geometry) old.dispose();
       acc = evaluator.evaluate(acc, brush, ADDITION, target);
       useping = !useping;
     }
