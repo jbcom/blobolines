@@ -1,6 +1,6 @@
-import * as THREE from "three";
 import { useMemo } from "react";
-import { palette, hex } from "@/styles/tokens";
+import * as THREE from "three";
+import { hex, palette } from "@/styles/tokens";
 
 /**
  * Painterly vertical gradient sky dome (cover-art atmosphere): warm cream high up

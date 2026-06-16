@@ -29,6 +29,15 @@ export const palette = {
     rim: "#bfe3ff",
     wet: "#ffffff",
   },
+  /** Procedural-eye colors (sclera/bezel/pupil/glint/tear) — functional, kept here so
+   *  the brand gate has one source of truth. */
+  eye: {
+    sclera: "#f8fbff",
+    bezel: "#14110f",
+    pupil: "#0a0a0c",
+    glint: "#ffffff",
+    tear: "#bfe3ff",
+  },
 } as const;
 
 /** Hex string → 0xRRGGBB int for three.js Color/material constructors. */

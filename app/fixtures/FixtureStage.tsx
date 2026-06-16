@@ -1,6 +1,6 @@
+import { Lighting } from "@app/scene/world";
 import { Canvas } from "@react-three/fiber";
 import type { ReactNode } from "react";
-import { Lighting } from "@app/scene/world";
 
 interface FixtureStageProps {
   children: ReactNode;

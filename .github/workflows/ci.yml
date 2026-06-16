@@ -75,7 +75,8 @@ jobs:
 
       - name: Build web (native base) + sync Capacitor
         run: |
-          pnpm exec cap add android || true
+          # Only suppress the known "platform already added" case; surface real errors.
+          pnpm exec cap add android || [ -d android ]
           pnpm cap:sync
 
       - name: Assemble debug APK

@@ -1,0 +1,34 @@
+import type { EyeExpression, Vec3 } from "@/core/types";
+
+/**
+ * Live diagnostics snapshot of the blob + environment. PlayerBlob writes it each frame;
+ * the dev harness reads it to dump before/after JSON around a fired event, so we can see
+ * exactly how the event changed the blob and the world. Dev tooling only.
+ */
+export interface BlobDiagnostics {
+  position: Vec3;
+  velocity: Vec3;
+  speed: number;
+  airborne: boolean;
+  expression: EyeExpression;
+  squash: number;
+  maxHeight: number;
+}
+
+let snapshot: BlobDiagnostics = {
+  position: [0, 0, 0],
+  velocity: [0, 0, 0],
+  speed: 0,
+  airborne: true,
+  expression: "idle",
+  squash: 1,
+  maxHeight: 0,
+};
+
+export function setBlobDiagnostics(d: BlobDiagnostics): void {
+  snapshot = d;
+}
+
+export function getBlobDiagnostics(): BlobDiagnostics {
+  return snapshot;
+}

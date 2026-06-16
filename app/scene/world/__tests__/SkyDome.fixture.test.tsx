@@ -1,6 +1,6 @@
-import { render } from "vitest-browser-react";
-import { expect, test, vi } from "vitest";
 import { FixtureStage } from "@app/fixtures";
+import { expect, test, vi } from "vitest";
+import { render } from "vitest-browser-react";
 import { SkyDome } from "../SkyDome";
 
 // Visual fixture: the painterly sky dome must actually paint colored pixels in a real
@@ -19,7 +19,7 @@ test("SkyDome renders and paints the gradient", async () => {
 
   await vi.waitFor(
     () => {
-      const canvas = document.querySelector("canvas");
+      const canvas = document.querySelector('[data-testid="sky-fixture"]')?.querySelector("canvas");
       if (!canvas) throw new Error("canvas not mounted");
       const dataUrl = canvas.toDataURL("image/png");
       // A non-trivial painted frame is well over a few KB of base64.

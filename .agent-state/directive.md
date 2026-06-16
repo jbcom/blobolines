@@ -6,8 +6,27 @@
 Build **Blobolines** — a gooey-blob vertical-launch physics arcade game — from the
 Gemini PoC (`blobolines-poc.html`, "Neon Launch 3D") as the **minimum baseline**.
 Elevate it into a complete, polished, shippable game. Public repo `jbcom/blobolines`,
-MIT, GitHub Pages (web) + Android (Capacitor). One initial commit on a feature branch,
-then continuous forward commits. NO stopping.
+MIT, GitHub Pages (web) + Android (Capacitor). NO stopping.
+
+## TWO-PHASE DELIVERY (owner decision)
+Two distinct spheres of work, two branches — cleaner focus than mixing them:
+1. **PHASE 1 — PLAYABLE (branch `feat/foundation`, PR #2).** Make the game actually
+   PLAYABLE end-to-end: launch the blob off trampolines, climb, fall/die, score. PROVE
+   it in a real HEADED browser via the vitest browser plugin + screenshot capture (read
+   the screenshot, confirm gameplay). Then push, address ALL PR feedback (CodeRabbit/
+   bots/CI), and SQUASH-MERGE once everything passes green.
+2. **PHASE 2 — POLISH (new branch off merged main).** Only after Phase 1 merges: goo
+   splash VFX, splat decals, trails, jiggle, audio depth, post-processing, juice,
+   content/balance, mobile perf. The deep polish lives here.
+Do PHASE 1 first to completion+merge, THEN cut the polish branch. Don't pull polish work
+forward into Phase 1 — minimum playable + proven + merged is the Phase-1 bar.
+
+## Core goal (the spine — preserve from the PoC)
+The central tension is unchanged: launch your blob AS HIGH AS POSSIBLE up an endless
+vertical tower of trampolines. Altimeter, best-height record, combo on clean bounces,
+and death when you fall below the level — this height-chase is the game's spine and must
+never be lost as we elevate. Everything else (goo, eyes, juice) serves making that climb
+feel amazing.
 
 ## North star (the fun)
 World-of-Goo / ink-blob FLUIDITY. The blob is a deformable gooey body, NOT a rigid
@@ -15,6 +34,34 @@ sphere: squash-and-stretch on impact, big colorful gooey splash droplets + splat
 on every trampoline collision, jiggle/surface-tension wobble, wet goo trails. Without
 this messy fluid juice the game misses what makes it fun. Latest-everything; add ANY
 library that elevates the game (physics/fluid/VFX/audio) — size is not a concern.
+
+## Goo + physics architecture (DECIDED — see memory blobolines-goo-architecture)
+STAY 3D (PoC + cover art are 3D). Rapier (@react-three/rapier) drives the real 3D blob
++ droplet bodies. **three-bvh-csg** is the 3D-native goo skin: reuse one Evaluator,
+ADD(union) blob+nearby droplets into a merged goo Brush in-place (batched, no allocs),
+SUB splats from pads — no Paper.js→extrude proxy, no fluid-sim (obsolete). Fallback:
+drei <MarchingCubes> metaballs. Goo shader + procedural eyes render the merged Brush.
+
+## Phase-1 PLAYABLE: PROVEN (commit e21f9c9)
+Game is playable end-to-end: blob rests on pad → drag-slingshot launch → climbs (altimeter
+rises) → fall → game over → replay. Proven by e2e/playable.spec.ts against BOTH dev and the
+production preview build. Rapier <Physics>-suspension blocker SOLVED (optimizeDeps.exclude
+rapier+compat; prod manualChunks keeps rapier in `three` chunk; rapier3d-compat inlines WASM
+so no .wasm asset needed). 122 unit + 3 browser + 1 e2e green.
+PR #2 feedback: 2 rounds of CodeRabbit/Amazon-Q/Gemini addressed (24 threads resolved):
+math-facade guards, Android scaffold (applicationId test + FileProvider scope), trampoline
+tilt, button type, dev-harness ?dev key, capture stream errors, persistence logging, brand-
+hex gate + full color tokenization. Pillar docs added (GAME-DESIGN/DESIGN/TESTING/DEPLOYMENT).
+Trampoline auto-bounce + combo + 3D air-steer wired. Awaiting final CI → SQUASH-MERGE.
+Then Phase 2 (polish) on a fresh branch off merged main: goo CSG skin (three-bvh-csg),
+splat VFX, jiggle, audio (Tone.js from syntheteria), post-processing, juice, content/balance,
+mobile perf, FOV-warp/screenshake, loading screen + favicon, more docs (AGENTS.md + HADS).
+
+## (resolved) Dev harness
+Dev harness (app/views/DevHarness; ?dev or DEV
+button) fires blob events + auto-writes screenshot + before/after diagnostics JSON to
+gitignored artifacts/ via Vite middleware (scripts/capturePlugin.ts) — proven working;
+USE IT to verify gameplay headlessly instead of timing manual screenshots.
 
 ## What CONTINUOUS means
 1. Never stop for status reports the user didn't ask for.
@@ -24,12 +71,15 @@ library that elevates the game (physics/fluid/VFX/audio) — size is not a conce
 5. Never stop because a task feels big — pick the next atomic commit.
 6. Only stop on: explicit user halt, red CI blocking, or genuine STOP_FAIL.
 
-## Operating loop
+## Operating loop — CONTIGUOUS, no pauses, work through the night
 while queue has [ ] items: implement → verify (typecheck+lint+test, run the app & READ a
 screenshot for visual/UI work) → commit (Conventional Commits) → dispatch pipelined local
 review (comprehensive-review:full-review + security-sast + code-simplifier, scoped to the
-diff, background) → fold findings forward → mark [x] → next. Milestone boundaries get a
-broader review pass. Reference `~/src/arcade-cabinet/{kings-road,marmalade-drops,ebb-and-bloom,will-it-blow,bioluminescent-sea}` for patterns.
+diff, background) → fold findings forward → mark [x] → IMMEDIATELY next item. Never stop
+between packages, never schedule a politeness wakeup, never wait idly. While CI/review run
+in the background, start the next independent package. If one item is blocked, pick another
+[ ] item — there is always parallel work. Milestone boundaries get a broader review pass.
+Reference `~/src/arcade-cabinet/{kings-road,marmalade-drops,ebb-and-bloom,will-it-blow,bioluminescent-sea}` for patterns.
 
 ## Not an MVP — the long haul
 The goal is a COMPLETE, polished, fun game, not a minimal-visible demo. "It renders"
@@ -69,23 +119,22 @@ tokens own palette.
 - [x] capacitor.config.ts (appId com.jbcom.blobolines)
 - [x] App shell entry: app/main.tsx, App.tsx (koota WorldProvider + ErrorBoundary)
 - [x] docs/ARCHITECTURE.md package map
-- [ ] shadcn/ui base components in app/components/ui (button, dialog, slider, switch, tabs, tooltip, progress) + barrel; cn() in src/lib (done)
-- [ ] Vitest dual config done — add src/__tests__ helpers + app/fixtures/FixtureStage barrel + first passing example tests (unit + fixture)
+- [x] shadcn/ui base components in app/components/ui (button, dialog, slider, switch, tabs, tooltip, progress) + barrel; cn() in src/lib
 - [x] Vitest dual config + src/__tests__/setup.ts + app/fixtures/FixtureStage + passing unit (tokens) + fixture (SkyDome WebGL) tests
-- [ ] Capacitor android platform added; haptics/screen-orientation/keep-awake wired via src/platform barrel (web fallbacks)
+- [x] Capacitor android platform added (`cap add android`); wrappers via src/platform barrel; cap sync confirmed
 - [x] release-please config + manifest; .github/dependabot.yml
 - [x] CI workflow (lint → tsc → unit → build → playwright install → browser fixtures + screenshot artifacts → Android assembleDebug APK artifact)
 - [x] release.yml + cd.yml deploying dist/ to GitHub Pages
-- [ ] enable Pages via gh; README + CHANGELOG (README done)
+- [x] enable Pages via gh (build_type=workflow, base /blobolines/); README done; CHANGELOG pending
 
 ## M0.5 — Real foundational subpackages (each = barreled package + tests, one commit)
-- [ ] src/core/math: createRng (cyrb128→mulberry32), clock facade, spring/lerp/vec helpers + unit tests + barrel
-- [ ] src/core/types: shared domain types/enums/ids + barrel
-- [ ] src/ecs: koota world (done) + traits + queries + react hooks + barrel
-- [ ] src/engine: fixed-timestep accumulator loop + world tick orchestration + unit tests + barrel
-- [ ] src/state: game store (menu/playing/gameover) + settings + persistence bridge + tests + barrel
-- [ ] src/input: @use-gesture + keyboard → intents + tests + barrel
-- [ ] src/platform: Capacitor wrappers (haptics/orientation/keep-awake/preferences) + web fallbacks + barrel
+- [x] src/core/math: createRng (cyrb128→mulberry32), clock facade, spring/lerp helpers + unit tests + barrel
+- [x] src/core/types: shared domain types/enums/ids + barrel
+- [x] src/ecs: koota world + traits (Transform/Velocity/Blob/Trampoline/Crystal/PowerUp/Particle/Dead) + tests + barrel
+- [x] src/engine: fixed-timestep accumulator loop (FIXED_DT 1/60, step-capped, alpha) + unit tests + barrel
+- [x] src/state: zustand game store (menu/playing/gameover) + settings + progress + Capacitor-Preferences persistence + barrel
+- [x] src/input: pure slingshot/air-steer/keyboard intent math + tests + barrel (React useGesture binding lands in M2 app/hooks)
+- [x] src/platform: Capacitor wrappers (haptics/orientation/keep-awake/preferences) + barrel
 
 ## M1 — Design system & identity
 - [ ] Design tokens (color/space/radius/shadow/motion/type) as CSS vars + TS token module + Tailwind theme; juicy gooey palette (not neon-cyberpunk)
@@ -94,19 +143,19 @@ tokens own palette.
 - [ ] Loading screen, app icon / favicon, splash (blob identity)
 
 ## M2 — Core engine & deterministic sim
-- [ ] RNG facade src/core/math/rng.ts (cyrb128 → mulberry32) + clock facade + unit tests
-- [ ] Fixed-timestep engine loop (accumulator) driven from useFrame; koota world + traits
-- [ ] Physics: @react-three/rapier world, gravity, blob rigidbody, kinematic trampolines
-- [ ] Camera rig: vertical follow, FOV warp on launch, screen shake, look-ahead
-- [ ] Input: @use-gesture/react unified pointer/touch + keyboard; slingshot vs air-steer modes
+- [x] RNG facade + clock facade + unit tests (M0.5)
+- [x] Fixed-timestep engine loop (accumulator) + unit tests (M0.5)
+- [x] Physics: @react-three/rapier world, gravity, blob rigidbody, fixed trampoline colliders + sensors (WASM-suspension fix proven)
+- [x] Camera rig: menu orbit + in-run vertical follow (damped). FOV warp on launch + screen shake — polish, Phase 2.
+- [x] Input: @use-gesture slingshot drag → launch impulse (LaunchInput). Air-steer + keyboard binding (pure math done) wired in Phase 2.
 
 ## M3 — Gooey blob (the star)
-- [ ] Blob rendering: choose & implement (marching-cubes metaball vs distort-material sphere vs screen-space SDF) per goo prior-art findings; mobile-perf budget
-- [ ] Squash-and-stretch deformation driven by velocity/impact; spring-back
-- [ ] Jiggle / surface-tension wobble secondary motion
-- [ ] Gooey surface shader: fresnel rim, translucency/subsurface approx, wet specular
-- [ ] Blob skins/cores system (replaces PoC skins) using design tokens
-- [ ] **Big expressive blinking eyes** (per hero-cover.png) — PROCEDURAL geometry, NOT sprites: big white distorted/stretched circles (sclera) with a bezel/rim ring + big black dot pupils, stretched onto the curved blob "face" and pushed into 3D. Responsive emotional states via scaling the eye meshes: idle blink (scaleY→0), squint on hard impact/squash, open WIDE on big launch/fast fall, tear up (droplet geo) when falling far / near death. Driven by velocity+impact state alongside squash-stretch. Core character juice.
+- [x] Blob rendering: goo-shaded deformable 3D sphere (chosen over metaball field for the single player body; metaball reserved for splash VFX) + WebGL fixture test
+- [x] Squash-and-stretch deformation driven by velocity/impact; springy approach to target scale
+- [ ] Jiggle / surface-tension wobble secondary motion (vertex-level)
+- [x] Gooey surface shader: fresnel rim, light-wrap, wet specular + shimmer (src/render/materials/gooMaterial)
+- [ ] Blob skins/cores system: wire all 4 skins (blue/slime/ghost/ink) + customizer UI to store
+- [x] **Big expressive blinking eyes** (per hero-cover.png) — PROCEDURAL geometry, NOT sprites: big white distorted/stretched circles (sclera) with a bezel/rim ring + big black dot pupils, stretched onto the curved blob "face" and pushed into 3D. Responsive emotional states via scaling the eye meshes: idle blink (scaleY→0), squint on hard impact/squash, open WIDE on big launch/fast fall, tear up (droplet geo) when falling far / near death. Driven by velocity+impact state alongside squash-stretch. Core character juice.
 
 ## M4 — Trampolines & world
 - [ ] Trampoline entity: spring depress (-k·x - c·v) + tilt on hit-angle, organic squishy mesh, goo smear

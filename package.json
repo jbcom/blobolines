@@ -42,7 +42,6 @@
     "@capacitor/haptics": "^8.0.2",
     "@capacitor/preferences": "^8.0.1",
     "@capacitor/screen-orientation": "^8.0.1",
-    "@dimforge/rapier3d-compat": "^0.19.3",
     "@fontsource-variable/fredoka": "^5.2.10",
     "@fontsource-variable/nunito": "^5.2.7",
     "@radix-ui/react-dialog": "^1.1.17",
@@ -70,8 +69,11 @@
     "react-dom": "^19.2.7",
     "tailwind-merge": "^3.6.0",
     "three": "^0.184.0",
+    "three-bvh-csg": "^0.0.18",
+    "three-mesh-bvh": "^0.9.10",
     "tone": "^15.1.22",
-    "zod": "^4.3.0"
+    "zod": "^4.3.0",
+    "zustand": "^5.0.14"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.5.0",

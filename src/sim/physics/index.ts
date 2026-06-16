@@ -1,0 +1,8 @@
+export {
+  AUTO_LAUNCH_DELAY,
+  BLOB,
+  DEATH_FALL_DISTANCE,
+  GRAVITY,
+  MAX_IMPACT_SPEED,
+  WORLD_BOUND_XZ,
+} from "./config";

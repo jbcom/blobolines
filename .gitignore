@@ -14,6 +14,9 @@ dist-ssr/
 # Test output
 coverage/
 __screenshots__/
+
+# Dev harness captured screenshots (re-derivable)
+artifacts/
 test-results/
 playwright-report/
 playwright/.cache/

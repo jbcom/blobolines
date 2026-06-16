@@ -13,7 +13,7 @@ export function Game() {
       <Canvas
         className="absolute inset-0"
         dpr={[1, 2]}
-        gl={{ antialias: true, powerPreference: "high-performance" }}
+        gl={{ antialias: true, powerPreference: "high-performance", preserveDrawingBuffer: true }}
         camera={{ position: [0, 6, 12], fov: 60, near: 0.1, far: 200 }}
       >
         <GameScene />
