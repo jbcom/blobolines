@@ -2,7 +2,7 @@ import { Progress } from "@app/components/ui/progress";
 import { Check, RotateCcw, Share2 } from "lucide-react";
 import { motion } from "motion/react";
 import { useEffect, useRef, useState } from "react";
-import { playChime, startMusic, stopMusic } from "@/audio";
+import { playRecord, startMusic, stopMusic } from "@/audio";
 import type { BlobSkin } from "@/core/types";
 import { comboMultiplier } from "@/sim/launch";
 import { SKIN_COST, useGameStore, useWorldStore } from "@/state";
@@ -111,7 +111,7 @@ export function GameOver() {
   useEffect(() => {
     if (isRecord && !chimedRef.current) {
       chimedRef.current = true;
-      playChime();
+      playRecord();
     }
   }, [isRecord]);
 

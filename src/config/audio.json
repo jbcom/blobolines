@@ -7,7 +7,9 @@
     "launch": "assets/audio/sfx/launch.mp3",
     "splat": "assets/audio/sfx/splat.mp3",
     "crystal": "assets/audio/sfx/crystal.mp3",
-    "powerup": "assets/audio/sfx/powerup.mp3"
+    "powerup": "assets/audio/sfx/powerup.mp3",
+    "milestone": "assets/audio/sfx/milestone.mp3",
+    "record": "assets/audio/sfx/record.mp3"
   },
   "music": {
     "play": "assets/audio/music/theme.mp3"

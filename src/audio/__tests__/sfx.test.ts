@@ -4,7 +4,9 @@ import {
   playBounce,
   playChime,
   playLaunch,
+  playMilestone,
   playPowerup,
+  playRecord,
   playSplat,
   setMusicAltitude,
   setMusicEnabled,
@@ -31,6 +33,9 @@ describe("audio before init", () => {
     expect(() => playChime()).not.toThrow();
     expect(() => playPowerup()).not.toThrow();
     expect(() => playSplat()).not.toThrow();
+    // Arcade-identity celebration stingers.
+    expect(() => playMilestone()).not.toThrow();
+    expect(() => playRecord()).not.toThrow();
   });
 
   it("rate-limits / repeats without error", () => {

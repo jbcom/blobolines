@@ -109,6 +109,14 @@ export function playChime(): void {
 export function playPowerup(): void {
   playSfx("powerup");
 }
+/** Bright arcade stinger when the blob crosses a 100m milestone. */
+export function playMilestone(): void {
+  playSfx("milestone");
+}
+/** Gold "new record" fanfare on a personal best. */
+export function playRecord(): void {
+  playSfx("record");
+}
 
 // ── Music + ambient ────────────────────────────────────────────────────────────
 export function startMusic(): void {
