@@ -71,10 +71,12 @@ tokens own palette.
 - [x] docs/ARCHITECTURE.md package map
 - [ ] shadcn/ui base components in app/components/ui (button, dialog, slider, switch, tabs, tooltip, progress) + barrel; cn() in src/lib (done)
 - [ ] Vitest dual config done — add src/__tests__ helpers + app/fixtures/FixtureStage barrel + first passing example tests (unit + fixture)
+- [x] Vitest dual config + src/__tests__/setup.ts + app/fixtures/FixtureStage + passing unit (tokens) + fixture (SkyDome WebGL) tests
 - [ ] Capacitor android platform added; haptics/screen-orientation/keep-awake wired via src/platform barrel (web fallbacks)
-- [ ] release-please config + manifest; .github/dependabot.yml
-- [ ] CI workflow (lint → tsc → unit → build → playwright install → browser fixtures + screenshot artifacts → Android assembleDebug APK artifact)
-- [ ] release.yml + cd.yml deploying dist/ to GitHub Pages; enable Pages via gh
+- [x] release-please config + manifest; .github/dependabot.yml
+- [x] CI workflow (lint → tsc → unit → build → playwright install → browser fixtures + screenshot artifacts → Android assembleDebug APK artifact)
+- [x] release.yml + cd.yml deploying dist/ to GitHub Pages
+- [ ] enable Pages via gh; README + CHANGELOG (README done)
 
 ## M0.5 — Real foundational subpackages (each = barreled package + tests, one commit)
 - [ ] src/core/math: createRng (cyrb128→mulberry32), clock facade, spring/lerp/vec helpers + unit tests + barrel
