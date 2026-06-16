@@ -1,5 +1,5 @@
 import { useFrame } from "@react-three/fiber";
-import { CuboidCollider, RigidBody } from "@react-three/rapier";
+import { CuboidCollider, type RapierRigidBody, RigidBody } from "@react-three/rapier";
 import { useMemo, useRef } from "react";
 import type { Group, Mesh } from "three";
 import { playBounce } from "@/audio";
@@ -34,10 +34,16 @@ interface TrampolineProps {
 const THICKNESS = 1.2;
 
 export function Trampoline({ position, width, depth, type, onImpact }: TrampolineProps) {
+  const rbRef = useRef<RapierRigidBody>(null);
   const meshRef = useRef<Group>(null);
   const membraneRef = useRef<Mesh>(null);
   const spring = useRef<TrampState>(createTrampState());
   const color = trampColor[type];
+  // Per-pad deterministic phase/dir for moving pads (seeded by world position).
+  const movePhase = useRef((position[0] * 0.37 + position[2] * 0.91) % (Math.PI * 2));
+  // Fragile pads break shortly after the first impact.
+  const breaking = useRef(false);
+  const breakTimer = useRef(0);
 
   // Target spring values (mutated on impact, decays back to 0).
   const target = useRef({ depress: 0, tiltX: 0, tiltZ: 0 });
@@ -45,22 +51,42 @@ export function Trampoline({ position, width, depth, type, onImpact }: Trampolin
   useFrame((_, dt) => {
     const g = meshRef.current;
     if (!g) return;
-    spring.current = stepTramp(spring.current, target.current, Math.min(dt, 1 / 30));
+    const step = Math.min(dt, 1 / 30);
+    spring.current = stepTramp(spring.current, target.current, step);
     // The group is a child of the RigidBody, so it's in body-LOCAL space — the depress
     // is the only Y offset; adding position[1] (the body's world Y) would double it.
     g.position.y = spring.current.depress.value;
     g.rotation.x = spring.current.tiltX.value;
     g.rotation.z = spring.current.tiltZ.value;
-    // Decay impact target back to rest so it springs up.
     target.current.depress *= 0.86;
     target.current.tiltX *= 0.86;
     target.current.tiltZ *= 0.86;
+
+    // Moving pads glide side to side on a kinematic body (collider moves with them).
+    if (type === "moving" && rbRef.current) {
+      movePhase.current += step * 1.2;
+      const x = position[0] + Math.sin(movePhase.current) * 5.5;
+      rbRef.current.setNextKinematicTranslation({ x, y: position[1], z: position[2] });
+    }
+
+    // Fragile pads shrink + fade then vanish ~0.8s after impact.
+    if (breaking.current) {
+      breakTimer.current += step;
+      const k = Math.max(0, 1 - breakTimer.current / 0.8);
+      g.scale.setScalar(k);
+      g.visible = k > 0.02;
+    }
   });
 
   const emissive = useMemo(() => color, [color]);
 
   return (
-    <RigidBody type="fixed" position={[position[0], position[1], position[2]]} colliders={false}>
+    <RigidBody
+      ref={rbRef}
+      type={type === "moving" ? "kinematicPosition" : "fixed"}
+      position={[position[0], position[1], position[2]]}
+      colliders={false}
+    >
       {/* Solid collider for the pad body. */}
       <CuboidCollider args={[width / 2, THICKNESS / 2, depth / 2]} />
       {/* Sensor just above the surface to detect + measure landings. */}
@@ -87,6 +113,8 @@ export function Trampoline({ position, width, depth, type, onImpact }: Trampolin
           const reboundSpeed = Math.max(speed, 8) * reboundMultiplier[type];
           reportRebound({ speed: reboundSpeed, type });
           playBounce(type);
+          // Fragile pads start disintegrating after this bounce (gives one last launch).
+          if (type === "fragile") breaking.current = true;
           onImpact?.(speed, relX, relZ);
         }}
       />

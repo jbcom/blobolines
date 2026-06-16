@@ -3,7 +3,7 @@ import { useRef } from "react";
 import type { InstancedMesh } from "three";
 import { Color, Matrix4, Quaternion, Vector3 } from "three";
 import { playChime } from "@/audio";
-import { collectedIndices, magnetStep } from "@/sim/collect";
+import { PICKUP_RADIUS } from "@/sim/collect";
 import { getBlobDiagnostics, useGameStore, useWorldStore } from "@/state";
 import { hex, palette } from "@/styles/tokens";
 
@@ -31,27 +31,34 @@ export function CrystalField() {
     const mesh = meshRef.current;
     if (!mesh) return;
 
-    // Sync local positions array length with the store (tower extends as we climb).
-    if (positions.current.length !== crystals.length) {
-      positions.current = crystals.map((c) => [c[0], c[1], c[2]]);
+    // Append-only sync: add positions for newly generated crystals as the tower extends,
+    // WITHOUT rebuilding the array (rebuilding would discard any in-place moves).
+    const pos = positions.current;
+    for (let i = pos.length; i < crystals.length && i < MAX_CRYSTALS; i++) {
+      pos.push([crystals[i][0], crystals[i][1], crystals[i][2]]);
     }
 
-    const blob = getBlobDiagnostics().position;
-    const hasMagnet = false; // magnet power-up wiring lands with power-ups
+    const [bx, by, bz] = getBlobDiagnostics().position;
     const t = state.clock.elapsedTime;
-    const count = Math.min(crystals.length, MAX_CRYSTALS);
+    const count = Math.min(pos.length, MAX_CRYSTALS);
+    const r2 = PICKUP_RADIUS * PICKUP_RADIUS;
 
+    // Single pass: render visible instances + collect touched ones (no per-frame allocs).
     let visible = 0;
+    let gathered = 0;
     for (let i = 0; i < count; i++) {
       if (collected.current.has(i)) continue;
-      let pos = positions.current[i];
-      if (hasMagnet) {
-        pos = [...magnetStep(pos, [blob[0], blob[1], blob[2]], 1 / 60)] as [number, number, number];
-        positions.current[i] = pos;
+      const p = pos[i];
+      const dx = p[0] - bx;
+      const dy = p[1] - by;
+      const dz = p[2] - bz;
+      if (dx * dx + dy * dy + dz * dz <= r2) {
+        collected.current.add(i);
+        gathered++;
+        continue;
       }
-      // Bob + spin per instance.
       const bob = Math.sin(t * 2 + i) * 0.2;
-      tmpObj.set(pos[0], pos[1] + bob, pos[2]);
+      tmpObj.set(p[0], p[1] + bob, p[2]);
       tmpQuat.setFromAxisAngle(UP, t * 1.5 + i);
       tmpMat.compose(tmpObj, tmpQuat, tmpScale);
       mesh.setMatrixAt(visible, tmpMat);
@@ -60,19 +67,8 @@ export function CrystalField() {
     mesh.count = visible;
     mesh.instanceMatrix.needsUpdate = true;
 
-    // Collect crystals the blob touches.
-    const live: [number, number, number][] = [];
-    const liveIdx: number[] = [];
-    for (let i = 0; i < count; i++) {
-      if (!collected.current.has(i)) {
-        live.push(positions.current[i]);
-        liveIdx.push(i);
-      }
-    }
-    const hits = collectedIndices([blob[0], blob[1], blob[2]], live);
-    if (hits.length > 0) {
-      for (const h of hits) collected.current.add(liveIdx[h]);
-      addCrystals(hits.length);
+    if (gathered > 0) {
+      addCrystals(gathered);
       playChime();
     }
   });

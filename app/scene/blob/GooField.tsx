@@ -1,5 +1,5 @@
 import { useFrame, useThree } from "@react-three/fiber";
-import { useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import type { Color, Group, Mesh, ShaderMaterial, Vector3 } from "three";
 import type { BlobSkin } from "@/core/types";
 import { packMetaballField } from "@/render/goo";
@@ -29,6 +29,10 @@ export function GooField({ skin, blobRadius, getDroplets }: GooFieldProps) {
   const eyesRef = useRef<Group>(null);
   const camera = useThree((s) => s.camera);
   const material = useMemo(() => new MetaballGooMaterial() as unknown as ShaderMaterial, []);
+  // Hand-built material isn't JSX-declared, so R3F won't auto-dispose it — release the
+  // compiled GL program on unmount (gameover→retry remounts GooField) to avoid leaking
+  // programs until the mobile driver drops draw calls.
+  useEffect(() => () => material.dispose(), [material]);
 
   useFrame((state) => {
     const hull = hullRef.current;

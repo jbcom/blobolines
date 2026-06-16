@@ -10,19 +10,26 @@ let masterGain: Gain | null = null;
 let sfxGain: Gain | null = null;
 let musicGain: Gain | null = null;
 let initialized = false;
+let initPromise: Promise<void> | null = null;
 
 let masterVolume = 0.8;
 let musicEnabled = true;
 
-/** Initialize on first gesture. Lazy-imports Tone so no AudioContext before interaction. */
-export async function initAudio(): Promise<void> {
-  if (initialized) return;
-  Tone = await import("tone");
-  await Tone.start();
-  masterGain = new Tone.Gain(masterVolume).toDestination();
-  sfxGain = new Tone.Gain(0.9).connect(masterGain);
-  musicGain = new Tone.Gain(musicEnabled ? 0.5 : 0).connect(masterGain);
-  initialized = true;
+/** Initialize on first gesture. Lazy-imports Tone so no AudioContext before interaction.
+ *  Concurrency-safe: simultaneous calls (touchstart+click, StrictMode) share one init,
+ *  so the gain chain is built exactly once. */
+export function initAudio(): Promise<void> {
+  if (initialized) return Promise.resolve();
+  if (initPromise) return initPromise;
+  initPromise = (async () => {
+    Tone = await import("tone");
+    await Tone.start();
+    masterGain = new Tone.Gain(masterVolume).toDestination();
+    sfxGain = new Tone.Gain(0.9).connect(masterGain);
+    musicGain = new Tone.Gain(musicEnabled ? 0.5 : 0).connect(masterGain);
+    initialized = true;
+  })();
+  return initPromise;
 }
 
 export function isAudioInitialized(): boolean {

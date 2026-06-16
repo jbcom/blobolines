@@ -36,7 +36,8 @@ export function useDroplets(seed = 1): {
     const burst = spawnSplash(origin, strength, rng.current);
     const list = droplets.current;
     for (const d of burst) {
-      if (list.length >= MAX_DROPLETS) break;
+      // Evict the oldest when full so fresh splashes always show during a hard streak.
+      if (list.length >= MAX_DROPLETS) list.shift();
       list.push(d);
     }
   }, []);

@@ -65,13 +65,14 @@ export function playPowerup(now = performance.now()): void {
   const T = getTone();
   const out = getSfxOutput();
   if (!T || !out || !gate("powerup", now)) return;
-  const synth = new T.Synth({
+  // PolySynth so the arpeggio notes ring together instead of stealing one mono voice.
+  const synth = new T.PolySynth(T.Synth, {
     oscillator: { type: "square" },
     envelope: { attack: 0.003, decay: 0.12, sustain: 0, release: 0.08 },
   }).connect(out);
   const t = T.now();
   ["C5", "E5", "G5", "C6"].forEach((n, i) => synth.triggerAttackRelease(n, 0.1, t + i * 0.06));
-  setTimeout(() => synth.dispose(), 700);
+  setTimeout(() => synth.dispose(), 900);
 }
 
 /** Splat / game-over — noisy low thud. */
