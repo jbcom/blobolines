@@ -279,8 +279,8 @@ Camera follow + shake, in-game deformation, wet glistening shader + color gradie
 - [x] In-run personal-best flourish: pulse Best line gold + banner when height crosses best mid-run (Altimeter).
 - [x] Big-launch/max-charge flourish in LaunchInput: pulse bar + "MAX" label + edge glow near charge 1.0.
 - [x] Near-miss danger feedback: escalating red screen-edge pulse + haptic while falling toward death (Hud).
-- [ ] PowerUpBadges countdown ring/bar per badge (use Progress primitive) instead of binary on/off.
-- [ ] Replace PowerUpBadges 120ms polling with bridge subscription (exact timing, cheaper render).
+- [x] PowerUpBadges countdown ring/bar per badge (use Progress primitive) instead of binary on/off. (per-badge scaleX countdown bar)
+- [x] Replace PowerUpBadges 120ms polling with bridge subscription (exact timing, cheaper render). (single rAF loop reads powerupRemaining for exact timing + imperative bar writes; React state flips only on on/off edge)
 ### Tier 2 — game-over recap
 - [ ] GameOver run recap: max combo, crystals this run vs lifetime, delta-to-best (+Nm / Nm short); extend RunStats with maxCombo.
 - [ ] GameOver Share button (navigator.share + clipboard fallback).
