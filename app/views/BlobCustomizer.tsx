@@ -1,4 +1,5 @@
 import { Dialog } from "@app/components/ui";
+import { usePunchOnChange } from "@app/hooks";
 import { Check, Gem, Lock } from "lucide-react";
 import type { BlobSkin } from "@/core/types";
 import { SKIN_COST, useGameStore } from "@/state";
@@ -28,6 +29,9 @@ export function BlobCustomizer({
   const setSkin = useGameStore((s) => s.setSkin);
   const unlockSkin = useGameStore((s) => s.unlockSkin);
   const addCrystals = useGameStore((s) => s.addCrystals);
+  // Punch the header gem count whenever crystals change (the deduct on a purchase reads as
+  // a satisfying kick rather than a silent number swap).
+  const gemRef = usePunchOnChange<HTMLSpanElement>(crystals, { scale: 1.3 });
 
   const pick = (id: BlobSkin) => {
     if (unlocked.includes(id)) {
@@ -46,7 +50,7 @@ export function BlobCustomizer({
     <Dialog open={open} onOpenChange={onOpenChange} ariaLabel="Blob customizer" testId="customizer">
       <div className="flex items-center justify-between">
         <h2 className="font-display text-xl font-bold text-cream">Goo Customizer</h2>
-        <span className="flex items-center gap-1 font-display text-sm text-blob-blue">
+        <span ref={gemRef} className="flex items-center gap-1 font-display text-sm text-blob-blue">
           <Gem className="size-4" strokeWidth={2.5} aria-hidden /> {crystals}
           <span className="sr-only"> crystals available</span>
         </span>
