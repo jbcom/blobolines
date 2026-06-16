@@ -29,6 +29,7 @@ export const MetaballGooMaterial = shaderMaterial(
     u_time: 0,
     u_heat: 0,
     u_wobble: 0,
+    u_wet: 1.0,
     u_center: new THREE.Vector3(),
     u_deform: new THREE.Vector3(1, 1, 1),
   },
@@ -56,6 +57,7 @@ export const MetaballGooMaterial = shaderMaterial(
     uniform float u_time;
     uniform float u_heat;
     uniform float u_wobble;
+    uniform float u_wet;
     uniform vec3 u_center;
     uniform vec3 u_deform;
 
@@ -138,30 +140,45 @@ export const MetaballGooMaterial = shaderMaterial(
       vec3 L = normalize(vec3(0.3, 0.8, 0.6));
       vec3 H = normalize(L + V);
 
+      float ndv = max(dot(n, V), 0.0);
       float diff = max(dot(n, L), 0.0);
-      float fres = pow(1.0 - max(dot(n, V), 0.0), 3.0);
+      float fres = pow(1.0 - ndv, 3.0);
       float shimmer = 1.0 + 0.06 * sin(u_time * 3.0 + p.x * 4.0 + p.y * 3.0);
-      float spec = pow(max(dot(n, H), 0.0), 48.0) * 1.6 * shimmer;
+
+      // WET surface: a tight bright specular hotspot (a water highlight) PLUS a broad,
+      // softer second lobe — the dual highlight reads as a liquid skin, not a matte ball.
+      float specTight = pow(max(dot(n, H), 0.0), 110.0) * 2.4 * shimmer;
+      float specBroad = pow(max(dot(n, H), 0.0), 18.0) * 0.5;
+      // A second glancing light gives a wet wrap-around sheen on the far side.
+      vec3 L2 = normalize(vec3(-0.4, 0.2, 0.5));
+      float sheen = pow(max(dot(n, normalize(L2 + V)), 0.0), 60.0) * 0.7;
+
+      // Subsurface glow: light wraps around and the body glows from within (jelly/goo),
+      // brightest where the surface is thin (high fresnel) and lit.
+      float wrap = max(dot(n, L) * 0.5 + 0.5, 0.0);
+      float subsurface = wrap * (0.35 + 0.5 * fres);
 
       // Combo flame: as the streak heats up, the goo turns molten — its body color is
-      // pushed toward the warm flame hue and the fresnel edge ignites with a pulsing
-      // glow, so it reads as fire (not a blue blob with an orange outline).
+      // pushed toward the warm flame hue and the fresnel edge ignites with a pulsing glow.
       float flicker = 0.7 + 0.3 * sin(u_time * 14.0 + p.y * 6.0);
       vec3 base = mix(u_color, u_flame, u_heat * 0.7);
       vec3 rim = mix(u_rim, u_flame, u_heat);
 
-      vec3 col = base * (0.55 + 0.4 * diff) + spec + fres * rim * 0.8;
+      vec3 col = base * (0.45 + 0.4 * diff + 0.45 * subsurface)
+               + (specTight + specBroad + sheen) * u_wet
+               + fres * rim * 1.1;
       // Hot fresnel edge licks brighter than white where the streak is at full heat.
       col += u_flame * fres * u_heat * 1.8 * flicker;
 
-      // This material renders outside the renderer's tonemapping pass (drei shaderMaterial
-      // has no tonemapping chunk), so the bright flame rim would blow out to flat white and
-      // lose its hue. Roll off ONLY the part above 1.0 with a soft knee — values below 1
-      // (the entire cold base goo) pass through untouched, so the blue blob is unchanged.
+      // Soft-clamp only the over-1.0 excess (this material renders outside the tonemapping
+      // pass) so the bright wet hotspots + flame rim keep their hue instead of blowing white.
       vec3 over = max(col - vec3(1.0), vec3(0.0));
-      col = min(col, vec3(1.0)) + over / (over + vec3(1.0)); // soft-clamp the excess hue
+      col = min(col, vec3(1.0)) + over / (over + vec3(1.0));
 
-      gl_FragColor = vec4(col, 1.0);
+      // Translucency: thin grazing edges go see-through (wet/jelly), the core stays solid.
+      // The bright hotspot stays opaque so highlights don't wash out.
+      float alpha = clamp(0.7 + 0.3 * ndv + specTight, 0.55, 1.0);
+      gl_FragColor = vec4(col, alpha);
     }
   `,
 );

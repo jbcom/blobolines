@@ -33,7 +33,14 @@ export function GooField({ skin, blobRadius, getDroplets }: GooFieldProps) {
   /** Current squash/stretch deform, sprung toward the target each frame. */
   const deform = useRef({ x: 1, y: 1, z: 1 });
   const camera = useThree((s) => s.camera);
-  const material = useMemo(() => new MetaballGooMaterial() as unknown as ShaderMaterial, []);
+  const material = useMemo(() => {
+    const m = new MetaballGooMaterial() as unknown as ShaderMaterial;
+    // Wet/translucent goo: blend grazing edges over the scene. Keep depthWrite so the
+    // body still occludes the eyes/world correctly (the edge alpha is subtle).
+    m.transparent = true;
+    m.depthWrite = true;
+    return m;
+  }, []);
   // Hand-built material isn't JSX-declared, so R3F won't auto-dispose it — release the
   // compiled GL program on unmount (gameover→retry remounts GooField) to avoid leaking
   // programs until the mobile driver drops draw calls.

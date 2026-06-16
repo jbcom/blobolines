@@ -224,4 +224,17 @@ add the PoC's ENERGY (shake, follow-light, bloom, speed FX, color), NOT neon-cyb
 - [ ] WET look: nail it — balls feel too SOLID right now, need real wet/translucent/jiggly goo surface.
 - [ ] Splat pieces get REAL PHYSICS: droplets that splat off the blob should be their own physics bodies (bounce/roll/settle), not just kinematic particles.
 - [ ] World STRATA / BIOMES: proper layered strata — real biomes for different atmospheric + post-atmospheric height bands (ground → sky → upper atmosphere → space → beyond), each with its own look/palette/hazards.
+
+### M10c — the blob IS goo, not a globe (user feedback 2026-06-16, batch 3) — HIGH PRIORITY
+The single biggest "it's not a blob" issue: right now it's a solid matte colored GLOBE.
+A real Blobolines blob should:
+- [ ] REST as a happy goo PUDDLE on the bottom trampoline (flattened, spread, settled),
+  blinking up at the camera — NOT a sphere hovering. Idle = puddle.
+- [ ] DEFORM toward the finger/drag direction when tapped+dragged — the goo stretches up
+  toward the pull (taffy/slime), gathering for the slingshot. Drag direction shapes it.
+- [ ] LAUNCH by FORMING into a cohesive blob — puddle gathers → rounds into a flying blob
+  on release, then deforms with flight (already have flight stretch).
+- [ ] WET GLISTENING GRADIENT surface (not flat matte): translucent, specular hotspot,
+  subsurface, color gradient across the body. (Wet shader in progress — verify it reads
+  glistening, not matte.)
 - [ ] Per change: drive harness, READ the capture, fix, repeat. Then PR.
