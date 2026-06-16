@@ -286,7 +286,7 @@ Camera follow + shake, in-game deformation, wet glistening shader + color gradie
 - [x] GameOver Share button (navigator.share + clipboard fallback).
 - [x] Real personal-best celebration on GameOver: goo-splat/confetti burst, gold card glow, distinct sound, "+Nm over best". (gold card glow + border, chime on record, "+N m over best" via run.recordDelta captured at commitBestHeight)
 - [x] GameOver delta-vs-best progress bar (run height as fraction of best).
-- [ ] GameOver: crystals → next-skin progress + jump to customizer.
+- [x] GameOver: crystals → next-skin progress + jump to customizer.
 ### Tier 3 — onboarding & states
 - [ ] First-run tutorial overlay: drag-ghost coachmark over LaunchInput, dismiss on first launch (new Onboarding.tsx).
 - [ ] First-play hint instead of burying how-to behind a menu button.

@@ -27,8 +27,12 @@ export interface GameState {
   settings: GameSettings;
   progress: PlayerProgress;
   run: RunStats;
+  /** Transient (not persisted): set true to request the menu open the blob customizer on
+   *  arrival — e.g. tapping "Customize" from the game-over card. TitleScreen consumes it. */
+  customizerIntent: boolean;
 
   setPhase: (phase: GamePhase) => void;
+  setCustomizerIntent: (open: boolean) => void;
   updateSettings: (patch: Partial<GameSettings>) => void;
   setRun: (patch: Partial<RunStats>) => void;
   resetRun: () => void;
@@ -59,8 +63,10 @@ export const useGameStore = create<GameState>((set) => ({
   settings: { ...DEFAULT_SETTINGS },
   progress: { ...DEFAULT_PROGRESS },
   run: { ...EMPTY_RUN },
+  customizerIntent: false,
 
   setPhase: (phase) => set({ phase }),
+  setCustomizerIntent: (open) => set({ customizerIntent: open }),
 
   updateSettings: (patch) => set((s) => ({ settings: { ...s.settings, ...patch } })),
 

@@ -3,8 +3,9 @@ import { Check, RotateCcw, Share2 } from "lucide-react";
 import { motion } from "motion/react";
 import { useEffect, useRef, useState } from "react";
 import { playChime, startMusic, stopMusic } from "@/audio";
+import type { BlobSkin } from "@/core/types";
 import { comboMultiplier } from "@/sim/launch";
-import { useGameStore, useWorldStore } from "@/state";
+import { SKIN_COST, useGameStore, useWorldStore } from "@/state";
 
 /**
  * Game-over screen — shows the run's altitude + crystals against the all-time best, and
@@ -16,8 +17,10 @@ export function GameOver() {
   const maxCombo = useGameStore((s) => s.run.maxCombo);
   const recordDelta = useGameStore((s) => s.run.recordDelta);
   const lifetimeCrystals = useGameStore((s) => s.progress.crystals);
+  const unlockedSkins = useGameStore((s) => s.progress.unlockedSkins);
   const best = useGameStore((s) => s.progress.bestHeight);
   const setPhase = useGameStore((s) => s.setPhase);
+  const setCustomizerIntent = useGameStore((s) => s.setCustomizerIntent);
   const resetRun = useGameStore((s) => s.resetRun);
   const resetWorld = useWorldStore((s) => s.reset);
   const replayRef = useRef<HTMLButtonElement>(null);
@@ -77,6 +80,19 @@ export function GameOver() {
   // 0 against itself — fall back to a celebratory label instead of "+0m".)
   const shortBy = Math.max(0, best - height);
   const comboLabel = maxCombo >= 2 ? `${comboMultiplier(maxCombo).toFixed(2)}×` : "—";
+
+  // Cheapest still-locked skin and progress toward affording it (crystals → next skin).
+  const nextSkin = (Object.entries(SKIN_COST) as [BlobSkin, number][])
+    .filter(([id]) => !unlockedSkins.includes(id))
+    .sort((a, b) => a[1] - b[1])[0];
+  const nextSkinPct = nextSkin ? Math.min(100, (lifetimeCrystals / nextSkin[1]) * 100) : 100;
+
+  const toCustomizer = () => {
+    setCustomizerIntent(true);
+    resetRun();
+    stopMusic();
+    setPhase("menu");
+  };
 
   // Distinct celebratory chime once when a record card appears.
   useEffect(() => {
@@ -139,6 +155,24 @@ export function GameOver() {
             className={isRecord ? "[&>div]:bg-tramp-gold" : undefined}
           />
         </div>
+
+        {/* Crystals → next skin: progress toward affording the cheapest locked skin, tappable
+            to jump straight into the customizer. Hidden once everything's unlocked. */}
+        {nextSkin && (
+          <button
+            type="button"
+            onClick={toCustomizer}
+            className="flex w-full flex-col gap-1 rounded-lg p-1 text-left hover:bg-bg/40"
+          >
+            <span className="flex items-center justify-between font-ui text-[11px] text-fg-subtle">
+              <span>
+                Next skin: {lifetimeCrystals}/{nextSkin[1]} 💎
+              </span>
+              <span className="font-semibold text-blob-blue">Customize ›</span>
+            </span>
+            <Progress value={nextSkinPct} aria-label="Crystals toward the next skin" />
+          </button>
+        )}
 
         <button
           ref={replayRef}

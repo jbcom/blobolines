@@ -12,7 +12,7 @@ beforeEach(() => {
 });
 afterEach(() => {
   cleanup();
-  useGameStore.setState({ phase: "menu" });
+  useGameStore.setState({ phase: "menu", customizerIntent: false });
 });
 
 test("shows the run recap: altitude, max combo, crystals run + lifetime, short-by delta", async () => {
@@ -29,6 +29,16 @@ test("shows the run recap: altitude, max combo, crystals run + lifetime, short-b
     .toBeInTheDocument();
   // Share button present.
   await expect.element(screen.getByRole("button", { name: /share/i })).toBeInTheDocument();
+  // Crystals → next-skin progress + customize jump (42 lifetime, slime costs 15 → unlocked
+  // already in DEFAULT? No: default unlockedSkins is ["blue"], so slime (15) is next).
+  await expect.element(screen.getByText(/Customize/)).toBeInTheDocument();
+});
+
+test("tapping Customize requests the customizer and returns to menu", async () => {
+  const screen = await render(<GameOver />);
+  await screen.getByText(/Customize/).click();
+  expect(useGameStore.getState().customizerIntent).toBe(true);
+  expect(useGameStore.getState().phase).toBe("menu");
 });
 
 test("celebrates a record run instead of a short-by delta", async () => {
