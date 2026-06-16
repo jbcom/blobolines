@@ -30,6 +30,21 @@ describe("packMetaballField", () => {
     expect(field.radii[1]).toBe(0.4);
   });
 
+  it("pinches off a droplet that has dropped below the blob body (no teardrop neck)", () => {
+    const blob: Vec3 = [0, 10, 0];
+    // Within merge distance horizontally, but clearly below the blob bottom (settling).
+    const below: MetaballSource = { position: [0, 10 - (blobRadius + 1), 0], radius: 0.3 };
+    const field = packMetaballField(blob, blobRadius, [below], 24);
+    expect(field.count).toBe(1); // blob only — the fallen droplet is not bridged in
+  });
+
+  it("still merges a close droplet level with / above the blob", () => {
+    const blob: Vec3 = [0, 10, 0];
+    const above: MetaballSource = { position: [0.3, 10.4, 0], radius: 0.3 };
+    const field = packMetaballField(blob, blobRadius, [above], 24);
+    expect(field.count).toBe(2);
+  });
+
   it("caps the total ball count at maxBalls", () => {
     const blob: Vec3 = [0, 0, 0];
     const droplets: MetaballSource[] = Array.from({ length: 30 }, (_, i) => ({

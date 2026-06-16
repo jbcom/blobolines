@@ -208,7 +208,7 @@ add the PoC's ENERGY (shake, follow-light, bloom, speed FX, color), NOT neon-cyb
 
 ### Queue
 - [x] Camera follows the real blob x/y/z (was height-only, X/Z hard-locked) + impact shake — verified in artifacts/launch-up.png (blob now framed).
-- [ ] Goo deformation in-game: squash/stretch wired into GooField via u_deform/u_center (done in code) — VERIFY it reads alive airborne, fix the blob↔ground-droplet teardrop-merge artifact.
+- [x] Goo deformation in-game: squash/stretch wired into GooField (u_deform/u_center) — verified alive airborne (artifacts/launch-up.png); fixed the teardrop-merge by tightening MERGE_DIST_SQ + pinching off droplets that drop below the body (artifacts/start.png clean).
 - [ ] Real color: per-skin palette actually varied; vary trampoline/crystal/powerup/sky colors; warmer richer grade. Not blue+cream everywhere.
 - [ ] Splat: bigger, juicier World-of-Goo splat on landing (current is small dark blobs). More droplets, color, spread, decal punch.
 - [ ] Aim/targeting feedback: a visible trajectory/aim indicator while charging the slingshot (PoC had launch feedback; we have none).
