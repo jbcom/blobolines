@@ -1,6 +1,7 @@
 import { shaderMaterial } from "@react-three/drei";
 import { extend, type ThreeElement } from "@react-three/fiber";
 import * as THREE from "three";
+import { palette } from "@/styles/tokens";
 
 /**
  * GooMaterial — the wet, translucent, gooey surface for the blob. A standard 3D mesh
@@ -12,8 +13,8 @@ import * as THREE from "three";
  */
 export const GooMaterial = shaderMaterial(
   {
-    uColor: new THREE.Color("#2e8bf0"),
-    uRim: new THREE.Color("#bfe3ff"),
+    uColor: new THREE.Color(palette.blob.blue),
+    uRim: new THREE.Color(palette.goo.rim),
     uTime: 0,
     uWet: 0.9,
   },

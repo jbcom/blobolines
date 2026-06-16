@@ -31,7 +31,8 @@
   ],
   "ban_patterns": [
     { "pattern": "Math\\.random\\(\\)", "globs": ["src/sim/**", "src/engine/**", "src/systems/**"], "message": "Use createRng(seed) facade — determinism." },
-    { "pattern": "performance\\.now\\(\\)", "globs": ["src/sim/**", "src/engine/**"], "message": "Use engine clock facade — determinism." }
+    { "pattern": "performance\\.now\\(\\)", "globs": ["src/sim/**", "src/engine/**"], "message": "Use engine clock facade — determinism." },
+    { "pattern": "#[0-9a-fA-F]{6}", "globs": ["src/render/**", "src/sim/**", "app/scene/**", "app/views/**"], "message": "Brand gate: no raw hex — use design tokens (src/styles/tokens.ts palette) so the cover-art palette stays the single source of truth." }
   ],
   "forbidden_bash": [
     "--no-verify", "git push --force(?!-with-lease)", "--admin",

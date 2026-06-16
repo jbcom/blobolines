@@ -12,7 +12,7 @@ import {
   type TrampState,
 } from "@/sim/trampoline";
 import { reportImpact, reportRebound } from "@/state";
-import { trampColor } from "@/styles/tokens";
+import { palette, trampColor } from "@/styles/tokens";
 
 /**
  * A single trampoline: a fixed Rapier body (the blob bounces off it) with a squishy
@@ -104,7 +104,7 @@ export function Trampoline({ position, width, depth, type, onImpact }: Trampolin
         <mesh ref={membraneRef} position={[0, THICKNESS / 2 + 0.02, 0]}>
           <boxGeometry args={[width * 0.92, 0.18, depth * 0.92]} />
           <meshStandardMaterial
-            color="#ffffff"
+            color={palette.goo.wet}
             emissive={emissive}
             emissiveIntensity={0.6}
             roughness={0.15}

@@ -4,6 +4,7 @@ import type { Group } from "three";
 import type { EyeExpression } from "@/core/types";
 import { eyeShape } from "@/sim/blob";
 import { getBlobDiagnostics } from "@/state";
+import { palette } from "@/styles/tokens";
 
 /**
  * Procedural blob eyes — NOT sprites. Each eye is a big white sclera sphere with a thin
@@ -28,27 +29,27 @@ function Eye({ side }: { side: 1 | -1 }) {
       {/* dark bezel ring behind the sclera (lid — squashes on blink/squint) */}
       <mesh position={[0, 0, 0.005]} name={`lid-${side}`}>
         <sphereGeometry args={[0.2, 24, 24]} />
-        <meshBasicMaterial color="#14110f" />
+        <meshBasicMaterial color={palette.eye.bezel} />
       </mesh>
       {/* white sclera, pushed forward onto the face (lid) */}
       <mesh position={[0, 0, 0.04]} name={`lid-${side}b`}>
         <sphereGeometry args={[0.18, 24, 24]} />
-        <meshStandardMaterial color="#f8fbff" roughness={0.25} />
+        <meshStandardMaterial color={palette.eye.sclera} roughness={0.25} />
       </mesh>
       {/* big black pupil */}
       <mesh position={[0, 0, 0.18]} name={`pupil-${side}`}>
         <sphereGeometry args={[0.09, 20, 20]} />
-        <meshBasicMaterial color="#0a0a0c" />
+        <meshBasicMaterial color={palette.eye.pupil} />
       </mesh>
       {/* glint */}
       <mesh position={[0.03, 0.04, 0.25]}>
         <sphereGeometry args={[0.025, 8, 8]} />
-        <meshBasicMaterial color="#ffffff" />
+        <meshBasicMaterial color={palette.eye.glint} />
       </mesh>
       {/* tear droplet — revealed by the animator when tearing */}
       <mesh position={[0, -0.18, 0.2]} name={`tear-${side}`} visible={false}>
         <sphereGeometry args={[0.05, 12, 12]} />
-        <meshStandardMaterial color="#bfe3ff" transparent opacity={0.85} roughness={0.1} />
+        <meshStandardMaterial color={palette.eye.tear} transparent opacity={0.85} roughness={0.1} />
       </mesh>
     </group>
   );
