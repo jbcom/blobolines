@@ -79,7 +79,7 @@ tokens own palette.
 - [x] capacitor.config.ts (appId com.jbcom.blobolines)
 - [x] App shell entry: app/main.tsx, App.tsx (koota WorldProvider + ErrorBoundary)
 - [x] docs/ARCHITECTURE.md package map
-- [x] shadcn/ui base components in app/components/ui (button, dialog, slider, switch, tabs, tooltip, progress) + barrel; cn() in src/lib (done)
+- [x] shadcn/ui base components in app/components/ui (button, dialog, slider, switch, tabs, tooltip, progress) + barrel; cn() in src/lib
 - [ ] Vitest dual config done — add src/__tests__ helpers + app/fixtures/FixtureStage barrel + first passing example tests (unit + fixture)
 - [x] Vitest dual config + src/__tests__/setup.ts + app/fixtures/FixtureStage + passing unit (tokens) + fixture (SkyDome WebGL) tests
 - [ ] Capacitor android platform added; haptics/screen-orientation/keep-awake wired via src/platform barrel (web fallbacks)
