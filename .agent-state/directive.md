@@ -184,11 +184,11 @@ tokens own palette.
 ## M8 — Mobile & ship
 - [x] Pages live & app RUNS (Phase 1, screenshot-verified); Android assembleDebug green in CI
 - [x] Pixel-5a 60fps perf pass: profiled at 6x CPU throttle — raymarch is cheap (p50 8.3ms); bounded the trampoline render window (was unbounded → climb spikes), p95 158ms→16.9ms. Wobble amp tuned to keep march budget flat.
-- [ ] Safe-area/touch tuning — Phase 2
+- [x] Safe-area/touch tuning: Hud safe-bottom inset added; TitleScreen menu buttons given 44px min tap targets (safe-area infra already in place for top/left/right + title bottom)
 - [x] Quality pass — a11y: full DOM-UI audit + fixes (names/roles, live regions, reduced-motion, AA contrast, dialog labelling, focus mgmt; canvas aria-hidden) with a11y assertion tests. error states: WebGL context-loss recovery + stale-Rapier-handle guard (ErrorBoundary already existed).
 
 ## M9 — Docs (pillar + agentic + HADS)
 - [x] Pillar: README, DESIGN, GAME-DESIGN, ARCHITECTURE, TESTING, DEPLOYMENT (CHANGELOG = release-please)
 - [x] STANDARDS.md, docs/STATE.md, CONTRIBUTING — present and substantive (verified, not stubs)
 - [x] Agentic: AGENTS.md (existed), per-system READMEs (src/sim, src/render, src/state, src/audio, app/scene), .github/copilot-instructions.md, .cursor/rules/blobolines.mdc
-- [ ] HADS-format docs via hads skill — Phase 2
+- [x] HADS-format docs: docs/reference/ENGINEERING-NOTES.hads.md (AI manifest + [SPEC]/[BUG] blocks capturing verified facts + the real bugs hit this build)
