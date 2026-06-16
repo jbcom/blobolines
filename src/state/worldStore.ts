@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import { world as worldCfg } from "@/config";
 import { createRng, type Rng } from "@/core/math";
-import type { TrampolineSpec, Vec3 } from "@/core/types";
+import type { CrystalSpec, TrampolineSpec } from "@/core/types";
 import { generateUpTo, type PowerUpSpec, starterPad } from "@/world";
 
 /**
@@ -14,7 +14,7 @@ import { generateUpTo, type PowerUpSpec, starterPad } from "@/world";
 interface WorldState {
   seed: number;
   trampolines: TrampolineSpec[];
-  crystals: Vec3[];
+  crystals: CrystalSpec[];
   powerups: PowerUpSpec[];
   highestY: number;
   /** Last pad placed — threaded into the next generateUpTo so the golden-path cant reaches

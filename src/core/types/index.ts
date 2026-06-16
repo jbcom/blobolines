@@ -19,6 +19,16 @@ export type EyeExpression = "idle" | "blink" | "squint" | "wide" | "tear";
 /** Power-up kinds. */
 export type PowerUpType = "magnet" | "thruster";
 
+/** Crystal rarity tiers. Higher tiers are worth more crystals (and so more score), rarer,
+ *  larger, and brighter — the reward for ranging off the safe line + climbing higher. */
+export type CrystalTier = "common" | "rare" | "radiant";
+
+/** A generated collectible crystal: where it floats + its rarity tier. */
+export interface CrystalSpec {
+  position: Vec3;
+  tier: CrystalTier;
+}
+
 /** Persistent player progress. */
 export interface PlayerProgress {
   bestHeight: number;

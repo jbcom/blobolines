@@ -446,7 +446,13 @@ permeability (permeable one-way pads rejected by owner).
       score record); share text leads with score. Tunable via config/score.json. Tests: score
       weighting/monotonicity/super-linear-combo unit, store commit (score + separate records),
       GameOver score-record-without-height-record browser fixture.
-- [ ] Crystal depth: tiers/bonus/multiplier, not flat +1; consumable/upgrade sinks beyond cosmetic skins.
+- [x] Crystal depth — TIERS: common/rare/radiant (worth 1/3/8 crystals, so more score too),
+      with rare/radiant odds RISING with altitude (climb is rewarded). src/world/crystalTier.ts
+      (pure picker + CRYSTAL_VALUE/CRYSTAL_SCALE); CrystalSpec {position,tier} threaded through
+      generator → worldStore → CrystalField (per-tier color: slime/violet/gold, per-tier scale,
+      gather awards tier value). Tests: tier value/scale ordering, determinism, mostly-common,
+      rarer-with-altitude, generator emits valid tiers. (Consumable/upgrade SINKS beyond skins
+      are a separate economy item — left for the powerups/economy pass.)
 - [x] Altitude-weighted pad type distribution: src/world/padType.ts blends per-type weights
       across altitude bands (safe standard-heavy start → full toolkit mid → richer bonus/skill
       mix high; standard's share thins as it gets harder, wobbler/super weighted in only up
@@ -454,7 +460,11 @@ permeability (permeable one-way pads rejected by owner).
       generator promotes those for reachability). The climb-proof sweep still passes against the
       new mix. Tests: determinism, no-canted, low=mostly-standard, super/wobbler altitude gating,
       standard-share-thins-with-altitude.
-- [ ] Make the `moving` pad meaningful (rebound 1.05 is nearly a dead type) — give it a real role/mechanic.
+- [x] Make the `moving` pad meaningful — DONE by the SLIDER work above: the moving pad tracks
+      its live slide velocity and tilts the rebound normal toward it, so catching it at the
+      right phase flings the blob sideways (timing-based skill). Its low rebound multiplier is
+      intentional — the value is the lateral launch, not vertical pop. (Use case satisfied; not
+      a separate mechanic.)
 - [ ] Hazards: add at least 2 (e.g. crumbling gap, spike pad, wind gust, drifting obstacle) gated by biome/height.
 - [ ] More powerups beyond magnet/thruster: shield/second-life, slow-mo, score-doubler, multi-bounce; allow stacking or distinct refresh.
 - [ ] Comeback/revive mechanic on death (watch-style or one-shot shield) for run length.

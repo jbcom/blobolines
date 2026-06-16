@@ -1,5 +1,6 @@
 import type { Rng } from "@/core/math";
-import type { PowerUpType, TrampolineSpec, TrampType, Vec3 } from "@/core/types";
+import type { CrystalSpec, PowerUpType, TrampolineSpec, TrampType, Vec3 } from "@/core/types";
+import { pickCrystalTier } from "./crystalTier";
 import { pickPadType } from "./padType";
 import { reaches } from "./reachable";
 
@@ -17,7 +18,7 @@ export interface PowerUpSpec {
 
 export interface GeneratedChunk {
   trampolines: TrampolineSpec[];
-  crystals: Vec3[];
+  crystals: CrystalSpec[];
   powerups: PowerUpSpec[];
   /** Highest Y generated so far (feed back as `fromY` next call). */
   highestY: number;
@@ -96,7 +97,7 @@ export function generateUpTo(
   prevPad: TrampolineSpec | null = null,
 ): GeneratedChunk {
   const trampolines: TrampolineSpec[] = [];
-  const crystals: Vec3[] = [];
+  const crystals: CrystalSpec[] = [];
   const powerups: PowerUpSpec[] = [];
   let y = fromY;
   /** Previous pad, so we can cant it toward this one (golden-path reachability). Threaded in
@@ -158,13 +159,16 @@ export function generateUpTo(
     trampolines.push(pad);
     prev = pad;
 
-    // ~60% of pads float a crystal above them.
+    // ~60% of pads float a crystal above them, each with an altitude-weighted rarity tier.
     if (rng.next() > 0.38) {
-      crystals.push([
-        x + (rng.next() - 0.5) * 2.5,
-        y + 3.2 + rng.next() * 2.8,
-        z + (rng.next() - 0.5) * 2.5,
-      ]);
+      crystals.push({
+        position: [
+          x + (rng.next() - 0.5) * 2.5,
+          y + 3.2 + rng.next() * 2.8,
+          z + (rng.next() - 0.5) * 2.5,
+        ],
+        tier: pickCrystalTier(rng, y),
+      });
     }
 
     // ~12% of pads (above the forgiving start) float a power-up.

@@ -44,6 +44,15 @@ const BANDS: Band[] = [
   },
 ];
 
+// The bracketing interpolation in weightsAt relies on bands being STRICTLY increasing in y.
+// Assert it once at module load so an out-of-order edit fails loudly instead of silently
+// selecting the wrong interval (the latent fragility flagged in review).
+for (let i = 1; i < BANDS.length; i++) {
+  if (BANDS[i].y <= BANDS[i - 1].y) {
+    throw new Error(`padType BANDS must be strictly increasing in y (index ${i})`);
+  }
+}
+
 const ALL_TYPES: TrampType[] = [
   "standard",
   "booster",

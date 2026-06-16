@@ -76,6 +76,15 @@ describe("world generator", () => {
     expect(chunk.powerups.length).toBeGreaterThan(0);
   });
 
+  it("every generated crystal carries a valid rarity tier + position", () => {
+    const chunk = generateUpTo(createRng(9), 0, 600);
+    expect(chunk.crystals.length).toBeGreaterThan(0);
+    for (const c of chunk.crystals) {
+      expect(["common", "rare", "radiant"]).toContain(c.tier);
+      expect(c.position).toHaveLength(3);
+    }
+  });
+
   it("starter pad is centered, large, standard", () => {
     const s = starterPad();
     expect(s.position).toEqual([0, 0, 0]);

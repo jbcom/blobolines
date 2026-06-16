@@ -46,6 +46,13 @@ describe("computeScore", () => {
     }
   });
 
+  it("self-clamps combo to the gameplay cap (no runaway for a stray uncapped caller)", () => {
+    // MAX_COMBO is 8; anything beyond must not grow the bonus (guards growth^n explosion).
+    const atCap = comboStyleBonus(8);
+    expect(comboStyleBonus(50)).toBe(atCap);
+    expect(comboStyleBonus(1000)).toBe(atCap);
+  });
+
   it("combines all three axes", () => {
     const s = computeScore({ height: 120, crystals: 4, maxCombo: 5 });
     expect(s).toBe(120 * cfg.heightPoints + 4 * cfg.crystalPoints + comboStyleBonus(5));

@@ -1,4 +1,5 @@
 import { score as scoreCfg } from "@/config";
+import { MAX_COMBO } from "@/sim/combo";
 
 /**
  * Composite run score — pure + deterministic. Height is the spine of the climb, but a real
@@ -25,9 +26,11 @@ export interface ScoreInputs {
 export function comboStyleBonus(maxCombo: number): number {
   if (maxCombo <= 0) return 0;
   const { comboStyleBase, comboStyleGrowth } = scoreCfg;
+  // Self-defending: clamp to the gameplay combo cap so a stray uncapped caller (test/replay)
+  // can't make growth^n explode. The combo state already caps at MAX_COMBO in sim/combo.
+  const n = Math.min(Math.floor(maxCombo), MAX_COMBO);
   // Closed-form geometric series: base·(growth^n − 1)/(growth − 1).
   const g = comboStyleGrowth;
-  const n = Math.floor(maxCombo);
   return Math.round((comboStyleBase * (g ** n - 1)) / (g - 1));
 }
 
