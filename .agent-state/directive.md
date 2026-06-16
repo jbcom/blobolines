@@ -327,13 +327,16 @@ game — touch/drag is primary; keyboard is a minor desktop-only secondary, don'
       shear toward drag/velocity, asymmetric lobes/blobbing, jiggle that travels around the
       body, wind/settle sag, anticipation pinch before launch — driven by velocity, impact,
       charge, and surface contact. Blobby should rarely look like a clean sphere.
-- [ ] Stronger fluid dynamics in the goo skin: surface-tension wobble that propagates +
-      overshoots, droplet bulge/pinch at the contact point, a wet sag at rest — push the CSG/
-      shader goo toward World-of-Goo fluidity, away from rigid-ball reads.
+      (STARTED: directional lean into motion + charge-gather pinch done; asymmetric lobes +
+      travelling jiggle + wind sag still queued.)
+- [x] Stronger fluid dynamics in the goo skin: surface-tension wobble that propagates +
+      overshoots, droplet bulge/pinch at the contact point, a wet sag at rest. (impact wobble
+      spikes to 1.6× + overshoots + decays; resting breathe; droplet bulge/pinch via the CSG
+      union already; more propagation queued under the deform-modes item.)
 - [x] MOUTH for Blobby: procedural BlobMouth (lip + curving corners) driven by mouthShape per
       expression — idle smile, "wheee" open on launch/wide, grimace on hard impact, dread "o"
       near death; depthTest-off on the face, diagnostics-driven like the eyes. (visual sweep
-      pending devtools recovery; covered by mouthShape unit + BlobActor browser fixture.) castShadow/receiveShadow blob+pads (castShadow set but Canvas has no shadows prop — dead). (RESOLVED differently: a fixed directional shadow frustum can't follow the blob to ~1400m and is costly on mobile; grounding comes from the blob-following BlobShadow contact disc instead. No Canvas shadow map.)
+      pending devtools recovery; covered by mouthShape unit + BlobActor browser fixture.)
 - [x] Soft fake contact shadow under the blob, scaled by altitude+squash (BlobShadow). (flat alpha disc on groundY, NOT drei ContactShadows — avoids the composer depth conflict; also fixed the dark-ring splat-decal bug: gradient faded to rgba(0,0,0,0) → dark edges; now toTransparent(color))
 - [x] ACESFilmic toneMapping + outputColorSpace on Canvas gl; drop the manual soft-clamp hack in metaballGoo. (soft-clamp gone with metaballGoo's deletion; CSG goo uses GooMaterial)
 - [x] Wire biome fog into the scene (biomeSkyAt.fog is computed but unused) — fogExp2 by altitude, hides far cutoff.
