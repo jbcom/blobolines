@@ -61,6 +61,10 @@ export interface TrampolineSpec {
   width: number;
   depth: number;
   type: TrampType;
+  /** Lateral cant direction for "canted" pads: unit [x,z] the pad tilts toward (the world
+   *  generator points it at the next pad so the bounce carries the blob there). Omitted /
+   *  zero = flat. */
+  cant?: readonly [number, number];
 }
 
 export const GAME_PHASES = ["menu", "playing", "gameover"] as const;

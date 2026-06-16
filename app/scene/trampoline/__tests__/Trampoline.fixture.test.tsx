@@ -31,3 +31,28 @@ test("Trampoline renders the pad with its splat-decal surface", async () => {
     { timeout: 8000, interval: 100 },
   );
 });
+
+// A canted pad (tilted membrane that redirects the bounce laterally) compiles + draws.
+test("canted Trampoline renders its tilted pad", async () => {
+  const screen = await render(
+    <FixtureStage testId="canted-fixture" cameraDistance={10}>
+      <Physics paused gravity={[0, -22, 0]}>
+        <Trampoline position={[0, 0, 0]} width={6} depth={6} type="canted" cant={[1, 0]} />
+      </Physics>
+    </FixtureStage>,
+  );
+
+  await expect.element(screen.getByTestId("canted-fixture")).toBeInTheDocument();
+  await new Promise((r) => setTimeout(r, 100));
+
+  await vi.waitFor(
+    () => {
+      const canvas = document
+        .querySelector('[data-testid="canted-fixture"]')
+        ?.querySelector("canvas");
+      if (!canvas) throw new Error("canvas not mounted");
+      expect(canvas.toDataURL("image/png").length).toBeGreaterThan(4000);
+    },
+    { timeout: 8000, interval: 100 },
+  );
+});

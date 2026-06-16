@@ -392,6 +392,16 @@ permeability (permeable one-way pads rejected by owner).
       can actually progress upward across canted pads (the playability safety net).
 - [ ] Better aim/curve control (mid-air steer / hook-shot) so a skilled player can also
       curve onto an offset pad — complements the canted-layout fix.
+### Pad-variety types (owner feedback 2026-06-16 — more platform kinds for navigability + challenge)
+- [ ] SLIDER pads: trampolines that slide back-and-forth horizontally (make the near-dead
+      `moving` type real — give it visible travel + timing-based landing). Carry its live
+      velocity into the bounce so a moving pad imparts lateral momentum.
+- [ ] WOBBLER pads: unstable pads that wobble/tip when landed on — a brief teeter that
+      redirects the bounce unpredictably (skill/risk), settling back if not re-hit.
+- [ ] [x] CANTED pad type: tilted membrane whose normal redirects the bounce laterally
+      (DONE — config cantedTiltRad, src/sim/trampoline/cant, spec.cant, ReboundRequest.normal,
+      PlayerBlob launches along the normal, membrane visually leans). Generator placement +
+      tests next.
 
 ### Mechanics depth
 - [ ] Add a real SCORE system (height + crystals + combo + style), persisted high score separate from best height.

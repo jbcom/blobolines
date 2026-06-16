@@ -85,11 +85,16 @@ export function consumeImpact(): number {
   return s;
 }
 
-/** A pending trampoline rebound: the upward speed to bounce the blob at, plus the pad
- *  type (for combo/scoring). Reported by a trampoline on contact, consumed by the blob. */
+/** A pending trampoline rebound: the rebound speed to bounce the blob at, the pad type
+ *  (for combo/scoring), and the pad's surface NORMAL — the launch direction. A flat pad's
+ *  normal is straight up [0,1,0]; a canted pad's normal tilts, redirecting the bounce
+ *  laterally so the blob is thrown sideways-and-up toward the next pad (navigability).
+ *  Reported by a trampoline on contact, consumed by the blob. */
 export interface ReboundRequest {
   speed: number;
   type: string;
+  /** Unit surface normal = launch direction. Defaults to straight up when omitted. */
+  normal?: readonly [number, number, number];
 }
 
 let rebound: ReboundRequest | null = null;

@@ -115,7 +115,23 @@ export function PlayerBlob() {
     const bounce = consumeRebound();
     if (bounce) {
       body.wakeUp();
-      body.setLinvel({ x: v.x, y: bounce.speed, z: v.z }, true);
+      // Launch ALONG the pad's surface normal: a flat pad bounces straight up (keeps the
+      // blob's horizontal drift); a canted pad's tilted normal throws the blob sideways-
+      // and-up toward the next pad. Blend horizontal momentum with the normal's lateral
+      // component so canted pads redirect without fully killing existing drift.
+      const n = bounce.normal;
+      if (n && (n[0] !== 0 || n[2] !== 0)) {
+        body.setLinvel(
+          {
+            x: v.x * 0.3 + n[0] * bounce.speed,
+            y: n[1] * bounce.speed,
+            z: v.z * 0.3 + n[2] * bounce.speed,
+          },
+          true,
+        );
+      } else {
+        body.setLinvel({ x: v.x, y: bounce.speed, z: v.z }, true);
+      }
       const run = useGameStore.getState().run;
       // Ice pads are slippery: a big bouncy launch but it BREAKS the clean-combo streak
       // (risk/reward). Every other pad builds the combo, capped at MAX_COMBO (the launch

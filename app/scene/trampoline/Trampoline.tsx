@@ -8,6 +8,8 @@ import { clamp } from "@/core/math";
 import type { TrampType } from "@/core/types";
 import { createSplatCanvas } from "@/render/vfx";
 import {
+  cantEuler,
+  cantNormal,
   createTrampState,
   impactTargets,
   REBOUND_SETTLE_SPEED,
@@ -31,18 +33,26 @@ interface TrampolineProps {
   width: number;
   depth: number;
   type: TrampType;
+  /** Lateral cant direction for "canted" pads (unit [x,z]); the bounce launches along the
+   *  resulting tilted normal so the blob is thrown toward the next pad. */
+  cant?: readonly [number, number];
   /** Called when the blob lands, with impact speed + relative hit point. */
   onImpact?: (speed: number, relX: number, relZ: number) => void;
 }
 
 const THICKNESS = 1.2;
 
-export function Trampoline({ position, width, depth, type, onImpact }: TrampolineProps) {
+export function Trampoline({ position, width, depth, type, cant, onImpact }: TrampolineProps) {
   const rbRef = useRef<RapierRigidBody>(null);
   const meshRef = useRef<Group>(null);
   const membraneRef = useRef<Mesh>(null);
   const spring = useRef<TrampState>(createTrampState());
   const color = trampColor[type];
+  // Canted pads lean toward `cant`: the static tilt that redirects the bounce. Normal =
+  // launch direction reported on rebound; euler = the visual lean of the frame.
+  const canted = type === "canted" && !!cant;
+  const cantN = useMemo(() => (canted ? cantNormal(cant) : null), [canted, cant]);
+  const cantRot = useMemo(() => (canted ? cantEuler(cant) : null), [canted, cant]);
   // Per-pad deterministic phase/dir for moving pads (seeded by world position).
   const movePhase = useRef((position[0] * 0.37 + position[2] * 0.91) % (Math.PI * 2));
   // Fragile pads break shortly after the first impact.
@@ -78,8 +88,10 @@ export function Trampoline({ position, width, depth, type, onImpact }: Trampolin
     const membrane = membraneRef.current;
     if (membrane) {
       membrane.position.y = THICKNESS / 2 + 0.02 + depress; // dip the sheet in
-      membrane.rotation.x = spring.current.tiltX.value;
-      membrane.rotation.z = spring.current.tiltZ.value;
+      // Static cant tilt (canted pads lean permanently toward `cant`) + the dynamic impact
+      // flex spring on top, so a canted pad both visibly leans and still flexes on hit.
+      membrane.rotation.x = (cantRot?.rotX ?? 0) + spring.current.tiltX.value;
+      membrane.rotation.z = (cantRot?.rotZ ?? 0) + spring.current.tiltZ.value;
       // Flatten + widen as it stretches down (a sheet under load), proportional to dip.
       const dip = Math.min(-depress / 5.4, 1); // 0..1
       membrane.scale.set(1 + dip * 0.06, 1 - dip * 0.5, 1 + dip * 0.06);
@@ -168,7 +180,9 @@ export function Trampoline({ position, width, depth, type, onImpact }: Trampolin
               ? Math.max(speed * reboundMultiplier.super, SUPER_MIN_REBOUND)
               : speed * reboundMultiplier[type];
           if (reboundSpeed >= REBOUND_SETTLE_SPEED) {
-            reportRebound({ speed: reboundSpeed, type });
+            // Canted pads launch along their tilted normal (sideways-and-up toward the next
+            // pad); flat pads bounce straight up (normal omitted → defaults to up).
+            reportRebound({ speed: reboundSpeed, type, normal: cantN ?? undefined });
             playBounce(type);
           }
           // Fragile pads start disintegrating after this bounce (gives one last launch).
