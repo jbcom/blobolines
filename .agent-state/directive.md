@@ -150,42 +150,43 @@ tokens own palette.
 - [x] Input: @use-gesture slingshot drag → launch impulse (LaunchInput). Air-steer + keyboard binding (pure math done) wired in Phase 2.
 
 ## M3 — Gooey blob (the star)
-- [x] Blob rendering: goo-shaded deformable 3D sphere (chosen over metaball field for the single player body; metaball reserved for splash VFX) + WebGL fixture test
+- [x] Blob rendering: dual path — goo-shaded sphere (menu/fixtures) + raymarched metaball goo skin (in-game, GooField + MetaballGooMaterial) that merges blob+droplets
 - [x] Squash-and-stretch deformation driven by velocity/impact; springy approach to target scale
-- [ ] Jiggle / surface-tension wobble secondary motion (vertex-level)
-- [x] Gooey surface shader: fresnel rim, light-wrap, wet specular + shimmer (src/render/materials/gooMaterial)
+- [ ] Jiggle / surface-tension wobble secondary motion (vertex-level) — Phase 2 polish
+- [x] Gooey surface shader: fresnel rim, light-wrap, wet specular + shimmer
 - [ ] Blob skins/cores system: wire all 4 skins (blue/slime/ghost/ink) + customizer UI to store
-- [x] **Big expressive blinking eyes** (per hero-cover.png) — PROCEDURAL geometry, NOT sprites: big white distorted/stretched circles (sclera) with a bezel/rim ring + big black dot pupils, stretched onto the curved blob "face" and pushed into 3D. Responsive emotional states via scaling the eye meshes: idle blink (scaleY→0), squint on hard impact/squash, open WIDE on big launch/fast fall, tear up (droplet geo) when falling far / near death. Driven by velocity+impact state alongside squash-stretch. Core character juice.
+- [x] **Big expressive blinking eyes** — procedural geometry on the goo face (depthTest-on-top), idle/blink/squint/wide/tear via eyeShape; world-space goo+eye alignment fixed
 
 ## M4 — Trampolines & world
-- [ ] Trampoline entity: spring depress (-k·x - c·v) + tilt on hit-angle, organic squishy mesh, goo smear
-- [ ] Platform types: standard / booster / moving / fragile-shatter — reimagined as gooey
-- [ ] Procedural vertical world generator (seeded), difficulty curve, ring/grid ambiance
-- [ ] Crystals/collectibles + powerups (magnet, hyper-thrust) reimagined; pickup juice
+- [x] Trampoline entity: spring depress (-k·x - c·v) + tilt on real hit-angle, squishy mesh, auto-bounce
+- [x] Platform types defined (standard/booster/moving/fragile) with rebound multipliers; moving/fragile gameplay behaviors — Phase 2
+- [x] Procedural vertical world generator (seeded), difficulty curve
+- [ ] Crystals/collectibles + powerups (magnet, hyper-thrust) reimagined; pickup juice — sim done (collect/magnet), entities + render Phase 2
 
 ## M5 — Goo VFX & juice (the messy fluidity)
-- [ ] Gooey splash droplet system on every collision (metaball particles, colorful, gooey blending) — replaces PoC cubic sparks
-- [ ] Splat decals on trampolines/surfaces (drei Decal or projected), fade/accumulate
-- [ ] Wet goo trail behind blob; launch burst; combo flame; chromatic/glitch on big events
-- [ ] @react-three/postprocessing stack: bloom, vignette, chromatic aberration, color grade, DOF, SSAO/N8AO tuned for soft glow
-- [ ] anime.js + Motion micro-interactions across HUD/menus; haptics on mobile impacts
+- [x] Gooey splash droplet system on every collision (metaball droplets merge into the goo) — replaces PoC cubic sparks
+- [x] Splat decals (Canvas2D goo-splat painter, src/render/vfx/splat) — wire onto pads Phase 2
+- [ ] Wet goo trail behind blob; launch burst; combo flame — Phase 2
+- [x] @react-three/postprocessing stack: bloom + vignette + chromatic (speed-reactive) + color grade (app/scene/postfx); DOF/N8AO optional Phase 2
+- [ ] anime.js + Motion micro-interactions across HUD/menus; haptics on mobile impacts — Phase 2
 
 ## M6 — Audio (Tone.js)
-- [ ] Tone.js engine replacing PoC raw Web Audio: bounce/launch/chime/powerup/explode synths + procedural ambient pad/sequence
-- [ ] Volume/BGM settings wired to design tokens & store; mute; audio-graph tests
+- [x] Tone.js engine (lazy, gain-bus) + bounce/launch/chime/powerup/splat synths, wired into gameplay; no-op-before-init tests
+- [ ] Procedural ambient pad/sequence; volume/BGM settings UI wired to store — Phase 2
 
 ## M7 — Game loop, UI, meta
-- [ ] Game states (menu/playing/gameover) + store; HUD (altimeter, crystals, combo, powerup badges)
-- [ ] Menus/modals via shadcn + Motion: main menu, settings, blob customizer, mechanics manual, game over
-- [ ] Persistence (Capacitor Preferences/localStorage): best height, crystals, unlocked skins, settings
-- [ ] Combo/multiplier + scoring; best-height records; juice on milestones
+- [x] Game states (menu/playing/gameover) + store; HUD (altimeter, crystals, combo)
+- [x] Menus via shadcn + Motion: main menu, game over. Settings/customizer/manual modals — Phase 2
+- [x] Persistence (Capacitor Preferences): best height, crystals, settings
+- [x] Combo/multiplier + scoring; best-height records. Milestone juice — Phase 2
 
 ## M8 — Mobile & ship
-- [ ] Safe-area insets, touch-first tuning, Pixel-5a perf pass (target 60fps), keep-awake/orientation
-- [ ] Android build verified (assembleDebug), web build verified, Pages live & app RUNS (screenshot-verified)
-- [ ] Quality pass: a11y, error states, perf budget, remove dead PoC references
+- [x] Pages live & app RUNS (Phase 1, screenshot-verified); Android assembleDebug green in CI
+- [ ] Safe-area/touch tuning + Pixel-5a 60fps perf pass (metaball raymarch budget) — Phase 2
+- [ ] Quality pass: a11y, error states, perf budget — Phase 2
 
 ## M9 — Docs (pillar + agentic + HADS)
-- [ ] Pillar: README, docs/DESIGN.md (vision), docs/GAME-DESIGN.md (mechanics/physics constants/tuning), docs/ARCHITECTURE.md, docs/design-tokens + typography spec, CONTRIBUTING, STANDARDS, CHANGELOG, docs/TESTING, docs/DEPLOYMENT, docs/STATE
-- [ ] Agentic: AGENTS.md, per-system READMEs, conventions, copilot-instructions, .cursor/rules
-- [ ] HADS-format docs (token-efficient dual human+AI) via hads skill for the core specs
+- [x] Pillar: README, DESIGN, GAME-DESIGN, ARCHITECTURE, TESTING, DEPLOYMENT (CHANGELOG = release-please)
+- [ ] STANDARDS.md, docs/STATE.md, CONTRIBUTING — Phase 2
+- [ ] Agentic: AGENTS.md, per-system READMEs, copilot-instructions, .cursor/rules — Phase 2
+- [ ] HADS-format docs via hads skill — Phase 2
