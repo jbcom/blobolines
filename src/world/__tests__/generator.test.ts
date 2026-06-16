@@ -47,6 +47,16 @@ describe("world generator", () => {
     expect(second.trampolines[0]?.position[1]).toBeGreaterThan(first.highestY);
   });
 
+  it("spawns power-ups (magnet/thruster) only above the forgiving start", () => {
+    const chunk = generateUpTo(createRng(3), 0, 600);
+    for (const p of chunk.powerups) {
+      expect(p.position[1]).toBeGreaterThan(30);
+      expect(["magnet", "thruster"]).toContain(p.type);
+    }
+    // Over a tall tower at least one should appear.
+    expect(chunk.powerups.length).toBeGreaterThan(0);
+  });
+
   it("starter pad is centered, large, standard", () => {
     const s = starterPad();
     expect(s.position).toEqual([0, 0, 0]);

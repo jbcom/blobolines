@@ -36,3 +36,24 @@ export function magnetStep(blob: Vec3, crystal: Vec3, dt: number): Vec3 {
     crystal[2] + (blob[2] - crystal[2]) * t,
   ];
 }
+
+/**
+ * One step of crystal physics for the field: optionally magnet-pull a crystal toward the
+ * blob, then test pickup. Mutates `crystal` in place (the field holds live positions) and
+ * returns whether the blob gathered it. Pure aside from the in-place write — the testable
+ * seam for the CrystalField frame loop, so the magnet arg order can't silently invert.
+ */
+export function stepCrystal(
+  blob: Vec3,
+  crystal: [number, number, number],
+  dt: number,
+  magnet: boolean,
+): boolean {
+  if (magnet) {
+    const m = magnetStep(blob, crystal, dt);
+    crystal[0] = m[0];
+    crystal[1] = m[1];
+    crystal[2] = m[2];
+  }
+  return dist(blob, crystal) <= PICKUP_RADIUS;
+}

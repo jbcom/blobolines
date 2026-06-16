@@ -1,6 +1,11 @@
-import { Play } from "lucide-react";
+import { HelpCircle, Palette, Play, Settings } from "lucide-react";
 import { motion } from "motion/react";
+import { useState } from "react";
+import { initAudio, startMusic } from "@/audio";
 import { useGameStore, useWorldStore } from "@/state";
+import { BlobCustomizer } from "./BlobCustomizer";
+import { ManualModal } from "./ManualModal";
+import { SettingsModal } from "./SettingsModal";
 
 /**
  * Title / main menu. The blob identity, the one-line pitch, and the launch CTA into
@@ -11,8 +16,14 @@ export function TitleScreen() {
   const resetRun = useGameStore((s) => s.resetRun);
   const resetWorld = useWorldStore((s) => s.reset);
   const best = useGameStore((s) => s.progress.bestHeight);
+  const [customizing, setCustomizing] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [manualOpen, setManualOpen] = useState(false);
 
   const play = () => {
+    // This click is the user gesture that unlocks the AudioContext; start ambient music
+    // once it's ready.
+    void initAudio().then(startMusic);
     resetRun();
     resetWorld();
     setPhase("playing");
@@ -48,14 +59,42 @@ export function TitleScreen() {
         transition={{ type: "spring", stiffness: 400, damping: 18 }}
         className="flex items-center gap-3 rounded-2xl bg-accent px-10 py-4 font-display text-xl font-bold uppercase tracking-wider text-bg shadow-[var(--glow-blue)]"
       >
-        Play <Play className="size-5 fill-current" />
+        Play <Play className="size-5 fill-current" aria-hidden />
       </motion.button>
+
+      <div className="flex items-center gap-5">
+        <button
+          type="button"
+          onClick={() => setCustomizing(true)}
+          className="-my-2 flex min-h-11 items-center gap-2 py-2 font-ui text-sm font-semibold text-fg-muted hover:text-cream"
+        >
+          <Palette className="size-4" aria-hidden /> Customize
+        </button>
+        <button
+          type="button"
+          onClick={() => setSettingsOpen(true)}
+          className="-my-2 flex min-h-11 items-center gap-2 py-2 font-ui text-sm font-semibold text-fg-muted hover:text-cream"
+        >
+          <Settings className="size-4" aria-hidden /> Settings
+        </button>
+        <button
+          type="button"
+          onClick={() => setManualOpen(true)}
+          className="-my-2 flex min-h-11 items-center gap-2 py-2 font-ui text-sm font-semibold text-fg-muted hover:text-cream"
+        >
+          <HelpCircle className="size-4" aria-hidden /> How to play
+        </button>
+      </div>
 
       {best > 0 && (
         <span className="font-ui text-xs font-semibold text-fg-subtle">
           Best climb · <span className="text-tramp-gold">{best}m</span>
         </span>
       )}
+
+      <BlobCustomizer open={customizing} onOpenChange={setCustomizing} />
+      <SettingsModal open={settingsOpen} onOpenChange={setSettingsOpen} />
+      <ManualModal open={manualOpen} onOpenChange={setManualOpen} />
     </motion.div>
   );
 }

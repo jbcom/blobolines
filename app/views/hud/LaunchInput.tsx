@@ -37,9 +37,21 @@ export function LaunchInput() {
   });
 
   return (
-    <div {...bind()} className="pointer-events-auto absolute inset-0 touch-none">
+    <div
+      {...bind()}
+      role="application"
+      aria-label="Launch area — drag back to aim and release to fling the blob; drag while airborne to steer"
+      className="pointer-events-auto absolute inset-0 touch-none"
+    >
       {charge > 0 && (
-        <div className="absolute bottom-[18%] left-1/2 -translate-x-1/2">
+        <div
+          className="absolute bottom-[18%] left-1/2 -translate-x-1/2"
+          role="progressbar"
+          aria-label="Launch power"
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-valuenow={Math.round(charge * 100)}
+        >
           <div className="h-2 w-44 overflow-hidden rounded-full border border-border bg-bg/70">
             <div
               className="h-full rounded-full bg-gradient-to-r from-accent to-accent-warm"

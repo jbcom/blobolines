@@ -125,6 +125,13 @@ export function DevHarness() {
           >
             + 50m altitude 📸
           </button>
+          <button
+            type="button"
+            className={btn}
+            onClick={() => fire("combo-flame", () => setRun({ combo: 8 }))}
+          >
+            🔥 combo flame (x8) 📸
+          </button>
           <div className="mt-1 text-[10px] text-white/50">skin (📸)</div>
           <div className="flex flex-wrap gap-1">
             {SKINS.map((s) => (

@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <radialGradient id="sky" cx="50%" cy="35%" r="75%">
+      <stop offset="0%" stop-color="#cfe0e8"/>
+      <stop offset="100%" stop-color="#4f7488"/>
+    </radialGradient>
+    <radialGradient id="goo" cx="40%" cy="32%" r="75%">
+      <stop offset="0%" stop-color="#7fc0ff"/>
+      <stop offset="55%" stop-color="#2e8bf0"/>
+      <stop offset="100%" stop-color="#1b5fb0"/>
+    </radialGradient>
+  </defs>
+  <rect width="512" height="512" rx="112" fill="url(#sky)"/>
+  <!-- gooey blob body: a rounded blob with a drip -->
+  <path fill="url(#goo)" d="
+    M256 110
+    c84 0 150 64 150 150
+    c0 70-44 118-110 134
+    c-6 26-2 46 8 64
+    c-20 6-40-6-50-26
+    c-66-12-148-58-148-136
+    c0-86 66-150 150-150 z"/>
+  <!-- eyes -->
+  <g>
+    <ellipse cx="214" cy="238" rx="40" ry="46" fill="#f8fbff"/>
+    <ellipse cx="300" cy="238" rx="40" ry="46" fill="#f8fbff"/>
+    <circle cx="222" cy="248" r="20" fill="#0a0a0c"/>
+    <circle cx="308" cy="248" r="20" fill="#0a0a0c"/>
+    <circle cx="229" cy="241" r="6" fill="#ffffff"/>
+    <circle cx="315" cy="241" r="6" fill="#ffffff"/>
+  </g>
+</svg>

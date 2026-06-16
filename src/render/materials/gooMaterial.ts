@@ -10,6 +10,11 @@ import { palette } from "@/styles/tokens";
  * specular highlight with a subtle time shimmer, and a touch of subsurface glow.
  *
  * Gooey-look recipe adapted from arcade-cabinet (marmalade-drops metaballFluid).
+ *
+ * `uWobble` [0,~1] drives a vertex-level surface-tension jiggle: the sphere's vertices
+ * ripple in and out along their normal with a few overlapping sine lobes, so a hard
+ * landing sends a wobble across the goo skin that settles like a water balloon. The
+ * displaced normal is recomputed analytically so lighting tracks the wobble.
  */
 export const GooMaterial = shaderMaterial(
   {
@@ -17,16 +22,45 @@ export const GooMaterial = shaderMaterial(
     uRim: new THREE.Color(palette.goo.rim),
     uTime: 0,
     uWet: 0.9,
+    uWobble: 0,
   },
   /* glsl */ `
+    uniform float uTime;
+    uniform float uWobble;
     varying vec3 vNormalV;
     varying vec3 vViewDir;
     varying vec3 vPosL;
+
+    // Smooth multi-lobe surface displacement (signed) at a point on the unit sphere.
+    float wobbleDisp(vec3 p) {
+      float w = sin(p.x * 5.0 + uTime * 9.0)
+              + sin(p.y * 6.0 - uTime * 7.0)
+              + sin(p.z * 4.0 + uTime * 11.0);
+      return w * (1.0 / 3.0);
+    }
+
     void main() {
-      vec4 viewPos = modelViewMatrix * vec4(position, 1.0);
+      vec3 n = normalize(normal);
+      float amp = uWobble * 0.12;
+      float d = wobbleDisp(position) * amp;
+      vec3 displaced = position + n * d;
+
+      // Recompute the normal from two displaced tangent neighbours so lighting tracks
+      // the ripple (central-difference gradient of the displaced surface).
+      vec3 t1 = normalize(abs(n.y) < 0.99 ? cross(n, vec3(0.0, 1.0, 0.0)) : vec3(1.0, 0.0, 0.0));
+      vec3 t2 = cross(n, t1);
+      float e = 0.05;
+      vec3 pa = position + t1 * e; pa += normalize(pa) * wobbleDisp(pa) * amp;
+      vec3 pb = position + t2 * e; pb += normalize(pb) * wobbleDisp(pb) * amp;
+      vec3 wobbleN = normalize(cross(pa - displaced, pb - displaced));
+      // The cross product can flip; keep it on the outward side.
+      if (dot(wobbleN, n) < 0.0) wobbleN = -wobbleN;
+      vec3 useN = mix(n, wobbleN, clamp(uWobble, 0.0, 1.0));
+
+      vec4 viewPos = modelViewMatrix * vec4(displaced, 1.0);
       // normalMatrix = transpose(inverse(modelViewMatrix)) — correct under the
       // non-uniform squash-stretch scale; lighting is done in view space.
-      vNormalV = normalize(normalMatrix * normal);
+      vNormalV = normalize(normalMatrix * useN);
       vViewDir = normalize(-viewPos.xyz); // camera is at the origin in view space
       vPosL = position;
       gl_Position = projectionMatrix * viewPos;

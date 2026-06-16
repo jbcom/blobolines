@@ -1,5 +1,7 @@
 import { RotateCcw } from "lucide-react";
 import { motion } from "motion/react";
+import { useEffect, useRef } from "react";
+import { startMusic, stopMusic } from "@/audio";
 import { useGameStore, useWorldStore } from "@/state";
 
 /**
@@ -13,16 +15,33 @@ export function GameOver() {
   const setPhase = useGameStore((s) => s.setPhase);
   const resetRun = useGameStore((s) => s.resetRun);
   const resetWorld = useWorldStore((s) => s.reset);
+  const replayRef = useRef<HTMLButtonElement>(null);
+
+  const toMenu = () => {
+    resetRun();
+    stopMusic();
+    setPhase("menu");
+  };
+
+  // Move focus to the primary action when the dialog appears (WCAG 2.4.3), and let Escape
+  // dismiss to the menu (expected for a modal). No focus TRAP is claimed (aria-modal is
+  // intentionally omitted) — during gameover the HUD is unmounted, so the only focusables
+  // are this dialog's own buttons; asserting aria-modal without enforcing it would lie.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: toMenu is stable for mount lifetime
+  useEffect(() => {
+    replayRef.current?.focus();
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") toMenu();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
 
   const replay = () => {
     resetRun();
     resetWorld();
+    startMusic();
     setPhase("playing");
-  };
-
-  const toMenu = () => {
-    resetRun();
-    setPhase("menu");
   };
 
   // commitBestHeight already merged this run into `best` before game-over, so on a new
@@ -34,6 +53,8 @@ export function GameOver() {
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
+      role="dialog"
+      aria-labelledby="gameover-title"
       className="pointer-events-auto absolute inset-0 flex flex-col items-center justify-center gap-6 bg-bg/70 px-6 backdrop-blur-md"
     >
       <motion.div
@@ -42,7 +63,7 @@ export function GameOver() {
         transition={{ type: "spring", stiffness: 260, damping: 18 }}
         className="flex w-full max-w-xs flex-col items-center gap-5 rounded-xl border border-border bg-surface p-6 text-center"
       >
-        <h2 className="font-display text-2xl font-bold text-cream">
+        <h2 id="gameover-title" className="font-display text-2xl font-bold text-cream">
           {isRecord ? "New best climb!" : "Splat!"}
         </h2>
 
@@ -53,11 +74,12 @@ export function GameOver() {
         </div>
 
         <button
+          ref={replayRef}
           type="button"
           onClick={replay}
           className="flex w-full items-center justify-center gap-2 rounded-xl bg-accent py-3 font-display font-bold uppercase tracking-wider text-bg"
         >
-          <RotateCcw className="size-4" /> Climb again
+          <RotateCcw className="size-4" aria-hidden /> Climb again
         </button>
         <button
           type="button"

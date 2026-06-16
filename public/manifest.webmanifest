@@ -1,0 +1,14 @@
+{
+  "name": "Blobolines",
+  "short_name": "Blobolines",
+  "description": "Bounce a gooey blob as high as you can up endless springy trampolines.",
+  "start_url": ".",
+  "scope": ".",
+  "display": "fullscreen",
+  "orientation": "portrait",
+  "background_color": "#0e1822",
+  "theme_color": "#0e1822",
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}

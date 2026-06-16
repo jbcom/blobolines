@@ -12,11 +12,21 @@ export function Altimeter() {
   const milestoneProgress = ((height % 100) / 100) * 100;
 
   return (
-    <div className="pointer-events-auto flex flex-col gap-1 rounded-xl border border-border bg-surface px-4 py-3 backdrop-blur-md">
-      <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-fg-subtle">
+    // Labelled group, NOT a live region: height changes ~every frame, so aria-live here
+    // would machine-gun a screen reader. The aria-label lets a user poll the value; the
+    // animated inner spans are aria-hidden so the per-frame churn isn't re-announced.
+    <div
+      role="img"
+      className="pointer-events-auto flex flex-col gap-1 rounded-xl border border-border bg-surface px-4 py-3 backdrop-blur-md"
+      aria-label={`Altitude ${height} meters, best ${best} meters`}
+    >
+      <span
+        aria-hidden
+        className="text-[10px] font-bold uppercase tracking-[0.18em] text-fg-subtle"
+      >
         Altitude
       </span>
-      <div className="flex items-baseline gap-1">
+      <div className="flex items-baseline gap-1" aria-hidden>
         <motion.span
           key={height}
           data-testid="altitude-value"
@@ -29,14 +39,14 @@ export function Altimeter() {
         </motion.span>
         <span className="text-xs font-semibold text-accent">m</span>
       </div>
-      <div className="mt-1 h-1.5 w-32 overflow-hidden rounded-full bg-bg/70">
+      <div className="mt-1 h-1.5 w-32 overflow-hidden rounded-full bg-bg/70" aria-hidden>
         <motion.div
           className="h-full rounded-full bg-accent"
           animate={{ width: `${milestoneProgress}%` }}
           transition={{ ease: "easeOut", duration: 0.3 }}
         />
       </div>
-      <span className="mt-0.5 text-[10px] font-semibold text-fg-subtle">
+      <span className="mt-0.5 text-[10px] font-semibold text-fg-subtle" aria-hidden>
         Best <span className="text-tramp-gold">{best}m</span>
       </span>
     </div>

@@ -13,6 +13,14 @@ export {
 } from "./launchBridge";
 export { attachPersistence, hydrateStore } from "./persistence";
 export {
+  activatePowerup,
+  isPowerupActive,
+  POWERUP_DURATION,
+  powerupRemaining,
+  resetPowerups,
+  tickPowerups,
+} from "./powerupBridge";
+export {
   DEFAULT_PROGRESS,
   DEFAULT_SETTINGS,
   equippedSkinColor,

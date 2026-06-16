@@ -8,14 +8,18 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
+        // Dark-on-bright (text-[var(--bg)]) instead of white-on-accent: white on --accent
+        // is only 3.46:1 (fails AA for normal text), dark-on-accent is ~5.18:1 (passes),
+        // matching the hand-rolled CTA buttons in the views.
         default:
-          "bg-[var(--accent)] text-white rounded-[var(--radius-md)] shadow-[var(--glow-blue)] hover:brightness-110",
-        warm: "bg-[var(--accent-warm)] text-white rounded-[var(--radius-md)] shadow-[var(--glow-warm)] hover:brightness-110",
+          "bg-[var(--accent)] text-[var(--bg)] rounded-[var(--radius-md)] shadow-[var(--glow-blue)] hover:brightness-110",
+        warm: "bg-[var(--accent-warm)] text-[var(--bg)] rounded-[var(--radius-md)] shadow-[var(--glow-warm)] hover:brightness-110",
         surface:
           "bg-[var(--surface)] text-[var(--fg)] border border-[var(--border)] rounded-[var(--radius-md)] hover:border-[var(--border-strong)] hover:bg-[var(--bg-elevated)]",
         ghost:
           "bg-transparent text-[var(--fg-muted)] rounded-[var(--radius-md)] hover:bg-[var(--surface)] hover:text-[var(--fg)]",
-        danger: "bg-[var(--danger)] text-white rounded-[var(--radius-md)] hover:brightness-110",
+        danger:
+          "bg-[var(--danger)] text-[var(--bg)] rounded-[var(--radius-md)] hover:brightness-110",
       },
       size: {
         sm: "h-8 px-3 text-[length:var(--text-sm)]",

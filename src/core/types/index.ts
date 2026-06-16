@@ -48,6 +48,9 @@ export interface BlobSnapshot {
 
 /** Trampoline descriptor used by world-gen and factories. */
 export interface TrampolineSpec {
+  /** Stable unique id (the pad's generation Y, which strictly increases up the tower).
+   *  Used as the React key so the render window can prune low pads without remounting. */
+  id: number;
   position: Vec3;
   width: number;
   depth: number;

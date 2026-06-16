@@ -1,9 +1,11 @@
 import { useFrame } from "@react-three/fiber";
-import { CuboidCollider, RigidBody } from "@react-three/rapier";
-import { useMemo, useRef } from "react";
-import type { Group, Mesh } from "three";
+import { CuboidCollider, type RapierRigidBody, RigidBody } from "@react-three/rapier";
+import { useEffect, useMemo, useRef } from "react";
+import { CanvasTexture, type Group, type Mesh } from "three";
+import { playBounce } from "@/audio";
 import { clamp } from "@/core/math";
 import type { TrampType } from "@/core/types";
+import { createSplatCanvas } from "@/render/vfx";
 import {
   createTrampState,
   impactTargets,
@@ -11,7 +13,7 @@ import {
   stepTramp,
   type TrampState,
 } from "@/sim/trampoline";
-import { reportImpact, reportRebound } from "@/state";
+import { reportImpact, reportRebound, useGameStore } from "@/state";
 import { palette, trampColor } from "@/styles/tokens";
 
 /**
@@ -33,33 +35,69 @@ interface TrampolineProps {
 const THICKNESS = 1.2;
 
 export function Trampoline({ position, width, depth, type, onImpact }: TrampolineProps) {
+  const rbRef = useRef<RapierRigidBody>(null);
   const meshRef = useRef<Group>(null);
   const membraneRef = useRef<Mesh>(null);
   const spring = useRef<TrampState>(createTrampState());
   const color = trampColor[type];
+  // Per-pad deterministic phase/dir for moving pads (seeded by world position).
+  const movePhase = useRef((position[0] * 0.37 + position[2] * 0.91) % (Math.PI * 2));
+  // Fragile pads break shortly after the first impact.
+  const breaking = useRef(false);
+  const breakTimer = useRef(0);
 
   // Target spring values (mutated on impact, decays back to 0).
   const target = useRef({ depress: 0, tiltX: 0, tiltZ: 0 });
 
+  // Accumulating goo-splat decal painted onto the membrane top each landing. One Canvas2D
+  // texture per pad; impacts smear a colored blob at the (relX,relZ) contact point.
+  const splat = useMemo(() => {
+    const sc = createSplatCanvas(128);
+    const texture = new CanvasTexture(sc.canvas);
+    return { ...sc, texture };
+  }, []);
+  // Release the GPU texture when the pad unmounts (tower recycles pads as you climb).
+  useEffect(() => () => splat.texture.dispose(), [splat]);
+
   useFrame((_, dt) => {
     const g = meshRef.current;
     if (!g) return;
-    spring.current = stepTramp(spring.current, target.current, Math.min(dt, 1 / 30));
+    const step = Math.min(dt, 1 / 30);
+    spring.current = stepTramp(spring.current, target.current, step);
     // The group is a child of the RigidBody, so it's in body-LOCAL space — the depress
     // is the only Y offset; adding position[1] (the body's world Y) would double it.
     g.position.y = spring.current.depress.value;
     g.rotation.x = spring.current.tiltX.value;
     g.rotation.z = spring.current.tiltZ.value;
-    // Decay impact target back to rest so it springs up.
     target.current.depress *= 0.86;
     target.current.tiltX *= 0.86;
     target.current.tiltZ *= 0.86;
+
+    // Moving pads glide side to side on a kinematic body (collider moves with them).
+    if (type === "moving" && rbRef.current) {
+      movePhase.current += step * 1.2;
+      const x = position[0] + Math.sin(movePhase.current) * 5.5;
+      rbRef.current.setNextKinematicTranslation({ x, y: position[1], z: position[2] });
+    }
+
+    // Fragile pads shrink + fade then vanish ~0.8s after impact.
+    if (breaking.current) {
+      breakTimer.current += step;
+      const k = Math.max(0, 1 - breakTimer.current / 0.8);
+      g.scale.setScalar(k);
+      g.visible = k > 0.02;
+    }
   });
 
   const emissive = useMemo(() => color, [color]);
 
   return (
-    <RigidBody type="fixed" position={[position[0], position[1], position[2]]} colliders={false}>
+    <RigidBody
+      ref={rbRef}
+      type={type === "moving" ? "kinematicPosition" : "fixed"}
+      position={[position[0], position[1], position[2]]}
+      colliders={false}
+    >
       {/* Solid collider for the pad body. */}
       <CuboidCollider args={[width / 2, THICKNESS / 2, depth / 2]} />
       {/* Sensor just above the surface to detect + measure landings. */}
@@ -69,9 +107,12 @@ export function Trampoline({ position, width, depth, type, onImpact }: Trampolin
         sensor
         onIntersectionEnter={(e) => {
           const other = e.other.rigidBody;
-          const lv = other?.linvel();
+          // Guard against a peer whose handle was invalidated this frame (the render window
+          // can unmount a pad's body, and a stale handle would throw on linvel/translation).
+          if (!other || other.isValid?.() === false) return;
+          const lv = other.linvel();
           // Only react to a descending blob (ignore the upward exit through the sensor).
-          if (!other || !lv || lv.y >= 0) return;
+          if (!lv || lv.y >= 0) return;
           const speed = Math.abs(lv.y);
           // Relative hit point on the pad ([-0.5,0.5] each axis) → off-center hits tilt
           // the pad toward the contact, deflecting the bounce (no longer hardcoded 0).
@@ -79,12 +120,21 @@ export function Trampoline({ position, width, depth, type, onImpact }: Trampolin
           const relX = clamp((bt.x - position[0]) / width, -0.5, 0.5);
           const relZ = clamp((bt.z - position[2]) / depth, -0.5, 0.5);
           target.current = impactTargets(speed, relX, relZ);
+          // Smear a goo splat on the membrane at the contact point, sized by impact and
+          // tinted to the blob's current skin. Accumulates across landings.
+          const skin = useGameStore.getState().progress.skin;
+          const size = clamp(0.1 + speed / 60, 0.1, 0.32);
+          splat.paint(relX + 0.5, relZ + 0.5, palette.blob[skin], size);
+          splat.texture.needsUpdate = true;
           reportImpact(speed);
           // Trampoline rebound: bounce back at impact speed × type multiplier, with a
           // floor so even a gentle landing pops (the pad is springy). The blob's
           // slingshot drag adds an extra charged launch on top.
           const reboundSpeed = Math.max(speed, 8) * reboundMultiplier[type];
           reportRebound({ speed: reboundSpeed, type });
+          playBounce(type);
+          // Fragile pads start disintegrating after this bounce (gives one last launch).
+          if (type === "fragile") breaking.current = true;
           onImpact?.(speed, relX, relZ);
         }}
       />
@@ -104,10 +154,23 @@ export function Trampoline({ position, width, depth, type, onImpact }: Trampolin
         <mesh ref={membraneRef} position={[0, THICKNESS / 2 + 0.02, 0]}>
           <boxGeometry args={[width * 0.92, 0.18, depth * 0.92]} />
           <meshStandardMaterial
-            color={palette.goo.wet}
+            color={palette.cream}
             emissive={emissive}
-            emissiveIntensity={0.6}
-            roughness={0.15}
+            emissiveIntensity={0.18}
+            roughness={0.25}
+          />
+        </mesh>
+        {/* Accumulating goo-splat decal — a transparent plane skimming the membrane top,
+            painted by the Canvas2D splat texture on each landing. polygonOffset lifts it
+            above the membrane to avoid z-fighting. */}
+        <mesh position={[0, THICKNESS / 2 + 0.02 + 0.1, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+          <planeGeometry args={[width * 0.92, depth * 0.92]} />
+          <meshBasicMaterial
+            map={splat.texture}
+            transparent
+            depthWrite={false}
+            polygonOffset
+            polygonOffsetFactor={-1}
           />
         </mesh>
       </group>

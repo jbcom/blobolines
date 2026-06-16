@@ -1,1 +1,1 @@
-export { type GeneratedChunk, generateUpTo, starterPad } from "./generator";
+export { type GeneratedChunk, generateUpTo, type PowerUpSpec, starterPad } from "./generator";

@@ -30,6 +30,9 @@ interface BlobActorProps {
   radius?: number;
   /** Read live state from the diagnostics bridge instead of props. */
   live?: boolean;
+  /** Render the solid goo sphere body. Off when a GooField metaball skin replaces it
+   *  (the eyes + squash group still apply). Default on (menu/fixtures). */
+  body?: boolean;
 }
 
 export function BlobActor({
@@ -39,9 +42,12 @@ export function BlobActor({
   expression = "idle",
   radius = 0.85,
   live = false,
+  body = true,
 }: BlobActorProps) {
   const groupRef = useRef<Group>(null);
   const material = useMemo(() => new GooMaterial() as unknown as ShaderMaterial, []);
+  /** Surface-tension wobble envelope [0,1] — spikes on impact, decays each frame. */
+  const wobble = useRef(0);
 
   // Release the compiled shader program when this blob unmounts (respawn, skin swap, HMR).
   useEffect(() => () => material.dispose(), [material]);
@@ -69,13 +75,20 @@ export function BlobActor({
     g.scale.x += (s.x - g.scale.x) * k;
     g.scale.y += (s.y - g.scale.y) * k;
     g.scale.z += (s.z - g.scale.z) * k;
+
+    // Surface-tension wobble: a fresh impact pumps the envelope up (toward the impact
+    // amount), then it decays so the goo skin ripples and settles like a water balloon.
+    wobble.current = Math.max(wobble.current * Math.exp(-dt / 0.5), imp);
+    material.uniforms.uWobble.value = wobble.current;
   });
 
   return (
     <group ref={groupRef}>
-      <mesh material={material}>
-        <sphereGeometry args={[radius, 48, 48]} />
-      </mesh>
+      {body && (
+        <mesh material={material}>
+          <sphereGeometry args={[radius, 48, 48]} />
+        </mesh>
+      )}
       <BlobEyes expression={expression} radius={radius} live={live} />
     </group>
   );
