@@ -337,7 +337,12 @@ Camera follow + shake, in-game deformation, wet glistening shader + color gradie
       SQUISHES the button (scaleX 1.08 / scaleY 0.82 — wide+short like pressing a goo blob) with
       a springy overshoot on release, instead of a uniform shrink. Reduced-motion → a plain
       scale 0.97 (no squish).
-- [ ] Reduced-motion guards on every new flourish (static cue fallback).
+- [x] Reduced-motion guards on every flourish: App wraps everything in <MotionConfig
+      reducedMotion="always"|"user"> (driven by the in-app toggle + OS pref), so all Framer
+      motion.* flourishes (HUD pops, banners, card springs) reduce globally. The looping ones
+      get explicit STATIC-cue fallbacks: LaunchInput pulse (already), Play squish (plain scale),
+      and the Onboarding drag-ghost now parks at the pulled-back position with a ↓ arrow instead
+      of a frozen-mid-loop dot. The 3D VFX (LaunchRing, screen flash) are one-shot, not looping.
 
 ## M13 — visual/render/VFX depth (from visual audit, 2026-06-16)
 ### Blobby the protagonist — MORE BLOBBY, less ball (owner feedback 2026-06-16, HIGH PRIORITY)
