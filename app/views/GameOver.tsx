@@ -1,7 +1,7 @@
 import { Progress } from "@app/components/ui/progress";
-import { RotateCcw } from "lucide-react";
+import { Check, RotateCcw, Share2 } from "lucide-react";
 import { motion } from "motion/react";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { playChime, startMusic, stopMusic } from "@/audio";
 import { comboMultiplier } from "@/sim/launch";
 import { useGameStore, useWorldStore } from "@/state";
@@ -47,6 +47,25 @@ export function GameOver() {
     resetWorld();
     startMusic();
     setPhase("playing");
+  };
+
+  // Share the run — native share sheet where available, clipboard fallback otherwise.
+  // Both are user-initiated (this button); the text carries no personal data.
+  const [shared, setShared] = useState(false);
+  const share = async () => {
+    const text = `I climbed ${height}m in Blobolines! 🫧`;
+    const url = "https://jbcom.github.io/blobolines/";
+    try {
+      if (typeof navigator !== "undefined" && navigator.share) {
+        await navigator.share({ title: "Blobolines", text, url });
+      } else if (typeof navigator !== "undefined" && navigator.clipboard) {
+        await navigator.clipboard.writeText(`${text} ${url}`);
+        setShared(true);
+        setTimeout(() => setShared(false), 1600);
+      }
+    } catch {
+      // user cancelled the share sheet, or clipboard denied — no-op.
+    }
   };
 
   // commitBestHeight already merged this run into `best` before game-over, so on a new
@@ -128,6 +147,21 @@ export function GameOver() {
           className="flex w-full items-center justify-center gap-2 rounded-xl bg-accent py-3 font-display font-bold uppercase tracking-wider text-bg"
         >
           <RotateCcw className="size-4" aria-hidden /> Climb again
+        </button>
+        <button
+          type="button"
+          onClick={share}
+          className="flex w-full items-center justify-center gap-2 rounded-xl border border-border py-2.5 font-display font-bold uppercase tracking-wider text-fg-muted hover:text-cream"
+        >
+          {shared ? (
+            <>
+              <Check className="size-4" aria-hidden /> Copied!
+            </>
+          ) : (
+            <>
+              <Share2 className="size-4" aria-hidden /> Share
+            </>
+          )}
         </button>
         <button
           type="button"

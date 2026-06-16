@@ -27,6 +27,8 @@ test("shows the run recap: altitude, max combo, crystals run + lifetime, short-b
   await expect
     .element(screen.getByRole("progressbar", { name: /fraction of best/i }))
     .toBeInTheDocument();
+  // Share button present.
+  await expect.element(screen.getByRole("button", { name: /share/i })).toBeInTheDocument();
 });
 
 test("celebrates a record run instead of a short-by delta", async () => {

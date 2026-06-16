@@ -283,7 +283,7 @@ Camera follow + shake, in-game deformation, wet glistening shader + color gradie
 - [x] Replace PowerUpBadges 120ms polling with bridge subscription (exact timing, cheaper render). (single rAF loop reads powerupRemaining for exact timing + imperative bar writes; React state flips only on on/off edge)
 ### Tier 2 — game-over recap
 - [x] GameOver run recap: max combo, crystals this run vs lifetime, delta-to-best (+Nm / Nm short); extend RunStats with maxCombo.
-- [ ] GameOver Share button (navigator.share + clipboard fallback).
+- [x] GameOver Share button (navigator.share + clipboard fallback).
 - [x] Real personal-best celebration on GameOver: goo-splat/confetti burst, gold card glow, distinct sound, "+Nm over best". (gold card glow + border, chime on record, "+N m over best" via run.recordDelta captured at commitBestHeight)
 - [x] GameOver delta-vs-best progress bar (run height as fraction of best).
 - [ ] GameOver: crystals → next-skin progress + jump to customizer.
