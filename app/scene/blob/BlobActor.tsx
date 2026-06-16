@@ -30,6 +30,9 @@ interface BlobActorProps {
   radius?: number;
   /** Read live state from the diagnostics bridge instead of props. */
   live?: boolean;
+  /** Render the solid goo sphere body. Off when a GooField metaball skin replaces it
+   *  (the eyes + squash group still apply). Default on (menu/fixtures). */
+  body?: boolean;
 }
 
 export function BlobActor({
@@ -39,6 +42,7 @@ export function BlobActor({
   expression = "idle",
   radius = 0.85,
   live = false,
+  body = true,
 }: BlobActorProps) {
   const groupRef = useRef<Group>(null);
   const material = useMemo(() => new GooMaterial() as unknown as ShaderMaterial, []);
@@ -73,9 +77,11 @@ export function BlobActor({
 
   return (
     <group ref={groupRef}>
-      <mesh material={material}>
-        <sphereGeometry args={[radius, 48, 48]} />
-      </mesh>
+      {body && (
+        <mesh material={material}>
+          <sphereGeometry args={[radius, 48, 48]} />
+        </mesh>
+      )}
       <BlobEyes expression={expression} radius={radius} live={live} />
     </group>
   );

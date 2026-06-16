@@ -14,6 +14,8 @@ import {
   useWorldStore,
 } from "@/state";
 import { BlobActor } from "./BlobActor";
+import { GooField } from "./GooField";
+import { useDroplets } from "./useDroplets";
 
 /**
  * The PLAYABLE blob — a dynamic Rapier body wrapping the gooey visual. It reports its
@@ -31,6 +33,7 @@ export function PlayerBlob() {
   const setPhase = useGameStore((s) => s.setPhase);
   const commitBestHeight = useGameStore((s) => s.commitBestHeight);
   const ensureHeight = useWorldStore((s) => s.ensureHeight);
+  const { splash, get: getDroplets } = useDroplets();
   const maxY = useRef(0);
   const lastEnsureY = useRef(0);
   const dead = useRef(false);
@@ -103,7 +106,10 @@ export function PlayerBlob() {
     // drives the squint eyes + squash. Normalized against MAX_IMPACT_SPEED.
     const landed = consumeImpact();
     if (landed > 0) {
-      impact.current = Math.min(1, landed / MAX_IMPACT_SPEED);
+      const strength = Math.min(1, landed / MAX_IMPACT_SPEED);
+      impact.current = strength;
+      // Fling a gooey splash from the contact point (just under the blob).
+      splash([p.x, p.y - BLOB.radius, p.z], strength);
     }
     impact.current = Math.max(0, impact.current - dt * 2.5);
     const fallDepth = maxY.current - p.y;
@@ -129,19 +135,25 @@ export function PlayerBlob() {
   });
 
   return (
-    <RigidBody
-      ref={bodyRef}
-      colliders={false}
-      position={[0, 3, 0]}
-      linearDamping={BLOB.linearDamping}
-      friction={BLOB.friction}
-      restitution={BLOB.restitution}
-      ccd={BLOB.ccd}
-      canSleep={false}
-      enabledRotations={[false, false, false]}
-    >
-      <BallCollider args={[BLOB.radius]} />
-      <BlobActor skin={skin} radius={BLOB.radius} live />
-    </RigidBody>
+    <>
+      <RigidBody
+        ref={bodyRef}
+        colliders={false}
+        position={[0, 3, 0]}
+        linearDamping={BLOB.linearDamping}
+        friction={BLOB.friction}
+        restitution={BLOB.restitution}
+        ccd={BLOB.ccd}
+        canSleep={false}
+        enabledRotations={[false, false, false]}
+      >
+        <BallCollider args={[BLOB.radius]} />
+        {/* Eyes + squash group only; the GooField metaball provides the goo body. */}
+        <BlobActor skin={skin} radius={BLOB.radius} live body={false} />
+      </RigidBody>
+      {/* Goo skin lives in world space (follows the blob via the diagnostics bridge),
+          NOT as a physics child — it merges the blob with the live splash droplets. */}
+      <GooField skin={skin} blobRadius={BLOB.radius} getDroplets={getDroplets} />
+    </>
   );
 }
