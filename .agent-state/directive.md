@@ -305,6 +305,11 @@ Camera follow + shake, in-game deformation, wet glistening shader + color gradie
 - [x] Gate/hide haptics control on non-touch; add intensity/test. (TOUCH_CAPABLE gate hides the control on pointer-only devices; a Test button fires a sample impact)
 - [x] Slingshot sensitivity drag-to-test preview area. (drag strip under the slider; dot tracks the pointer scaled by sensitivity, snaps home on release)
 ### Tier 6 — responsive & cohesion
+- [ ] Device-aware element SCALING (owner feedback 2026-06-16): scale UI + gameplay-readout
+      sizing to the actual device using Capacitor device detection (@capacitor/device) on
+      native AND a web fallback (viewport/DPR/pointer-coarse). Phone vs tablet vs desktop
+      get appropriately-sized HUD/controls/text — not one fixed px scale. A device/scale
+      facade in src/platform feeding a CSS scale var / store value the UI reads.
 - [ ] Hud wide/tall breakpoints: anchor readouts to safe-area corners, don't stretch.
 - [ ] TitleScreen/GameOver respect safe-left/right in landscape/notch.
 - [ ] Modal max-height + internal scroll for short/landscape screens.
@@ -369,6 +374,25 @@ Camera follow + shake, in-game deformation, wet glistening shader + color gradie
 ### Bugs (do first — real correctness)
 - [x] BUG fixed: ComboBadge now shows the real comboMultiplier (was a divergent 0.5 formula); deleted the dead buggy comboLabel.
 - [x] BUG fixed: runtime combo increment now clamps to MAX_COMBO (was unclamped).
+### Navigability — varied platform cants + shapes (HIGH PRIORITY, owner-decided 2026-06-16)
+Right now every trampoline is one shape + one flat angle → climbing is impossible/luck.
+DECISION: fix it with DIFFERENT PLATFORM CANTS AND SHAPES + golden-path placement — NOT
+permeability (permeable one-way pads rejected by owner).
+- [ ] Canted/angled trampoline pad type(s): a pad with a real tilt whose normal redirects
+      the bounce LATERALLY (not just straight up) — the building block of the climb. The
+      bounce should reflect off the tilted membrane so a blob is thrown sideways-and-up
+      toward the next pad.
+- [ ] Varied platform shapes + sizes (not all one rectangle): mix widths/depths and a few
+      silhouettes so the tower reads varied and gives different bounce footprints.
+- [ ] GOLDEN-PATH placement rules in the world generator: emit a mix of horizontal + canted
+      pads under a GUARANTEE that for every pad there is at least one reachable next pad
+      (canted where needed) that bounces you onward — the generator proves a continuous
+      reachable route upward. This is THE navigability fix.
+- [ ] Real-browser component test proving the climb: a blob launched up the generated tower
+      can actually progress upward across canted pads (the playability safety net).
+- [ ] Better aim/curve control (mid-air steer / hook-shot) so a skilled player can also
+      curve onto an offset pad — complements the canted-layout fix.
+
 ### Mechanics depth
 - [ ] Add a real SCORE system (height + crystals + combo + style), persisted high score separate from best height.
 - [ ] Crystal depth: tiers/bonus/multiplier, not flat +1; consumable/upgrade sinks beyond cosmetic skins.
