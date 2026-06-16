@@ -12,8 +12,10 @@ export const lerp = (a: number, b: number, t: number): number => a + (b - a) * t
 export const inverseLerp = (a: number, b: number, v: number): number =>
   a === b ? 0 : (v - a) / (b - a);
 
-/** Frame-rate independent exponential approach: fraction to cover this step. */
-export const damp = (dt: number, tau: number): number => 1 - Math.exp(-dt / Math.max(tau, 1e-6));
+/** Frame-rate independent exponential approach: fraction to cover this step. Negative
+ *  dt is clamped to 0 so the result always stays in [0, 1). */
+export const damp = (dt: number, tau: number): number =>
+  1 - Math.exp(-Math.max(dt, 0) / Math.max(tau, 1e-6));
 
 /** Ease-out cubic — the spring-back curve for squash/stretch and eye states. */
 export const easeOutCubic = (t: number): number => 1 - (1 - t) ** 3;

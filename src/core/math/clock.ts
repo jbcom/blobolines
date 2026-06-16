@@ -21,7 +21,9 @@ export interface ClockOptions {
 }
 
 export function createClock(options: ClockOptions = {}): Clock {
-  const maxDelta = options.maxDelta ?? 1 / 30;
+  // Clamp to a positive value — a negative maxDelta would make tick() return negative
+  // deltas and destabilize the sim.
+  const maxDelta = Math.max(options.maxDelta ?? 1 / 30, 1e-6);
   let last = 0;
   let simElapsed = 0;
   let initialized = false;
@@ -34,7 +36,10 @@ export function createClock(options: ClockOptions = {}): Clock {
         initialized = true;
         return 0;
       }
-      const dt = Math.min(Math.max(0, now - last), maxDelta);
+      // Backward time → 0 delta, and DON'T rewind `last` (rewinding would create an
+      // artificial positive spike on the next forward tick).
+      if (now <= last) return 0;
+      const dt = Math.min(now - last, maxDelta);
       last = now;
       simElapsed += dt;
       return dt;

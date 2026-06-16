@@ -69,10 +69,19 @@ export function createRng(seed: number | string): Rng {
 
   return {
     next,
-    range: (min, max) => min + next() * (max - min),
-    int: (min, max) => min + Math.floor(next() * (max - min + 1)),
+    range: (min, max) => {
+      if (max < min) throw new Error(`createRng.range: max (${max}) < min (${min})`);
+      return min + next() * (max - min);
+    },
+    int: (min, max) => {
+      if (max < min) throw new Error(`createRng.int: max (${max}) < min (${min})`);
+      return min + Math.floor(next() * (max - min + 1));
+    },
     bool: (p = 0.5) => next() < p,
-    pick: (items) => items[Math.floor(next() * items.length)] as (typeof items)[number],
+    pick: (items) => {
+      if (items.length === 0) throw new Error("createRng.pick: empty array");
+      return items[Math.floor(next() * items.length)] as (typeof items)[number];
+    },
     sign: () => (next() < 0.5 ? -1 : 1),
     reset: () => {
       state = base;

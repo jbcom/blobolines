@@ -67,6 +67,16 @@ describe("createRng", () => {
     expect([r.next(), r.next(), r.next()]).toEqual(first);
   });
 
+  it("pick() throws on an empty array (non-empty contract)", () => {
+    expect(() => createRng(1).pick([])).toThrow();
+  });
+
+  it("range() and int() throw on inverted bounds", () => {
+    const r = createRng(1);
+    expect(() => r.range(5, 1)).toThrow();
+    expect(() => r.int(9, 2)).toThrow();
+  });
+
   it("normalizeSeed yields an unsigned 32-bit int", () => {
     expect(normalizeSeed(-1)).toBe(0xffffffff);
     expect(normalizeSeed("x")).toBeGreaterThanOrEqual(0);

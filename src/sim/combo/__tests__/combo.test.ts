@@ -20,10 +20,9 @@ describe("combo tracking", () => {
   });
 
   it("breaking resets to zero", () => {
-    let c = createCombo();
-    c = onCleanBounce(onCleanBounce(c));
-    c = breakCombo();
-    expect(c.streak).toBe(0);
+    const built = onCleanBounce(onCleanBounce(createCombo()));
+    expect(built.streak).toBe(2);
+    expect(breakCombo().streak).toBe(0);
   });
 });
 

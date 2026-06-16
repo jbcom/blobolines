@@ -42,6 +42,22 @@ describe("createClock", () => {
     expect(c.tick(9)).toBe(0);
   });
 
+  it("does not spike after a backward tick (no last-rewind)", () => {
+    const c = createClock({ maxDelta: 1 });
+    c.tick(10);
+    expect(c.tick(9)).toBe(0); // backward → 0
+    expect(c.tick(10)).toBeCloseTo(0, 6); // forward to where we were → still ~0, no spike
+    expect(c.tick(10.5)).toBeCloseTo(0.5, 6);
+  });
+
+  it("clamps a negative maxDelta to a positive value", () => {
+    const c = createClock({ maxDelta: -5 });
+    c.tick(0);
+    const dt = c.tick(10);
+    expect(dt).toBeGreaterThanOrEqual(0);
+    expect(dt).toBeLessThan(1);
+  });
+
   it("reset re-establishes the origin on next tick", () => {
     const c = createClock();
     c.tick(0);
