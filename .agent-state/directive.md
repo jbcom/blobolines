@@ -311,7 +311,12 @@ Camera follow + shake, in-game deformation, wet glistening shader + color gradie
       HUD readout row scales by it (phone bigger, desktop baseline). Pure deviceScale unit-
       tested. (viewport+pointer is the right signal on both web & native — chose it over a
       @capacitor/device dep that only gives model/platform, not a usable scale.)
-- [ ] Hud wide/tall breakpoints: anchor readouts to safe-area corners, don't stretch.
+- [x] Hud wide/tall breakpoints: readouts are now ABSOLUTELY anchored to the safe-area corners
+      (altimeter top-left, combo top-center, crystals top-right) instead of a full-width flex
+      justify-between row that flung them to opposite edges of a wide monitor. Each scales by
+      --ui-scale from its own corner origin. Verified live at 1568px wide AND 420px portrait
+      (claude-in-chrome) — clean at both. Hud.layout browser fixture asserts the altimeter stays
+      in the left third (not stretched center).
 - [ ] TitleScreen/GameOver respect safe-left/right in landscape/notch.
 - [ ] Modal max-height + internal scroll for short/landscape screens.
 - [ ] Goo-language pass on DOM chrome (organic corners/squish on CTA + badges).

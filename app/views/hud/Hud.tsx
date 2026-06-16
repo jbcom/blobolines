@@ -23,27 +23,47 @@ export function Hud() {
       <ScreenFlash />
       {/* first-run drag-to-launch coachmark (until the first launch) */}
       <Onboarding />
-      <div
-        className="pointer-events-none flex h-full w-full flex-col p-4"
-        style={{
-          paddingTop: "calc(var(--safe-top) + 0.75rem)",
-          paddingBottom: "calc(var(--safe-bottom) + 0.75rem)",
-          paddingLeft: "calc(var(--safe-left) + 1rem)",
-          paddingRight: "calc(var(--safe-right) + 1rem)",
-        }}
-      >
-        {/* Device-aware scale: the readout row scales by --ui-scale (phone bigger so the
-            HUD stays legible at arm's length; desktop baseline). transform-origin top keeps
-            it anchored to the safe-area top while scaling. */}
+      {/* Readouts are ANCHORED to the safe-area corners, NOT stretched across the row. On a
+          wide landscape/desktop screen a flex justify-between would fling the altimeter and
+          crystals to opposite edges of a 2560px monitor (and float the combo far from both);
+          corner-anchoring keeps each readout pinned where the thumb/eye expects it regardless
+          of aspect ratio. Each scales by --ui-scale from its own corner origin. */}
+      <div className="pointer-events-none absolute inset-0">
+        {/* top-left: altimeter */}
         <div
-          className="flex w-full items-start justify-between gap-3"
-          style={{ transform: "scale(var(--ui-scale))", transformOrigin: "top center" }}
+          className="absolute"
+          style={{
+            top: "calc(var(--safe-top) + 0.75rem)",
+            left: "calc(var(--safe-left) + 1rem)",
+            transform: "scale(var(--ui-scale))",
+            transformOrigin: "top left",
+          }}
         >
           <Altimeter />
-          <div className="flex flex-1 flex-col items-center pt-1">
-            <ComboBadge />
-            <PowerUpBadges />
-          </div>
+        </div>
+        {/* top-center: combo + power-ups */}
+        <div
+          className="absolute flex flex-col items-center"
+          style={{
+            top: "calc(var(--safe-top) + 0.75rem)",
+            left: "50%",
+            transform: "translateX(-50%) scale(var(--ui-scale))",
+            transformOrigin: "top center",
+          }}
+        >
+          <ComboBadge />
+          <PowerUpBadges />
+        </div>
+        {/* top-right: crystals */}
+        <div
+          className="absolute"
+          style={{
+            top: "calc(var(--safe-top) + 0.75rem)",
+            right: "calc(var(--safe-right) + 1rem)",
+            transform: "scale(var(--ui-scale))",
+            transformOrigin: "top right",
+          }}
+        >
           <CrystalCounter />
         </div>
       </div>
