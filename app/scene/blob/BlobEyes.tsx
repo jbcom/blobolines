@@ -22,13 +22,13 @@ const EYE_OFFSET_Y = 0.18;
 function Eye({ side }: { side: 1 | -1 }) {
   return (
     <group position={[side * EYE_OFFSET_X, EYE_OFFSET_Y, 0]}>
-      {/* dark bezel ring behind the sclera */}
-      <mesh position={[0, 0, 0.005]}>
+      {/* dark bezel ring behind the sclera (lid — squashes on blink/squint) */}
+      <mesh position={[0, 0, 0.005]} name={`lid-${side}`}>
         <sphereGeometry args={[0.2, 24, 24]} />
         <meshBasicMaterial color="#14110f" />
       </mesh>
-      {/* white sclera, pushed forward onto the face */}
-      <mesh position={[0, 0, 0.04]}>
+      {/* white sclera, pushed forward onto the face (lid) */}
+      <mesh position={[0, 0, 0.04]} name={`lid-${side}b`}>
         <sphereGeometry args={[0.18, 24, 24]} />
         <meshStandardMaterial color="#f8fbff" roughness={0.25} />
       </mesh>
@@ -65,12 +65,15 @@ export function BlobEyes({ expression, radius }: BlobEyesProps) {
     const blink = cycle < 0.14 ? Math.sin((cycle / 0.14) * Math.PI) : 0;
 
     const shape = eyeShape(expression, blink);
-    g.scale.set(shape.scale * radius, shape.scale * shape.openY * radius, shape.scale * radius);
+    // Keep the parent group UNIFORM so pupils/tears stay round; the vertical eye
+    // opening (blink/squint/wide) is applied only to the lid meshes (sclera + bezel).
+    g.scale.setScalar(shape.scale * radius);
 
     const tearing = shape.tear > 0;
     g.traverse((o) => {
-      if (o.name.startsWith("pupil-")) o.scale.setScalar(shape.pupil);
-      if (o.name.startsWith("tear-")) o.visible = tearing;
+      if (o.name.startsWith("lid-")) o.scale.set(1, shape.openY, 1);
+      else if (o.name.startsWith("pupil-")) o.scale.setScalar(shape.pupil);
+      else if (o.name.startsWith("tear-")) o.visible = tearing;
     });
   });
 

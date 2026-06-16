@@ -18,15 +18,17 @@ export const GooMaterial = shaderMaterial(
     uWet: 0.9,
   },
   /* glsl */ `
-    varying vec3 vNormalW;
+    varying vec3 vNormalV;
     varying vec3 vViewDir;
     varying vec3 vPosL;
     void main() {
-      vec4 worldPos = modelMatrix * vec4(position, 1.0);
-      vNormalW = normalize(mat3(modelMatrix) * normal);
-      vViewDir = normalize(cameraPosition - worldPos.xyz);
+      vec4 viewPos = modelViewMatrix * vec4(position, 1.0);
+      // normalMatrix = transpose(inverse(modelViewMatrix)) — correct under the
+      // non-uniform squash-stretch scale; lighting is done in view space.
+      vNormalV = normalize(normalMatrix * normal);
+      vViewDir = normalize(-viewPos.xyz); // camera is at the origin in view space
       vPosL = position;
-      gl_Position = projectionMatrix * viewMatrix * worldPos;
+      gl_Position = projectionMatrix * viewPos;
     }
   `,
   /* glsl */ `
@@ -36,14 +38,15 @@ export const GooMaterial = shaderMaterial(
     uniform float uTime;
     uniform float uWet;
 
-    varying vec3 vNormalW;
+    varying vec3 vNormalV;
     varying vec3 vViewDir;
     varying vec3 vPosL;
 
-    const vec3 LIGHT_DIR = vec3(0.3, 1.0, 0.6);
+    // Fixed view-space key light (top-front-right) — stylized, camera-relative.
+    const vec3 LIGHT_DIR = vec3(0.3, 0.7, 0.9);
 
     void main() {
-      vec3 N = normalize(vNormalW);
+      vec3 N = normalize(vNormalV);
       vec3 V = normalize(vViewDir);
       vec3 L = normalize(LIGHT_DIR);
       vec3 H = normalize(L + V);

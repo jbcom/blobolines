@@ -6,8 +6,20 @@
 Build **Blobolines** — a gooey-blob vertical-launch physics arcade game — from the
 Gemini PoC (`blobolines-poc.html`, "Neon Launch 3D") as the **minimum baseline**.
 Elevate it into a complete, polished, shippable game. Public repo `jbcom/blobolines`,
-MIT, GitHub Pages (web) + Android (Capacitor). One initial commit on a feature branch,
-then continuous forward commits. NO stopping.
+MIT, GitHub Pages (web) + Android (Capacitor). NO stopping.
+
+## TWO-PHASE DELIVERY (owner decision)
+Two distinct spheres of work, two branches — cleaner focus than mixing them:
+1. **PHASE 1 — PLAYABLE (branch `feat/foundation`, PR #2).** Make the game actually
+   PLAYABLE end-to-end: launch the blob off trampolines, climb, fall/die, score. PROVE
+   it in a real HEADED browser via the vitest browser plugin + screenshot capture (read
+   the screenshot, confirm gameplay). Then push, address ALL PR feedback (CodeRabbit/
+   bots/CI), and SQUASH-MERGE once everything passes green.
+2. **PHASE 2 — POLISH (new branch off merged main).** Only after Phase 1 merges: goo
+   splash VFX, splat decals, trails, jiggle, audio depth, post-processing, juice,
+   content/balance, mobile perf. The deep polish lives here.
+Do PHASE 1 first to completion+merge, THEN cut the polish branch. Don't pull polish work
+forward into Phase 1 — minimum playable + proven + merged is the Phase-1 bar.
 
 ## Core goal (the spine — preserve from the PoC)
 The central tension is unchanged: launch your blob AS HIGH AS POSSIBLE up an endless

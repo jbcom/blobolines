@@ -1,6 +1,6 @@
 import { useFrame } from "@react-three/fiber";
-import { useMemo, useRef } from "react";
-import type { Color, Group, Mesh, ShaderMaterial } from "three";
+import { useEffect, useMemo, useRef } from "react";
+import type { Color, Group, ShaderMaterial } from "three";
 import type { BlobSkin, EyeExpression } from "@/core/types";
 import { GooMaterial } from "@/render/materials";
 import { combineScale, impactSquash, speedStretch } from "@/sim/blob";
@@ -33,17 +33,13 @@ export function BlobActor({
   radius = 0.85,
 }: BlobActorProps) {
   const groupRef = useRef<Group>(null);
-  const meshRef = useRef<Mesh>(null);
-  const material = useMemo(() => {
-    const m = new GooMaterial() as unknown as ShaderMaterial & {
-      uColor: Color;
-      uRim: Color;
-    };
-    return m;
-  }, []);
+  const material = useMemo(() => new GooMaterial() as unknown as ShaderMaterial, []);
 
-  // Keep material color in sync with the equipped skin.
-  useMemo(() => {
+  // Release the compiled shader program when this blob unmounts (respawn, skin swap, HMR).
+  useEffect(() => () => material.dispose(), [material]);
+
+  // Keep material color in sync with the equipped skin (side effect → useEffect).
+  useEffect(() => {
     (material.uniforms.uColor.value as Color).set(palette.blob[skin]);
     (material.uniforms.uRim.value as Color).set(palette.goo.rim);
   }, [material, skin]);
@@ -65,7 +61,7 @@ export function BlobActor({
 
   return (
     <group ref={groupRef}>
-      <mesh ref={meshRef} material={material}>
+      <mesh material={material}>
         <sphereGeometry args={[radius, 48, 48]} />
       </mesh>
       <BlobEyes expression={expression} radius={radius} />
