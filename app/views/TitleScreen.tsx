@@ -1,7 +1,7 @@
 import { HelpCircle, Palette, Play, Settings } from "lucide-react";
 import { motion } from "motion/react";
 import { useState } from "react";
-import { initAudio } from "@/audio";
+import { initAudio, startMusic } from "@/audio";
 import { useGameStore, useWorldStore } from "@/state";
 import { BlobCustomizer } from "./BlobCustomizer";
 import { ManualModal } from "./ManualModal";
@@ -21,8 +21,9 @@ export function TitleScreen() {
   const [manualOpen, setManualOpen] = useState(false);
 
   const play = () => {
-    // This click is the user gesture that unlocks the AudioContext.
-    void initAudio();
+    // This click is the user gesture that unlocks the AudioContext; start ambient music
+    // once it's ready.
+    void initAudio().then(startMusic);
     resetRun();
     resetWorld();
     setPhase("playing");

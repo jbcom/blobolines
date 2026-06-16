@@ -1,5 +1,6 @@
 import { RotateCcw } from "lucide-react";
 import { motion } from "motion/react";
+import { startMusic, stopMusic } from "@/audio";
 import { useGameStore, useWorldStore } from "@/state";
 
 /**
@@ -17,11 +18,13 @@ export function GameOver() {
   const replay = () => {
     resetRun();
     resetWorld();
+    startMusic();
     setPhase("playing");
   };
 
   const toMenu = () => {
     resetRun();
+    stopMusic();
     setPhase("menu");
   };
 

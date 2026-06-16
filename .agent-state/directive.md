@@ -172,7 +172,7 @@ tokens own palette.
 
 ## M6 — Audio (Tone.js)
 - [x] Tone.js engine (lazy, gain-bus) + bounce/launch/chime/powerup/splat synths, wired into gameplay; no-op-before-init tests
-- [ ] Procedural ambient pad/sequence; volume/BGM settings UI wired to store — Phase 2
+- [x] Procedural ambient music (Tone.js pad drone + plucked Loop sequence) on the music bus; starts on play, stops to menu; volume/music-toggle settings wired (SettingsModal)
 
 ## M7 — Game loop, UI, meta
 - [x] Game states (menu/playing/gameover) + store; HUD (altimeter, crystals, combo)
