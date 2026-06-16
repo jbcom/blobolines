@@ -107,9 +107,12 @@ export function Trampoline({ position, width, depth, type, onImpact }: Trampolin
         sensor
         onIntersectionEnter={(e) => {
           const other = e.other.rigidBody;
-          const lv = other?.linvel();
+          // Guard against a peer whose handle was invalidated this frame (the render window
+          // can unmount a pad's body, and a stale handle would throw on linvel/translation).
+          if (!other || other.isValid?.() === false) return;
+          const lv = other.linvel();
           // Only react to a descending blob (ignore the upward exit through the sensor).
-          if (!other || !lv || lv.y >= 0) return;
+          if (!lv || lv.y >= 0) return;
           const speed = Math.abs(lv.y);
           // Relative hit point on the pad ([-0.5,0.5] each axis) → off-center hits tilt
           // the pad toward the contact, deflecting the bounce (no longer hardcoded 0).

@@ -1,6 +1,29 @@
+import type { RootState } from "@react-three/fiber";
 import { Canvas } from "@react-three/fiber";
 import { GameScene } from "./scene/GameScene";
 import { HudOverlay } from "./views/HudOverlay";
+
+/**
+ * WebGL context-loss handling. Mobile GPUs can drop the rendering context (backgrounding,
+ * memory pressure); without this the canvas goes permanently blank. preventDefault on
+ * `lost` tells the browser we'll recover, and three re-initializes on `restored`.
+ */
+function handleCanvasCreated(state: RootState) {
+  const canvas = state.gl.domElement;
+  canvas.addEventListener(
+    "webglcontextlost",
+    (e) => {
+      e.preventDefault();
+      console.warn("[Blobolines] WebGL context lost — awaiting restore.");
+    },
+    false,
+  );
+  canvas.addEventListener(
+    "webglcontextrestored",
+    () => console.warn("[Blobolines] WebGL context restored."),
+    false,
+  );
+}
 
 /**
  * Top-level layout: the R3F <Canvas> fills the screen at z-canvas; the DOM UI
@@ -15,6 +38,7 @@ export function Game() {
         dpr={[1, 2]}
         gl={{ antialias: true, powerPreference: "high-performance", preserveDrawingBuffer: true }}
         camera={{ position: [0, 6, 12], fov: 60, near: 0.1, far: 200 }}
+        onCreated={handleCanvasCreated}
       >
         <GameScene />
       </Canvas>
