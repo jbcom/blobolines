@@ -333,8 +333,14 @@ game — touch/drag is primary; keyboard is a minor desktop-only secondary, don'
       uSag droops the lower hemisphere + bulges the equator, a heavy settled hang. Plus the
       existing directional lean into motion + charge-gather pinch (group-level). GooCsg drives
       sag/lobe off the settle amount (sprung), impact dir off velocity. Covered by GooMaterial
-      uniform unit test + a settled-goo browser render fixture. (Eyeball sweep of the look
-      stays under the separate "visual sweep pending devtools recovery" item.)
+      uniform unit test + a settled-goo browser render fixture. VISUAL SWEEP DONE (claude-in-
+      chrome on the dev server, screenshots read): wired the idle deform into the menu hero too
+      (BlobActor — it was a static sphere); found + fixed two regressions the screenshots
+      revealed — (a) the sag/lobe presented a grazing slab that blew the wet specular to pure
+      white → tightened spec exp 48→70, level 1.6→0.9, tinted by goo color; (b) strong menu
+      sag/lobe detached the mesh-based eyes from the deformed body → dialed menu sag/lobe to a
+      subtle 0.16/0.14 (in-game GooCsg is unaffected — its face counter-scales). In-game blob
+      verified as a proper gooey teardrop with registered face.
 - [x] Stronger fluid dynamics in the goo skin: surface-tension wobble that propagates +
       overshoots, droplet bulge/pinch at the contact point, a wet sag at rest. (impact wobble
       spikes to 1.6× + overshoots + decays; resting breathe; droplet bulge/pinch via the CSG

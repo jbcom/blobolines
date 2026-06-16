@@ -85,6 +85,9 @@ function playSfx(id: SfxId, opts?: { rate?: number; volume?: number }): void {
   // overlapping SFX (rapid bounces) must not abruptly re-level/re-pitch each other's in-flight
   // plays. A per-pad voice (padVoice) passes rate/volume so each pad type sounds distinct.
   const playId = h.play();
+  // Howler's play() can return undefined on a malformed/zero-length sample; @types/howler
+  // types it as number, so guard before per-play rate/volume (they'd silently NOOP otherwise).
+  if (playId == null) return;
   if (opts?.rate && opts.rate !== 1) h.rate(opts.rate, playId);
   h.volume(vol.sfx * sfxVolume * (opts?.volume ?? 1), playId);
 }

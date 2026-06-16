@@ -125,14 +125,20 @@ export const GooMaterial = shaderMaterial(
       float diffuse  = max(dot(N, L), 0.0);
       float fresnel  = pow(1.0 - max(dot(N, V), 0.0), 3.0);
       float shimmer  = 1.0 + 0.06 * sin(uTime * 3.2 + vPosL.x * 4.0 + vPosL.y * 3.0);
-      float specular = pow(max(dot(N, H), 0.0), 48.0) * 1.6 * uWet * shimmer;
+      // Tight wet hotspot. Tightened (exp 70) + leveled down so the deformed (sag/lobe) body
+      // doesn't present a big grazing-angle slab that blows the highlight to pure white and
+      // washes out the goo color — the spec should read as a wet glint, not a flare.
+      float specular = pow(max(dot(N, H), 0.0), 70.0) * 0.9 * uWet * shimmer;
 
       // Soft subsurface-ish glow: a little light wraps around the body.
       float wrap = max(dot(N, L) * 0.5 + 0.5, 0.0);
 
       vec3 base   = uColor * (0.55 + 0.35 * wrap);
       vec3 lit    = base + uColor * diffuse * 0.5;
-      vec3 finalC = lit + specular + fresnel * uRim * 0.8;
+      // Tint the specular by a touch of the goo color so the hotspot stays "wet goo", not a
+      // white hole; keep the rim fresnel for the volumetric edge.
+      vec3 spec   = specular * mix(vec3(1.0), uColor, 0.25);
+      vec3 finalC = lit + spec + fresnel * uRim * 0.8;
 
       gl_FragColor = vec4(finalC, 1.0);
     }
