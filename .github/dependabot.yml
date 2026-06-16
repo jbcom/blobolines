@@ -1,27 +1,53 @@
 version: 2
+# Aggressive grouping: each ecosystem collapses to at most a couple of PRs per week
+# instead of one-per-dependency. The owner merges all green Dependabot PRs, so
+# fewer-but-grouped PRs mean less churn and one CI run instead of ten. Every group
+# includes major bumps (owner accepts the risk; green CI is the gate).
 updates:
+  # ── npm (app deps) ──────────────────────────────────────────────────────────────
   - package-ecosystem: npm
     directory: "/"
     schedule:
       interval: weekly
     open-pull-requests-limit: 10
     groups:
-      minor-and-patch:
-        update-types:
-          - minor
-          - patch
+      # The three / R3F / three-bvh-csg packages are peer-locked and must bump together,
+      # so they get their own atomic group.
+      three-stack:
+        patterns:
+          - "three"
+          - "@types/three"
+          - "@react-three/*"
+          - "three-*"
+        update-types: ["minor", "patch", "major"]
+      # Everything else (incl. majors) lands in one PR.
+      all-dependencies:
+        patterns: ["*"]
+        exclude-patterns:
+          - "three"
+          - "@types/three"
+          - "@react-three/*"
+          - "three-*"
+        update-types: ["minor", "patch", "major"]
 
+  # ── GitHub Actions ──────────────────────────────────────────────────────────────
   - package-ecosystem: github-actions
     directory: "/"
     schedule:
       interval: weekly
+    open-pull-requests-limit: 5
     groups:
       actions:
-        update-types:
-          - minor
-          - patch
+        patterns: ["*"]
+        update-types: ["minor", "patch", "major"]
 
+  # ── Gradle (Android) ────────────────────────────────────────────────────────────
   - package-ecosystem: gradle
     directory: "/android"
     schedule:
       interval: weekly
+    open-pull-requests-limit: 5
+    groups:
+      gradle:
+        patterns: ["*"]
+        update-types: ["minor", "patch", "major"]
