@@ -1,19 +1,20 @@
 import { create } from "zustand";
 import { createRng, type Rng } from "@/core/math";
 import type { TrampolineSpec, Vec3 } from "@/core/types";
-import { generateUpTo, starterPad } from "@/world";
+import { generateUpTo, type PowerUpSpec, starterPad } from "@/world";
 
 /**
  * Runtime store for the generated tower. Separate from the UI store (useGameStore):
- * this holds the procedurally generated trampolines/crystals and extends them as the
- * blob climbs. Lives in zustand so the R3F field renderer re-renders when new chunks
- * are appended.
+ * this holds the procedurally generated trampolines/crystals/power-ups and extends them
+ * as the blob climbs. Lives in zustand so the R3F field renderers re-render when new
+ * chunks are appended.
  */
 
 interface WorldState {
   seed: number;
   trampolines: TrampolineSpec[];
   crystals: Vec3[];
+  powerups: PowerUpSpec[];
   highestY: number;
   rng: Rng;
 
@@ -32,6 +33,7 @@ function freshTower(seed: number) {
     rng,
     trampolines: [starterPad(), ...chunk.trampolines],
     crystals: chunk.crystals,
+    powerups: chunk.powerups,
     highestY: chunk.highestY,
   };
 }
@@ -46,12 +48,13 @@ export const useWorldStore = create<WorldState>((set, get) => ({
   },
 
   ensureHeight: (targetY) => {
-    const { highestY, rng, trampolines, crystals } = get();
+    const { highestY, rng, trampolines, crystals, powerups } = get();
     if (targetY <= highestY) return;
     const chunk = generateUpTo(rng, highestY, targetY);
     set({
       trampolines: [...trampolines, ...chunk.trampolines],
       crystals: [...crystals, ...chunk.crystals],
+      powerups: [...powerups, ...chunk.powerups],
       highestY: chunk.highestY,
     });
   },

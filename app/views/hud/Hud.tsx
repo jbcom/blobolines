@@ -2,6 +2,7 @@ import { Altimeter } from "./Altimeter";
 import { ComboBadge } from "./ComboBadge";
 import { CrystalCounter } from "./CrystalCounter";
 import { LaunchInput } from "./LaunchInput";
+import { PowerUpBadges } from "./PowerUpBadges";
 
 /**
  * In-game HUD layout. Top row: altimeter (left), combo (center), crystals (right),
@@ -23,8 +24,9 @@ export function Hud() {
       >
         <div className="flex w-full items-start justify-between gap-3">
           <Altimeter />
-          <div className="flex flex-1 justify-center pt-1">
+          <div className="flex flex-1 flex-col items-center pt-1">
             <ComboBadge />
+            <PowerUpBadges />
           </div>
           <CrystalCounter />
         </div>

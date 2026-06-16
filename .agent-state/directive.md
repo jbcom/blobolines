@@ -161,7 +161,7 @@ tokens own palette.
 - [x] Trampoline entity: spring depress (-k·x - c·v) + tilt on real hit-angle, squishy mesh, auto-bounce
 - [x] Platform types defined (standard/booster/moving/fragile) with rebound multipliers; moving/fragile gameplay behaviors — Phase 2
 - [x] Procedural vertical world generator (seeded), difficulty curve
-- [ ] Crystals/collectibles + powerups (magnet, hyper-thrust) reimagined; pickup juice — sim done (collect/magnet), entities + render Phase 2
+- [x] Crystals (instanced, collect, magnet-pull) + power-ups (magnet torus / thruster cone): spawn in world-gen, render, collect, effects (magnet pulls crystals, thruster boosts up), HUD badges, reset on run
 
 ## M5 — Goo VFX & juice (the messy fluidity)
 - [x] Gooey splash droplet system on every collision (metaball droplets merge into the goo) — replaces PoC cubic sparks

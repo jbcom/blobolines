@@ -6,7 +6,7 @@ import { BlobActor, PlayerBlob } from "./blob";
 import { CameraRig } from "./CameraRig";
 import { PostFX } from "./postfx";
 import { TrampolineField } from "./trampoline";
-import { CrystalField, Lighting, SkyDome } from "./world";
+import { CrystalField, Lighting, PowerUpField, SkyDome } from "./world";
 
 /**
  * Root scene composition inside <Canvas>. Composes small, single-responsibility
@@ -38,9 +38,10 @@ export function GameScene() {
         )}
       </Suspense>
 
-      {/* Crystals are not physics bodies and have no async deps — render outside the
-          Physics Suspense boundary so they can never unmount the blob/pads. */}
+      {/* Crystals + power-ups are not physics bodies and have no async deps — render
+          outside the Physics Suspense boundary so they can never unmount the blob/pads. */}
       {playing && <CrystalField />}
+      {playing && <PowerUpField />}
 
       <PostFX />
     </>

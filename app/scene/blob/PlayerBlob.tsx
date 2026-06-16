@@ -10,7 +10,10 @@ import {
   consumeLaunch,
   consumeRebound,
   getAirSteer,
+  isPowerupActive,
+  resetPowerups,
   setBlobDiagnostics,
+  tickPowerups,
   useGameStore,
   useWorldStore,
 } from "@/state";
@@ -51,6 +54,7 @@ export function PlayerBlob() {
     maxY.current = 3;
     lastEnsureY.current = 3;
     dead.current = false;
+    resetPowerups();
     impact.current = 0;
   }, []);
 
@@ -60,6 +64,14 @@ export function PlayerBlob() {
     const p = body.translation();
     const v = body.linvel();
     const airborne = Math.abs(v.y) > 0.5;
+
+    // Power-up timers tick down; the hyper-thrust holds a strong upward velocity while
+    // active (smashing the blob skyward), overriding gravity for its duration.
+    tickPowerups(dt);
+    if (isPowerupActive("thruster")) {
+      body.wakeUp();
+      body.setLinvel({ x: v.x, y: 34, z: v.z }, true);
+    }
 
     // Trampoline auto-bounce: landing on a pad pops the blob back up (the springy core
     // of "trampolines") and builds the clean-bounce combo. A charged slingshot drag adds

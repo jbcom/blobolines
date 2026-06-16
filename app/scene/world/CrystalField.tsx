@@ -3,8 +3,8 @@ import { useRef } from "react";
 import type { InstancedMesh } from "three";
 import { Color, Matrix4, Quaternion, Vector3 } from "three";
 import { playChime } from "@/audio";
-import { PICKUP_RADIUS } from "@/sim/collect";
-import { getBlobDiagnostics, useGameStore, useWorldStore } from "@/state";
+import { magnetStep, PICKUP_RADIUS } from "@/sim/collect";
+import { getBlobDiagnostics, isPowerupActive, useGameStore, useWorldStore } from "@/state";
 import { hex, palette } from "@/styles/tokens";
 
 /**
@@ -27,7 +27,7 @@ export function CrystalField() {
   // Live positions (mutated by the magnet); seeded from the store list.
   const positions = useRef<[number, number, number][]>([]);
 
-  useFrame((state) => {
+  useFrame((state, delta) => {
     const mesh = meshRef.current;
     if (!mesh) return;
 
@@ -42,12 +42,21 @@ export function CrystalField() {
     const t = state.clock.elapsedTime;
     const count = Math.min(pos.length, MAX_CRYSTALS);
     const r2 = PICKUP_RADIUS * PICKUP_RADIUS;
+    const magnet = isPowerupActive("magnet");
+    const dt = Math.min(delta, 1 / 30);
 
-    // Single pass: render visible instances + collect touched ones (no per-frame allocs).
+    // Single pass: magnet-pull (if active) + render visible instances + collect touched
+    // ones (no per-frame allocations).
     let visible = 0;
     let gathered = 0;
     for (let i = 0; i < count; i++) {
       if (collected.current.has(i)) continue;
+      if (magnet) {
+        const m = magnetStep(pos[i], [bx, by, bz], dt);
+        pos[i][0] = m[0];
+        pos[i][1] = m[1];
+        pos[i][2] = m[2];
+      }
       const p = pos[i];
       const dx = p[0] - bx;
       const dy = p[1] - by;

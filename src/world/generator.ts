@@ -1,5 +1,10 @@
 import type { Rng } from "@/core/math";
-import type { TrampolineSpec, TrampType, Vec3 } from "@/core/types";
+import type { PowerUpType, TrampolineSpec, TrampType, Vec3 } from "@/core/types";
+
+export interface PowerUpSpec {
+  position: Vec3;
+  type: PowerUpType;
+}
 
 /**
  * Procedural vertical world generator (pure, seeded). Produces an endless upward spiral
@@ -11,6 +16,7 @@ import type { TrampolineSpec, TrampType, Vec3 } from "@/core/types";
 export interface GeneratedChunk {
   trampolines: TrampolineSpec[];
   crystals: Vec3[];
+  powerups: PowerUpSpec[];
   /** Highest Y generated so far (feed back as `fromY` next call). */
   highestY: number;
 }
@@ -24,6 +30,7 @@ const TYPE_BAG: TrampType[] = ["standard", "standard", "standard", "booster", "m
 export function generateUpTo(rng: Rng, fromY: number, targetY: number): GeneratedChunk {
   const trampolines: TrampolineSpec[] = [];
   const crystals: Vec3[] = [];
+  const powerups: PowerUpSpec[] = [];
   let y = fromY;
 
   while (y < targetY) {
@@ -53,9 +60,21 @@ export function generateUpTo(rng: Rng, fromY: number, targetY: number): Generate
         z + (rng.next() - 0.5) * 2.5,
       ]);
     }
+
+    // ~12% of pads (above the forgiving start) float a power-up.
+    if (y > 30 && rng.next() > 0.88) {
+      powerups.push({
+        position: [
+          x + (rng.next() - 0.5) * 1.5,
+          y + 4.5 + rng.next() * 2,
+          z + (rng.next() - 0.5) * 1.5,
+        ],
+        type: rng.bool() ? "magnet" : "thruster",
+      });
+    }
   }
 
-  return { trampolines, crystals, highestY: y };
+  return { trampolines, crystals, powerups, highestY: y };
 }
 
 /** The fixed starting pad (large, centered, standard) the blob begins on. */
