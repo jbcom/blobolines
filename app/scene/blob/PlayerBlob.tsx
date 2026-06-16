@@ -229,6 +229,7 @@ export function PlayerBlob() {
       expression: expr,
       squash,
       maxHeight: maxY.current,
+      groundY: safeY.current,
     });
 
     // Project the Rapier-driven state onto the blob's ECS entity so systems + UI can query

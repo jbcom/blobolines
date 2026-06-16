@@ -13,6 +13,9 @@ export interface BlobDiagnostics {
   expression: EyeExpression;
   squash: number;
   maxHeight: number;
+  /** Y of the highest pad the blob has landed on this run — the ground the contact shadow
+   *  rests on (so it sits on the pad below, not at the blob, as the blob arcs up). */
+  groundY: number;
 }
 
 let snapshot: BlobDiagnostics = {
@@ -23,6 +26,7 @@ let snapshot: BlobDiagnostics = {
   expression: "idle",
   squash: 1,
   maxHeight: 0,
+  groundY: 0,
 };
 
 export function setBlobDiagnostics(d: BlobDiagnostics): void {

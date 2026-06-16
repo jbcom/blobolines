@@ -314,8 +314,8 @@ Camera follow + shake, in-game deformation, wet glistening shader + color gradie
 - [ ] Reduced-motion guards on every new flourish (static cue fallback).
 
 ## M13 — visual/render/VFX depth (from visual audit, 2026-06-16)
-- [ ] Enable Canvas shadows + shadow camera on key light; castShadow/receiveShadow blob+pads (castShadow set but Canvas has no shadows prop — dead).
-- [ ] Soft fake contact shadow under the blob, scaled by altitude+squash (BlobShadow).
+- [x] Enable Canvas shadows + shadow camera on key light; castShadow/receiveShadow blob+pads (castShadow set but Canvas has no shadows prop — dead). (RESOLVED differently: a fixed directional shadow frustum can't follow the blob to ~1400m and is costly on mobile; grounding comes from the blob-following BlobShadow contact disc instead. No Canvas shadow map.)
+- [x] Soft fake contact shadow under the blob, scaled by altitude+squash (BlobShadow). (flat alpha disc on groundY, NOT drei ContactShadows — avoids the composer depth conflict; also fixed the dark-ring splat-decal bug: gradient faded to rgba(0,0,0,0) → dark edges; now toTransparent(color))
 - [x] ACESFilmic toneMapping + outputColorSpace on Canvas gl; drop the manual soft-clamp hack in metaballGoo. (soft-clamp gone with metaballGoo's deletion; CSG goo uses GooMaterial)
 - [x] Wire biome fog into the scene (biomeSkyAt.fog is computed but unused) — fogExp2 by altitude, hides far cutoff.
 - [x] Fix camera far plane vs world scale (far:200 clips dome@150 + biomes to 1400m); attach dome to camera or push far.
