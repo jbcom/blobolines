@@ -48,8 +48,14 @@ rises) → fall → game over → replay. Proven by e2e/playable.spec.ts against
 production preview build. Rapier <Physics>-suspension blocker SOLVED (optimizeDeps.exclude
 rapier+compat; prod manualChunks keeps rapier in `three` chunk; rapier3d-compat inlines WASM
 so no .wasm asset needed). 122 unit + 3 browser + 1 e2e green.
-Remaining for Phase-1 merge: address PR feedback (CodeRabbit/bots/CI) on PR #2 → squash-merge.
-Then Phase 2 (polish) on a fresh branch: goo CSG skin, splat VFX, jiggle, audio depth, juice.
+PR #2 feedback: 2 rounds of CodeRabbit/Amazon-Q/Gemini addressed (24 threads resolved):
+math-facade guards, Android scaffold (applicationId test + FileProvider scope), trampoline
+tilt, button type, dev-harness ?dev key, capture stream errors, persistence logging, brand-
+hex gate + full color tokenization. Pillar docs added (GAME-DESIGN/DESIGN/TESTING/DEPLOYMENT).
+Trampoline auto-bounce + combo + 3D air-steer wired. Awaiting final CI → SQUASH-MERGE.
+Then Phase 2 (polish) on a fresh branch off merged main: goo CSG skin (three-bvh-csg),
+splat VFX, jiggle, audio (Tone.js from syntheteria), post-processing, juice, content/balance,
+mobile perf, FOV-warp/screenshake, loading screen + favicon, more docs (AGENTS.md + HADS).
 
 ## (resolved) Dev harness
 Dev harness (app/views/DevHarness; ?dev or DEV
