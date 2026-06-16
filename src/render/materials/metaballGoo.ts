@@ -99,11 +99,16 @@ export const MetaballGooMaterial = shaderMaterial(
       vec3 ro = vWorldPos;
       float t = 0.0;
       bool hit = false;
+      // The wobble term adds spatial gradient to the field, so its Lipschitz constant rises
+      // above 1 and a full unscaled step would overstep the surface (holes in the goo).
+      // Shorten the step by a bound on that gradient while wobble is active — full-speed
+      // marching when cold (u_wobble == 0), so there's no idle perf cost.
+      float stepScale = 1.0 / (1.0 + u_wobble * 0.85);
       for (int i = 0; i < MAX_STEPS; i++) {
         vec3 p = ro + rd * t;
         float d = field(p);
         if (d < MIN_DIST) { hit = true; break; }
-        t += d;
+        t += d * stepScale;
         if (t > MAX_DIST) break;
       }
       if (!hit) discard;
@@ -131,12 +136,11 @@ export const MetaballGooMaterial = shaderMaterial(
       col += u_flame * fres * u_heat * 1.8 * flicker;
 
       // This material renders outside the renderer's tonemapping pass (drei shaderMaterial
-      // has no tonemapping chunk), so soft-clamp here — without it the flame rim blows out
-      // to flat white at full heat and loses its hue. Reinhard keeps the warm color.
-      col = col / (col + vec3(1.0));
-      // Reinhard darkens midtones; lift back toward the original LDR look (approx inverse
-      // at the base goo level) so only the genuinely-hot regions roll off.
-      col = pow(col, vec3(0.7));
+      // has no tonemapping chunk), so the bright flame rim would blow out to flat white and
+      // lose its hue. Roll off ONLY the part above 1.0 with a soft knee — values below 1
+      // (the entire cold base goo) pass through untouched, so the blue blob is unchanged.
+      vec3 over = max(col - vec3(1.0), vec3(0.0));
+      col = min(col, vec3(1.0)) + over / (over + vec3(1.0)); // soft-clamp the excess hue
 
       gl_FragColor = vec4(col, 1.0);
     }

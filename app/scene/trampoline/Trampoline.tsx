@@ -1,10 +1,11 @@
 import { useFrame } from "@react-three/fiber";
 import { CuboidCollider, type RapierRigidBody, RigidBody } from "@react-three/rapier";
-import { useMemo, useRef } from "react";
-import type { Group, Mesh } from "three";
+import { useEffect, useMemo, useRef } from "react";
+import { CanvasTexture, type Group, type Mesh } from "three";
 import { playBounce } from "@/audio";
 import { clamp } from "@/core/math";
 import type { TrampType } from "@/core/types";
+import { createSplatCanvas } from "@/render/vfx";
 import {
   createTrampState,
   impactTargets,
@@ -12,7 +13,7 @@ import {
   stepTramp,
   type TrampState,
 } from "@/sim/trampoline";
-import { reportImpact, reportRebound } from "@/state";
+import { reportImpact, reportRebound, useGameStore } from "@/state";
 import { palette, trampColor } from "@/styles/tokens";
 
 /**
@@ -47,6 +48,16 @@ export function Trampoline({ position, width, depth, type, onImpact }: Trampolin
 
   // Target spring values (mutated on impact, decays back to 0).
   const target = useRef({ depress: 0, tiltX: 0, tiltZ: 0 });
+
+  // Accumulating goo-splat decal painted onto the membrane top each landing. One Canvas2D
+  // texture per pad; impacts smear a colored blob at the (relX,relZ) contact point.
+  const splat = useMemo(() => {
+    const sc = createSplatCanvas(128);
+    const texture = new CanvasTexture(sc.canvas);
+    return { ...sc, texture };
+  }, []);
+  // Release the GPU texture when the pad unmounts (tower recycles pads as you climb).
+  useEffect(() => () => splat.texture.dispose(), [splat]);
 
   useFrame((_, dt) => {
     const g = meshRef.current;
@@ -106,6 +117,12 @@ export function Trampoline({ position, width, depth, type, onImpact }: Trampolin
           const relX = clamp((bt.x - position[0]) / width, -0.5, 0.5);
           const relZ = clamp((bt.z - position[2]) / depth, -0.5, 0.5);
           target.current = impactTargets(speed, relX, relZ);
+          // Smear a goo splat on the membrane at the contact point, sized by impact and
+          // tinted to the blob's current skin. Accumulates across landings.
+          const skin = useGameStore.getState().progress.skin;
+          const size = clamp(0.1 + speed / 60, 0.1, 0.32);
+          splat.paint(relX + 0.5, relZ + 0.5, palette.blob[skin], size);
+          splat.texture.needsUpdate = true;
           reportImpact(speed);
           // Trampoline rebound: bounce back at impact speed × type multiplier, with a
           // floor so even a gentle landing pops (the pad is springy). The blob's
@@ -138,6 +155,19 @@ export function Trampoline({ position, width, depth, type, onImpact }: Trampolin
             emissive={emissive}
             emissiveIntensity={0.18}
             roughness={0.25}
+          />
+        </mesh>
+        {/* Accumulating goo-splat decal — a transparent plane skimming the membrane top,
+            painted by the Canvas2D splat texture on each landing. polygonOffset lifts it
+            above the membrane to avoid z-fighting. */}
+        <mesh position={[0, THICKNESS / 2 + 0.02 + 0.1, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+          <planeGeometry args={[width * 0.92, depth * 0.92]} />
+          <meshBasicMaterial
+            map={splat.texture}
+            transparent
+            depthWrite={false}
+            polygonOffset
+            polygonOffsetFactor={-1}
           />
         </mesh>
       </group>
