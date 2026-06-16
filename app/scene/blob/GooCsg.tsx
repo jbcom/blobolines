@@ -152,20 +152,25 @@ export function GooCsg({ skin, blobRadius, getDroplets }: GooCsgProps) {
 
     // ── Wet wobble + squash/stretch (same juice model as the hero blob) ──
     const imp = Math.min(1, Math.max(0, (1 - diag.squash) / 0.3));
-    wobble.current = Math.max(wobble.current * Math.exp(-dt / blobCfg.wobbleDecayTau), imp);
-    material.uniforms.uWobble.value = wobble.current;
+    // A FRESH impact spikes the surface-tension wobble well past the impact amount, so a
+    // hard landing sends a big travelling ripple across the goo that settles like a water
+    // balloon (decays each frame). Overshoot factor makes it read fluid, not stiff.
+    wobble.current = Math.max(wobble.current * Math.exp(-dt / blobCfg.wobbleDecayTau), imp * 1.6);
+    material.uniforms.uWobble.value = Math.min(1.4, wobble.current);
 
     const [vx, vy, vz] = diag.velocity;
     let target = combineScale(speedStretch(vx, vy, vz), impactSquash(imp));
 
-    // Puddle at rest: settle into a wide flat happy puddle when grounded + slow.
+    // Puddle at rest: settle into a wide flat happy puddle when grounded + slow, with a slow
+    // breathe so Blobby is never a perfectly static ball even standing still.
     const settled = diag.airborne ? 0 : 1 - Math.min(diag.speed / blobCfg.puddle.settleSpeed, 1);
     if (settled > 0.01) {
       const [px, py, pz] = blobCfg.puddle.scale;
+      const breathe = Math.sin(state.clock.elapsedTime * 1.8) * 0.04 * settled;
       target = {
-        x: target.x + (px - target.x) * settled,
-        y: target.y + (py - target.y) * settled,
-        z: target.z + (pz - target.z) * settled,
+        x: target.x + (px - target.x) * settled + breathe,
+        y: target.y + (py - target.y) * settled - breathe,
+        z: target.z + (pz - target.z) * settled + breathe,
       };
     }
     // Charging the slingshot: the resting puddle gathers up toward the pull.
