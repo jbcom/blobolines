@@ -93,7 +93,7 @@ tokens own palette.
 - [x] src/ecs: koota world + traits (Transform/Velocity/Blob/Trampoline/Crystal/PowerUp/Particle/Dead) + tests + barrel
 - [x] src/engine: fixed-timestep accumulator loop (FIXED_DT 1/60, step-capped, alpha) + unit tests + barrel
 - [x] src/state: zustand game store (menu/playing/gameover) + settings + progress + Capacitor-Preferences persistence + barrel
-- [ ] src/input: @use-gesture + keyboard → intents + tests + barrel
+- [x] src/input: pure slingshot/air-steer/keyboard intent math + tests + barrel (React useGesture binding lands in M2 app/hooks)
 - [x] src/platform: Capacitor wrappers (haptics/orientation/keep-awake/preferences) + barrel
 
 ## M1 — Design system & identity
@@ -110,12 +110,12 @@ tokens own palette.
 - [ ] Input: @use-gesture/react unified pointer/touch + keyboard; slingshot vs air-steer modes
 
 ## M3 — Gooey blob (the star)
-- [ ] Blob rendering: choose & implement (marching-cubes metaball vs distort-material sphere vs screen-space SDF) per goo prior-art findings; mobile-perf budget
-- [ ] Squash-and-stretch deformation driven by velocity/impact; spring-back
-- [ ] Jiggle / surface-tension wobble secondary motion
-- [ ] Gooey surface shader: fresnel rim, translucency/subsurface approx, wet specular
-- [ ] Blob skins/cores system (replaces PoC skins) using design tokens
-- [ ] **Big expressive blinking eyes** (per hero-cover.png) — PROCEDURAL geometry, NOT sprites: big white distorted/stretched circles (sclera) with a bezel/rim ring + big black dot pupils, stretched onto the curved blob "face" and pushed into 3D. Responsive emotional states via scaling the eye meshes: idle blink (scaleY→0), squint on hard impact/squash, open WIDE on big launch/fast fall, tear up (droplet geo) when falling far / near death. Driven by velocity+impact state alongside squash-stretch. Core character juice.
+- [x] Blob rendering: goo-shaded deformable 3D sphere (chosen over metaball field for the single player body; metaball reserved for splash VFX) + WebGL fixture test
+- [x] Squash-and-stretch deformation driven by velocity/impact; springy approach to target scale
+- [ ] Jiggle / surface-tension wobble secondary motion (vertex-level)
+- [x] Gooey surface shader: fresnel rim, light-wrap, wet specular + shimmer (src/render/materials/gooMaterial)
+- [ ] Blob skins/cores system: wire all 4 skins (blue/slime/ghost/ink) + customizer UI to store
+- [x] **Big expressive blinking eyes** (per hero-cover.png) — PROCEDURAL geometry, NOT sprites: big white distorted/stretched circles (sclera) with a bezel/rim ring + big black dot pupils, stretched onto the curved blob "face" and pushed into 3D. Responsive emotional states via scaling the eye meshes: idle blink (scaleY→0), squint on hard impact/squash, open WIDE on big launch/fast fall, tear up (droplet geo) when falling far / near death. Driven by velocity+impact state alongside squash-stretch. Core character juice.
 
 ## M4 — Trampolines & world
 - [ ] Trampoline entity: spring depress (-k·x - c·v) + tilt on hit-angle, organic squishy mesh, goo smear
