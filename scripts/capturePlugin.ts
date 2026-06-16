@@ -16,7 +16,7 @@ export function capturePlugin(): Plugin {
       const outDir = resolve(server.config.root, "artifacts");
       const safe = (label: string) => label.replace(/[^a-z0-9-_]/gi, "_");
       const readBody = (req: Parameters<Parameters<typeof server.middlewares.use>[1]>[0]) =>
-        new Promise<string>((res) => {
+        new Promise<string>((res, rej) => {
           let body = "";
           req.on("data", (c: Buffer) => {
             // Cap body size — a captured PNG dataURL is well under this; guards OOM.
@@ -27,6 +27,7 @@ export function capturePlugin(): Plugin {
             body += c;
           });
           req.on("end", () => res(body));
+          req.on("error", rej);
         });
 
       server.middlewares.use("/__capture", (req, res) => {
@@ -35,20 +36,25 @@ export function capturePlugin(): Plugin {
           res.end("POST only");
           return;
         }
-        readBody(req).then((body) => {
-          try {
-            const { label, dataUrl } = JSON.parse(body) as { label: string; dataUrl: string };
-            const base64 = dataUrl.replace(/^data:image\/png;base64,/, "");
-            mkdirSync(outDir, { recursive: true });
-            const file = resolve(outDir, `${safe(label)}.png`);
-            writeFileSync(file, Buffer.from(base64, "base64"));
-            res.statusCode = 200;
-            res.end(JSON.stringify({ ok: true, file }));
-          } catch (err) {
+        readBody(req)
+          .then((body) => {
+            try {
+              const { label, dataUrl } = JSON.parse(body) as { label: string; dataUrl: string };
+              const base64 = dataUrl.replace(/^data:image\/png;base64,/, "");
+              mkdirSync(outDir, { recursive: true });
+              const file = resolve(outDir, `${safe(label)}.png`);
+              writeFileSync(file, Buffer.from(base64, "base64"));
+              res.statusCode = 200;
+              res.end(JSON.stringify({ ok: true, file }));
+            } catch (err) {
+              res.statusCode = 400;
+              res.end(JSON.stringify({ ok: false, error: String(err) }));
+            }
+          })
+          .catch((err) => {
             res.statusCode = 400;
             res.end(JSON.stringify({ ok: false, error: String(err) }));
-          }
-        });
+          });
       });
 
       server.middlewares.use("/__diagnostics", (req, res) => {
@@ -57,19 +63,24 @@ export function capturePlugin(): Plugin {
           res.end("POST only");
           return;
         }
-        readBody(req).then((body) => {
-          try {
-            const parsed = JSON.parse(body) as { label: string };
-            mkdirSync(outDir, { recursive: true });
-            const file = resolve(outDir, `${safe(parsed.label)}.json`);
-            writeFileSync(file, JSON.stringify(parsed, null, 2));
-            res.statusCode = 200;
-            res.end(JSON.stringify({ ok: true, file }));
-          } catch (err) {
+        readBody(req)
+          .then((body) => {
+            try {
+              const parsed = JSON.parse(body) as { label: string };
+              mkdirSync(outDir, { recursive: true });
+              const file = resolve(outDir, `${safe(parsed.label)}.json`);
+              writeFileSync(file, JSON.stringify(parsed, null, 2));
+              res.statusCode = 200;
+              res.end(JSON.stringify({ ok: true, file }));
+            } catch (err) {
+              res.statusCode = 400;
+              res.end(JSON.stringify({ ok: false, error: String(err) }));
+            }
+          })
+          .catch((err) => {
             res.statusCode = 400;
             res.end(JSON.stringify({ ok: false, error: String(err) }));
-          }
-        });
+          });
       });
     },
   };

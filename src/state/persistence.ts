@@ -27,14 +27,20 @@ export function attachPersistence(): () => void {
   let lastProgress = useGameStore.getState().progress;
   let lastSettings = useGameStore.getState().settings;
 
+  const persist = (key: string, value: unknown) => {
+    saveJson(key, value).catch((err) => {
+      console.warn(`[blobolines] failed to persist ${key}:`, err);
+    });
+  };
+
   return useGameStore.subscribe((state: GameState) => {
     if (state.progress !== lastProgress) {
       lastProgress = state.progress;
-      void saveJson(KEY_PROGRESS, state.progress);
+      persist(KEY_PROGRESS, state.progress);
     }
     if (state.settings !== lastSettings) {
       lastSettings = state.settings;
-      void saveJson(KEY_SETTINGS, state.settings);
+      persist(KEY_SETTINGS, state.settings);
     }
   });
 }

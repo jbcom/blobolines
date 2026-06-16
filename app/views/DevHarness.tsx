@@ -12,7 +12,8 @@ import { getBlobDiagnostics, requestLaunch, useGameStore, useWorldStore } from "
  */
 
 const isDev =
-  import.meta.env.DEV || (typeof location !== "undefined" && location.search.includes("dev"));
+  import.meta.env.DEV ||
+  (typeof location !== "undefined" && new URLSearchParams(location.search).has("dev"));
 
 const SKINS: BlobSkin[] = ["blue", "slime", "ghost", "ink"];
 

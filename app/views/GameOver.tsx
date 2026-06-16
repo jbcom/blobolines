@@ -25,6 +25,9 @@ export function GameOver() {
     setPhase("menu");
   };
 
+  // commitBestHeight already merged this run into `best` before game-over, so on a new
+  // record best === height. `>=` is therefore correct: it's a record exactly when this
+  // run reached the (now-updated) best. A losing run has height < best.
   const isRecord = height >= best && height > 0;
 
   return (

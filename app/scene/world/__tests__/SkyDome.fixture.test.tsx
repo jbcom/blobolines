@@ -19,7 +19,7 @@ test("SkyDome renders and paints the gradient", async () => {
 
   await vi.waitFor(
     () => {
-      const canvas = document.querySelector("canvas");
+      const canvas = document.querySelector('[data-testid="sky-fixture"]')?.querySelector("canvas");
       if (!canvas) throw new Error("canvas not mounted");
       const dataUrl = canvas.toDataURL("image/png");
       // A non-trivial painted frame is well over a few KB of base64.

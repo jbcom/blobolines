@@ -132,7 +132,7 @@ export function PlayerBlob() {
     <RigidBody
       ref={bodyRef}
       colliders={false}
-      position={[0, 5, 0]}
+      position={[0, 3, 0]}
       linearDamping={BLOB.linearDamping}
       friction={BLOB.friction}
       restitution={BLOB.restitution}

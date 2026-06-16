@@ -1,8 +1,9 @@
 /**
  * Input bridge — a tiny imperative channel from the DOM/keyboard input layer to the
- * physics blob. The overlay queues a launch (dir + charge) on slingshot release; the
- * air-steer force is a continuous X/Z value the blob reads each frame while airborne.
- * Avoids threading refs through the React tree while keeping UI and physics decoupled.
+ * physics blob. The overlay stores the latest launch (dir + charge) on slingshot
+ * release (last-write-wins, consumed once next frame); the air-steer force is a
+ * continuous X/Z value the blob reads each frame while airborne. Avoids threading refs
+ * through the React tree while keeping UI and physics decoupled.
  */
 
 export interface LaunchRequest {

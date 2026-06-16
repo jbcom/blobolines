@@ -17,7 +17,10 @@ test("BlobActor renders the gooey blob with eyes", async () => {
 
   await vi.waitFor(
     () => {
-      const canvas = document.querySelector("canvas");
+      // Scope to THIS fixture's canvas (not the first global one) to avoid cross-test flake.
+      const canvas = document
+        .querySelector('[data-testid="blob-fixture"]')
+        ?.querySelector("canvas");
       if (!canvas) throw new Error("canvas not mounted");
       expect(canvas.toDataURL("image/png").length).toBeGreaterThan(4000);
     },
