@@ -1,3 +1,4 @@
+import { Progress } from "@app/components/ui/progress";
 import { RotateCcw } from "lucide-react";
 import { motion } from "motion/react";
 import { useEffect, useRef } from "react";
@@ -79,7 +80,7 @@ export function GameOver() {
           <Row label="Altitude" value={`${height} m`} accent="text-accent" />
           <Row
             label="Best"
-            value={isRecord ? `${best} m` : `${best} m`}
+            value={`${best} m`}
             accent="text-tramp-gold"
             sub={isRecord ? "New record!" : shortBy > 0 ? `${shortBy} m short` : undefined}
           />
@@ -89,6 +90,16 @@ export function GameOver() {
             value={`${crystals}`}
             accent="text-blob-blue"
             sub={`${lifetimeCrystals} lifetime`}
+          />
+        </div>
+
+        {/* Delta-vs-best bar: this run's height as a fraction of the all-time best, so the
+            gap to beat is visible at a glance (full + gold on a record). */}
+        <div className="w-full">
+          <Progress
+            value={best > 0 ? Math.min(100, (height / best) * 100) : 100}
+            aria-label="Run height as a fraction of best"
+            className={isRecord ? "[&>div]:bg-tramp-gold" : undefined}
           />
         </div>
 

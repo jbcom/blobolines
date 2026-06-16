@@ -285,7 +285,7 @@ Camera follow + shake, in-game deformation, wet glistening shader + color gradie
 - [x] GameOver run recap: max combo, crystals this run vs lifetime, delta-to-best (+Nm / Nm short); extend RunStats with maxCombo.
 - [ ] GameOver Share button (navigator.share + clipboard fallback).
 - [ ] Real personal-best celebration on GameOver: goo-splat/confetti burst, gold card glow, distinct sound, "+Nm over best".
-- [ ] GameOver delta-vs-best progress bar (run height as fraction of best).
+- [x] GameOver delta-vs-best progress bar (run height as fraction of best).
 - [ ] GameOver: crystals → next-skin progress + jump to customizer.
 ### Tier 3 — onboarding & states
 - [ ] First-run tutorial overlay: drag-ghost coachmark over LaunchInput, dismiss on first launch (new Onboarding.tsx).

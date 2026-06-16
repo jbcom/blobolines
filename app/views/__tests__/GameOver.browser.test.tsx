@@ -23,6 +23,10 @@ test("shows the run recap: altitude, max combo, crystals run + lifetime, short-b
   await expect.element(screen.getByText("42 lifetime")).toBeInTheDocument();
   // 134 best - 80 height = 54m short.
   await expect.element(screen.getByText("54 m short")).toBeInTheDocument();
+  // Delta-vs-best progress bar present.
+  await expect
+    .element(screen.getByRole("progressbar", { name: /fraction of best/i }))
+    .toBeInTheDocument();
 });
 
 test("celebrates a record run instead of a short-by delta", async () => {
