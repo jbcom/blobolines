@@ -6,7 +6,7 @@ import { useEffect, useRef } from "react";
 import { playLaunch, playSplat, setMusicAltitude } from "@/audio";
 import { Blob, Transform, Velocity } from "@/ecs";
 import { spawnBlob } from "@/factories";
-import { ImpactStyle, impact as impact_ } from "@/platform";
+import { ImpactStyle, impact as impact_, vibrate } from "@/platform";
 import { blobTraitsFromSnapshot, classifyExpression } from "@/sim/blob";
 import { MAX_COMBO } from "@/sim/combo";
 import { launchVelocity } from "@/sim/launch";
@@ -60,6 +60,8 @@ export function PlayerBlob() {
   const dead = useRef(false);
   /** Recent impact amount [0,1], set on landing and decaying each frame. */
   const impact = useRef(0);
+  /** Countdown to the next near-death heartbeat haptic (shrinks as death nears). */
+  const dangerBeat = useRef(0);
 
   // Spawn the blob ECS entity for this run; destroy it on unmount (PlayerBlob remounts per
   // run). The entity is the blob's queryable logical state, synced from Rapier each step.
@@ -89,6 +91,7 @@ export function PlayerBlob() {
     resetBridges(); // clear any launch/aim/rebound/splat left pending from the prior run
     resetFlash(); // no leftover combo/launch/death flash crossing into the new run
     impact.current = 0;
+    dangerBeat.current = 0;
   }, [resetDroplets]);
 
   useFrame((_, dt) => {
@@ -200,9 +203,19 @@ export function PlayerBlob() {
     const expr = classifyExpression({ vy: v.y, impact: impact.current, fallDepth, airborne });
 
     // Near-death danger: as the blob falls past half the death distance, pulse a red edge
-    // vignette that intensifies toward the fatal depth (a clear "you're about to die" cue).
+    // vignette that intensifies toward the fatal depth (a clear "you're about to die" cue),
+    // plus an escalating heartbeat haptic whose interval shrinks as death nears.
     if (fallDepth > DEATH_FALL_DISTANCE * 0.5) {
-      flash("red", (fallDepth - DEATH_FALL_DISTANCE * 0.5) / (DEATH_FALL_DISTANCE * 0.5));
+      const danger = (fallDepth - DEATH_FALL_DISTANCE * 0.5) / (DEATH_FALL_DISTANCE * 0.5);
+      flash("red", danger);
+      // Heartbeat: interval 0.45s → 0.12s as danger ramps 0→1; fire a short buzz each beat.
+      dangerBeat.current -= dt;
+      if (dangerBeat.current <= 0) {
+        dangerBeat.current = 0.45 - danger * 0.33;
+        void vibrate(12 + Math.round(danger * 20));
+      }
+    } else {
+      dangerBeat.current = 0;
     }
 
     // Visual state for BlobActor (read via the bridge — no per-frame React render).
