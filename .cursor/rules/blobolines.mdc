@@ -1,0 +1,41 @@
+---
+description: Blobolines project conventions — read AGENTS.md for the full contract
+globs:
+alwaysApply: true
+---
+
+# Blobolines — Cursor rules
+
+Gooey-blob vertical-launch physics arcade game: React Three Fiber + Rapier (3D),
+goo as a raymarched metaball isosurface, shipped to GitHub Pages + Android
+(Capacitor). The authoritative contract is `AGENTS.md`, `STANDARDS.md`, and
+`docs/ARCHITECTURE.md` — this rule is a summary.
+
+## Hard rules
+
+- **pnpm only.** Commands: `pnpm dev`, `pnpm build`, `pnpm test` (unit, happy-dom),
+  `pnpm test:browser` (Chromium WebGL fixtures), `pnpm lint`, `pnpm typecheck`.
+- **Biome** for lint+format — never ESLint/Prettier.
+- **Conventional Commits**, squash-merge via PR, never commit to `main`.
+- **No stubs / TODO / placeholder / "later".** Committed code works and is tested.
+- **Latest-everything**; modernize past breaking changes, don't pin older.
+- **Design tokens own all color** — no raw hex in `src/render/**`, `app/scene/**`,
+  `app/views/**`, `src/sim/**`; use `src/styles/tokens.ts` / `tokens.css`.
+
+## Architecture & boundaries
+
+- `src/sim` and `src/core` are **pure**: no `three`, no React, no DOM, no
+  `Math.random()` (use the seeded `Rng` from `src/core/math`). Constants live in
+  `src/sim/physics/config.ts`.
+- `src/render` = framework-agnostic three.js materials / goo field / VFX.
+  `app/scene` = the R3F components that instantiate and drive them.
+- `app/views` = DOM HUD + menus (shadcn + Motion + anime.js). UI never touches
+  three objects — it goes through the `src/state` stores/bridges.
+- **Never re-render per frame.** Per-frame data flows through the diagnostics /
+  launch / powerup bridges in `src/state`, read inside each component's `useFrame`.
+
+## Definition of done
+
+`pnpm lint && pnpm typecheck && pnpm test && pnpm test:browser && pnpm build` all
+green; render/UI changes carry a visual/fixture test; each touched subsystem's
+`README.md` stays aligned. Verify the app RUNS, not just that tests pass.
