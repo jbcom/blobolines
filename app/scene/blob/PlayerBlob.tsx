@@ -14,6 +14,7 @@ import {
   getAirSteer,
   isPowerupActive,
   reportSplat,
+  resetBridges,
   resetPowerups,
   setBlobDiagnostics,
   tickPowerups,
@@ -64,6 +65,7 @@ export function PlayerBlob() {
     dead.current = false;
     resetPowerups();
     resetDroplets();
+    resetBridges(); // clear any launch/aim/rebound/splat left pending from the prior run
     impact.current = 0;
   }, [resetDroplets]);
 

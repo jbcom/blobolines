@@ -55,7 +55,10 @@ export const useWorldStore = create<WorldState>((set, get) => ({
   ...freshTower(1),
 
   reset: (seed) => {
-    const s = seed ?? Math.floor(performance.now()) >>> 0;
+    // Deterministic next seed (not performance.now() — that was non-reproducible and
+    // violated the determinism doctrine): advance the previous seed by an LCG step so each
+    // run gets a fresh-but-replayable tower. Pass an explicit seed for a fixed/daily run.
+    const s = seed ?? ((get().seed * 1664525 + 1013904223) >>> 0 || 1);
     set({ seed: s, ...freshTower(s) });
   },
 

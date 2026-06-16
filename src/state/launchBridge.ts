@@ -104,3 +104,17 @@ export function consumeRebound(): ReboundRequest | null {
   rebound = null;
   return r;
 }
+
+/**
+ * Clear ALL pending bridge state. Called on run end (menu/gameover) so a value reported in
+ * the last frame before the run ended can't fire on the next run's first frame. (powerups
+ * have their own resetPowerups; this covers launch/aim/rebound/splat/steer/impact.)
+ */
+export function resetBridges(): void {
+  pending = null;
+  aim = null;
+  rebound = null;
+  splatQueue = [];
+  steer = [0, 0];
+  landingImpact = 0;
+}

@@ -12,6 +12,7 @@ export {
   reportRebound,
   reportSplat,
   requestLaunch,
+  resetBridges,
   type SplatBurst,
   setAim,
   setAirSteer,

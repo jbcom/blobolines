@@ -385,8 +385,8 @@ Camera follow + shake, in-game deformation, wet glistening shader + color gradie
 
 ## M16 — perf/architecture/quality (from perf audit, 2026-06-16)
 ### More confirmed bugs
-- [ ] BUG: launchBridge module-singleton queues (aim/launch/rebound) not drained on game end → stale value fires next run. Drain on setPhase(menu|gameover) (mirror resetPowerups).
-- [ ] BUG/determinism: worldStore seeds fresh tower with performance.now() when no seed — non-deterministic, breaks replay + violates determinism doctrine. Use explicit seed source.
+- [x] BUG fixed: resetBridges() clears launch/aim/rebound/splat/steer/impact on run start (PlayerBlob mount) — no stale value firing next run.
+- [x] BUG fixed: worldStore.reset derives the next seed via LCG from the previous (was performance.now) — deterministic/replayable; explicit seed still honored. Tested.
 ### Quality tier (biggest mobile gap)
 - [ ] Runtime quality-tier system (low/med/high) in store.settings → DPR, raymarch steps, postfx passes, shadows, AA, pool/particle counts. Expose in SettingsModal.
 - [ ] Make raymarchSteps a uniform (u_maxSteps loop bound), not a compile-time #define, so tiers scale without rebuild.
