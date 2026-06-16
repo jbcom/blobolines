@@ -7,7 +7,7 @@ import { packMetaballField } from "@/render/goo";
 import { MAX_GOO_BALLS, MetaballGooMaterial } from "@/render/materials";
 import type { Droplet } from "@/render/vfx";
 import { combineScale, impactSquash, speedStretch } from "@/sim/blob";
-import { getBlobDiagnostics, useGameStore } from "@/state";
+import { getAim, getBlobDiagnostics, useGameStore } from "@/state";
 import { palette } from "@/styles/tokens";
 import { BlobEyes } from "./BlobEyes";
 
@@ -114,6 +114,19 @@ export function GooField({ skin, blobRadius, getDroplets }: GooFieldProps) {
         x: target.x + (px - target.x) * settled,
         y: target.y + (py - target.y) * settled,
         z: target.z + (pz - target.z) * settled,
+      };
+    }
+
+    // Charging the slingshot: the resting puddle GATHERS UP toward the pull — it tenses
+    // into a taller, narrower goo ready to fling, scaled by drag charge. (The puddle is
+    // pulled up toward the finger; on release it forms into the flying blob.)
+    const aim = getAim();
+    if (aim && !diag.airborne) {
+      const g = Math.min(aim.charge, 1);
+      target = {
+        x: target.x * (1 - g * 0.22),
+        y: target.y * (1 + g * 0.45),
+        z: target.z * (1 - g * 0.22),
       };
     }
     const sk = 1 - Math.exp(-dt / blobCfg.deformSpringTau);

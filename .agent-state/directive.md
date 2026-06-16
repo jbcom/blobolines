@@ -241,8 +241,8 @@ A real Blobolines blob should:
 - [x] WET GLISTENING surface: dual specular (tight water hotspot + broad lobe + sheen),
   subsurface glow, translucent grazing edges — verified glistening in harness (was matte).
   (Still to refine: an actual color GRADIENT across the body, and drag-direction deform.)
-- [ ] DEFORM toward the finger/drag direction when tapped+dragged (still open).
-- [ ] LAUNCH by FORMING into a cohesive blob from the puddle (still open).
+- [x] DEFORM on charge: the resting puddle GATHERS UP (taller, narrower) toward the pull while charging the slingshot, scaled by drag charge — tenses to fling. (Full directional lean toward the finger needs a shear; upward gather is the readable approximation.)
+- [x] LAUNCH FORMING: puddle gathers on charge → on release the deform springs to the flight blob shape (speedStretch) as it leaves — puddle→blob handled by the same spring.
 
 ### M10d — architecture (user feedback 2026-06-16, batch 4)
 - [x] All tunables moved to JSON in src/config, decomposed by domain (physics/blob/launch/
