@@ -257,3 +257,4 @@ Camera follow + shake, in-game deformation, wet glistening shader + color gradie
 
 ## M11 — features polish & improvements (/loop, dynamic)
 - [x] Audio: distinct bounce SFX for the super (triumphant 420Hz) + ice (glassy MetalSynth ping) bonus pads — they were both falling to the default standard pitch.
+- [x] Real audio: switched Tone.js synth → Howler.js playing the owned itch.io sample library (impact bounces, whoosh launch, explosion splat, UI crystal/powerup, menu theme, wind/magic ambient beds). Cue→file map in config/audio.json; ambient bed swaps sky→space by altitude. Verified Howls load + play in-browser.
