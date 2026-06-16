@@ -291,7 +291,7 @@ Camera follow + shake, in-game deformation, wet glistening shader + color gradie
 - [x] First-run tutorial overlay: drag-ghost coachmark over LaunchInput, dismiss on first launch (new Onboarding.tsx).
 - [x] First-play hint instead of burying how-to behind a menu button. (the Onboarding coachmark IS the first-play hint — shows the controls inline on first run instead of behind the How-to menu button)
 - [x] Branded error/boot-failure screen + boundary (Rapier-WASM/Canvas fail → "tap to retry"). (tap-anywhere-to-retry fallback; friendly "graphics engine couldn't start" copy for WebGL/WASM errors)
-- [ ] LoadingScreen real progress (asset/WASM fraction) not infinite bounce.
+- [x] LoadingScreen real progress (asset/WASM fraction) not infinite bounce. (honest determinate bar: real fonts.ready checkpoint, eases asymptotically, only hits 100% by unmounting when Suspense resolves — never fakes completion)
 - [x] BlobCustomizer empty state when crystals==0 ("collect crystals to unlock goo").
 ### Tier 4 — customizer/shop
 - [ ] Clearer locked-tile cost + "need N more" sublabel + affordability progress fill.
