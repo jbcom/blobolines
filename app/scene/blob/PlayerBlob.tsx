@@ -1,9 +1,13 @@
 import { useFrame } from "@react-three/fiber";
 import { BallCollider, type RapierRigidBody, RigidBody } from "@react-three/rapier";
+import type { Entity } from "koota";
+import { useWorld } from "koota/react";
 import { useEffect, useRef } from "react";
 import { playLaunch, playSplat, setMusicAltitude } from "@/audio";
+import { Blob, Transform, Velocity } from "@/ecs";
+import { spawnBlob } from "@/factories";
 import { ImpactStyle, impact as impact_ } from "@/platform";
-import { classifyExpression } from "@/sim/blob";
+import { blobTraitsFromSnapshot, classifyExpression } from "@/sim/blob";
 import { MAX_COMBO } from "@/sim/combo";
 import { launchVelocity } from "@/sim/launch";
 import { BLOB, DEATH_FALL_DISTANCE, MAX_IMPACT_SPEED, WORLD_BOUND_XZ } from "@/sim/physics";
@@ -35,6 +39,10 @@ import { useDroplets } from "./useDroplets";
 
 export function PlayerBlob() {
   const bodyRef = useRef<RapierRigidBody>(null);
+  const world = useWorld();
+  /** The blob's ECS entity — its logical source of truth (Rapier owns the dynamics; this
+   *  is the queryable projection synced each step). Spawned via the factory on mount. */
+  const entityRef = useRef<Entity | null>(null);
   const skin = useGameStore((s) => s.progress.skin);
   const setRun = useGameStore((s) => s.setRun);
   const setPhase = useGameStore((s) => s.setPhase);
@@ -50,6 +58,17 @@ export function PlayerBlob() {
   const dead = useRef(false);
   /** Recent impact amount [0,1], set on landing and decaying each frame. */
   const impact = useRef(0);
+
+  // Spawn the blob ECS entity for this run; destroy it on unmount (PlayerBlob remounts per
+  // run). The entity is the blob's queryable logical state, synced from Rapier each step.
+  useEffect(() => {
+    const entity = spawnBlob(world, BLOB.radius);
+    entityRef.current = entity;
+    return () => {
+      entity.destroy();
+      entityRef.current = null;
+    };
+  }, [world]);
 
   // Reset body to the starter pad whenever a run begins. PlayerBlob remounts on each
   // run (GameScene mounts <Physics> only while playing), so [] is correct; the refs
@@ -173,15 +192,32 @@ export function PlayerBlob() {
     const expr = classifyExpression({ vy: v.y, impact: impact.current, fallDepth, airborne });
 
     // Visual state for BlobActor (read via the bridge — no per-frame React render).
+    const squash = 1 - impact.current * 0.3;
     setBlobDiagnostics({
       position: [p.x, p.y, p.z],
       velocity: [v.x, v.y, v.z],
       speed,
       airborne,
       expression: expr,
-      squash: 1 - impact.current * 0.3,
+      squash,
       maxHeight: maxY.current,
     });
+
+    // Project the Rapier-driven state onto the blob's ECS entity so systems + UI can query
+    // it without reaching into the renderer (Rapier stays the dynamics authority).
+    const entity = entityRef.current;
+    if (entity?.isAlive()) {
+      const u = blobTraitsFromSnapshot({
+        position: [p.x, p.y, p.z],
+        velocity: [v.x, v.y, v.z],
+        squash,
+        airborne,
+        expression: expr,
+      });
+      entity.set(Transform, u.transform);
+      entity.set(Velocity, u.velocity);
+      entity.set(Blob, u.blob);
+    }
 
     // Death: fire exactly once (guard against firing every frame while still falling).
     if (!dead.current && fallDepth > DEATH_FALL_DISTANCE) {

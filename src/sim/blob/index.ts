@@ -1,4 +1,9 @@
 export {
+  type BlobSnapshot,
+  type BlobTraitUpdate,
+  blobTraitsFromSnapshot,
+} from "./entitySync";
+export {
   classifyExpression,
   DEFAULT_THRESHOLDS,
   type ExpressionInput,
