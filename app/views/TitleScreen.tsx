@@ -1,6 +1,6 @@
 import { Play } from "lucide-react";
 import { motion } from "motion/react";
-import { useGameStore } from "@/state";
+import { useGameStore, useWorldStore } from "@/state";
 
 /**
  * Title / main menu. The blob identity, the one-line pitch, and the launch CTA into
@@ -9,10 +9,12 @@ import { useGameStore } from "@/state";
 export function TitleScreen() {
   const setPhase = useGameStore((s) => s.setPhase);
   const resetRun = useGameStore((s) => s.resetRun);
+  const resetWorld = useWorldStore((s) => s.reset);
   const best = useGameStore((s) => s.progress.bestHeight);
 
   const play = () => {
     resetRun();
+    resetWorld();
     setPhase("playing");
   };
 

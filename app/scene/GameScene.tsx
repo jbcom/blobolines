@@ -1,20 +1,41 @@
+import { Physics } from "@react-three/rapier";
+import { Suspense } from "react";
+import { GRAVITY } from "@/sim/physics";
 import { useGameStore } from "@/state";
-import { BlobActor } from "./blob";
+import { BlobActor, PlayerBlob } from "./blob";
+import { CameraRig } from "./CameraRig";
+import { TrampolineField } from "./trampoline";
 import { Lighting, SkyDome } from "./world";
 
 /**
  * Root scene composition inside <Canvas>. Composes small, single-responsibility
- * scene layers (per docs/ARCHITECTURE.md) — never a monolith. Gameplay layers
- * (trampolines, vfx, postfx) are added as their packages land.
+ * layers (per docs/ARCHITECTURE.md). In MENU it shows a calm hero blob; in PLAYING it
+ * runs the Rapier world with the climbing tower and the player blob.
+ *
+ * The sky + lighting stay mounted across phases (outside Suspense) so the canvas never
+ * goes black while Rapier's WASM loads on the first Play.
  */
 export function GameScene() {
+  const phase = useGameStore((s) => s.phase);
   const skin = useGameStore((s) => s.progress.skin);
+  const playing = phase === "playing";
 
   return (
     <>
       <SkyDome />
       <Lighting />
-      <BlobActor skin={skin} />
+      <CameraRig active={playing} />
+
+      <Suspense fallback={null}>
+        {playing ? (
+          <Physics gravity={GRAVITY}>
+            <TrampolineField />
+            <PlayerBlob />
+          </Physics>
+        ) : (
+          <BlobActor skin={skin} expression="idle" />
+        )}
+      </Suspense>
     </>
   );
 }

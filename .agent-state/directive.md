@@ -35,6 +35,21 @@ on every trampoline collision, jiggle/surface-tension wobble, wet goo trails. Wi
 this messy fluid juice the game misses what makes it fun. Latest-everything; add ANY
 library that elevates the game (physics/fluid/VFX/audio) — size is not a concern.
 
+## Goo + physics architecture (DECIDED — see memory blobolines-goo-architecture)
+STAY 3D (PoC + cover art are 3D). Rapier (@react-three/rapier) drives the real 3D blob
++ droplet bodies. **three-bvh-csg** is the 3D-native goo skin: reuse one Evaluator,
+ADD(union) blob+nearby droplets into a merged goo Brush in-place (batched, no allocs),
+SUB splats from pads — no Paper.js→extrude proxy, no fluid-sim (obsolete). Fallback:
+drei <MarchingCubes> metaballs. Goo shader + procedural eyes render the merged Brush.
+
+## CURRENT PHASE-1 BLOCKER
+Rapier <Physics> suspends forever in Vite — PlayerBlob/TrampolineField never mount
+(verified: mount log never fires, blob diagnostics frozen at defaults, scene empty in
+playing). stuck-loop-debugger dispatched. Dev harness (app/views/DevHarness; ?dev or DEV
+button) fires blob events + auto-writes screenshot + before/after diagnostics JSON to
+gitignored artifacts/ via Vite middleware (scripts/capturePlugin.ts) — proven working;
+USE IT to verify gameplay headlessly instead of timing manual screenshots.
+
 ## What CONTINUOUS means
 1. Never stop for status reports the user didn't ask for.
 2. Never stop for scope caution.

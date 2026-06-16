@@ -19,6 +19,7 @@ export function Altimeter() {
       <div className="flex items-baseline gap-1">
         <motion.span
           key={height}
+          data-testid="altitude-value"
           initial={{ y: -6, opacity: 0.4 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ type: "spring", stiffness: 500, damping: 30 }}

@@ -16,7 +16,7 @@ const TooltipContent = React.forwardRef<
       sideOffset={sideOffset}
       collisionPadding={8}
       className={cn(
-        "z-[var(--z-overlay)] max-w-xs rounded-[var(--radius-sm)] bg-[var(--bg-elevated)] border border-[var(--border)] px-3 py-1.5 text-[var(--text-sm)] text-[var(--fg)] shadow-[var(--shadow-md)] animate-in fade-in-0 zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[side=bottom]:slide-in-from-top-1 data-[side=top]:slide-in-from-bottom-1 origin-[--radix-tooltip-content-transform-origin]",
+        "z-[var(--z-overlay)] max-w-xs rounded-[var(--radius-sm)] bg-[var(--bg-elevated)] border border-[var(--border)] px-3 py-1.5 text-[length:var(--text-sm)] text-[var(--fg)] shadow-[var(--shadow-md)] animate-in fade-in-0 zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[side=bottom]:slide-in-from-top-1 data-[side=top]:slide-in-from-bottom-1",
         className,
       )}
       {...props}

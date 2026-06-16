@@ -4,7 +4,7 @@ import * as React from "react";
 import { cn } from "@/lib/utils";
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap font-[var(--font-ui)] font-semibold transition-all duration-[var(--dur-fast)] ease-[var(--ease-bounce)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg)] disabled:pointer-events-none disabled:opacity-40 active:scale-95",
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap font-[family-name:var(--font-ui)] font-semibold transition-all duration-[var(--dur-fast)] ease-[var(--ease-bounce)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg)] disabled:pointer-events-none disabled:opacity-40 active:scale-95",
   {
     variants: {
       variant: {
@@ -18,9 +18,9 @@ const buttonVariants = cva(
         danger: "bg-[var(--danger)] text-white rounded-[var(--radius-md)] hover:brightness-110",
       },
       size: {
-        sm: "h-8 px-3 text-[var(--text-sm)]",
-        default: "h-10 px-5 text-[var(--text-base)]",
-        lg: "h-12 px-7 text-[var(--text-lg)]",
+        sm: "h-8 px-3 text-[length:var(--text-sm)]",
+        default: "h-10 px-5 text-[length:var(--text-base)]",
+        lg: "h-12 px-7 text-[length:var(--text-lg)]",
         icon: "h-10 w-10 rounded-[var(--radius-md)]",
       },
     },

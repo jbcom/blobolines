@@ -1,4 +1,6 @@
 import { useGameStore } from "@/state";
+import { DevHarness } from "./DevHarness";
+import { GameOver } from "./GameOver";
 import { Hud } from "./hud";
 import { TitleScreen } from "./TitleScreen";
 
@@ -14,6 +16,8 @@ export function HudOverlay() {
     <>
       {phase === "menu" && <TitleScreen />}
       {phase === "playing" && <Hud />}
+      {phase === "gameover" && <GameOver />}
+      <DevHarness />
     </>
   );
 }
