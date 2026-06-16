@@ -30,6 +30,7 @@ const TYPE_BAG: TrampType[] = [
   "moving",
   "fragile",
   "super",
+  "ice",
 ];
 
 /**

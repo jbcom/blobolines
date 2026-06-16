@@ -19,6 +19,14 @@ const tmpQuat = new Quaternion();
 const tmpScale = new Vector3(1, 1, 1);
 const tmpMat = new Matrix4();
 const MAX_CRYSTALS = worldCfg.maxCrystals;
+// Gem hue palette for per-crystal color variety (cycled deterministically by id).
+const GEM_COLORS = [
+  new Color(hex(palette.blob.slime)),
+  new Color(hex(palette.blob.blue)),
+  new Color(hex(palette.tramp.gold)),
+  new Color(hex(palette.tramp.violet)),
+  new Color(hex(palette.goo.flame)),
+];
 
 export function CrystalField() {
   const meshRef = useRef<InstancedMesh>(null);
@@ -73,10 +81,13 @@ export function CrystalField() {
       tmpQuat.setFromAxisAngle(UP, t * 1.5 + i);
       tmpMat.compose(tmpObj, tmpQuat, tmpScale);
       mesh.setMatrixAt(visible, tmpMat);
+      // Per-crystal color variety (was all-green): cycle gem hues deterministically by id.
+      mesh.setColorAt(visible, GEM_COLORS[i % GEM_COLORS.length]);
       visible++;
     }
     mesh.count = visible;
     mesh.instanceMatrix.needsUpdate = true;
+    if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
 
     if (gathered > 0) {
       addCrystals(gathered);
@@ -87,13 +98,8 @@ export function CrystalField() {
   return (
     <instancedMesh ref={meshRef} args={[undefined, undefined, MAX_CRYSTALS]} frustumCulled={false}>
       <octahedronGeometry args={[0.45, 0]} />
-      <meshStandardMaterial
-        color={new Color(hex(palette.blob.slime))}
-        emissive={new Color(hex(palette.blob.slime))}
-        emissiveIntensity={0.6}
-        roughness={0.2}
-        metalness={0.3}
-      />
+      {/* White base so per-instance setColorAt tints true. */}
+      <meshStandardMaterial color={palette.goo.wet} roughness={0.2} metalness={0.3} />
     </instancedMesh>
   );
 }

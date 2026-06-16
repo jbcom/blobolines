@@ -37,6 +37,29 @@ export function getAim(): LaunchRequest | null {
   return aim;
 }
 
+/** Splat-burst events: a hard landing flings real physics goo chunks from a point. The
+ *  blob reports them here; the SplatChunks system (inside <Physics>) drains the queue each
+ *  frame and spawns Rapier bodies that bounce/roll/settle. Kept tiny (last-few wins). */
+export interface SplatBurst {
+  position: readonly [number, number, number];
+  strength: number;
+}
+
+let splatQueue: SplatBurst[] = [];
+
+export function reportSplat(burst: SplatBurst): void {
+  splatQueue.push(burst);
+  if (splatQueue.length > 4) splatQueue = splatQueue.slice(-4); // cap pending bursts
+}
+
+/** Drain all pending splat bursts (returns them once, then clears). */
+export function consumeSplats(): SplatBurst[] {
+  if (splatQueue.length === 0) return splatQueue;
+  const out = splatQueue;
+  splatQueue = [];
+  return out;
+}
+
 /** Continuous mid-air steering force on the world X/Z plane (lateral accel). */
 let steer: readonly [number, number] = [0, 0];
 

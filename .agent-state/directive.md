@@ -210,7 +210,8 @@ add the PoC's ENERGY (shake, follow-light, bloom, speed FX, color), NOT neon-cyb
 - [x] Camera follows the real blob x/y/z (was height-only, X/Z hard-locked) + impact shake — verified in artifacts/launch-up.png (blob now framed).
 - [x] Goo deformation in-game: squash/stretch wired into GooField (u_deform/u_center) — verified alive airborne (artifacts/launch-up.png); fixed the teardrop-merge by tightening MERGE_DIST_SQ + pinching off droplets that drop below the body (artifacts/start.png clean).
 - [~] Real color: type-tinted trampoline membranes + warm saturated sky DONE (verified); crystal/powerup color + richer grade still open.
-- [ ] [WAIT] PR #5 (feat/goo-alive) CI green + bot-review threads addressed → squash-merge (monitor armed).
+- [x] PR #5 merged + deployed live.
+- [ ] [WAIT] PR #6 (feat/goo-depth) CI green + bot threads addressed → squash-merge (monitor armed).
 - [x] Splat: bigger juicier World-of-Goo splat — wider spray (maxCount 28, MAX_GOO_BALLS 32), larger impact-scaled decal + satellite splats on hard hits (verified: large multi-lobe goo covering the pad).
 - [x] Aim/targeting feedback: in-scene dotted ballistic trajectory arc while charging (aim bridge + TrajectoryPreview, arc-length spacing) — verified readable aim line.
 - [x] Gameplay: off-pad death fixed — death now measured below highest LANDED pad (safeY), not airborne apex; a tall launch lands + survives (verified alt 37m no Splat).
@@ -223,10 +224,10 @@ add the PoC's ENERGY (shake, follow-light, bloom, speed FX, color), NOT neon-cyb
 - [x] BONUS trampolines: added the violet SUPER mega-launch pad (guaranteed big boost). More bonus types can follow this pattern.
 - [x] Powerup MODELS: rocket (Space Kit) + magnet (U-curve) GLBs from 3DLowPoly → public/assets/models, loaded via useGLTF w/ primitive Suspense fallback (self-contained re-export so no 404).
 - [x] WET look: dual-spec + subsurface + translucent wet shader (verified glistening). [next: color gradient]
-- [ ] [NEXT-BRANCH] BONUS trampolines: more mechanics beyond super (redirect/ice/sticky).
-- [ ] [NEXT-BRANCH] Splat pieces get REAL PHYSICS: droplets as their own Rapier bodies (bounce/roll/settle), not kinematic particles.
-- [ ] [NEXT-BRANCH] World STRATA / BIOMES geometry: real biome environment props/hazards per height band (backdrop colors done; geometry/strata next).
-- [ ] [NEXT-BRANCH] crystal/powerup color variety + blob color gradient across the body.
+- [x] BONUS trampolines: added ICE pad (cyan, very bouncy 1.55x but BREAKS the clean-combo — risk/reward) alongside super. Two distinct bonus mechanics now.
+- [x] Splat pieces REAL PHYSICS: SplatChunks — a pooled set of Rapier rigid bodies flung from the contact on a hard landing that bounce/roll/settle on pads, then recycle. Verified in harness (chunks scattered + rolled on the pad).
+- [x] World STRATA / BIOMES geometry: BiomeProps — instanced drifting clouds (sky bands ~60-560m) + twinkling stars (space 650m+), opacity-faded by altitude so each band reads as a distinct biome alongside the SkyDome color transition.
+- [x] Color richness: blob body now has a vertical color GRADIENT (deeper low, brighter top) in the goo shader; crystals cycle 5 gem hues (slime/blue/gold/violet/flame) via per-instance setColorAt (was all green).
 
 ### M10c — the blob IS goo, not a globe (user feedback 2026-06-16, batch 3) — HIGH PRIORITY
 The single biggest "it's not a blob" issue: right now it's a solid matte-colored GLOBE.

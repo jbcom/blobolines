@@ -2,11 +2,18 @@ import { Physics } from "@react-three/rapier";
 import { Suspense } from "react";
 import { GRAVITY } from "@/sim/physics";
 import { useGameStore } from "@/state";
-import { BlobActor, PlayerBlob, TrajectoryPreview } from "./blob";
+import { BlobActor, PlayerBlob, SplatChunks, TrajectoryPreview } from "./blob";
 import { CameraRig } from "./CameraRig";
 import { PostFX } from "./postfx";
 import { TrampolineField } from "./trampoline";
-import { BlobFollowLight, CrystalField, Lighting, PowerUpField, SkyDome } from "./world";
+import {
+  BiomeProps,
+  BlobFollowLight,
+  CrystalField,
+  Lighting,
+  PowerUpField,
+  SkyDome,
+} from "./world";
 
 /**
  * Root scene composition inside <Canvas>. Composes small, single-responsibility
@@ -32,6 +39,7 @@ export function GameScene() {
           <Physics gravity={GRAVITY}>
             <TrampolineField />
             <PlayerBlob />
+            <SplatChunks skin={skin} />
           </Physics>
         ) : (
           <BlobActor skin={skin} expression="idle" />
@@ -40,6 +48,7 @@ export function GameScene() {
 
       {/* Crystals + power-ups are not physics bodies and have no async deps — render
           outside the Physics Suspense boundary so they can never unmount the blob/pads. */}
+      {playing && <BiomeProps />}
       {playing && <BlobFollowLight />}
       {playing && <CrystalField />}
       {playing && <PowerUpField />}

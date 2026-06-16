@@ -12,6 +12,7 @@ import {
   consumeRebound,
   getAirSteer,
   isPowerupActive,
+  reportSplat,
   resetPowerups,
   setBlobDiagnostics,
   tickPowerups,
@@ -88,7 +89,9 @@ export function PlayerBlob() {
       body.wakeUp();
       body.setLinvel({ x: v.x, y: bounce.speed, z: v.z }, true);
       const run = useGameStore.getState().run;
-      setRun({ combo: run.combo + 1 });
+      // Ice pads are slippery: a big bouncy launch but it BREAKS the clean-combo streak
+      // (risk/reward). Every other pad builds the combo.
+      setRun({ combo: bounce.type === "ice" ? 0 : run.combo + 1 });
     }
 
     // Launch: set velocity directly for a crisp, predictable pop.
@@ -143,6 +146,10 @@ export function PlayerBlob() {
       if (p.y > safeY.current) safeY.current = p.y;
       // Fling a gooey splash from the contact point (just under the blob).
       splash([p.x, p.y - BLOB.radius, p.z], strength);
+      // On a meaningful impact, also fling REAL physics goo chunks that bounce/roll/settle
+      // on the pad (the kinematic splash above is the metaball merge; this is the physical
+      // mess). Gated so micro-bounces don't spawn bodies.
+      if (strength > 0.25) reportSplat({ position: [p.x, p.y - BLOB.radius, p.z], strength });
       // Haptic thump on landing (mobile), scaled to impact; respects the setting.
       if (useGameStore.getState().settings.haptics) {
         impact_(
