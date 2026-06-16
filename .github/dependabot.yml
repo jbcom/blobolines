@@ -19,6 +19,9 @@ updates:
           - "@types/three"
           - "@react-three/*"
           - "three-*"
+          - "postprocessing"
+          - "n8ao"
+          - "maath"
         update-types: ["minor", "patch", "major"]
       # Everything else (incl. majors) lands in one PR.
       all-dependencies:
@@ -28,6 +31,9 @@ updates:
           - "@types/three"
           - "@react-three/*"
           - "three-*"
+          - "postprocessing"
+          - "n8ao"
+          - "maath"
         update-types: ["minor", "patch", "major"]
 
   # ── GitHub Actions ──────────────────────────────────────────────────────────────
