@@ -227,7 +227,7 @@ add the PoC's ENERGY (shake, follow-light, bloom, speed FX, color), NOT neon-cyb
 - [ ] World STRATA / BIOMES: proper layered strata — real biomes for different atmospheric + post-atmospheric height bands (ground → sky → upper atmosphere → space → beyond), each with its own look/palette/hazards.
 
 ### M10c — the blob IS goo, not a globe (user feedback 2026-06-16, batch 3) — HIGH PRIORITY
-The single biggest "it's not a blob" issue: right now it's a solid matte colored GLOBE.
+The single biggest "it's not a blob" issue: right now it's a solid matte-colored GLOBE.
 A real Blobolines blob should:
 - [x] REST as a happy goo PUDDLE: grounded+slow blends deform toward a wide flat puddle;
   forms back into a blob as it speeds up. Also fixed the runaway auto-bounce (removed the

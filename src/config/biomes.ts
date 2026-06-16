@@ -42,7 +42,9 @@ export function biomeSkyAt(height: number): BiomeColors {
       break;
     }
   }
-  const t = (height - lo.minHeight) / (hi.minHeight - lo.minHeight);
+  // Guard against adjacent bands sharing a minHeight (span 0 → NaN from divide-by-zero).
+  const span = hi.minHeight - lo.minHeight;
+  const t = span === 0 ? 0 : (height - lo.minHeight) / span;
   return {
     top: mixHex(lo.sky.top, hi.sky.top, t),
     mid: mixHex(lo.sky.mid, hi.sky.mid, t),

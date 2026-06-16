@@ -1,5 +1,6 @@
 import { useGLTF } from "@react-three/drei";
 import { useMemo } from "react";
+import type { Material, Mesh, MeshStandardMaterial } from "three";
 import type { PowerUpType } from "@/core/types";
 import { palette } from "@/styles/tokens";
 
@@ -36,19 +37,20 @@ export function PowerUpModel({ type }: { type: PowerUpType }) {
   const model = useMemo(() => {
     const c = scene.clone(true);
     c.traverse((o) => {
-      const mesh = o as unknown as {
-        isMesh?: boolean;
-        material?: {
-          color?: { set: (c: string) => void };
-          emissive?: { set: (c: string) => void };
-          emissiveIntensity?: number;
-        };
-      };
-      if (mesh.isMesh && mesh.material) {
-        mesh.material = { ...mesh.material } as typeof mesh.material;
-        mesh.material.emissive?.set(spec.color);
-        if (mesh.material.emissiveIntensity !== undefined) mesh.material.emissiveIntensity = 0.4;
-      }
+      const mesh = o as Mesh;
+      if (!mesh.isMesh) return;
+      const src = mesh.material;
+      // Clone the material via THREE's own .clone() (NOT object spread — spreading a
+      // Material yields a plain object that loses the prototype/dispose/isMaterial), so
+      // tinting one instance doesn't mutate the shared cached material.
+      const mats = Array.isArray(src) ? src : [src];
+      const cloned = mats.map((m) => {
+        const cm = (m as Material).clone() as MeshStandardMaterial;
+        cm.emissive?.set(spec.color);
+        if ("emissiveIntensity" in cm) cm.emissiveIntensity = 0.4;
+        return cm;
+      });
+      mesh.material = Array.isArray(src) ? cloned : cloned[0];
     });
     return c;
   }, [scene, spec.color]);

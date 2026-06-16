@@ -12,9 +12,12 @@ import { reboundMultiplier } from "@/sim/trampoline";
 export const BASE_POWER = launchCfg.basePower;
 export const POWER_PER_CHARGE = launchCfg.powerPerCharge;
 
-/** Combo multiplier from a clean-bounce streak (≥ comboStart compounds). */
+/** Combo multiplier from a clean-bounce streak: 1× until `comboStart`, then +comboStep per
+ *  bounce. Anchored at comboStart (not hardcoded to 2) so the config value is respected —
+ *  at combo === comboStart the first bonus is exactly +comboStep. */
 export function comboMultiplier(combo: number): number {
-  return combo >= launchCfg.comboStart ? 1 + (combo - 1) * launchCfg.comboStep : 1;
+  const { comboStart, comboStep } = launchCfg;
+  return combo >= comboStart ? 1 + (combo - comboStart + 1) * comboStep : 1;
 }
 
 /**
