@@ -219,8 +219,9 @@ add the PoC's ENERGY (shake, follow-light, bloom, speed FX, color), NOT neon-cyb
 ### M10b — deeper feature requests (user feedback 2026-06-16, batch 2)
 - [x] Trampoline DEPRESSION: membrane (not the whole pad) now dips inward + tilts + flattens on impact, proportional to force, springs back — reads as a flexing sheet under the blob's weight.
 - [x] Backdrop CHANGES with height: SkyDome lerps biome bands (ground→sky→upper-atmo→stratosphere→space→deep-space) from blob altitude (config/biomes.json). Verified ground band; lerp unit-tested.
-- [ ] Trampoline COLOR changes with height/progress too.
-- [ ] BONUS trampolines of different colors that do different things (beyond standard/booster/moving/fragile — new mechanics).
+- [x] Trampoline COLOR by height: pad hue blends toward the biome mid-color with altitude (mixHex), so pads cool/darken into space with the backdrop.
+- [x] BONUS trampolines: added the violet SUPER mega-launch pad (guaranteed big boost). More bonus types can follow this pattern.
+- [ ] BONUS trampolines: additional new mechanics beyond super (e.g. redirect/ice/sticky) — Phase next.
 - [x] Powerup MODELS: rocket (Space Kit) + magnet (U-curve) GLBs from 3DLowPoly → public/assets/models, loaded via useGLTF w/ primitive Suspense fallback. Builds; in-scene capture pending (powerups spawn high).
 - [ ] WET look: nail it — balls feel too SOLID right now, need real wet/translucent/jiggly goo surface.
 - [ ] Splat pieces get REAL PHYSICS: droplets that splat off the blob should be their own physics bodies (bounce/roll/settle), not just kinematic particles.

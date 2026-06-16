@@ -3,6 +3,7 @@ import { CuboidCollider, type RapierRigidBody, RigidBody } from "@react-three/ra
 import { useEffect, useMemo, useRef } from "react";
 import { CanvasTexture, type Group, type Mesh } from "three";
 import { playBounce } from "@/audio";
+import { biomeSkyAt } from "@/config";
 import { clamp } from "@/core/math";
 import type { TrampType } from "@/core/types";
 import { createSplatCanvas } from "@/render/vfx";
@@ -100,10 +101,14 @@ export function Trampoline({ position, width, depth, type, onImpact }: Trampolin
     }
   });
 
-  const emissive = useMemo(() => color, [color]);
-  // Membrane = mostly bright cream but pulled ~45% toward the pad type color so each pad
-  // reads its own hue from above (the top face is what the camera mostly sees).
-  const membraneColor = useMemo(() => mixHex(palette.cream, color, 0.45), [color]);
+  // Pads recolor with ALTITUDE to match the biome backdrop: their type hue is pulled
+  // toward the biome's mid color the higher they are, so high-up pads cool/darken into
+  // space alongside the sky. Computed once from the pad's fixed world Y.
+  const tinted = useMemo(() => mixHex(color, biomeSkyAt(position[1]).mid, 0.35), [color, position]);
+  const emissive = useMemo(() => tinted, [tinted]);
+  // Membrane = mostly bright cream but pulled ~45% toward the (height-tinted) pad color so
+  // each pad reads its own hue from above (the top face is what the camera mostly sees).
+  const membraneColor = useMemo(() => mixHex(palette.cream, tinted, 0.45), [tinted]);
 
   return (
     <RigidBody
@@ -173,7 +178,7 @@ export function Trampoline({ position, width, depth, type, onImpact }: Trampolin
         <mesh>
           <boxGeometry args={[width, THICKNESS, depth]} />
           <meshStandardMaterial
-            color={color}
+            color={tinted}
             emissive={emissive}
             emissiveIntensity={0.35}
             roughness={0.4}
