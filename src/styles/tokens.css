@@ -1,0 +1,108 @@
+/*
+ * Blobolines design tokens — the single source of truth for the visual language.
+ * Grounded in public/assets/images/hero-cover.png: dusty blue-teal sky, warm cream
+ * light, inky black goo, and candy-bright blob/trampoline accents. Soft & juicy,
+ * NOT neon-cyberpunk. Consumed by Tailwind theme (@theme inline) and components.
+ */
+
+:root {
+  /* ---- Brand palette: candy blob/trampoline accents ---- */
+  --blob-ink: #14110f; /* the black ink-blob; near-black goo */
+  --blob-blue: #2e8bf0; /* happy blue blob */
+  --blob-slime: #7ed957; /* green slime blob */
+  --blob-ghost: #f4f6fb; /* white ghost blob */
+
+  --tramp-blue: #2f7fd1;
+  --tramp-gold: #f2c14e;
+  --tramp-orange: #f08a3c;
+  --tramp-green: #6cc04a;
+
+  /* ---- Atmosphere: painterly sky/background ---- */
+  --sky-top: #cfe0e8; /* hazy upper sky */
+  --sky-mid: #8fb3c4; /* dusty blue-teal */
+  --sky-deep: #4f7488; /* deep ruins haze */
+  --cream: #f3efd6; /* warm light shafts */
+  --cream-soft: #f6f0c2;
+
+  /* ---- Goo / fluid feedback ---- */
+  --goo-splash: #2e8bf0;
+  --goo-rim: #bfe3ff; /* fresnel rim highlight */
+  --goo-wet: #ffffff; /* specular sheen */
+
+  /* ---- Semantic UI surface (dark, glassy, soft) ---- */
+  --bg: #0e1822;
+  --bg-elevated: #16242f;
+  --surface: rgba(22, 36, 47, 0.92);
+  --surface-glass: rgba(22, 36, 47, 0.66);
+  --border: rgba(143, 179, 196, 0.22);
+  --border-strong: rgba(143, 179, 196, 0.45);
+
+  --fg: #f3efd6;
+  --fg-muted: #aebfc9;
+  --fg-subtle: #6f8593;
+
+  --accent: var(--blob-blue);
+  --accent-warm: var(--tramp-orange);
+  --success: var(--tramp-green);
+  --danger: #ef5a6f;
+
+  /* ---- Typography ---- */
+  --font-display: "Fredoka Variable", "Fredoka", system-ui, sans-serif;
+  --font-ui: "Nunito Variable", "Nunito", system-ui, sans-serif;
+
+  --text-xs: 0.75rem;
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+  --text-lg: 1.125rem;
+  --text-xl: 1.375rem;
+  --text-2xl: 1.875rem;
+  --text-3xl: 2.5rem;
+  --text-hero: clamp(2.75rem, 12vw, 6rem);
+
+  /* ---- Spacing scale ---- */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-12: 3rem;
+
+  /* ---- Radius: rounded & blobby ---- */
+  --radius-sm: 0.5rem;
+  --radius-md: 0.875rem;
+  --radius-lg: 1.25rem;
+  --radius-xl: 1.75rem;
+  --radius-blob: 42% 58% 56% 44% / 48% 44% 56% 52%; /* organic blob shape */
+  --radius-full: 9999px;
+
+  /* ---- Shadows: soft, gooey glow ---- */
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.25);
+  --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.32);
+  --shadow-lg: 0 18px 48px rgba(0, 0, 0, 0.42);
+  --glow-blue: 0 0 24px rgba(46, 139, 240, 0.45);
+  --glow-warm: 0 0 24px rgba(240, 138, 60, 0.45);
+  --glow-slime: 0 0 24px rgba(126, 217, 87, 0.45);
+
+  /* ---- Motion: bouncy, springy ---- */
+  --ease-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-squish: cubic-bezier(0.5, 0, 0.1, 1.4);
+  --dur-fast: 140ms;
+  --dur-base: 240ms;
+  --dur-slow: 420ms;
+
+  /* ---- Z layers ---- */
+  --z-canvas: 0;
+  --z-hud: 10;
+  --z-overlay: 20;
+  --z-modal: 30;
+  --z-flash: 40;
+  --z-loader: 50;
+
+  /* ---- Safe areas (mobile) ---- */
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
+}

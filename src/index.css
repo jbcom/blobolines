@@ -1,0 +1,72 @@
+@import "tailwindcss";
+@import "./styles/fonts.css";
+@import "./styles/tokens.css";
+
+/*
+ * Tailwind v4 theme — maps the design tokens (tokens.css :root vars) onto Tailwind's
+ * utility namespace so `bg-surface`, `text-fg`, `font-display`, `rounded-blob`, etc. work.
+ */
+@theme inline {
+  --color-bg: var(--bg);
+  --color-bg-elevated: var(--bg-elevated);
+  --color-surface: var(--surface);
+  --color-border: var(--border);
+  --color-fg: var(--fg);
+  --color-fg-muted: var(--fg-muted);
+  --color-fg-subtle: var(--fg-subtle);
+  --color-accent: var(--accent);
+  --color-accent-warm: var(--accent-warm);
+  --color-success: var(--success);
+  --color-danger: var(--danger);
+
+  --color-blob-blue: var(--blob-blue);
+  --color-blob-slime: var(--blob-slime);
+  --color-blob-ghost: var(--blob-ghost);
+  --color-blob-ink: var(--blob-ink);
+  --color-tramp-blue: var(--tramp-blue);
+  --color-tramp-gold: var(--tramp-gold);
+  --color-tramp-orange: var(--tramp-orange);
+  --color-tramp-green: var(--tramp-green);
+  --color-cream: var(--cream);
+
+  --font-display: var(--font-display);
+  --font-ui: var(--font-ui);
+
+  --text-hero: var(--text-hero);
+
+  --radius-sm: var(--radius-sm);
+  --radius-md: var(--radius-md);
+  --radius-lg: var(--radius-lg);
+  --radius-xl: var(--radius-xl);
+
+  --ease-bounce: var(--ease-bounce);
+  --ease-out-soft: var(--ease-out-soft);
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  background-color: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-ui);
+  overflow: hidden;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: none;
+  overscroll-behavior: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.font-display {
+  font-family: var(--font-display);
+}
+
+/* Utility: organic blob shape for decorative elements */
+.shape-blob {
+  border-radius: var(--radius-blob);
+}

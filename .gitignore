@@ -1,0 +1,61 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build output
+dist/
+dist-ssr/
+*.local
+
+# Vite / cache
+.vite/
+.cache/
+
+# Test output
+coverage/
+__screenshots__/
+test-results/
+playwright-report/
+playwright/.cache/
+
+# Capacitor / Android native build artifacts
+android/app/build/
+android/build/
+android/.gradle/
+android/local.properties
+android/app/release/
+android/app/src/main/assets/public/
+ios/App/Pods/
+ios/App/App/public/
+*.apk
+*.aab
+*.keystore
+
+# Editor / OS
+.DS_Store
+.idea/
+.vscode/*
+!.vscode/extensions.json
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# Env
+.env
+.env.*
+!.env.example
+
+# Agent-state cache (re-derivable; tracked files are directive.md + decisions.ndjson)
+.agent-state/digest.md
+.agent-state/cursor.md
+.agent-state/.indexed-sha
+.agent-state/.last-stop-sha
+.agent-state/.last-compaction
+.agent-state/batch.json
