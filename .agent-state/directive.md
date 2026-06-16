@@ -9,6 +9,13 @@ Elevate it into a complete, polished, shippable game. Public repo `jbcom/bloboli
 MIT, GitHub Pages (web) + Android (Capacitor). One initial commit on a feature branch,
 then continuous forward commits. NO stopping.
 
+## Core goal (the spine — preserve from the PoC)
+The central tension is unchanged: launch your blob AS HIGH AS POSSIBLE up an endless
+vertical tower of trampolines. Altimeter, best-height record, combo on clean bounces,
+and death when you fall below the level — this height-chase is the game's spine and must
+never be lost as we elevate. Everything else (goo, eyes, juice) serves making that climb
+feel amazing.
+
 ## North star (the fun)
 World-of-Goo / ink-blob FLUIDITY. The blob is a deformable gooey body, NOT a rigid
 sphere: squash-and-stretch on impact, big colorful gooey splash droplets + splat decals
@@ -24,12 +31,15 @@ library that elevates the game (physics/fluid/VFX/audio) — size is not a conce
 5. Never stop because a task feels big — pick the next atomic commit.
 6. Only stop on: explicit user halt, red CI blocking, or genuine STOP_FAIL.
 
-## Operating loop
+## Operating loop — CONTIGUOUS, no pauses, work through the night
 while queue has [ ] items: implement → verify (typecheck+lint+test, run the app & READ a
 screenshot for visual/UI work) → commit (Conventional Commits) → dispatch pipelined local
 review (comprehensive-review:full-review + security-sast + code-simplifier, scoped to the
-diff, background) → fold findings forward → mark [x] → next. Milestone boundaries get a
-broader review pass. Reference `~/src/arcade-cabinet/{kings-road,marmalade-drops,ebb-and-bloom,will-it-blow,bioluminescent-sea}` for patterns.
+diff, background) → fold findings forward → mark [x] → IMMEDIATELY next item. Never stop
+between packages, never schedule a politeness wakeup, never wait idly. While CI/review run
+in the background, start the next independent package. If one item is blocked, pick another
+[ ] item — there is always parallel work. Milestone boundaries get a broader review pass.
+Reference `~/src/arcade-cabinet/{kings-road,marmalade-drops,ebb-and-bloom,will-it-blow,bioluminescent-sea}` for patterns.
 
 ## Not an MVP — the long haul
 The goal is a COMPLETE, polished, fun game, not a minimal-visible demo. "It renders"
@@ -69,7 +79,7 @@ tokens own palette.
 - [x] capacitor.config.ts (appId com.jbcom.blobolines)
 - [x] App shell entry: app/main.tsx, App.tsx (koota WorldProvider + ErrorBoundary)
 - [x] docs/ARCHITECTURE.md package map
-- [ ] shadcn/ui base components in app/components/ui (button, dialog, slider, switch, tabs, tooltip, progress) + barrel; cn() in src/lib (done)
+- [x] shadcn/ui base components in app/components/ui (button, dialog, slider, switch, tabs, tooltip, progress) + barrel; cn() in src/lib (done)
 - [ ] Vitest dual config done — add src/__tests__ helpers + app/fixtures/FixtureStage barrel + first passing example tests (unit + fixture)
 - [x] Vitest dual config + src/__tests__/setup.ts + app/fixtures/FixtureStage + passing unit (tokens) + fixture (SkyDome WebGL) tests
 - [ ] Capacitor android platform added; haptics/screen-orientation/keep-awake wired via src/platform barrel (web fallbacks)
