@@ -121,7 +121,7 @@ export function PlayerBlob() {
       // (risk/reward). Every other pad builds the combo, capped at MAX_COMBO (the launch
       // multiplier is balanced around that cap; leaving it unclamped overshot).
       const nextCombo = bounce.type === "ice" ? 0 : Math.min(run.combo + 1, MAX_COMBO);
-      setRun({ combo: nextCombo });
+      setRun({ combo: nextCombo, maxCombo: Math.max(run.maxCombo, nextCombo) });
       // Gold screen flash as the streak escalates (from 3×), intensity ramping with heat.
       if (nextCombo >= 3) flash("gold", Math.min(1, (nextCombo - 2) / 6));
     }

@@ -2,6 +2,7 @@ import { RotateCcw } from "lucide-react";
 import { motion } from "motion/react";
 import { useEffect, useRef } from "react";
 import { startMusic, stopMusic } from "@/audio";
+import { comboMultiplier } from "@/sim/launch";
 import { useGameStore, useWorldStore } from "@/state";
 
 /**
@@ -11,6 +12,8 @@ import { useGameStore, useWorldStore } from "@/state";
 export function GameOver() {
   const height = useGameStore((s) => Math.max(0, Math.floor(s.run.height)));
   const crystals = useGameStore((s) => s.run.crystals);
+  const maxCombo = useGameStore((s) => s.run.maxCombo);
+  const lifetimeCrystals = useGameStore((s) => s.progress.crystals);
   const best = useGameStore((s) => s.progress.bestHeight);
   const setPhase = useGameStore((s) => s.setPhase);
   const resetRun = useGameStore((s) => s.resetRun);
@@ -48,6 +51,11 @@ export function GameOver() {
   // record best === height. `>=` is therefore correct: it's a record exactly when this
   // run reached the (now-updated) best. A losing run has height < best.
   const isRecord = height >= best && height > 0;
+  // Delta vs the all-time best: on a record show how far over the *previous* best we went;
+  // on a losing run show how short. (best already includes this run, so a record's gap is
+  // 0 against itself — fall back to a celebratory label instead of "+0m".)
+  const shortBy = Math.max(0, best - height);
+  const comboLabel = maxCombo >= 2 ? `${comboMultiplier(maxCombo).toFixed(2)}×` : "—";
 
   return (
     <motion.div
@@ -69,8 +77,19 @@ export function GameOver() {
 
         <div className="flex w-full flex-col gap-2 font-ui text-sm">
           <Row label="Altitude" value={`${height} m`} accent="text-accent" />
-          <Row label="Crystals" value={`${crystals}`} accent="text-blob-blue" />
-          <Row label="Best" value={`${best} m`} accent="text-tramp-gold" />
+          <Row
+            label="Best"
+            value={isRecord ? `${best} m` : `${best} m`}
+            accent="text-tramp-gold"
+            sub={isRecord ? "New record!" : shortBy > 0 ? `${shortBy} m short` : undefined}
+          />
+          <Row label="Max combo" value={comboLabel} accent="text-tramp-orange" />
+          <Row
+            label="Crystals"
+            value={`${crystals}`}
+            accent="text-blob-blue"
+            sub={`${lifetimeCrystals} lifetime`}
+          />
         </div>
 
         <button
@@ -93,11 +112,24 @@ export function GameOver() {
   );
 }
 
-function Row({ label, value, accent }: { label: string; value: string; accent: string }) {
+function Row({
+  label,
+  value,
+  accent,
+  sub,
+}: {
+  label: string;
+  value: string;
+  accent: string;
+  sub?: string;
+}) {
   return (
     <div className="flex items-center justify-between border-border/60 border-b pb-1.5 last:border-0">
       <span className="text-fg-subtle">{label}</span>
-      <span className={`font-display font-bold ${accent}`}>{value}</span>
+      <span className="flex items-baseline gap-2">
+        {sub && <span className="text-[10px] font-semibold text-fg-subtle">{sub}</span>}
+        <span className={`font-display font-bold ${accent}`}>{value}</span>
+      </span>
     </div>
   );
 }

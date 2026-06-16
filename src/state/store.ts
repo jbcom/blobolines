@@ -15,6 +15,8 @@ export interface RunStats {
   height: number;
   crystals: number;
   combo: number;
+  /** Highest combo reached this run (for the game-over recap). */
+  maxCombo: number;
 }
 
 export interface GameState {
@@ -47,7 +49,7 @@ export const DEFAULT_PROGRESS: PlayerProgress = {
   unlockedSkins: ["blue"],
 };
 
-const EMPTY_RUN: RunStats = { height: 0, crystals: 0, combo: 0 };
+const EMPTY_RUN: RunStats = { height: 0, crystals: 0, combo: 0, maxCombo: 0 };
 
 export const useGameStore = create<GameState>((set) => ({
   phase: "menu",
