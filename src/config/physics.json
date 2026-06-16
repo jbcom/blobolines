@@ -1,0 +1,14 @@
+{
+  "gravity": [0, -22, 0],
+  "blob": {
+    "radius": 0.85,
+    "restitution": 0.0,
+    "friction": 0.2,
+    "linearDamping": 0.05,
+    "ccd": true
+  },
+  "autoLaunchDelay": 1.6,
+  "deathFallDistance": 24,
+  "worldBoundXZ": 35,
+  "maxImpactSpeed": 28
+}

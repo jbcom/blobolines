@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { world as worldCfg } from "@/config";
 import type { BlobSkin, GamePhase, GameSettings, PlayerProgress } from "@/core/types";
 import { palette } from "@/styles/tokens";
 
@@ -91,13 +92,8 @@ export const useGameStore = create<GameState>((set) => ({
     ),
 }));
 
-/** Cost (in crystals) per skin — keep with the palette so shop + store agree. */
-export const SKIN_COST: Record<BlobSkin, number> = {
-  blue: 0,
-  slime: 15,
-  ghost: 30,
-  ink: 50,
-};
+/** Cost (in crystals) per skin — data-driven from src/config/world.json. */
+export const SKIN_COST: Record<BlobSkin, number> = worldCfg.skinCost;
 
 /** Convenience: the color for the currently equipped skin. */
 export const equippedSkinColor = (s: GameState): string => palette.blob[s.progress.skin];

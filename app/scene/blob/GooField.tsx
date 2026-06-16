@@ -1,6 +1,7 @@
 import { useFrame, useThree } from "@react-three/fiber";
 import { useEffect, useMemo, useRef } from "react";
 import type { Color, Group, Mesh, ShaderMaterial, Vector3 } from "three";
+import { blob as blobCfg } from "@/config";
 import type { BlobSkin } from "@/core/types";
 import { packMetaballField } from "@/render/goo";
 import { MAX_GOO_BALLS, MetaballGooMaterial } from "@/render/materials";
@@ -94,7 +95,7 @@ export function GooField({ skin, blobRadius, getDroplets }: GooFieldProps) {
     // (squash = 1 - impact*0.3), pump the wobble envelope up on a fresh impact, then let
     // it decay so the goo skin ripples and settles like a water balloon.
     const imp = Math.min(1, Math.max(0, (1 - diag.squash) / 0.3));
-    wobble.current = Math.max(wobble.current * Math.exp(-dt / 0.7), imp);
+    wobble.current = Math.max(wobble.current * Math.exp(-dt / blobCfg.wobbleDecayTau), imp);
     material.uniforms.u_wobble.value = wobble.current;
 
     // Squash-and-stretch: stretch along velocity while flying, flatten on impact — the
@@ -106,16 +107,16 @@ export function GooField({ skin, blobRadius, getDroplets }: GooFieldProps) {
     // Puddle at rest: when grounded and slow, the goo isn't a hovering ball — it settles
     // into a wide flat happy puddle on the pad. Blend toward a squat shape by how settled
     // it is (slow + not airborne), and form back into a blob as it speeds up / launches.
-    const settled = diag.airborne ? 0 : 1 - Math.min(diag.speed / 4, 1);
+    const settled = diag.airborne ? 0 : 1 - Math.min(diag.speed / blobCfg.puddle.settleSpeed, 1);
     if (settled > 0.01) {
-      const puddle = { x: 1.55, y: 0.42, z: 1.55 };
+      const [px, py, pz] = blobCfg.puddle.scale;
       target = {
-        x: target.x + (puddle.x - target.x) * settled,
-        y: target.y + (puddle.y - target.y) * settled,
-        z: target.z + (puddle.z - target.z) * settled,
+        x: target.x + (px - target.x) * settled,
+        y: target.y + (py - target.y) * settled,
+        z: target.z + (pz - target.z) * settled,
       };
     }
-    const sk = 1 - Math.exp(-dt / 0.06);
+    const sk = 1 - Math.exp(-dt / blobCfg.deformSpringTau);
     deform.current.x += (target.x - deform.current.x) * sk;
     deform.current.y += (target.y - deform.current.y) * sk;
     deform.current.z += (target.z - deform.current.z) * sk;

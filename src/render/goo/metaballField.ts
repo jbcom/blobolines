@@ -1,3 +1,4 @@
+import { goo as gooCfg } from "@/config";
 import type { Vec3 } from "@/core/types";
 
 /**
@@ -25,10 +26,10 @@ export interface MetaballField {
 }
 
 /** Squared world distance under which a droplet merges into the blob's goo. Kept tight
- *  (~1.6 units) so only freshly-flung droplets still touching the body blend in — once a
- *  droplet has separated/fallen it pinches off cleanly instead of stringing a long
- *  teardrop tail from the blob down to settled goo on the pad. */
-export const MERGE_DIST_SQ = 2.6;
+ *  so only freshly-flung droplets still touching the body blend in — once a droplet has
+ *  separated/fallen it pinches off cleanly instead of stringing a long teardrop tail.
+ *  Data-driven from src/config/goo.json. */
+export const MERGE_DIST_SQ = gooCfg.mergeDistSq;
 
 /**
  * Pack the blob body + nearby droplets into world-space metaball sources. Droplet 0 is

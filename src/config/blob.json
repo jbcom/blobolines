@@ -1,0 +1,15 @@
+{
+  "speedStretch": {
+    "maxSpeed": 30,
+    "maxStretch": 0.4
+  },
+  "impactSquash": {
+    "maxFlatten": 0.45
+  },
+  "puddle": {
+    "settleSpeed": 4,
+    "scale": [1.55, 0.42, 1.55]
+  },
+  "deformSpringTau": 0.06,
+  "wobbleDecayTau": 0.7
+}

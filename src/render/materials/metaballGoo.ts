@@ -1,6 +1,7 @@
 import { shaderMaterial } from "@react-three/drei";
 import { extend, type ThreeElement } from "@react-three/fiber";
 import * as THREE from "three";
+import { goo as gooCfg } from "@/config";
 import { palette } from "@/styles/tokens";
 
 /**
@@ -16,7 +17,7 @@ import { palette } from "@/styles/tokens";
  * the combo "flame" charge that ignites a warm pulsing fresnel glow as the streak builds.
  */
 
-export const MAX_GOO_BALLS = 24;
+export const MAX_GOO_BALLS = gooCfg.maxGooBalls;
 
 export const MetaballGooMaterial = shaderMaterial(
   {
@@ -44,7 +45,7 @@ export const MetaballGooMaterial = shaderMaterial(
   /* glsl */ `
     precision highp float;
     #define MAX_BALLS ${MAX_GOO_BALLS}
-    #define MAX_STEPS 48
+    #define MAX_STEPS ${gooCfg.raymarchSteps}
     #define MIN_DIST 0.004
     #define MAX_DIST 12.0
 
@@ -85,7 +86,7 @@ export const MetaballGooMaterial = shaderMaterial(
       float w = sin(p.x * 4.0 + u_time * 9.0)
               + sin(p.y * 5.0 - u_time * 7.0)
               + sin(p.z * 4.5 + u_time * 11.0);
-      return w * (1.0 / 3.0) * u_wobble * 0.18;
+      return w * (1.0 / 3.0) * u_wobble * ${gooCfg.wobbleAmplitude.toFixed(3)};
     }
 
     float field(vec3 rawP) {

@@ -3,6 +3,7 @@ import { useEffect, useRef } from "react";
 import type { InstancedMesh } from "three";
 import { Color, Matrix4, Quaternion, Vector3 } from "three";
 import { playChime } from "@/audio";
+import { world as worldCfg } from "@/config";
 import { stepCrystal } from "@/sim/collect";
 import { getBlobDiagnostics, isPowerupActive, useGameStore, useWorldStore } from "@/state";
 import { hex, palette } from "@/styles/tokens";
@@ -17,7 +18,7 @@ const tmpObj = new Vector3();
 const tmpQuat = new Quaternion();
 const tmpScale = new Vector3(1, 1, 1);
 const tmpMat = new Matrix4();
-const MAX_CRYSTALS = 512;
+const MAX_CRYSTALS = worldCfg.maxCrystals;
 
 export function CrystalField() {
   const meshRef = useRef<InstancedMesh>(null);
