@@ -2,6 +2,7 @@ import { useFrame } from "@react-three/fiber";
 import { BallCollider, type RapierRigidBody, RigidBody } from "@react-three/rapier";
 import { useEffect, useRef } from "react";
 import { playLaunch, playSplat } from "@/audio";
+import { ImpactStyle, impact as impact_ } from "@/platform";
 import { classifyExpression } from "@/sim/blob";
 import { launchVelocity } from "@/sim/launch";
 import { BLOB, DEATH_FALL_DISTANCE, MAX_IMPACT_SPEED, WORLD_BOUND_XZ } from "@/sim/physics";
@@ -123,6 +124,16 @@ export function PlayerBlob() {
       impact.current = strength;
       // Fling a gooey splash from the contact point (just under the blob).
       splash([p.x, p.y - BLOB.radius, p.z], strength);
+      // Haptic thump on landing (mobile), scaled to impact; respects the setting.
+      if (useGameStore.getState().settings.haptics) {
+        impact_(
+          strength > 0.6
+            ? ImpactStyle.Heavy
+            : strength > 0.3
+              ? ImpactStyle.Medium
+              : ImpactStyle.Light,
+        );
+      }
     }
     impact.current = Math.max(0, impact.current - dt * 2.5);
     const fallDepth = maxY.current - p.y;
