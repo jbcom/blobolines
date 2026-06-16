@@ -51,6 +51,8 @@ export function GooCsg({ skin, blobRadius, getDroplets }: GooCsgProps) {
   const wobble = useRef(0);
   /** Current squash/stretch deform, sprung toward the target each frame. */
   const deform = useRef({ x: 1, y: 1, z: 1 });
+  /** Directional lean (radians, sprung) — the body tilts toward its horizontal motion. */
+  const lean = useRef({ x: 0, z: 0 });
 
   const material = useMemo(() => new GooMaterial() as unknown as ShaderMaterial, []);
 
@@ -186,6 +188,14 @@ export function GooCsg({ skin, blobRadius, getDroplets }: GooCsgProps) {
     const squash = Math.min(1, deform.current.y);
     group.position.set(bx, by - blobRadius * (1 - squash), bz);
     group.scale.set(deform.current.x, deform.current.y, deform.current.z);
+    // Directional LEAN: tilt the whole body toward its horizontal travel (a fluid body leans
+    // into motion, never a rigid upright ball). Spring the tilt so it lags + overshoots a
+    // touch. Magnitude scales with horizontal speed, capped so it stays a lean not a faceplant.
+    const hSpeed = Math.hypot(vx, vz);
+    const leanK = Math.min(hSpeed / 26, 1) * 0.5; // radians, capped ~0.5
+    damp(lean.current, "x", (vz / (hSpeed || 1)) * leanK, 0.12, dt);
+    damp(lean.current, "z", (-vx / (hSpeed || 1)) * leanK, 0.12, dt);
+    group.rotation.set(lean.current.x, 0, lean.current.z);
 
     // Eyes ride the goo face, billboarded at the blob center (counter the group scale so
     // they don't squash with the body).
