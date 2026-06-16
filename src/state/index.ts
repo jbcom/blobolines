@@ -2,9 +2,12 @@ export { type BlobDiagnostics, getBlobDiagnostics, setBlobDiagnostics } from "./
 export {
   consumeImpact,
   consumeLaunch,
+  consumeRebound,
   getAirSteer,
   type LaunchRequest,
+  type ReboundRequest,
   reportImpact,
+  reportRebound,
   requestLaunch,
   setAirSteer,
 } from "./launchBridge";

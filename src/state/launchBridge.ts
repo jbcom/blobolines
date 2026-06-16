@@ -47,3 +47,23 @@ export function consumeImpact(): number {
   landingImpact = 0;
   return s;
 }
+
+/** A pending trampoline rebound: the upward speed to bounce the blob at, plus the pad
+ *  type (for combo/scoring). Reported by a trampoline on contact, consumed by the blob. */
+export interface ReboundRequest {
+  speed: number;
+  type: string;
+}
+
+let rebound: ReboundRequest | null = null;
+
+export function reportRebound(req: ReboundRequest): void {
+  // Keep the strongest pending rebound if several pads are touched in one frame.
+  if (!rebound || req.speed > rebound.speed) rebound = req;
+}
+
+export function consumeRebound(): ReboundRequest | null {
+  const r = rebound;
+  rebound = null;
+  return r;
+}

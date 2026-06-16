@@ -7,6 +7,7 @@ import { BLOB, DEATH_FALL_DISTANCE, MAX_IMPACT_SPEED, WORLD_BOUND_XZ } from "@/s
 import {
   consumeImpact,
   consumeLaunch,
+  consumeRebound,
   getAirSteer,
   setBlobDiagnostics,
   useGameStore,
@@ -56,6 +57,17 @@ export function PlayerBlob() {
     const p = body.translation();
     const v = body.linvel();
     const airborne = Math.abs(v.y) > 0.5;
+
+    // Trampoline auto-bounce: landing on a pad pops the blob back up (the springy core
+    // of "trampolines") and builds the clean-bounce combo. A charged slingshot drag adds
+    // extra power on top via consumeLaunch below.
+    const bounce = consumeRebound();
+    if (bounce) {
+      body.wakeUp();
+      body.setLinvel({ x: v.x, y: bounce.speed, z: v.z }, true);
+      const run = useGameStore.getState().run;
+      setRun({ combo: run.combo + 1 });
+    }
 
     // Launch: set velocity directly for a crisp, predictable pop.
     const req = consumeLaunch();

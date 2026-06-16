@@ -3,8 +3,14 @@ import { CuboidCollider, RigidBody } from "@react-three/rapier";
 import { useMemo, useRef } from "react";
 import type { Group, Mesh } from "three";
 import type { TrampType } from "@/core/types";
-import { createTrampState, impactTargets, stepTramp, type TrampState } from "@/sim/trampoline";
-import { reportImpact } from "@/state";
+import {
+  createTrampState,
+  impactTargets,
+  reboundMultiplier,
+  stepTramp,
+  type TrampState,
+} from "@/sim/trampoline";
+import { reportImpact, reportRebound } from "@/state";
 import { trampColor } from "@/styles/tokens";
 
 /**
@@ -62,10 +68,16 @@ export function Trampoline({ position, width, depth, type, onImpact }: Trampolin
         sensor
         onIntersectionEnter={(e) => {
           const lv = e.other.rigidBody?.linvel();
-          const speed = lv ? Math.abs(lv.y) : 0;
-          const t = impactTargets(speed, 0, 0);
-          target.current = t;
+          // Only react to a descending blob (ignore the upward exit through the sensor).
+          if (!lv || lv.y >= 0) return;
+          const speed = Math.abs(lv.y);
+          target.current = impactTargets(speed, 0, 0);
           reportImpact(speed);
+          // Trampoline rebound: bounce back at impact speed × type multiplier, with a
+          // floor so even a gentle landing pops (the pad is springy). The blob's
+          // slingshot drag adds an extra charged launch on top.
+          const reboundSpeed = Math.max(speed, 8) * reboundMultiplier[type];
+          reportRebound({ speed: reboundSpeed, type });
           onImpact?.(speed, 0, 0);
         }}
       />
