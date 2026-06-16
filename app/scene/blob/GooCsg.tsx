@@ -8,6 +8,7 @@ import {
   type Mesh,
   type ShaderMaterial,
   SphereGeometry,
+  type Vector3,
 } from "three";
 import { mergeVertices } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 import { ADDITION, Brush, Evaluator } from "three-bvh-csg";
@@ -53,6 +54,9 @@ export function GooCsg({ skin, blobRadius, getDroplets }: GooCsgProps) {
   const deform = useRef({ x: 1, y: 1, z: 1 });
   /** Directional lean (radians, sprung) — the body tilts toward its horizontal motion. */
   const lean = useRef({ x: 0, z: 0 });
+  /** Sprung gooey deform-mode amounts: wet sag (rest droop) + asymmetric lobe (wandering
+   *  fat side), eased so they ramp/decay smoothly instead of popping with state changes. */
+  const modes = useRef({ sag: 0, lobe: 0.25 });
 
   const material = useMemo(() => new GooMaterial() as unknown as ShaderMaterial, []);
 
@@ -159,11 +163,36 @@ export function GooCsg({ skin, blobRadius, getDroplets }: GooCsgProps) {
     material.uniforms.uWobble.value = Math.min(1.4, wobble.current);
 
     const [vx, vy, vz] = diag.velocity;
+
+    // Impact direction = where the goo is moving (the ripple travels FROM the contact, i.e.
+    // along the motion at the moment of impact). Falls back to straight-down while resting.
+    const vMag = Math.hypot(vx, vy, vz);
+    if (vMag > 0.5) {
+      (material.uniforms.uImpactDir.value as Vector3).set(vx / vMag, vy / vMag, vz / vMag);
+    }
+
+    // ASYMMETRIC lobe: a slow-wandering fat side so Blobby is never a clean sphere even idle.
+    // The bulge amount eases up at rest/low-speed (a heavy settled glob bulges) and the
+    // direction sweeps on a slow Lissajous so the fat side migrates around the body.
+    const t = state.clock.elapsedTime;
+    (material.uniforms.uLobeDir.value as Vector3).set(
+      Math.cos(t * 0.6),
+      Math.sin(t * 0.37) * 0.5,
+      Math.sin(t * 0.6),
+    );
     let target = combineScale(speedStretch(vx, vy, vz), impactSquash(imp));
 
     // Puddle at rest: settle into a wide flat happy puddle when grounded + slow, with a slow
     // breathe so Blobby is never a perfectly static ball even standing still.
     const settled = diag.airborne ? 0 : 1 - Math.min(diag.speed / blobCfg.puddle.settleSpeed, 1);
+
+    // WET SAG eases in as Blobby settles (a resting glob hangs/bulges under its weight); the
+    // ASYMMETRIC lobe is always a little present (never a clean sphere) and grows when settled.
+    damp(modes.current, "sag", settled, 0.18, dt);
+    damp(modes.current, "lobe", 0.25 + settled * 0.4, 0.3, dt);
+    material.uniforms.uSag.value = modes.current.sag;
+    material.uniforms.uLobe.value = modes.current.lobe;
+
     if (settled > 0.01) {
       const [px, py, pz] = blobCfg.puddle.scale;
       const breathe = Math.sin(state.clock.elapsedTime * 1.8) * 0.04 * settled;

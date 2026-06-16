@@ -48,3 +48,41 @@ test("GooCsg renders the merged goo body (with nearby droplets) in WebGL", async
     { timeout: 6000, interval: 60 },
   );
 });
+
+// Settled/resting goo exercises the myriad-deform path: wet SAG eases in + the asymmetric
+// LOBE grows when grounded + slow, so the body must still paint a real (non-sphere) goo
+// silhouette without erroring on the new vertex displacement modes.
+test("GooCsg renders a settled, sagging+lobed goo puddle at rest", async () => {
+  setBlobDiagnostics({
+    position: [0, 0, 0],
+    velocity: [0, 0, 0],
+    speed: 0,
+    airborne: false,
+    expression: "idle",
+    squash: 1,
+    maxHeight: 0,
+    groundY: 0,
+  });
+
+  const screen = await render(
+    <FixtureStage testId="goocsg-rest-fixture" cameraDistance={5}>
+      <ambientLight intensity={1} />
+      <GooCsg skin="slime" blobRadius={0.85} getDroplets={() => []} />
+    </FixtureStage>,
+  );
+
+  await expect.element(screen.getByTestId("goocsg-rest-fixture")).toBeInTheDocument();
+  // Let the sprung sag/lobe ease in over a few frames before sampling.
+  await new Promise((r) => setTimeout(r, 200));
+
+  await vi.waitFor(
+    () => {
+      const canvas = document
+        .querySelector('[data-testid="goocsg-rest-fixture"]')
+        ?.querySelector("canvas");
+      if (!canvas) throw new Error("canvas not mounted");
+      expect(canvas.toDataURL("image/png").length).toBeGreaterThan(4000);
+    },
+    { timeout: 6000, interval: 60 },
+  );
+});

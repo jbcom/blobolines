@@ -324,12 +324,17 @@ Camera follow + shake, in-game deformation, wet glistening shader + color gradie
 Blobby reads too much like a deforming sphere. Make it genuinely gooey/fluid with a wide
 range of deformation, and give it a MOUTH for expressiveness. (Input note: this is a MOBILE
 game — touch/drag is primary; keyboard is a minor desktop-only secondary, don't over-invest.)
-- [ ] A MYRIAD of deformation possibilities, not just uniform squash/stretch: directional
-      shear toward drag/velocity, asymmetric lobes/blobbing, jiggle that travels around the
-      body, wind/settle sag, anticipation pinch before launch — driven by velocity, impact,
-      charge, and surface contact. Blobby should rarely look like a clean sphere.
-      (STARTED: directional lean into motion + charge-gather pinch done; asymmetric lobes +
-      travelling jiggle + wind sag still queued.)
+- [x] A MYRIAD of deformation possibilities, not just uniform squash/stretch. Now in the goo
+      vertex shader (GooMaterial.surfaceDisp), summed into one signed displacement so the
+      analytic normal recompute covers them all: (1) TRAVELLING jiggle — the impact ripple
+      phase advances along uImpactDir so it sweeps across the body from the contact point, not
+      a standing wave; (2) ASYMMETRIC lobe — a soft bulge toward uLobeDir, which wanders on a
+      slow Lissajous so the fat side migrates (never a clean sphere, even idle); (3) WET SAG —
+      uSag droops the lower hemisphere + bulges the equator, a heavy settled hang. Plus the
+      existing directional lean into motion + charge-gather pinch (group-level). GooCsg drives
+      sag/lobe off the settle amount (sprung), impact dir off velocity. Covered by GooMaterial
+      uniform unit test + a settled-goo browser render fixture. (Eyeball sweep of the look
+      stays under the separate "visual sweep pending devtools recovery" item.)
 - [x] Stronger fluid dynamics in the goo skin: surface-tension wobble that propagates +
       overshoots, droplet bulge/pinch at the contact point, a wet sag at rest. (impact wobble
       spikes to 1.6× + overshoots + decays; resting breathe; droplet bulge/pinch via the CSG
