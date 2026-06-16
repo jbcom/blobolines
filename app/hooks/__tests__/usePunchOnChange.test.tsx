@@ -1,9 +1,10 @@
 import { renderHook } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-// Mock anime.js so the test asserts the trigger contract without a real DOM animation.
+// Mock motion's animate so the test asserts the trigger contract without a real DOM
+// animation (motion's DOM keyframe measurement needs real layout, absent in happy-dom).
 const animate = vi.fn();
-vi.mock("animejs", () => ({ animate: (...args: unknown[]) => animate(...args) }));
+vi.mock("motion", () => ({ animate: (...args: unknown[]) => animate(...args) }));
 
 import { usePunchOnChange } from "../usePunchOnChange";
 

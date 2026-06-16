@@ -68,3 +68,8 @@ pnpm-debug.log*
 .agent-state/batch.json
 .claude/scheduled_tasks.lock
 .agent-state/.last-stop-fingerprint
+
+# Transient commit/PR message scratch files (written so the commit-gate hook can read
+# overrides from -F FILE; removed right after use, ignored so a stray never lands).
+.commitmsg.tmp
+.prbody.tmp

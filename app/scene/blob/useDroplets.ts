@@ -1,4 +1,4 @@
-import { useFrame } from "@react-three/fiber";
+import { useGameLoop } from "@app/hooks/useGameLoop";
 import { useCallback, useRef } from "react";
 import { createRng, type Rng } from "@/core/math";
 import type { Vec3 } from "@/core/types";
@@ -38,13 +38,14 @@ export function useDroplets(seed = 1): {
   /** Write cursor for the ring buffer (overwrites oldest when full — O(1), no shift). */
   const head = useRef(0);
 
-  useFrame((_, dt) => {
+  // Step droplets on the engine's fixed timestep (deterministic + frame-rate-independent)
+  // rather than a per-render dt clamp — the documented engine.tick seam.
+  useGameLoop((dt) => {
     const list = droplets.current;
     if (list.length === 0) return;
-    const step = Math.min(dt, 1 / 30);
     let w = 0;
     for (let i = 0; i < list.length; i++) {
-      const next = stepDroplet(list[i], step, GRAVITY[1]);
+      const next = stepDroplet(list[i], dt, GRAVITY[1]);
       if (next) list[w++] = next;
     }
     list.length = w;

@@ -1,10 +1,10 @@
-import { animate } from "animejs";
+import { animate } from "motion";
 import { type RefObject, useEffect, useRef } from "react";
 
 /**
- * anime.js micro-interaction: punch an element (quick scale + rotate kick that springs
- * back) every time `value` changes — the imperative, fire-and-forget juice anime.js is
- * built for, distinct from Motion's declarative layout transitions. Skips the very first
+ * Motion micro-interaction: punch an element (quick scale + rotate kick that springs back)
+ * every time `value` changes — imperative, fire-and-forget juice via Motion's `animate`,
+ * distinct from the declarative layout transitions used elsewhere. Skips the very first
  * render so a freshly-mounted badge doesn't punch on appear (Motion handles the entrance).
  *
  * Returns a ref to attach to the element you want to punch.
@@ -31,8 +31,8 @@ export function usePunchOnChange<T extends HTMLElement>(
     }
     const el = ref.current;
     if (!el) return;
-    // Honor prefers-reduced-motion (Motion's config doesn't reach anime.js) — skip the
-    // punch entirely; the underlying value still updates, just without the kick.
+    // Honor prefers-reduced-motion — skip the punch entirely; the underlying value still
+    // updates, just without the kick.
     if (
       typeof window !== "undefined" &&
       window.matchMedia?.("(prefers-reduced-motion: reduce)").matches
@@ -41,12 +41,13 @@ export function usePunchOnChange<T extends HTMLElement>(
     }
     flip.current *= -1;
     const r = rotate * flip.current;
-    animate(el, {
-      scale: [1, scale, 1],
-      rotate: rotate ? [0, r, 0] : 0,
-      duration: 420,
-      ease: "outElastic(1, 0.6)",
-    });
+    // Elastic kick that springs back to rest: keyframe out to the peak then home, on a
+    // bouncy spring so it overshoots and settles like anime's outElastic.
+    animate(
+      el,
+      { scale: [1, scale, 1], rotate: rotate ? [0, r, 0] : [0, 0, 0] },
+      { duration: 0.42, type: "spring", bounce: 0.5 },
+    );
   }, [value, scale, rotate]);
 
   return ref;

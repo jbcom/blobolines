@@ -11,6 +11,7 @@ import { BlendFunction } from "postprocessing";
 import { useRef } from "react";
 import { Vector2 } from "three";
 import { getBlobDiagnostics } from "@/state";
+import { N8AO } from "./N8AO";
 
 /**
  * Post-processing stack — soft gooey glow, not neon. Bloom for the wet highlights, a
@@ -31,6 +32,9 @@ export function PostFX() {
 
   return (
     <EffectComposer multisampling={0}>
+      {/* AO first (right after the render pass) so creases are darkened before bloom/grade —
+          grounds the goo where it meets pads and where droplets fuse into the body. */}
+      <N8AO />
       <Bloom intensity={0.28} luminanceThreshold={0.85} luminanceSmoothing={0.3} mipmapBlur />
       <HueSaturation saturation={0.08} />
       <BrightnessContrast brightness={0.02} contrast={0.06} />

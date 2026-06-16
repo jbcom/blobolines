@@ -40,11 +40,13 @@ public surface; modules stay small and single-responsibility — no monolithic s
 | `src/sim/trampoline` | ✓ | trampoline spring + tilt model, type behaviors (standard/booster/moving/fragile) |
 | `src/sim/launch` | ✓ | slingshot aim→velocity, combo/multiplier, 3D air-steer model |
 | `src/world` | ✓ | seeded procedural vertical generator, difficulty curve |
-| `src/factories` | ✓ | spawn blob / trampoline / crystal / powerup / particle entities |
+| `src/ecs` | ✓ | koota world + traits (Transform/Velocity/Blob/Trampoline/Crystal/PowerUp/Particle); the queryable entity model |
+| `src/engine` | ✓ | fixed-timestep accumulator (`advance`/`createStepLoop`) — deterministic sim stepping |
+| `src/factories` | ✓ | spawn blob (+ future trampoline/crystal/powerup) entities into the ECS world |
 | `src/audio` | ✓ | Howler.js engine playing the itch.io sample library (config/audio.json); music/ambient/sfx channels |
-| `src/render/materials` | ✓ | metaball goo material, eye materials, trampoline material |
-| `src/render/shaders` | ✓ | GLSL (metaball density field, fresnel/wet goo, splat) |
-| `src/render/vfx` | ✓ | goo splash burst, splat-decal texture painter, trail |
+| `src/render/materials` | ✓ | wet goo material (GooMaterial), eye materials, trampoline material |
+| `src/render/goo` | ✓ | CSG merge selection (`selectMerges`) feeding the three-bvh-csg goo union |
+| `src/render/vfx` | ✓ | goo splash/launch/trail droplet kinematics, splat |
 | `src/state` | ✓ | game store (menu/playing/gameover), settings, persistence bridge |
 | `src/platform` | ✓ | Capacitor haptics/orientation/keep-awake/preferences wrappers (web fallbacks) |
 | `src/input` | ✓ | @use-gesture unified pointer/touch + keyboard → intents |
@@ -56,11 +58,10 @@ public surface; modules stay small and single-responsibility — no monolithic s
 | Package | Barrel | Responsibility |
 |---------|--------|----------------|
 | `app/scene` | ✓ | composes small scene components inside `<Canvas>` |
-| `app/scene/blob` | ✓ | `<BlobActor>`, `<BlobEyes>` (procedural sclera+rim+pupil) |
+| `app/scene/blob` | ✓ | `<PlayerBlob>` (Rapier body + ECS entity), `<GooCsg>` (three-bvh-csg merged goo), `<BlobActor>` (menu hero), `<BlobEyes>`, `<SplatChunks>`, `<TrajectoryPreview>` |
 | `app/scene/trampoline` | ✓ | `<Trampoline>`, `<TrampolineField>` |
-| `app/scene/world` | ✓ | `<SkyDome>`, `<Lighting>`, `<Ambiance>` (rings/grid/clouds) |
-| `app/scene/vfx` | ✓ | `<GooSplash>`, `<SplatDecals>`, `<BlobTrail>` |
-| `app/scene/postfx` | ✓ | `<PostFX>` (bloom, vignette, speed-reactive chromatic) |
+| `app/scene/world` | ✓ | `<SkyDome>`, `<Lighting>`, `<BiomeProps>`, `<BlobFollowLight>`, `<CrystalField>`, `<PowerUpField>` |
+| `app/scene/postfx` | ✓ | `<PostFX>` (N8AO ambient occlusion, bloom, vignette, speed-reactive chromatic) |
 | `app/views` | ✓ | DOM overlay: `<HudOverlay>`, `<MainMenu>`, `<GameOver>`, modals |
 | `app/components/ui` | ✓ | shadcn primitives (button, dialog, slider, switch, tabs, tooltip, progress) |
 | `app/hooks` | ✓ | React glue hooks (useGameLoop, useInput, useHaptics) |

@@ -1,4 +1,6 @@
+import { WorldProvider } from "koota/react";
 import { Suspense, useEffect } from "react";
+import { gameWorld } from "@/ecs/world";
 import { attachPersistence, hydrateStore } from "@/state";
 import { ErrorBoundary } from "./ErrorBoundary";
 import { Game } from "./Game";
@@ -13,9 +15,11 @@ export function App() {
 
   return (
     <ErrorBoundary source="App">
-      <Suspense fallback={<LoadingScreen />}>
-        <Game />
-      </Suspense>
+      <WorldProvider world={gameWorld}>
+        <Suspense fallback={<LoadingScreen />}>
+          <Game />
+        </Suspense>
+      </WorldProvider>
     </ErrorBoundary>
   );
 }
