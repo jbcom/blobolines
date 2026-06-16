@@ -254,3 +254,6 @@ A real Blobolines blob should:
 
 ## All M10 "make it alive" feedback shipped (PRs #5 #6 #7)
 Camera follow + shake, in-game deformation, wet glistening shader + color gradient, resting puddle (sits on pad) + charge-gather, aim trajectory, membrane bend, off-pad-death fix, real color + height biome backdrop/strata + pad recolor, GLB powerups, super+ice bonus pads, real-physics splat chunks, juicy splat, blob-follow light, multi-hue crystals, JSON config architecture. Next polish batch (when requested): drag-direction shear deform, biome hazards, more bonus mechanics, audio/FX depth.
+
+## M11 — features polish & improvements (/loop, dynamic)
+- [x] Audio: distinct bounce SFX for the super (triumphant 420Hz) + ice (glassy MetalSynth ping) bonus pads — they were both falling to the default standard pitch.

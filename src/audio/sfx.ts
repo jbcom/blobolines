@@ -16,12 +16,34 @@ function gate(key: string, now: number): boolean {
   return true;
 }
 
-/** Springy bounce — pitch keyed to pad type. */
+/** Per-pad bounce pitch (Hz) — each type reads distinctly, incl. the super + ice bonus pads. */
+const BOUNCE_PITCH: Record<TrampType, number> = {
+  standard: 200,
+  booster: 320,
+  moving: 240,
+  fragile: 150,
+  super: 420, // triumphant high pop for the mega-launch
+  ice: 540, // bright glassy ping
+};
+
+/** Springy bounce — pitch keyed to pad type. Ice gets a glassy metallic timbre. */
 export function playBounce(type: TrampType, now = performance.now()): void {
   const T = getTone();
   const out = getSfxOutput();
   if (!T || !out || !gate(`bounce-${type}`, now)) return;
-  const base = type === "booster" ? 320 : type === "fragile" ? 150 : type === "moving" ? 240 : 200;
+  const base = BOUNCE_PITCH[type] ?? 200;
+  if (type === "ice") {
+    // Glassy ping for ice — a short bright metallic hit, not the rubbery membrane.
+    const synth = new T.MetalSynth({
+      envelope: { attack: 0.001, decay: 0.18, release: 0.05 },
+      harmonicity: 5.1,
+      resonance: 4000,
+      octaves: 1.2,
+    }).connect(out);
+    synth.triggerAttackRelease(base, 0.12);
+    setTimeout(() => synth.dispose(), 500);
+    return;
+  }
   const synth = new T.MembraneSynth({
     pitchDecay: 0.04,
     octaves: 4,

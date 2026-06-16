@@ -19,6 +19,9 @@ describe("sfx before init", () => {
   it("every SFX is a safe no-op (no throw) before init", () => {
     expect(() => playBounce("standard")).not.toThrow();
     expect(() => playBounce("booster")).not.toThrow();
+    // Bonus pads have distinct bounce sounds (super = triumphant, ice = glassy MetalSynth).
+    expect(() => playBounce("super")).not.toThrow();
+    expect(() => playBounce("ice")).not.toThrow();
     expect(() => playLaunch(1)).not.toThrow();
     expect(() => playChime()).not.toThrow();
     expect(() => playPowerup()).not.toThrow();
