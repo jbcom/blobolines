@@ -1,5 +1,12 @@
 export { type BlobDiagnostics, getBlobDiagnostics, setBlobDiagnostics } from "./diagnostics";
 export {
+  consumeFlash,
+  type FlashKind,
+  type FlashRequest,
+  flash,
+  resetFlash,
+} from "./flashBridge";
+export {
   consumeImpact,
   consumeLaunch,
   consumeRebound,

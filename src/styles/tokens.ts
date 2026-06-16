@@ -44,6 +44,8 @@ export const palette = {
     glint: "#ffffff",
     tear: "#bfe3ff",
   },
+  /** Danger red — near-death screen-edge pulse / warning feedback. */
+  danger: "#ff3b4e",
 } as const;
 
 /** Hex string → 0xRRGGBB int for three.js Color/material constructors. */

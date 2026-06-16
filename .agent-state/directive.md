@@ -274,7 +274,7 @@ Camera follow + shake, in-game deformation, wet glistening shader + color gradie
 ## M12 — UI/UX depth (from UI audit, 2026-06-16)
 ### Tier 1 — game-feel & HUD
 - [x] Altitude-milestone celebration: transient "100m/200m…" banner + number-pop + sound on each 100m crossing (Altimeter/Hud).
-- [ ] ScreenFlash component on the unused --z-flash layer: gold on combo escalation, blue on big launch, red vignette near death (new app/views/hud/ScreenFlash.tsx).
+- [x] ScreenFlash component on the unused --z-flash layer: gold on combo escalation, blue on big launch, red vignette near death (new app/views/hud/ScreenFlash.tsx).
 - [ ] Escalate ComboBadge by tier: color/glow/size ramp gold→orange→goo.flame, "ON FIRE" state at 5×.
 - [ ] In-run personal-best flourish: pulse Best line gold + banner when height crosses best mid-run (Altimeter).
 - [ ] Big-launch/max-charge flourish in LaunchInput: pulse bar + "MAX" label + edge glow near charge 1.0.

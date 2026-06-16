@@ -4,6 +4,7 @@ import { CrystalCounter } from "./CrystalCounter";
 import { LaunchInput } from "./LaunchInput";
 import { MilestoneBanner } from "./MilestoneBanner";
 import { PowerUpBadges } from "./PowerUpBadges";
+import { ScreenFlash } from "./ScreenFlash";
 
 /**
  * In-game HUD layout. Top row: altimeter (left), combo (center), crystals (right),
@@ -17,6 +18,8 @@ export function Hud() {
       <LaunchInput />
       {/* transient 100m-milestone celebration, centered over the canvas */}
       <MilestoneBanner />
+      {/* full-screen flash layer: gold combo / blue launch / red near-death */}
+      <ScreenFlash />
       <div
         className="pointer-events-none flex h-full w-full flex-col p-4"
         style={{
