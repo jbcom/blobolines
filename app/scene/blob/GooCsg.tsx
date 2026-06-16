@@ -1,4 +1,5 @@
 import { useFrame, useThree } from "@react-three/fiber";
+import { damp } from "maath/easing";
 import { useEffect, useMemo, useRef } from "react";
 import {
   type Color,
@@ -166,10 +167,10 @@ export function GooCsg({ skin, blobRadius, getDroplets }: GooCsgProps) {
         z: target.z * (1 - g * 0.22),
       };
     }
-    const sk = 1 - Math.exp(-dt / blobCfg.deformSpringTau);
-    deform.current.x += (target.x - deform.current.x) * sk;
-    deform.current.y += (target.y - deform.current.y) * sk;
-    deform.current.z += (target.z - deform.current.z) * sk;
+    // Frame-rate-independent critically-damped spring toward the target deform (maath).
+    damp(deform.current, "x", target.x, blobCfg.deformSpringTau, dt);
+    damp(deform.current, "y", target.y, blobCfg.deformSpringTau, dt);
+    damp(deform.current, "z", target.z, blobCfg.deformSpringTau, dt);
 
     // Position + squash the whole goo group at the blob. A squashed puddle (deform.y<1)
     // drops its center so it sits ON the pad instead of hovering a radius up.
