@@ -81,7 +81,7 @@ tokens own palette.
 - [x] docs/ARCHITECTURE.md package map
 - [x] shadcn/ui base components in app/components/ui (button, dialog, slider, switch, tabs, tooltip, progress) + barrel; cn() in src/lib
 - [x] Vitest dual config + src/__tests__/setup.ts + app/fixtures/FixtureStage + passing unit (tokens) + fixture (SkyDome WebGL) tests
-- [ ] Capacitor android platform added (`cap add android`) — wrappers wired via src/platform barrel (DONE); platform scaffold pending
+- [x] Capacitor android platform added (`cap add android`); wrappers via src/platform barrel; cap sync confirmed
 - [x] release-please config + manifest; .github/dependabot.yml
 - [x] CI workflow (lint → tsc → unit → build → playwright install → browser fixtures + screenshot artifacts → Android assembleDebug APK artifact)
 - [x] release.yml + cd.yml deploying dist/ to GitHub Pages
@@ -90,8 +90,8 @@ tokens own palette.
 ## M0.5 — Real foundational subpackages (each = barreled package + tests, one commit)
 - [x] src/core/math: createRng (cyrb128→mulberry32), clock facade, spring/lerp helpers + unit tests + barrel
 - [x] src/core/types: shared domain types/enums/ids + barrel
-- [ ] src/ecs: koota world (done) + traits + queries + react hooks + barrel
-- [ ] src/engine: fixed-timestep accumulator loop + world tick orchestration + unit tests + barrel
+- [x] src/ecs: koota world + traits (Transform/Velocity/Blob/Trampoline/Crystal/PowerUp/Particle/Dead) + tests + barrel
+- [x] src/engine: fixed-timestep accumulator loop (FIXED_DT 1/60, step-capped, alpha) + unit tests + barrel
 - [x] src/state: zustand game store (menu/playing/gameover) + settings + progress + Capacitor-Preferences persistence + barrel
 - [ ] src/input: @use-gesture + keyboard → intents + tests + barrel
 - [x] src/platform: Capacitor wrappers (haptics/orientation/keep-awake/preferences) + barrel
