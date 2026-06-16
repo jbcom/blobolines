@@ -133,10 +133,12 @@ export function GooField({ skin, blobRadius, getDroplets }: GooFieldProps) {
     deform.current.x += (target.x - deform.current.x) * sk;
     deform.current.y += (target.y - deform.current.y) * sk;
     deform.current.z += (target.z - deform.current.z) * sk;
-    // Keep a flattened puddle sitting ON the pad: the body collider center stays a radius
-    // above the surface, but a squashed goo (deform.y<1) is shorter, so drop the render
-    // center by the lost half-height — the puddle's bottom stays on the pad, not half-sunk.
-    const centerY = by - blobRadius * (1 - deform.current.y);
+    // Keep a flattened puddle sitting ON the pad: a SQUASHED goo (deform.y<1) is shorter
+    // than the body collider (centered a radius above the surface), so drop the render
+    // center by the lost half-height. Only when squashed — when STRETCHING (deform.y>1,
+    // airborne) leave the center at the body so the visual tracks physics + the eyes.
+    const squash = Math.min(1, deform.current.y); // 1 when stretched/round, <1 when squashed
+    const centerY = by - blobRadius * (1 - squash);
     (material.uniforms.u_center.value as Vector3).set(bx, centerY, bz);
     (material.uniforms.u_deform.value as Vector3).set(
       deform.current.x,
