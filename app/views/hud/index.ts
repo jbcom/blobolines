@@ -3,4 +3,5 @@ export { ComboBadge } from "./ComboBadge";
 export { CrystalCounter } from "./CrystalCounter";
 export { Hud } from "./Hud";
 export { MilestoneBanner } from "./MilestoneBanner";
+export { Onboarding } from "./Onboarding";
 export { ScreenFlash } from "./ScreenFlash";

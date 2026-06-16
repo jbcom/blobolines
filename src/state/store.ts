@@ -38,6 +38,7 @@ export interface GameState {
   resetRun: () => void;
   addCrystals: (n: number) => void;
   commitBestHeight: (height: number) => void;
+  markTutorialSeen: () => void;
   setSkin: (skin: BlobSkin) => void;
   unlockSkin: (skin: BlobSkin) => void;
 }
@@ -54,6 +55,7 @@ export const DEFAULT_PROGRESS: PlayerProgress = {
   crystals: 0,
   skin: "blue",
   unlockedSkins: ["blue"],
+  tutorialSeen: false,
 };
 
 const EMPTY_RUN: RunStats = { height: 0, crystals: 0, combo: 0, maxCombo: 0, recordDelta: 0 };
@@ -73,6 +75,9 @@ export const useGameStore = create<GameState>((set) => ({
   setRun: (patch) => set((s) => ({ run: { ...s.run, ...patch } })),
 
   resetRun: () => set({ run: { ...EMPTY_RUN } }),
+
+  markTutorialSeen: () =>
+    set((s) => (s.progress.tutorialSeen ? s : { progress: { ...s.progress, tutorialSeen: true } })),
 
   addCrystals: (n) =>
     set((s) => ({
