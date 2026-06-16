@@ -3,7 +3,7 @@ import { CuboidCollider, type RapierRigidBody, RigidBody } from "@react-three/ra
 import { useEffect, useMemo, useRef } from "react";
 import { CanvasTexture, type Group, type Mesh, SRGBColorSpace } from "three";
 import { playBounce } from "@/audio";
-import { biomeSkyAt } from "@/config";
+import { biomeSkyAt, trampoline as trampCfg } from "@/config";
 import { clamp } from "@/core/math";
 import type { TrampType } from "@/core/types";
 import { createSplatCanvas } from "@/render/vfx";
@@ -41,6 +41,7 @@ interface TrampolineProps {
 }
 
 const THICKNESS = 1.2;
+const { movingAmplitude, movingSpeed } = trampCfg;
 
 export function Trampoline({ position, width, depth, type, cant, onImpact }: TrampolineProps) {
   const rbRef = useRef<RapierRigidBody>(null);
@@ -55,6 +56,8 @@ export function Trampoline({ position, width, depth, type, cant, onImpact }: Tra
   const cantRot = useMemo(() => (canted ? cantEuler(cant) : null), [canted, cant]);
   // Per-pad deterministic phase/dir for moving pads (seeded by world position).
   const movePhase = useRef((position[0] * 0.37 + position[2] * 0.91) % (Math.PI * 2));
+  // Live lateral slide speed of a moving pad — imparted into the bounce (timing skill).
+  const slideVx = useRef(0);
   // Fragile pads break shortly after the first impact.
   const breaking = useRef(false);
   const breakTimer = useRef(0);
@@ -100,11 +103,14 @@ export function Trampoline({ position, width, depth, type, cant, onImpact }: Tra
     target.current.tiltX *= 0.86;
     target.current.tiltZ *= 0.86;
 
-    // Moving pads glide side to side on a kinematic body (collider moves with them).
+    // Moving pads glide side to side on a kinematic body (collider moves with them) and
+    // track their slide velocity so a bounce imparts that lateral momentum (timing skill).
     if (type === "moving" && rbRef.current) {
-      movePhase.current += step * 1.2;
-      const x = position[0] + Math.sin(movePhase.current) * 5.5;
+      movePhase.current += step * movingSpeed;
+      const x = position[0] + Math.sin(movePhase.current) * movingAmplitude;
       rbRef.current.setNextKinematicTranslation({ x, y: position[1], z: position[2] });
+      // d/dt of x: cos(phase)·amp·speed → instantaneous lateral slide speed (m/s).
+      slideVx.current = Math.cos(movePhase.current) * movingAmplitude * movingSpeed;
     }
 
     // Fragile pads shrink + fade then vanish ~0.8s after impact.
@@ -180,9 +186,16 @@ export function Trampoline({ position, width, depth, type, cant, onImpact }: Tra
               ? Math.max(speed * reboundMultiplier.super, SUPER_MIN_REBOUND)
               : speed * reboundMultiplier[type];
           if (reboundSpeed >= REBOUND_SETTLE_SPEED) {
-            // Canted pads launch along their tilted normal (sideways-and-up toward the next
-            // pad); flat pads bounce straight up (normal omitted → defaults to up).
-            reportRebound({ speed: reboundSpeed, type, normal: cantN ?? undefined });
+            // Canted pads launch along their tilted normal; moving pads tilt the launch
+            // toward their slide direction (so timing the catch flings you sideways — the
+            // type's real skill); flat pads bounce straight up (normal omitted → up).
+            let normal = cantN ?? undefined;
+            if (type === "moving" && Math.abs(slideVx.current) > 0.5) {
+              // Lateral fraction from the pad's slide speed (capped), up-component fills rest.
+              const lx = Math.max(-0.5, Math.min(0.5, slideVx.current / 12));
+              normal = [lx, Math.sqrt(Math.max(0, 1 - lx * lx)), 0];
+            }
+            reportRebound({ speed: reboundSpeed, type, normal });
             playBounce(type);
           }
           // Fragile pads start disintegrating after this bounce (gives one last launch).
