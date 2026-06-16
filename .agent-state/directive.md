@@ -374,8 +374,14 @@ game — touch/drag is primary; keyboard is a minor desktop-only secondary, don'
 - [ ] Low-amplitude perpetual idle jiggle (breathing) on the goo so it's always alive at rest.
 
 ## M14 — audio depth (from audio audit, 2026-06-16)
-- [ ] Distinct bounce samples for ALL pad types (standard soft RR, booster springy, super heavy+whoosh, ice magic, fragile wood+crack, moving metal) — 4 of 6 currently share one sample.
-- [ ] Impact-strength → Howl rate(0.85-1.15)+volume scaling; pass sensor speed into playBounce.
+- [x] Distinct bounce VOICE for ALL pad types: src/audio/padVoice.ts (pure) gives each type a
+      sample + pitch + level — booster springs bright (rate 1.22), super lands heavy+loud (0.72,
+      1.25×), moving metallic detune, wobbler unstable low, canted a hair bright; ice/fragile
+      keep dedicated samples. Re-pitches the owned `bounce` sample instead of needing 6 files.
+      playSfx now takes per-play rate+volume (set on the play-id, not the shared Howl).
+- [x] Impact-strength → rate+volume scaling: padVoice(type, strength) brightens pitch (~+12%)
+      and lifts volume (~+20%) with the hit; Trampoline passes speed/MAX_IMPACT_SPEED into
+      playBounce so a hard landing sounds sharper + no two bounces are identical.
 - [ ] Round-robin engine (playRandom with no-immediate-repeat) for per-cue variant sets.
 - [ ] Charged-launch whoosh by power (soft→fast→hard, rate scaled by charge) — playLaunch ignores charge today.
 - [ ] Combo-escalation rising-pitch blip per clean bounce (rate=1+combo*0.06), reset on break.

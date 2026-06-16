@@ -1,6 +1,7 @@
 import { Howl, Howler } from "howler";
 import audioCfg from "@/config/audio.json";
 import type { TrampType } from "@/core/types";
+import { padVoice } from "./padVoice";
 
 /**
  * Howler-backed audio engine playing the real itch.io sample library (config/audio.json)
@@ -76,14 +77,16 @@ export function isAudioInitialized(): boolean {
   return Howler.ctx ? Howler.ctx.state === "running" : false;
 }
 
-function playSfx(id: SfxId): void {
+function playSfx(id: SfxId, opts?: { rate?: number; volume?: number }): void {
   const path = (audioCfg.sfx as Record<string, string>)[id];
   if (!path) return;
   const h = howlFor(path, false, vol.sfx);
-  // Set volume on THIS play instance (the play id), not globally on the cached Howl —
-  // overlapping SFX (rapid bounces) must not abruptly re-level each other's in-flight plays.
+  // Set rate + volume on THIS play instance (the play id), not globally on the cached Howl —
+  // overlapping SFX (rapid bounces) must not abruptly re-level/re-pitch each other's in-flight
+  // plays. A per-pad voice (padVoice) passes rate/volume so each pad type sounds distinct.
   const playId = h.play();
-  h.volume(vol.sfx * sfxVolume, playId);
+  if (opts?.rate && opts.rate !== 1) h.rate(opts.rate, playId);
+  h.volume(vol.sfx * sfxVolume * (opts?.volume ?? 1), playId);
 }
 
 /** Set the SFX channel volume [0,1], independent of music. */
@@ -92,10 +95,12 @@ export function setSfxVolume(v: number): void {
 }
 
 // ── SFX API (same surface the game already calls) ──────────────────────────────
-/** Per-pad bounce sample: ice gets the bright click, gentle pads the soft wood. */
-export function playBounce(type: TrampType): void {
-  const id: SfxId = type === "ice" ? "bounce_ice" : type === "fragile" ? "bounce_soft" : "bounce";
-  playSfx(id);
+/** Per-pad bounce VOICE: each pad type gets a distinct sample + pitch + level (padVoice),
+ *  and a harder impact (strength→1) brightens the pitch — so every pad sounds like itself and
+ *  no two bounces are quite identical. */
+export function playBounce(type: TrampType, strength = 1): void {
+  const v = padVoice(type, strength);
+  playSfx(v.sample, { rate: v.rate, volume: v.volume });
 }
 export function playLaunch(_strength = 1): void {
   playSfx("launch");

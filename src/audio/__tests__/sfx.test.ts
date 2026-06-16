@@ -24,11 +24,22 @@ describe("audio before init", () => {
   });
 
   it("every SFX cue is a safe no-op (no throw) before init", () => {
-    expect(() => playBounce("standard")).not.toThrow();
-    expect(() => playBounce("booster")).not.toThrow();
-    // Bonus pads map to distinct samples (ice → bright click, fragile → soft).
-    expect(() => playBounce("super")).not.toThrow();
-    expect(() => playBounce("ice")).not.toThrow();
+    // Every pad type now has a distinct bounce voice (padVoice) — all must be safe no-ops,
+    // at any impact strength.
+    for (const t of [
+      "standard",
+      "booster",
+      "super",
+      "moving",
+      "canted",
+      "wobbler",
+      "fragile",
+      "ice",
+    ] as const) {
+      expect(() => playBounce(t)).not.toThrow();
+      expect(() => playBounce(t, 0)).not.toThrow();
+      expect(() => playBounce(t, 1)).not.toThrow();
+    }
     expect(() => playLaunch(1)).not.toThrow();
     expect(() => playChime()).not.toThrow();
     expect(() => playPowerup()).not.toThrow();

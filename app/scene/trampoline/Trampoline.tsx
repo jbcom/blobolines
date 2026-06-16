@@ -7,6 +7,7 @@ import { biomeSkyAt, trampoline as trampCfg } from "@/config";
 import { clamp } from "@/core/math";
 import type { TrampType } from "@/core/types";
 import { createSplatCanvas } from "@/render/vfx";
+import { MAX_IMPACT_SPEED } from "@/sim/physics";
 import {
   cantEuler,
   cantNormal,
@@ -208,7 +209,8 @@ export function Trampoline({ position, width, depth, type, cant, onImpact }: Tra
               normal = [lx / mag, up / mag, lz / mag];
             }
             reportRebound({ speed: reboundSpeed, type, normal });
-            playBounce(type);
+            // Impact strength [0,1] brightens the bounce voice — a hard landing sounds sharper.
+            playBounce(type, Math.min(1, speed / MAX_IMPACT_SPEED));
           }
           // Fragile pads start disintegrating after this bounce (gives one last launch).
           if (type === "fragile") breaking.current = true;
