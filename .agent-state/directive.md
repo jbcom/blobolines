@@ -270,3 +270,45 @@ Camera follow + shake, in-game deformation, wet glistening shader + color gradie
 ## M11 — features polish & improvements (/loop, dynamic)
 - [x] Audio: distinct bounce SFX for the super (triumphant 420Hz) + ice (glassy MetalSynth ping) bonus pads — they were both falling to the default standard pitch.
 - [x] Real audio: switched Tone.js synth → Howler.js playing the owned itch.io sample library (impact bounces, whoosh launch, explosion splat, UI crystal/powerup, menu theme, wind/magic ambient beds). Cue→file map in config/audio.json; ambient bed swaps sky→space by altitude. Verified Howls load + play in-browser.
+
+## M12 — UI/UX depth (from UI audit, 2026-06-16)
+### Tier 1 — game-feel & HUD
+- [ ] Altitude-milestone celebration: transient "100m/200m…" banner + number-pop + sound on each 100m crossing (Altimeter/Hud).
+- [ ] ScreenFlash component on the unused --z-flash layer: gold on combo escalation, blue on big launch, red vignette near death (new app/views/hud/ScreenFlash.tsx).
+- [ ] Escalate ComboBadge by tier: color/glow/size ramp gold→orange→goo.flame, "ON FIRE" state at 5×.
+- [ ] In-run personal-best flourish: pulse Best line gold + banner when height crosses best mid-run (Altimeter).
+- [ ] Big-launch/max-charge flourish in LaunchInput: pulse bar + "MAX" label + edge glow near charge 1.0.
+- [ ] Near-miss danger feedback: escalating red screen-edge pulse + haptic while falling toward death (Hud).
+- [ ] PowerUpBadges countdown ring/bar per badge (use Progress primitive) instead of binary on/off.
+- [ ] Replace PowerUpBadges 120ms polling with bridge subscription (exact timing, cheaper render).
+### Tier 2 — game-over recap
+- [ ] GameOver run recap: max combo, crystals this run vs lifetime, delta-to-best (+Nm / Nm short); extend RunStats with maxCombo.
+- [ ] GameOver Share button (navigator.share + clipboard fallback).
+- [ ] Real personal-best celebration on GameOver: goo-splat/confetti burst, gold card glow, distinct sound, "+Nm over best".
+- [ ] GameOver delta-vs-best progress bar (run height as fraction of best).
+- [ ] GameOver: crystals → next-skin progress + jump to customizer.
+### Tier 3 — onboarding & states
+- [ ] First-run tutorial overlay: drag-ghost coachmark over LaunchInput, dismiss on first launch (new Onboarding.tsx).
+- [ ] First-play hint instead of burying how-to behind a menu button.
+- [ ] Branded error/boot-failure screen + boundary (Rapier-WASM/Canvas fail → "tap to retry").
+- [ ] LoadingScreen real progress (asset/WASM fraction) not infinite bounce.
+- [ ] BlobCustomizer empty state when crystals==0 ("collect crystals to unlock goo").
+### Tier 4 — customizer/shop
+- [ ] Clearer locked-tile cost + "need N more" sublabel + affordability progress fill.
+- [ ] Animate crystal-spend on unlock (header gem deduct + tile pop via usePunchOnChange).
+- [ ] Live gooey blob preview per skin in customizer (not a flat swatch).
+- [ ] Keyboard/gamepad grid nav for skins (roving tabindex or Tabs).
+### Tier 5 — settings
+- [ ] In-app reduced-motion toggle driving MotionConfig.
+- [ ] Reset-progress action (confirm) clearing best/crystals/unlocks.
+- [ ] Separate SFX volume from music volume.
+- [ ] Gate/hide haptics control on non-touch; add intensity/test.
+- [ ] Slingshot sensitivity drag-to-test preview area.
+### Tier 6 — responsive & cohesion
+- [ ] Hud wide/tall breakpoints: anchor readouts to safe-area corners, don't stretch.
+- [ ] TitleScreen/GameOver respect safe-left/right in landscape/notch.
+- [ ] Modal max-height + internal scroll for short/landscape screens.
+- [ ] Goo-language pass on DOM chrome (organic corners/squish on CTA + badges).
+- [ ] Consolidate bespoke accent buttons onto the shared Button primitive.
+- [ ] anime.js squish-stretch on title Play press.
+- [ ] Reduced-motion guards on every new flourish (static cue fallback).
