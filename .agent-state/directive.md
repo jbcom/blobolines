@@ -209,14 +209,14 @@ add the PoC's ENERGY (shake, follow-light, bloom, speed FX, color), NOT neon-cyb
 ### Queue
 - [x] Camera follows the real blob x/y/z (was height-only, X/Z hard-locked) + impact shake — verified in artifacts/launch-up.png (blob now framed).
 - [x] Goo deformation in-game: squash/stretch wired into GooField (u_deform/u_center) — verified alive airborne (artifacts/launch-up.png); fixed the teardrop-merge by tightening MERGE_DIST_SQ + pinching off droplets that drop below the body (artifacts/start.png clean).
-- [ ] Real color: per-skin palette actually varied; vary trampoline/crystal/powerup/sky colors; warmer richer grade. Not blue+cream everywhere.
+- [~] Real color: type-tinted trampoline membranes + warm saturated sky DONE (verified); crystal/powerup color + richer grade still open.
 - [ ] Splat: bigger, juicier World-of-Goo splat on landing (current is small dark blobs). More droplets, color, spread, decal punch.
 - [ ] Aim/targeting feedback: a visible trajectory/aim indicator while charging the slingshot (PoC had launch feedback; we have none).
-- [ ] Gameplay: blob dies too fast / launches off the pads — tune so a normal launch lands on the next pad (verify it's playable, not just renders).
+- [x] Gameplay: off-pad death fixed — death now measured below highest LANDED pad (safeY), not airborne apex; a tall launch lands + survives (verified alt 37m no Splat).
 - [ ] Juice: blob-follow point light tinting the scene, stronger speed-reactive FX, punchier bloom/contrast.
 
 ### M10b — deeper feature requests (user feedback 2026-06-16, batch 2)
-- [ ] Trampoline DEPRESSION: real trampoline-like depress/recoil responsive to hit force (spring exists in sim — make it read like a real bouncing trampoline membrane, visibly).
+- [x] Trampoline DEPRESSION: membrane (not the whole pad) now dips inward + tilts + flattens on impact, proportional to force, springs back — reads as a flexing sheet under the blob's weight.
 - [ ] Backdrop CHANGES with height: progress through atmosphere → space → beyond, the sky/backdrop transitioning as you climb.
 - [ ] Trampoline COLOR changes with height/progress too.
 - [ ] BONUS trampolines of different colors that do different things (beyond standard/booster/moving/fragile — new mechanics).
@@ -228,13 +228,22 @@ add the PoC's ENERGY (shake, follow-light, bloom, speed FX, color), NOT neon-cyb
 ### M10c — the blob IS goo, not a globe (user feedback 2026-06-16, batch 3) — HIGH PRIORITY
 The single biggest "it's not a blob" issue: right now it's a solid matte colored GLOBE.
 A real Blobolines blob should:
-- [ ] REST as a happy goo PUDDLE on the bottom trampoline (flattened, spread, settled),
-  blinking up at the camera — NOT a sphere hovering. Idle = puddle.
+- [x] REST as a happy goo PUDDLE: grounded+slow blends deform toward a wide flat puddle;
+  forms back into a blob as it speeds up. Also fixed the runaway auto-bounce (removed the
+  rebound floor + settle threshold) so it actually comes to rest. Verified in harness.
+  (Still to refine: lift puddle center so it sits ON the pad, not half-sunk.)
 - [ ] DEFORM toward the finger/drag direction when tapped+dragged — the goo stretches up
   toward the pull (taffy/slime), gathering for the slingshot. Drag direction shapes it.
 - [ ] LAUNCH by FORMING into a cohesive blob — puddle gathers → rounds into a flying blob
   on release, then deforms with flight (already have flight stretch).
-- [ ] WET GLISTENING GRADIENT surface (not flat matte): translucent, specular hotspot,
-  subsurface, color gradient across the body. (Wet shader in progress — verify it reads
-  glistening, not matte.)
+- [x] WET GLISTENING surface: dual specular (tight water hotspot + broad lobe + sheen),
+  subsurface glow, translucent grazing edges — verified glistening in harness (was matte).
+  (Still to refine: an actual color GRADIENT across the body, and drag-direction deform.)
+- [ ] DEFORM toward the finger/drag direction when tapped+dragged (still open).
+- [ ] LAUNCH by FORMING into a cohesive blob from the puddle (still open).
+
+### M10d — architecture (user feedback 2026-06-16, batch 4)
+- [x] All tunables moved to JSON in src/config, decomposed by domain (physics/blob/launch/
+  trampoline/collect/goo/world) + typed barrel; sim/render read bases so modifiers can
+  scale them. Behavior-preserving, 162 tests green.
 - [ ] Per change: drive harness, READ the capture, fix, repeat. Then PR.
