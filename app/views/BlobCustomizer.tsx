@@ -55,6 +55,14 @@ export function BlobCustomizer({
         Spend crystals collected on the climb to unlock new goo.
       </p>
 
+      {/* Empty state — no crystals AND nothing unlocked beyond the starter skin: nudge the
+          player toward the loop that earns unlocks rather than showing only locked tiles. */}
+      {crystals === 0 && unlocked.length <= 1 && (
+        <p className="mt-3 rounded-lg border border-border/60 border-dashed bg-bg/40 px-3 py-2 text-center font-ui text-xs text-fg-muted">
+          💎 Collect crystals on your climb to unlock new goo.
+        </p>
+      )}
+
       <div className="mt-4 grid grid-cols-2 gap-3">
         {SKINS.map((s) => {
           const isUnlocked = unlocked.includes(s.id);

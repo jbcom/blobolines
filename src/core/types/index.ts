@@ -25,6 +25,8 @@ export interface PlayerProgress {
   crystals: number;
   skin: BlobSkin;
   unlockedSkins: BlobSkin[];
+  /** Has the player seen the first-run drag-to-launch coachmark? Set true on first launch. */
+  tutorialSeen: boolean;
 }
 
 /** User-tunable settings. */

@@ -3,6 +3,7 @@ import { ComboBadge } from "./ComboBadge";
 import { CrystalCounter } from "./CrystalCounter";
 import { LaunchInput } from "./LaunchInput";
 import { MilestoneBanner } from "./MilestoneBanner";
+import { Onboarding } from "./Onboarding";
 import { PowerUpBadges } from "./PowerUpBadges";
 import { ScreenFlash } from "./ScreenFlash";
 
@@ -20,6 +21,8 @@ export function Hud() {
       <MilestoneBanner />
       {/* full-screen flash layer: gold combo / blue launch / red near-death */}
       <ScreenFlash />
+      {/* first-run drag-to-launch coachmark (until the first launch) */}
+      <Onboarding />
       <div
         className="pointer-events-none flex h-full w-full flex-col p-4"
         style={{
