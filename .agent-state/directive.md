@@ -211,16 +211,16 @@ add the PoC's ENERGY (shake, follow-light, bloom, speed FX, color), NOT neon-cyb
 - [x] Goo deformation in-game: squash/stretch wired into GooField (u_deform/u_center) — verified alive airborne (artifacts/launch-up.png); fixed the teardrop-merge by tightening MERGE_DIST_SQ + pinching off droplets that drop below the body (artifacts/start.png clean).
 - [~] Real color: type-tinted trampoline membranes + warm saturated sky DONE (verified); crystal/powerup color + richer grade still open.
 - [ ] Splat: bigger, juicier World-of-Goo splat on landing (current is small dark blobs). More droplets, color, spread, decal punch.
-- [ ] Aim/targeting feedback: a visible trajectory/aim indicator while charging the slingshot (PoC had launch feedback; we have none).
+- [x] Aim/targeting feedback: in-scene dotted ballistic trajectory arc while charging (aim bridge + TrajectoryPreview, arc-length spacing) — verified readable aim line.
 - [x] Gameplay: off-pad death fixed — death now measured below highest LANDED pad (safeY), not airborne apex; a tall launch lands + survives (verified alt 37m no Splat).
 - [ ] Juice: blob-follow point light tinting the scene, stronger speed-reactive FX, punchier bloom/contrast.
 
 ### M10b — deeper feature requests (user feedback 2026-06-16, batch 2)
 - [x] Trampoline DEPRESSION: membrane (not the whole pad) now dips inward + tilts + flattens on impact, proportional to force, springs back — reads as a flexing sheet under the blob's weight.
-- [ ] Backdrop CHANGES with height: progress through atmosphere → space → beyond, the sky/backdrop transitioning as you climb.
+- [x] Backdrop CHANGES with height: SkyDome lerps biome bands (ground→sky→upper-atmo→stratosphere→space→deep-space) from blob altitude (config/biomes.json). Verified ground band; lerp unit-tested.
 - [ ] Trampoline COLOR changes with height/progress too.
 - [ ] BONUS trampolines of different colors that do different things (beyond standard/booster/moving/fragile — new mechanics).
-- [ ] Powerup MODELS: find + identify GLB powerup models from 3DLowPoly in /Volumes/home/assets, use them (replace the torus/cone primitives).
+- [x] Powerup MODELS: rocket (Space Kit) + magnet (U-curve) GLBs from 3DLowPoly → public/assets/models, loaded via useGLTF w/ primitive Suspense fallback. Builds; in-scene capture pending (powerups spawn high).
 - [ ] WET look: nail it — balls feel too SOLID right now, need real wet/translucent/jiggly goo surface.
 - [ ] Splat pieces get REAL PHYSICS: droplets that splat off the blob should be their own physics bodies (bounce/roll/settle), not just kinematic particles.
 - [ ] World STRATA / BIOMES: proper layered strata — real biomes for different atmospheric + post-atmospheric height bands (ground → sky → upper atmosphere → space → beyond), each with its own look/palette/hazards.
