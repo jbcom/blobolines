@@ -27,6 +27,16 @@ function layerOpacity(height: number, lo: number, hi: number): number {
   return 1 - Math.abs(height - mid) / (mid - lo);
 }
 
+/** Continuous wrap of an instance's Y (from its 0..1 fraction) into the COLUMN window
+ *  centred on the blob height — scrolls seamlessly, no per-COLUMN pop. */
+function wrapY(yFrac: number, h: number): number {
+  const raw = yFrac * COLUMN; // instance's home offset within a column
+  // Distance of `raw`'s repeating ladder from (h - COLUMN/2), wrapped into [0, COLUMN).
+  const lowEdge = h - COLUMN / 2;
+  const off = (((raw - lowEdge) % COLUMN) + COLUMN) % COLUMN;
+  return lowEdge + off;
+}
+
 export function BiomeProps() {
   const cloudRef = useRef<InstancedMesh>(null);
   const starRef = useRef<InstancedMesh>(null);
@@ -65,9 +75,11 @@ export function BiomeProps() {
       m.opacity = op * 0.7;
       cloud.visible = op > 0.01;
       if (cloud.visible) {
-        const base = Math.floor(h / COLUMN) * COLUMN;
         clouds.forEach((c, i) => {
-          tmpPos.set(c.x + Math.sin(t * c.drift) * 3, base + c.yFrac * COLUMN, c.z);
+          // Wrap each instance's Y CONTINUOUSLY into [h-COLUMN/2, h+COLUMN/2] so the layer
+          // scrolls seamlessly with the climb — a shared Math.floor base popped all clouds
+          // by COLUMN at once when h crossed a multiple.
+          tmpPos.set(c.x + Math.sin(t * c.drift) * 3, wrapY(c.yFrac, h), c.z);
           tmpScale.set(c.s, c.s * 0.6, c.s);
           tmpMat.compose(tmpPos, tmpQuat, tmpScale);
           cloud.setMatrixAt(i, tmpMat);
@@ -84,10 +96,9 @@ export function BiomeProps() {
       m.opacity = op;
       star.visible = op > 0.01;
       if (star.visible) {
-        const base = Math.floor(h / COLUMN) * COLUMN;
         stars.forEach((s, i) => {
           const tw = 0.6 + 0.4 * Math.sin(t * 2 + s.tw);
-          tmpPos.set(s.x, base + s.yFrac * COLUMN, s.z);
+          tmpPos.set(s.x, wrapY(s.yFrac, h), s.z);
           tmpScale.setScalar(s.s * tw);
           tmpMat.compose(tmpPos, tmpQuat, tmpScale);
           star.setMatrixAt(i, tmpMat);

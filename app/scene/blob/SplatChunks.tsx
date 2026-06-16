@@ -26,18 +26,22 @@ export function SplatChunks({ skin }: { skin: BlobSkin }) {
   const rng = useRef<Rng>(createRng(7));
 
   useFrame((_, dt) => {
-    // Age + sink finished chunks far below (out of play) so the pool can reuse them.
+    // Age + retire ACTIVE chunks only. age === Infinity marks an idle/retired slot, so we
+    // skip the per-frame work + setTranslation/sleep for the (usually most) inactive ones,
+    // and age never grows unbounded.
     for (let i = 0; i < POOL; i++) {
+      if (age.current[i] === Number.POSITIVE_INFINITY) continue;
       age.current[i] += dt;
-      if (age.current[i] > CHUNK_LIFE && bodies.current[i]) {
+      if (age.current[i] > CHUNK_LIFE) {
         const b = bodies.current[i];
         const t = b?.translation();
-        if (b && t && t.y > -500) {
+        if (b && t) {
           b.setTranslation({ x: t.x, y: -1000, z: t.z }, false);
           b.setLinvel({ x: 0, y: 0, z: 0 }, false);
           b.setAngvel({ x: 0, y: 0, z: 0 }, false); // clear spin so a reused chunk isn't spinning
           b.sleep();
         }
+        age.current[i] = Number.POSITIVE_INFINITY; // retired — skip until reused
       }
     }
 
@@ -45,8 +49,9 @@ export function SplatChunks({ skin }: { skin: BlobSkin }) {
     for (const burst of consumeSplats()) {
       const n = Math.max(2, Math.round(CHUNKS_PER_BURST * burst.strength));
       for (let k = 0; k < n; k++) {
-        const b = bodies.current[head.current];
+        const idx = head.current;
         head.current = (head.current + 1) % POOL;
+        const b = bodies.current[idx];
         if (!b) continue;
         const [bx, by, bz] = burst.position;
         b.setTranslation({ x: bx, y: by + 0.2, z: bz }, true);
@@ -56,7 +61,7 @@ export function SplatChunks({ skin }: { skin: BlobSkin }) {
         const up = rng.current.range(3, 7) * (0.5 + burst.strength);
         b.setLinvel({ x: Math.cos(theta) * spd, y: up, z: Math.sin(theta) * spd }, true);
         b.wakeUp();
-        age.current[head.current === 0 ? POOL - 1 : head.current - 1] = 0;
+        age.current[idx] = 0;
       }
     }
   });
