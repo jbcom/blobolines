@@ -397,8 +397,9 @@ DECISION: fix it with DIFFERENT PLATFORM CANTS AND SHAPES + golden-path placemen
 permeability (permeable one-way pads rejected by owner).
 - [x] Canted/angled trampoline pad type(s): tilt redirects the bounce laterally (cant.ts +
       ReboundRequest.normal + PlayerBlob launches along the normal + membrane leans).
-- [ ] Varied platform shapes + sizes (not all one rectangle): mix widths/depths and a few
-      silhouettes so the tower reads varied and gives different bounce footprints.
+- [x] Varied platform shapes + sizes (not all one rectangle): width/depth already independent;
+      added a shape roll (~1 in 4 → long plank or deep beam silhouette) so the tower isn't a
+      stack of squares and the footprint changes how you land.
 - [x] GOLDEN-PATH placement rules in the world generator: far successors get the previous pad
       canted toward them (forgiving start clamps into reach instead); generator test proves
       every laterally-distant pad has a canted predecessor pointing at it. THE navigability fix.

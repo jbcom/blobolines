@@ -63,8 +63,19 @@ export function generateUpTo(rng: Rng, fromY: number, targetY: number): Generate
 
     // Difficulty: pads shrink with altitude.
     const diff = Math.max(0.4, 1 - y / 650);
-    const width = (5.8 + rng.next() * 2.8) * diff;
-    const depth = (5.8 + rng.next() * 2.8) * diff;
+    let width = (5.8 + rng.next() * 2.8) * diff;
+    let depth = (5.8 + rng.next() * 2.8) * diff;
+    // Shape variety: ~1 in 4 pads gets a distinct silhouette — a long plank (wide+thin) or a
+    // beam (deep+narrow) — so the tower isn't a stack of identical squares (and the footprint
+    // affects how you must land). The other axis shrinks to keep the area sane.
+    const shapeRoll = rng.next();
+    if (shapeRoll > 0.85) {
+      width *= 1.55;
+      depth *= 0.6;
+    } else if (shapeRoll > 0.7) {
+      depth *= 1.55;
+      width *= 0.6;
+    }
 
     let type: TrampType = y < 25 ? "standard" : rng.pick(TYPE_BAG);
 
