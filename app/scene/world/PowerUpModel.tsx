@@ -56,6 +56,9 @@ export function PowerUpModel({ type }: { type: PowerUpType }) {
   return <primitive object={model} scale={spec.scale} rotation={spec.rotation} />;
 }
 
-// Preload both so they pop in without a hitch on first spawn.
-useGLTF.preload(url(MODEL.magnet.url));
-useGLTF.preload(url(MODEL.thruster.url));
+// Preload both so they pop in without a hitch on first spawn — but NOT under vitest, where
+// a module-scope fetch races the browser-test bundler ("Vite unexpectedly reloaded a test").
+if (!import.meta.env.VITEST) {
+  useGLTF.preload(url(MODEL.magnet.url));
+  useGLTF.preload(url(MODEL.thruster.url));
+}

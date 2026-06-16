@@ -133,11 +133,17 @@ export function Trampoline({ position, width, depth, type, onImpact }: Trampolin
           const relX = clamp((bt.x - position[0]) / width, -0.5, 0.5);
           const relZ = clamp((bt.z - position[2]) / depth, -0.5, 0.5);
           target.current = impactTargets(speed, relX, relZ);
-          // Smear a goo splat on the membrane at the contact point, sized by impact and
-          // tinted to the blob's current skin. Accumulates across landings.
+          // Smear a big juicy goo splat on the membrane at the contact point, sized by
+          // impact + tinted to the blob's skin. A hard landing throws a wider, multi-blob
+          // splat (World-of-Goo splat, not a small dot); accumulates across landings.
           const skin = useGameStore.getState().progress.skin;
-          const size = clamp(0.1 + speed / 60, 0.1, 0.32);
+          const size = clamp(0.18 + speed / 34, 0.18, 0.55);
           splat.paint(relX + 0.5, relZ + 0.5, palette.blob[skin], size);
+          // Hard hits fling a couple of satellite splats around the contact for spread.
+          if (speed > 9) {
+            splat.paint(relX + 0.5 + 0.12, relZ + 0.5 - 0.08, palette.blob[skin], size * 0.6);
+            splat.paint(relX + 0.5 - 0.1, relZ + 0.5 + 0.11, palette.blob[skin], size * 0.5);
+          }
           splat.texture.needsUpdate = true;
           reportImpact(speed);
           // Trampoline rebound: bounce back at impact speed × type multiplier (NO minimum
