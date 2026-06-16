@@ -50,7 +50,7 @@ describe("computeAirSteer", () => {
     expect(computeAirSteer(0, 90)[1]).toBeGreaterThan(0);
   });
 
-  it("magnitude clamps to maxAirSpeed", () => {
+  it("magnitude clamps to maxAirAccel", () => {
     const [x, z] = computeAirSteer(500, 0);
     expect(Math.hypot(x, z)).toBeCloseTo(15, 5);
   });
@@ -58,7 +58,7 @@ describe("computeAirSteer", () => {
   it("eased response gives finer control near the deadzone than a linear ramp would", () => {
     // A small drag just past the deadzone produces well under half the max accel (the curve),
     // so a player can micro-adjust onto a near pad without overshooting.
-    const cfg = { maxSteerDist: 90, deadzone: 8, maxAirSpeed: 15, responseCurve: 1.7 };
+    const cfg = { maxSteerDist: 90, deadzone: 8, maxAirAccel: 15, responseCurve: 1.7 };
     const mid = Math.hypot(...computeAirSteer((90 - 8) * 0.5 + 8, 0, cfg));
     expect(mid).toBeLessThan(15 * 0.5);
     expect(mid).toBeGreaterThan(0);
@@ -74,7 +74,7 @@ describe("computeAirSteer", () => {
   });
 
   it("linear responseCurve reproduces a straight ramp", () => {
-    const cfg = { maxSteerDist: 90, deadzone: 0, maxAirSpeed: 15, responseCurve: 1 };
+    const cfg = { maxSteerDist: 90, deadzone: 0, maxAirAccel: 15, responseCurve: 1 };
     expect(Math.hypot(...computeAirSteer(45, 0, cfg))).toBeCloseTo(7.5, 5);
   });
 });
@@ -90,7 +90,7 @@ describe("keyboardSteer", () => {
     expect(keyboardSteer({ ...none, left: true, right: true })).toEqual([0, 0]);
   });
 
-  it("diagonals are normalized to maxAirSpeed", () => {
+  it("diagonals are normalized to maxAirAccel", () => {
     const [x, z] = keyboardSteer({ ...none, right: true, down: true });
     expect(Math.hypot(x, z)).toBeCloseTo(15, 5);
   });

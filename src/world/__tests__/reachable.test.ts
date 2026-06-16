@@ -26,7 +26,7 @@ const TILT = trampCfg.cantedTiltRad;
 // The golden-path generator only cants pads whose successor is beyond this steerable range;
 // sub-cant gaps are meant to be closed by the player nudging mid-air, so the climb proof
 // must model that budget too (passing 0 would test a stricter game than we ship).
-const STEER = DEFAULT_STEER.maxAirSpeed;
+const STEER = DEFAULT_STEER.maxAirAccel;
 
 // A representative sustained climbing launch speed: a clean drop onto a slightly-springy
 // standard pad plus the player's slingshot keeps the blob moving up at roughly this rate.
@@ -86,5 +86,25 @@ describe("tower is climbable (reachability proof)", () => {
         ).toBe(true);
       }
     }
+  });
+
+  // The generator GUARANTEES reachability by construction (ensureReachable), not just usually.
+  // Sweep a wide seed range to a tall target — a single stranded pad anywhere fails this. This
+  // is the adversarial backstop for the "cant might be insufficient / clamp might bail early"
+  // failure modes: if any geometry slipped through the constructive fixup, it surfaces here.
+  it("EVERY pad is reachable across 60 seeds up to a tall tower (constructive guarantee)", () => {
+    let pairsChecked = 0;
+    for (let s = 0; s < 60; s++) {
+      const pads = fullTower(`sweep-${s}`, 700);
+      for (let i = 0; i < pads.length - 1; i++) {
+        pairsChecked++;
+        expect(
+          canReach(pads[i], pads[i + 1], CLIMB_SPEED, G, TILT, STEER),
+          `seed sweep-${s}: pad #${i} (y=${pads[i].position[1].toFixed(1)}, type=${pads[i].type}) strands the climb`,
+        ).toBe(true);
+      }
+    }
+    // Sanity: the sweep actually exercised a large number of pads (not a no-op).
+    expect(pairsChecked).toBeGreaterThan(2000);
   });
 });

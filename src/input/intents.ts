@@ -57,11 +57,13 @@ export interface SteerConfig {
   maxSteerDist: number;
   /** Pixel deadzone below which no steering happens. */
   deadzone: number;
-  /** Max lateral acceleration applied. */
-  maxAirSpeed: number;
+  /** Max lateral ACCELERATION applied (world units / s²). PlayerBlob integrates it as
+   *  `v += steer * dt`, so this is m/s², NOT a speed — the climb proof (src/world/reachable)
+   *  feeds it straight into ½·a·t², which is only dimensionally sound because it's accel. */
+  maxAirAccel: number;
   /** Response curve exponent on the drag→accel ramp. 1 = linear; >1 = eased: a small drag
    *  gives gentle accel (fine aim for curving onto a near pad) while a big drag still commits
-   *  to the full lean (the hook onto a far offset pad). The CAP stays maxAirSpeed, so the
+   *  to the full lean (the hook onto a far offset pad). The CAP stays maxAirAccel, so the
    *  reachability budget the world generator assumes (src/world/reachable) is unchanged. */
   responseCurve: number;
 }
@@ -69,18 +71,19 @@ export interface SteerConfig {
 export const DEFAULT_STEER: SteerConfig = {
   maxSteerDist: 90,
   deadzone: 8,
-  maxAirSpeed: 15,
+  maxAirAccel: 15,
   responseCurve: 1.7,
 };
 
 /**
- * Air-steer: drag (dx,dy) → a force on the world X (left/right) and Z (fwd/back) axes.
- * Drag up = forward (-Z), drag down = backward (+Z). Returns [0,0] inside the deadzone.
+ * Air-steer: drag (dx,dy) → a lateral ACCELERATION on the world X (left/right) and Z
+ * (fwd/back) axes (integrated by PlayerBlob as v += steer·dt). Drag up = forward (-Z),
+ * drag down = backward (+Z). Returns [0,0] inside the deadzone.
  *
  * The drag distance past the deadzone is normalized to [0,1] then shaped by responseCurve:
  * fine control near center, a committed lean at the extreme — the "curve / hook" feel that
  * lets a skilled player arc onto an offset pad (complements the canted-pad layout). The peak
- * magnitude is still maxAirSpeed so the climb-reachability guarantee holds.
+ * magnitude is still maxAirAccel so the climb-reachability guarantee holds.
  */
 export function computeAirSteer(
   dx: number,
@@ -95,19 +98,19 @@ export function computeAirSteer(
   const factor = config.responseCurve === 1 ? t : t ** config.responseCurve;
   const angle = Math.atan2(dy, dx);
   return [
-    Math.cos(angle) * factor * config.maxAirSpeed,
-    Math.sin(angle) * factor * config.maxAirSpeed,
+    Math.cos(angle) * factor * config.maxAirAccel,
+    Math.sin(angle) * factor * config.maxAirAccel,
   ];
 }
 
-/** Keyboard steering: WASD/arrows → unit force on X/Z scaled by maxAirSpeed. */
+/** Keyboard steering: WASD/arrows → unit lateral acceleration on X/Z scaled by maxAirAccel. */
 export function keyboardSteer(
   keys: { left: boolean; right: boolean; up: boolean; down: boolean },
-  maxAirSpeed = DEFAULT_STEER.maxAirSpeed,
+  maxAirAccel = DEFAULT_STEER.maxAirAccel,
 ): readonly [number, number] {
   const x = (keys.right ? 1 : 0) - (keys.left ? 1 : 0);
   const z = (keys.down ? 1 : 0) - (keys.up ? 1 : 0);
   if (x === 0 && z === 0) return [0, 0];
   const len = Math.hypot(x, z);
-  return [(x / len) * maxAirSpeed, (z / len) * maxAirSpeed];
+  return [(x / len) * maxAirAccel, (z / len) * maxAirAccel];
 }

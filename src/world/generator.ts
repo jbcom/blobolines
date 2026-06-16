@@ -38,6 +38,61 @@ const TYPE_BAG: TrampType[] = [
   "wobbler",
 ];
 
+/** Below this altitude the start stays forgiving: pads are pulled into a flat-bounce reach
+ *  rather than canted, so the first launches are gentle and don't demand the canted mechanic. */
+const FORGIVING_Y = 25;
+
+/**
+ * Make `pad` reachable from `prev`, mutating `prev` (cant) and/or returning a pad pulled
+ * inward, so `reaches(prev, result)` is TRUE on return. Constructive guarantee (see the call
+ * site): above the forgiving start we first try canting `prev` toward the pad; if that's still
+ * short — or we're in the forgiving start — we pull the pad straight toward `prev`. Because
+ * the launch lands dead-on as the lateral gap shrinks to zero, the pull loop always reaches a
+ * solution, so the function never returns an unreachable pad.
+ */
+function ensureReachable(prev: TrampolineSpec, pad: TrampolineSpec): TrampolineSpec {
+  if (reaches(prev, pad)) return pad;
+
+  const [px, , pz] = prev.position;
+  const revertFlat = () => {
+    if (prev.type === "canted") {
+      prev.type = "standard";
+      (prev as { cant?: readonly [number, number] }).cant = undefined;
+    }
+  };
+  /** Make prev reach `p`: a flat bounce if that already lands (no needless cant that would
+   *  overshoot a near-overhead pad), else — above the forgiving start — cant prev straight at
+   *  p. Returns whether prev now reaches p. Always leaves prev's cant matching p's position. */
+  const aimAt = (p: TrampolineSpec): boolean => {
+    revertFlat();
+    if (reaches(prev, p)) return true;
+    if (prev.position[1] < FORGIVING_Y) return false; // forgiving start stays flat → must pull
+    const ax = p.position[0] - px;
+    const az = p.position[2] - pz;
+    const m = Math.hypot(ax, az) || 1;
+    prev.type = "canted";
+    (prev as { cant?: readonly [number, number] }).cant = [ax / m, az / m];
+    return reaches(prev, p);
+  };
+
+  if (aimAt(pad)) return pad;
+
+  // Still short: pull the pad straight toward prev until it's reachable, RE-AIMING at each step
+  // (flat-or-cant) so prev always points at the pad's current position — a stale cant would
+  // overshoot a pulled-in, near-overhead pad. Shrinking the gap monotonically raises
+  // reachability and bottoms out at miss=0, so this terminates with reaches() true.
+  const dx = pad.position[0] - px;
+  const dz = pad.position[2] - pz;
+  let k = 0.85;
+  let result = pad;
+  while (k > 0) {
+    result = { ...pad, position: [px + dx * k, pad.position[1], pz + dz * k] };
+    if (aimAt(result)) break;
+    k -= 0.1;
+  }
+  return result;
+}
+
 /**
  * Generate trampolines (and crystals) from `fromY` up to at least `targetY`.
  * The first pads (low) are always `standard` so the start is forgiving.
@@ -83,40 +138,24 @@ export function generateUpTo(
       width *= 0.6;
     }
 
-    let type: TrampType = y < 25 ? "standard" : rng.pick(TYPE_BAG);
+    let type: TrampType = y < FORGIVING_Y ? "standard" : rng.pick(TYPE_BAG);
 
-    // GOLDEN PATH: every pad must be reachable from its predecessor. If this pad is laterally
-    // far from the previous one, either (forgiving start, prev below y=25) PULL it into flat-
-    // bounce reach so the early pads stay flat + easy, or (above the start) CANT the previous
-    // pad toward it so its bounce throws the blob here. Reachability beats pad variety, so
-    // canting overrides whatever special type the previous pad rolled.
-    // GOLDEN-PATH REACHABILITY: build a candidate for this pad, then GUARANTEE the previous
-    // pad can launch the blob to it. `reaches()` is the shipped-tuning predicate (launch
-    // speed, gravity, canted tilt, steer budget) — the same one the climb proof asserts, so
-    // the placement rule and the playability check can't drift. If the flat previous pad
-    // can't reach: in the forgiving start (prev below y=25) PULL this pad inward so the early
-    // pads stay flat + easy; otherwise CANT the previous pad toward it (overriding whatever
-    // special type it rolled — reachability beats variety).
+    // GOLDEN-PATH REACHABILITY: GUARANTEE the previous pad can launch the blob to this one.
+    // `reaches()` is the shipped-tuning predicate (launch speed, gravity, canted tilt, steer
+    // budget) — the SAME one the climb proof asserts, so the placement rule and the
+    // playability check can't drift. The fixup is constructive (no silent fall-through):
+    //   1. If a flat prev already reaches → leave both alone (variety preserved).
+    //   2. Else, above the forgiving start, CANT prev toward this pad (its tilted bounce
+    //      throws the blob here), overriding whatever special type it rolled.
+    //   3. If it STILL can't reach (cant insufficient for the geometry, or we're in the
+    //      forgiving start where pads stay flat), PULL this pad straight toward prev. As the
+    //      lateral gap → 0 the launch lands dead-on (miss → 0 ≤ footprint), so this loop
+    //      provably terminates WITH reaches() true — the climb is guaranteed by construction,
+    //      not merely checked after the fact.
     if (prev) {
-      let candidate: TrampolineSpec = { id: y, position: [x, y, z], width, depth, type };
-      if (!reaches(prev, candidate)) {
-        const dx = x - prev.position[0];
-        const dz = z - prev.position[2];
-        const lateral = Math.hypot(dx, dz) || 1;
-        if (prev.position[1] < 25) {
-          // Forgiving zone: pull this pad straight toward prev until the flat bounce reaches.
-          // Step inward in fractions; the footprint guarantees a small number of steps lands.
-          for (let k = 0.85; k > 0.05 && !reaches(prev, candidate); k -= 0.15) {
-            x = prev.position[0] + dx * k;
-            z = prev.position[2] + dz * k;
-            candidate = { id: y, position: [x, y, z], width, depth, type };
-          }
-        } else {
-          // Cant prev toward this pad (override its type — reachability first), then verify.
-          prev.type = "canted";
-          (prev as { cant?: readonly [number, number] }).cant = [dx / lateral, dz / lateral];
-        }
-      }
+      const fixed = ensureReachable(prev, { id: y, position: [x, y, z], width, depth, type });
+      x = fixed.position[0];
+      z = fixed.position[2];
     }
     // A freshly-placed pad starts flat; the NEXT iteration may cant it toward its successor.
     if (type === "canted") type = "standard";

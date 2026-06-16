@@ -47,9 +47,12 @@ export function canReach(
   const dy = b.position[1] - a.position[1];
   // Peak height reached: vy²/2g. Must clear the vertical gap to B.
   if (vy * vy < 2 * g * dy) return false;
-  // Time to rise to B's height (first root of dy = vy t - ½ g t²).
+  // Time to FIRST reach B's height: the smaller root of dy = vy·t − ½g·t². When B is above A
+  // (dy>0, the climbing case) that's the ascending crossing. When B is at or below A (dy≤0)
+  // the small root is non-positive — the blob is already at/over B's height at launch — so
+  // clamp to t=0 (no time to drift laterally; only an essentially-overhead B is reachable).
   const disc = vy * vy - 2 * g * dy;
-  const t = (vy - Math.sqrt(Math.max(0, disc))) / g;
+  const t = Math.max(0, (vy - Math.sqrt(Math.max(0, disc))) / g);
   // Horizontal reach from the launch normal in that time...
   const reachX = n[0] * speed * t;
   const reachZ = n[2] * speed * t;
@@ -72,7 +75,7 @@ export function canReach(
 export const CLIMB_SPEED = 30;
 const G = Math.abs(GRAVITY[1]);
 const TILT = trampCfg.cantedTiltRad;
-const STEER = DEFAULT_STEER.maxAirSpeed;
+const STEER = DEFAULT_STEER.maxAirAccel;
 
 /**
  * Golden-path predicate: can the blob get from pad `a` to pad `b` under the shipped tuning
