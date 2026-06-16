@@ -53,6 +53,7 @@ export const launch = launchCfg as {
 export const trampoline = trampolineCfg as {
   reboundMultiplier: Record<TrampType, number>;
   cantedTiltRad: number;
+  wobblerMaxTiltRad: number;
   superMinRebound: number;
   reboundSettleSpeed: number;
   depressSpring: { stiffness: number; damping: number };

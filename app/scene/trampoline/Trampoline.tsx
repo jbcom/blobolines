@@ -42,6 +42,7 @@ interface TrampolineProps {
 
 const THICKNESS = 1.2;
 const { movingAmplitude, movingSpeed } = trampCfg;
+const WOBBLER_MAX_TILT = trampCfg.wobblerMaxTiltRad;
 
 export function Trampoline({ position, width, depth, type, cant, onImpact }: TrampolineProps) {
   const rbRef = useRef<RapierRigidBody>(null);
@@ -194,6 +195,15 @@ export function Trampoline({ position, width, depth, type, cant, onImpact }: Tra
               // Lateral fraction from the pad's slide speed (capped), up-component fills rest.
               const lx = Math.max(-0.5, Math.min(0.5, slideVx.current / 12));
               normal = [lx, Math.sqrt(Math.max(0, 1 - lx * lx)), 0];
+            } else if (type === "wobbler") {
+              // Unstable: the pad TIPS toward where you landed, so an off-center hit deflects
+              // the bounce that way (risk/reward — hit center for a clean launch). Tilt by the
+              // hit offset, scaled to the configured max tilt.
+              const s = Math.sin(WOBBLER_MAX_TILT);
+              const lx = relX * 2 * s;
+              const lz = relZ * 2 * s;
+              const up = Math.sqrt(Math.max(0.1, 1 - lx * lx - lz * lz));
+              normal = [lx, up, lz];
             }
             reportRebound({ speed: reboundSpeed, type, normal });
             playBounce(type);

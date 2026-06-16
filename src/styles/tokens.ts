@@ -79,7 +79,15 @@ export const blobSkinColor: Record<BlobSkin, string> = {
 
 /** Trampoline gameplay types → token color. `super` = bonus mega-launch; `ice` = very
  *  bouncy but slippery (breaks the clean-combo). */
-export type TrampType = "standard" | "booster" | "moving" | "fragile" | "super" | "ice" | "canted";
+export type TrampType =
+  | "standard"
+  | "booster"
+  | "moving"
+  | "fragile"
+  | "super"
+  | "ice"
+  | "canted"
+  | "wobbler";
 
 export const trampColor: Record<TrampType, string> = {
   standard: palette.tramp.blue,
@@ -89,6 +97,7 @@ export const trampColor: Record<TrampType, string> = {
   super: palette.tramp.violet,
   ice: palette.tramp.ice,
   canted: palette.tramp.orange,
+  wobbler: palette.tramp.violet,
 };
 
 export const motion = {

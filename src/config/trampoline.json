@@ -6,9 +6,11 @@
     "fragile": 1.05,
     "super": 2.8,
     "ice": 1.55,
-    "canted": 1.35
+    "canted": 1.35,
+    "wobbler": 1.2
   },
   "cantedTiltRad": 0.42,
+  "wobblerMaxTiltRad": 0.5,
   "superMinRebound": 26,
   "reboundSettleSpeed": 3.2,
   "depressSpring": { "stiffness": 170, "damping": 26 },

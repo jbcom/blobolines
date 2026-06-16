@@ -410,8 +410,9 @@ permeability (permeable one-way pads rejected by owner).
 - [x] SLIDER pads: the `moving` pad now tracks its live slide velocity (cos(phase)·amp·speed)
       and tilts the rebound normal toward it, so catching it at the right moment flings the
       blob sideways — timing-based skill, the type's real role. Travel from config amp/speed.
-- [ ] WOBBLER pads: unstable pads that wobble/tip when landed on — a brief teeter that
-      redirects the bounce unpredictably (skill/risk), settling back if not re-hit.
+- [x] WOBBLER pads: unstable pad type that TIPS toward the hit point — an off-center landing
+      deflects the bounce that way (hit center for a clean launch; risk/reward). Tilt scaled
+      by hit offset × config wobblerMaxTiltRad, launched via the rebound normal. In TYPE_BAG.
 - [ ] [x] CANTED pad type: tilted membrane whose normal redirects the bounce laterally
       (DONE — config cantedTiltRad, src/sim/trampoline/cant, spec.cant, ReboundRequest.normal,
       PlayerBlob launches along the normal, membrane visually leans). Generator placement +
