@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { goo as gooCfg } from "@/config";
 import { createRng } from "@/core/math";
 import type { Vec3 } from "@/core/types";
 import { spawnLaunchBurst, spawnSplash, spawnTrailDroplet, stepDroplet } from "../droplets";
@@ -12,8 +13,10 @@ describe("spawnSplash", () => {
     expect(strong.length).toBeGreaterThan(weak.length);
   });
 
-  it("caps the droplet count", () => {
-    expect(spawnSplash(ORIGIN, 100, createRng(1)).length).toBeLessThanOrEqual(18);
+  it("caps the droplet count at the configured maxCount", () => {
+    expect(spawnSplash(ORIGIN, 100, createRng(1)).length).toBeLessThanOrEqual(
+      gooCfg.splash.maxCount,
+    );
   });
 
   it("is deterministic per seed", () => {
