@@ -246,3 +246,8 @@ A real Blobolines blob should:
 - [x] All tunables moved to JSON in src/config, decomposed by domain (physics/blob/launch/
   trampoline/collect/goo/world/biomes) + typed barrel; sim/render read bases so modifiers
   can scale them. Behavior-preserving, 166 tests green.
+
+### M10e — polish refinements (feat/goo-polish-2)
+- [x] Puddle sits ON the pad: render center drops by the lost half-height when squashed, so the resting puddle rests on the surface (eyes peek over) instead of half-sunk.
+  the puddle rests on the surface (eyes peek over the top), not half-sunk through it.
+- [ ] [WAIT] open PR for this batch → CI green + threads → squash-merge.
