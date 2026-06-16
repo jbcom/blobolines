@@ -364,3 +364,21 @@ Camera follow + shake, in-game deformation, wet glistening shader + color gradie
 - [ ] Three-bus mix (music/sfx/ambient/master) with independent enable+volume; retune ambient down to 0.25.
 - [ ] Audio thump layer mirroring the Light/Medium/Heavy haptic split.
 - [ ] Preload critical cues at startMusic to avoid first-play decode hitch (mobile).
+
+## M15 — game-design depth + CONFIRMED BUGS (from mechanics inventory, 2026-06-16)
+### Bugs (do first — real correctness)
+- [ ] BUG: HUD comboLabel uses 1+(streak-1)*0.5 but actual comboMultiplier is 1+(combo-comboStart+1)*0.15 — player sees the wrong multiplier. Unify on the sim function.
+- [ ] BUG: MAX_COMBO=8 in combo.ts is never enforced at runtime (run.combo increments unclamped); onCleanBounce/breakCombo helpers exist but aren't wired. Either wire them or clamp.
+### Mechanics depth
+- [ ] Add a real SCORE system (height + crystals + combo + style), persisted high score separate from best height.
+- [ ] Crystal depth: tiers/bonus/multiplier, not flat +1; consumable/upgrade sinks beyond cosmetic skins.
+- [ ] Altitude-weighted pad type distribution (super/booster rarer low, more bonus variety high) — currently uniform at all heights.
+- [ ] Make the `moving` pad meaningful (rebound 1.05 is nearly a dead type) — give it a real role/mechanic.
+- [ ] Hazards: add at least 2 (e.g. crumbling gap, spike pad, wind gust, drifting obstacle) gated by biome/height.
+- [ ] More powerups beyond magnet/thruster: shield/second-life, slow-mo, score-doubler, multi-bounce; allow stacking or distinct refresh.
+- [ ] Comeback/revive mechanic on death (watch-style or one-shot shield) for run length.
+- [ ] Difficulty curve beyond pad-shrink: vary spacing, gravity, type mix, crystal/powerup density by height.
+- [ ] Daily-challenge seed plumbing (Rng is seedable; add a daily seed + leaderboard-ready run hash).
+- [ ] Missions/objectives/achievements layer (e.g. "reach 200m", "10-combo", "100 crystals").
+- [ ] Charge-time/overcharge nuance on the slingshot (hold penalty or perfect-release window).
+- [ ] Wire walls/misses to break combo if that's the intended rule (docs claim it; runtime only breaks on ice).
