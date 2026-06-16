@@ -320,7 +320,12 @@ Camera follow + shake, in-game deformation, wet glistening shader + color gradie
 - [x] TitleScreen/GameOver respect safe-left/right (+top/bottom on GameOver) via env-inset
       padding, so neither tucks under a landscape notch / rounded corner. Dropped the redundant
       fixed px-6. Desktop layout unchanged (insets 0) — verified live.
-- [ ] Modal max-height + internal scroll for short/landscape screens.
+- [x] Modal max-height + internal scroll: the shared Dialog primitive now caps its Content to
+      the safe viewport height (100dvh − safe-top − safe-bottom − 2rem) and the inner panel
+      scrolls internally (min-h-0 + overflow-y-auto + overscroll-contain), so a tall modal
+      (Settings/Customizer) on a short/landscape screen never overflows off-screen. Fixed once
+      in the primitive → all three modals benefit. SettingsModal fixture asserts the cap +
+      scroll container.
 - [ ] Goo-language pass on DOM chrome (organic corners/squish on CTA + badges).
 - [ ] Consolidate bespoke accent buttons onto the shared Button primitive.
 - [ ] anime.js squish-stretch on title Play press.

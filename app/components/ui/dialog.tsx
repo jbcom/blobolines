@@ -57,7 +57,13 @@ export function Dialog({
               // Description that id dangles (axe aria-valid-attr-value). Clear it when no
               // description is given; when one IS given, omit the prop so Radix wires it.
               {...(ariaDescription ? {} : { "aria-describedby": undefined })}
-              className="fixed left-1/2 top-1/2 z-[calc(var(--z-modal)+1)] w-[min(90vw,480px)] -translate-x-1/2 -translate-y-1/2 focus:outline-none"
+              // Cap the dialog to the safe viewport height (minus the notch/home-indicator
+              // insets) so a tall modal on a short/landscape screen never overflows off-screen
+              // — the inner panel scrolls instead. The translate centering is unchanged.
+              style={{
+                maxHeight: "calc(100dvh - var(--safe-top) - var(--safe-bottom) - 2rem)",
+              }}
+              className="fixed left-1/2 top-1/2 z-[calc(var(--z-modal)+1)] flex w-[min(90vw,480px)] -translate-x-1/2 -translate-y-1/2 focus:outline-none"
             >
               <RadixDialog.Title asChild>
                 <span className="sr-only">{ariaLabel}</span>
@@ -79,7 +85,10 @@ export function Dialog({
                 exit={{ opacity: 0, y: prefersReduced ? 0 : 16, scale: prefersReduced ? 1 : 0.97 }}
                 transition={{ duration: dur, ease: [0.22, 1, 0.36, 1] }}
                 className={cn(
-                  "rounded-[var(--radius-xl)] border border-[var(--border)] bg-[var(--bg-elevated)] p-6 shadow-[var(--shadow-lg)]",
+                  // min-h-0 + overflow-y-auto lets the panel scroll INTERNALLY when it's
+                  // taller than the capped Content (short/landscape screens); overscroll-
+                  // contain stops the scroll chaining to the page behind the modal.
+                  "max-h-full w-full min-h-0 overflow-y-auto overscroll-contain rounded-[var(--radius-xl)] border border-[var(--border)] bg-[var(--bg-elevated)] p-6 shadow-[var(--shadow-lg)]",
                   className,
                 )}
               >

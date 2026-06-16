@@ -29,6 +29,19 @@ test("SettingsModal controls have accessible names", async () => {
   // Haptics switch is intentionally gated to touch devices, so it's not asserted here.
 });
 
+// Short/landscape safety: the dialog caps to the safe viewport height and the inner panel
+// scrolls internally, so a tall modal never overflows off a short screen.
+test("dialog caps its height and scrolls its panel internally", async () => {
+  const screen = await render(<SettingsModal open onOpenChange={() => {}} />);
+  await expect.element(screen.getByTestId("settings")).toBeVisible();
+  const content = screen.getByTestId("settings").element();
+  // Content carries an inline max-height cap (the calc against the safe insets).
+  expect((content as HTMLElement).style.maxHeight).toMatch(/calc\(/);
+  // The inner panel is the scroll container (overflow-y auto).
+  const panel = content.querySelector(".overflow-y-auto");
+  expect(panel).toBeTruthy();
+});
+
 test("Reset progress requires a two-step confirm", async () => {
   const screen = await render(<SettingsModal open onOpenChange={() => {}} />);
   const btn = screen.getByRole("button", { name: "Reset" });
