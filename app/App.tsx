@@ -2,6 +2,7 @@ import { WorldProvider } from "koota/react";
 import { MotionConfig } from "motion/react";
 import { Suspense, useEffect } from "react";
 import { gameWorld } from "@/ecs/world";
+import { applyDeviceScale } from "@/platform";
 import { attachPersistence, hydrateStore, useGameStore } from "@/state";
 import { ErrorBoundary } from "./ErrorBoundary";
 import { Game } from "./Game";
@@ -15,7 +16,13 @@ export function App() {
   useEffect(() => {
     void hydrateStore();
     const detach = attachPersistence();
-    return detach;
+    // Device-aware UI scale → --ui-scale CSS var (phone bigger, desktop baseline), rebinds
+    // on resize/orientation. Works on web + the Capacitor webview without a native dep.
+    const scale = applyDeviceScale();
+    return () => {
+      detach();
+      scale.detach();
+    };
   }, []);
 
   return (

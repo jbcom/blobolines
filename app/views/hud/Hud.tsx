@@ -32,7 +32,13 @@ export function Hud() {
           paddingRight: "calc(var(--safe-right) + 1rem)",
         }}
       >
-        <div className="flex w-full items-start justify-between gap-3">
+        {/* Device-aware scale: the readout row scales by --ui-scale (phone bigger so the
+            HUD stays legible at arm's length; desktop baseline). transform-origin top keeps
+            it anchored to the safe-area top while scaling. */}
+        <div
+          className="flex w-full items-start justify-between gap-3"
+          style={{ transform: "scale(var(--ui-scale))", transformOrigin: "top center" }}
+        >
           <Altimeter />
           <div className="flex flex-1 flex-col items-center pt-1">
             <ComboBadge />

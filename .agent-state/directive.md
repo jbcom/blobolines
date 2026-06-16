@@ -305,11 +305,12 @@ Camera follow + shake, in-game deformation, wet glistening shader + color gradie
 - [x] Gate/hide haptics control on non-touch; add intensity/test. (TOUCH_CAPABLE gate hides the control on pointer-only devices; a Test button fires a sample impact)
 - [x] Slingshot sensitivity drag-to-test preview area. (drag strip under the slider; dot tracks the pointer scaled by sensitivity, snaps home on release)
 ### Tier 6 — responsive & cohesion
-- [ ] Device-aware element SCALING (owner feedback 2026-06-16): scale UI + gameplay-readout
-      sizing to the actual device using Capacitor device detection (@capacitor/device) on
-      native AND a web fallback (viewport/DPR/pointer-coarse). Phone vs tablet vs desktop
-      get appropriately-sized HUD/controls/text — not one fixed px scale. A device/scale
-      facade in src/platform feeding a CSS scale var / store value the UI reads.
+- [x] Device-aware element SCALING (owner feedback 2026-06-16): src/platform/scale facade
+      classifies phone/tablet/desktop from viewport min-dim + pointer-coarse (works on web +
+      Capacitor webview, no native dep), writes --ui-scale on :root (rebinds on resize); the
+      HUD readout row scales by it (phone bigger, desktop baseline). Pure deviceScale unit-
+      tested. (viewport+pointer is the right signal on both web & native — chose it over a
+      @capacitor/device dep that only gives model/platform, not a usable scale.)
 - [ ] Hud wide/tall breakpoints: anchor readouts to safe-area corners, don't stretch.
 - [ ] TitleScreen/GameOver respect safe-left/right in landscape/notch.
 - [ ] Modal max-height + internal scroll for short/landscape screens.

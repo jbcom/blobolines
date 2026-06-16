@@ -93,6 +93,9 @@
   --dur-base: 240ms;
   --dur-slow: 420ms;
 
+  /* ---- Device-aware UI scale (set at runtime by applyDeviceScale; default 1) ---- */
+  --ui-scale: 1;
+
   /* ---- Z layers ---- */
   --z-canvas: 0;
   --z-hud: 10;
