@@ -111,11 +111,30 @@ export function BlobCustomizer({
                   Equip
                 </span>
               ) : (
-                <span
-                  aria-hidden
-                  className="flex items-center gap-1 font-ui text-[11px] font-bold text-blob-blue"
-                >
-                  {affordable ? <Gem className="size-3" /> : <Lock className="size-3" />} {cost}
+                <span aria-hidden className="flex w-full flex-col items-center gap-1">
+                  <span
+                    className={`flex items-center gap-1 font-ui text-[11px] font-bold ${
+                      affordable ? "text-blob-blue" : "text-fg-subtle"
+                    }`}
+                  >
+                    {affordable ? <Gem className="size-3" /> : <Lock className="size-3" />} {cost}
+                  </span>
+                  {affordable ? (
+                    <span className="font-ui text-[10px] font-semibold text-blob-blue">Unlock</span>
+                  ) : (
+                    <>
+                      {/* "need N more" + how close they are to affording it. */}
+                      <span className="font-ui text-[10px] text-fg-subtle">
+                        need {cost - crystals} more
+                      </span>
+                      <span className="h-1 w-full overflow-hidden rounded-full bg-bg/70">
+                        <span
+                          className="block h-full rounded-full bg-blob-blue/70"
+                          style={{ width: `${Math.min(100, (crystals / cost) * 100)}%` }}
+                        />
+                      </span>
+                    </>
+                  )}
                 </span>
               )}
             </button>
