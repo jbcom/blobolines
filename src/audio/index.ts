@@ -14,6 +14,7 @@ export {
   setMasterVolume,
   setMusicAltitude,
   setMusicEnabled,
+  setSfxVolume,
   startMusic,
   stopMusic,
 } from "./howler";

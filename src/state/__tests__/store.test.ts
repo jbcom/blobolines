@@ -12,7 +12,7 @@ beforeEach(() => {
     phase: "menu",
     settings: { ...DEFAULT_SETTINGS },
     progress: { ...DEFAULT_PROGRESS },
-    run: { height: 0, crystals: 0, combo: 0 },
+    run: { height: 0, crystals: 0, combo: 0, maxCombo: 0, recordDelta: 0 },
   });
 });
 
@@ -58,6 +58,20 @@ describe("useGameStore", () => {
   it("commitBestHeight floors to int", () => {
     useGameStore.getState().commitBestHeight(123.9);
     expect(useGameStore.getState().progress.bestHeight).toBe(123);
+  });
+
+  it("resetProgress wipes best height, crystals, unlocks and skin to defaults", () => {
+    const s = useGameStore.getState();
+    s.commitBestHeight(200);
+    s.addCrystals(50);
+    s.unlockSkin("slime");
+    s.setSkin("slime");
+    s.resetProgress();
+    const p = useGameStore.getState().progress;
+    expect(p.bestHeight).toBe(0);
+    expect(p.crystals).toBe(0);
+    expect(p.unlockedSkins).toEqual(["blue"]);
+    expect(p.skin).toBe("blue");
   });
 
   it("setSkin changes equipped skin", () => {

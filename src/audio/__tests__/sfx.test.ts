@@ -8,6 +8,7 @@ import {
   playSplat,
   setMusicAltitude,
   setMusicEnabled,
+  setSfxVolume,
   startMusic,
   stopMusic,
 } from "../index";
@@ -39,6 +40,14 @@ describe("audio before init", () => {
   it("setMusicAltitude is a safe no-op before music starts", () => {
     expect(() => setMusicAltitude(0)).not.toThrow();
     expect(() => setMusicAltitude(900)).not.toThrow();
+  });
+
+  it("setSfxVolume clamps + never throws, and SFX still play at any level", () => {
+    expect(() => setSfxVolume(0)).not.toThrow();
+    expect(() => playBounce("standard")).not.toThrow(); // muted SFX channel still safe
+    expect(() => setSfxVolume(0.5)).not.toThrow();
+    expect(() => setSfxVolume(5)).not.toThrow(); // clamped, no throw
+    expect(() => playChime()).not.toThrow();
   });
 });
 

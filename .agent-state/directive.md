@@ -299,11 +299,11 @@ Camera follow + shake, in-game deformation, wet glistening shader + color gradie
 - [x] Live gooey blob preview per skin in customizer (not a flat swatch). (wet-goo radial-gradient swatch with glossy highlight + shade from palette tokens — reads as a 3D goo droplet without 4 live WebGL canvases on mobile)
 - [ ] Keyboard/gamepad grid nav for skins (roving tabindex or Tabs).
 ### Tier 5 — settings
-- [ ] In-app reduced-motion toggle driving MotionConfig.
-- [ ] Reset-progress action (confirm) clearing best/crystals/unlocks.
-- [ ] Separate SFX volume from music volume.
-- [ ] Gate/hide haptics control on non-touch; add intensity/test.
-- [ ] Slingshot sensitivity drag-to-test preview area.
+- [x] In-app reduced-motion toggle driving MotionConfig. (settings.reducedMotion → MotionConfig reducedMotion "always"/"user", moved into App so it's reactive)
+- [x] Reset-progress action (confirm) clearing best/crystals/unlocks. (store.resetProgress + two-step confirm button in Settings)
+- [x] Separate SFX volume from music volume. (settings.sfxVolume + setSfxVolume on the Howler SFX channel; persisted + applied at boot)
+- [x] Gate/hide haptics control on non-touch; add intensity/test. (TOUCH_CAPABLE gate hides the control on pointer-only devices; a Test button fires a sample impact)
+- [x] Slingshot sensitivity drag-to-test preview area. (drag strip under the slider; dot tracks the pointer scaled by sensitivity, snaps home on release)
 ### Tier 6 — responsive & cohesion
 - [ ] Hud wide/tall breakpoints: anchor readouts to safe-area corners, don't stretch.
 - [ ] TitleScreen/GameOver respect safe-left/right in landscape/notch.

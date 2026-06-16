@@ -1,3 +1,4 @@
+import { setMasterVolume, setMusicEnabled, setSfxVolume } from "@/audio";
 import type { GameSettings, PlayerProgress } from "@/core/types";
 import { loadJson, saveJson } from "@/platform";
 import { DEFAULT_PROGRESS, DEFAULT_SETTINGS, type GameState, useGameStore } from "./store";
@@ -16,10 +17,16 @@ export async function hydrateStore(): Promise<void> {
     loadJson<PlayerProgress>(KEY_PROGRESS, DEFAULT_PROGRESS),
     loadJson<GameSettings>(KEY_SETTINGS, DEFAULT_SETTINGS),
   ]);
+  const mergedSettings = { ...DEFAULT_SETTINGS, ...settings };
   useGameStore.setState({
     progress: { ...DEFAULT_PROGRESS, ...progress },
-    settings: { ...DEFAULT_SETTINGS, ...settings },
+    settings: mergedSettings,
   });
+  // Push persisted audio settings to the engine so they take effect from boot, not only
+  // when the user next touches a control.
+  setMasterVolume(mergedSettings.masterVolume);
+  setSfxVolume(mergedSettings.sfxVolume);
+  setMusicEnabled(mergedSettings.musicEnabled);
 }
 
 /** Subscribe persistence to store changes. Returns an unsubscribe fn. */

@@ -20,11 +20,20 @@ test("SettingsModal controls have accessible names", async () => {
   const screen = await render(<SettingsModal open onOpenChange={() => {}} />);
   await expect.element(screen.getByTestId("settings")).toBeVisible();
   await expect.element(screen.getByRole("slider", { name: "Master volume" })).toBeInTheDocument();
+  await expect.element(screen.getByRole("slider", { name: "SFX volume" })).toBeInTheDocument();
   await expect
     .element(screen.getByRole("slider", { name: "Slingshot sensitivity" }))
     .toBeInTheDocument();
   await expect.element(screen.getByRole("switch", { name: "Music" })).toBeInTheDocument();
-  await expect
-    .element(screen.getByRole("switch", { name: "Haptics (mobile)" }))
-    .toBeInTheDocument();
+  await expect.element(screen.getByRole("switch", { name: "Reduce motion" })).toBeInTheDocument();
+  // Haptics switch is intentionally gated to touch devices, so it's not asserted here.
+});
+
+test("Reset progress requires a two-step confirm", async () => {
+  const screen = await render(<SettingsModal open onOpenChange={() => {}} />);
+  const btn = screen.getByRole("button", { name: "Reset" });
+  await expect.element(btn).toBeInTheDocument();
+  await btn.click();
+  // After the first tap it arms — the label flips to a confirm prompt.
+  await expect.element(screen.getByRole("button", { name: /tap to confirm/i })).toBeInTheDocument();
 });
