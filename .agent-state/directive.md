@@ -290,7 +290,7 @@ Camera follow + shake, in-game deformation, wet glistening shader + color gradie
 ### Tier 3 — onboarding & states
 - [x] First-run tutorial overlay: drag-ghost coachmark over LaunchInput, dismiss on first launch (new Onboarding.tsx).
 - [x] First-play hint instead of burying how-to behind a menu button. (the Onboarding coachmark IS the first-play hint — shows the controls inline on first run instead of behind the How-to menu button)
-- [ ] Branded error/boot-failure screen + boundary (Rapier-WASM/Canvas fail → "tap to retry").
+- [x] Branded error/boot-failure screen + boundary (Rapier-WASM/Canvas fail → "tap to retry"). (tap-anywhere-to-retry fallback; friendly "graphics engine couldn't start" copy for WebGL/WASM errors)
 - [ ] LoadingScreen real progress (asset/WASM fraction) not infinite bounce.
 - [x] BlobCustomizer empty state when crystals==0 ("collect crystals to unlock goo").
 ### Tier 4 — customizer/shop
