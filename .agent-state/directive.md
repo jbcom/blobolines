@@ -223,10 +223,10 @@ add the PoC's ENERGY (shake, follow-light, bloom, speed FX, color), NOT neon-cyb
 - [x] BONUS trampolines: added the violet SUPER mega-launch pad (guaranteed big boost). More bonus types can follow this pattern.
 - [x] Powerup MODELS: rocket (Space Kit) + magnet (U-curve) GLBs from 3DLowPoly → public/assets/models, loaded via useGLTF w/ primitive Suspense fallback (self-contained re-export so no 404).
 - [x] WET look: dual-spec + subsurface + translucent wet shader (verified glistening). [next: color gradient]
-- [ ] [NEXT-BRANCH] BONUS trampolines: more mechanics beyond super (redirect/ice/sticky).
-- [ ] [NEXT-BRANCH] Splat pieces get REAL PHYSICS: droplets as their own Rapier bodies (bounce/roll/settle), not kinematic particles.
-- [ ] [NEXT-BRANCH] World STRATA / BIOMES geometry: real biome environment props/hazards per height band (backdrop colors done; geometry/strata next).
-- [ ] [NEXT-BRANCH] crystal/powerup color variety + blob color gradient across the body.
+- [ ] [feat/goo-depth] BONUS trampolines: more mechanics beyond super (redirect/ice/sticky).
+- [ ] [feat/goo-depth] Splat pieces get REAL PHYSICS: droplets as their own Rapier bodies (bounce/roll/settle), not kinematic particles.
+- [ ] [feat/goo-depth] World STRATA / BIOMES geometry: real biome environment props/hazards per height band (backdrop colors done; geometry/strata next).
+- [ ] [feat/goo-depth] crystal/powerup color variety + blob color gradient across the body.
 
 ### M10c — the blob IS goo, not a globe (user feedback 2026-06-16, batch 3) — HIGH PRIORITY
 The single biggest "it's not a blob" issue: right now it's a solid matte-colored GLOBE.
