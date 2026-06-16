@@ -20,8 +20,8 @@ interface BlobEyesProps {
   live?: boolean;
 }
 
-const EYE_OFFSET_X = 0.32;
-const EYE_OFFSET_Y = 0.18;
+const EYE_OFFSET_X = 0.3;
+const EYE_OFFSET_Y = 0.08;
 
 function Eye({ side }: { side: 1 | -1 }) {
   return (
@@ -83,7 +83,7 @@ export function BlobEyes({ expression, radius, live = false }: BlobEyesProps) {
   });
 
   return (
-    <group ref={groupRef} position={[0, 0, radius * 0.92]}>
+    <group ref={groupRef} position={[0, 0, radius * 0.15]}>
       <Eye side={-1} />
       <Eye side={1} />
     </group>

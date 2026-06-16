@@ -1,11 +1,12 @@
-import { useFrame } from "@react-three/fiber";
+import { useFrame, useThree } from "@react-three/fiber";
 import { useMemo, useRef } from "react";
-import type { Color, Mesh, ShaderMaterial, Vector3 } from "three";
+import type { Color, Group, Mesh, ShaderMaterial, Vector3 } from "three";
 import type { BlobSkin } from "@/core/types";
 import { MAX_GOO_BALLS, MetaballGooMaterial } from "@/render/materials";
 import type { Droplet } from "@/render/vfx";
 import { getBlobDiagnostics } from "@/state";
 import { palette } from "@/styles/tokens";
+import { BlobEyes } from "./BlobEyes";
 
 /**
  * GooField — the merging goo skin. A hull mesh centered on the blob renders a raymarched
@@ -24,6 +25,8 @@ interface GooFieldProps {
 
 export function GooField({ skin, blobRadius, getDroplets }: GooFieldProps) {
   const hullRef = useRef<Mesh>(null);
+  const eyesRef = useRef<Group>(null);
+  const camera = useThree((s) => s.camera);
   const material = useMemo(() => new MetaballGooMaterial() as unknown as ShaderMaterial, []);
 
   useFrame((state) => {
@@ -33,6 +36,19 @@ export function GooField({ skin, blobRadius, getDroplets }: GooFieldProps) {
 
     // Hull follows the blob so the raymarch stays in a small local volume.
     hull.position.set(bx, by, bz);
+
+    // Eyes ride on the goo front: sit at the blob center, nudged toward the camera on
+    // the horizontal plane, and yaw to face the camera while staying upright (so they
+    // never tilt off the face when the camera looks down).
+    const eyes = eyesRef.current;
+    if (eyes) {
+      const dx = camera.position.x - bx;
+      const dz = camera.position.z - bz;
+      const len = Math.hypot(dx, dz) || 1;
+      const push = blobRadius * 0.7;
+      eyes.position.set(bx + (dx / len) * push, by + blobRadius * 0.12, bz + (dz / len) * push);
+      eyes.rotation.set(0, Math.atan2(dx, dz), 0);
+    }
 
     // Mutate the uniform arrays in place (drei holds them by reference; no allocs).
     const balls = material.uniforms.u_balls.value as Vector3[];
@@ -64,9 +80,15 @@ export function GooField({ skin, blobRadius, getDroplets }: GooFieldProps) {
   });
 
   return (
-    <mesh ref={hullRef} material={material}>
-      {/* Hull large enough to contain the blob + near droplets; raymarch happens within. */}
-      <sphereGeometry args={[blobRadius + 3, 16, 16]} />
-    </mesh>
+    <>
+      <mesh ref={hullRef} material={material}>
+        {/* Hull contains the blob + near droplets; the raymarch happens within it. */}
+        <sphereGeometry args={[blobRadius + 3, 16, 16]} />
+      </mesh>
+      {/* Eyes billboarded onto the goo front (world space, bridge-driven). */}
+      <group ref={eyesRef} renderOrder={2}>
+        <BlobEyes expression="idle" radius={blobRadius} live />
+      </group>
+    </>
   );
 }

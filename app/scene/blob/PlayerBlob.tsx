@@ -13,7 +13,6 @@ import {
   useGameStore,
   useWorldStore,
 } from "@/state";
-import { BlobActor } from "./BlobActor";
 import { GooField } from "./GooField";
 import { useDroplets } from "./useDroplets";
 
@@ -148,8 +147,6 @@ export function PlayerBlob() {
         enabledRotations={[false, false, false]}
       >
         <BallCollider args={[BLOB.radius]} />
-        {/* Eyes + squash group only; the GooField metaball provides the goo body. */}
-        <BlobActor skin={skin} radius={BLOB.radius} live body={false} />
       </RigidBody>
       {/* Goo skin lives in world space (follows the blob via the diagnostics bridge),
           NOT as a physics child — it merges the blob with the live splash droplets. */}
