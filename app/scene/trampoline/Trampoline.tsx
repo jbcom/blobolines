@@ -106,10 +106,10 @@ export function Trampoline({ position, width, depth, type, onImpact }: Trampolin
         <mesh ref={membraneRef} position={[0, THICKNESS / 2 + 0.02, 0]}>
           <boxGeometry args={[width * 0.92, 0.18, depth * 0.92]} />
           <meshStandardMaterial
-            color={palette.goo.wet}
+            color={palette.cream}
             emissive={emissive}
-            emissiveIntensity={0.6}
-            roughness={0.15}
+            emissiveIntensity={0.18}
+            roughness={0.25}
           />
         </mesh>
       </group>

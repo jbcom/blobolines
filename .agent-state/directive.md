@@ -137,10 +137,10 @@ tokens own palette.
 - [x] src/platform: Capacitor wrappers (haptics/orientation/keep-awake/preferences) + barrel
 
 ## M1 — Design system & identity
-- [ ] Design tokens (color/space/radius/shadow/motion/type) as CSS vars + TS token module + Tailwind theme; juicy gooey palette (not neon-cyberpunk)
-- [ ] Unique Google Fonts pairing (display + UI) self-hosted via @fontsource or fontsource-variable; wire into tokens & Tailwind
-- [ ] Brand-hex ban_patterns added to gates.json (enforce palette); STANDARDS.md brand section
-- [ ] Loading screen, app icon / favicon, splash (blob identity)
+- [x] Design tokens (color/space/radius/shadow/motion/type) as CSS vars + TS token module + Tailwind theme; juicy gooey palette (Phase 1)
+- [x] Unique self-hosted Google Fonts: Fredoka Variable (display) + Nunito Variable (UI), wired to tokens + Tailwind (Phase 1)
+- [x] Brand-hex ban_patterns in gates.json (enforced); all render colors tokenized (Phase 1). STANDARDS.md brand section — Phase 2.
+- [ ] Loading screen, app icon / favicon, splash (blob identity) — Phase 2
 
 ## M2 — Core engine & deterministic sim
 - [x] RNG facade + clock facade + unit tests (M0.5)

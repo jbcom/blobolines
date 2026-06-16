@@ -5,3 +5,4 @@ export {
   spawnSplash,
   stepDroplet,
 } from "./droplets";
+export { createSplatCanvas, type SplatCanvas } from "./splat";

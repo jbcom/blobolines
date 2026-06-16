@@ -24,32 +24,34 @@ const EYE_OFFSET_X = 0.3;
 const EYE_OFFSET_Y = 0.08;
 
 function Eye({ side }: { side: 1 | -1 }) {
+  // Eyes draw on TOP of the opaque goo (depthTest off + high renderOrder) so the
+  // metaball body never occludes them; they read as painted onto the goo face.
   return (
-    <group position={[side * EYE_OFFSET_X, EYE_OFFSET_Y, 0]}>
+    <group position={[side * EYE_OFFSET_X, EYE_OFFSET_Y, 0]} renderOrder={10}>
       {/* dark bezel ring behind the sclera (lid — squashes on blink/squint) */}
-      <mesh position={[0, 0, 0.005]} name={`lid-${side}`}>
+      <mesh position={[0, 0, 0.005]} name={`lid-${side}`} renderOrder={10}>
         <sphereGeometry args={[0.2, 24, 24]} />
-        <meshBasicMaterial color={palette.eye.bezel} />
+        <meshBasicMaterial color={palette.eye.bezel} depthTest={false} />
       </mesh>
       {/* white sclera, pushed forward onto the face (lid) */}
-      <mesh position={[0, 0, 0.04]} name={`lid-${side}b`}>
+      <mesh position={[0, 0, 0.04]} name={`lid-${side}b`} renderOrder={11}>
         <sphereGeometry args={[0.18, 24, 24]} />
-        <meshStandardMaterial color={palette.eye.sclera} roughness={0.25} />
+        <meshBasicMaterial color={palette.eye.sclera} depthTest={false} />
       </mesh>
       {/* big black pupil */}
-      <mesh position={[0, 0, 0.18]} name={`pupil-${side}`}>
+      <mesh position={[0, 0, 0.18]} name={`pupil-${side}`} renderOrder={12}>
         <sphereGeometry args={[0.09, 20, 20]} />
-        <meshBasicMaterial color={palette.eye.pupil} />
+        <meshBasicMaterial color={palette.eye.pupil} depthTest={false} />
       </mesh>
       {/* glint */}
-      <mesh position={[0.03, 0.04, 0.25]}>
+      <mesh position={[0.03, 0.04, 0.25]} renderOrder={13}>
         <sphereGeometry args={[0.025, 8, 8]} />
-        <meshBasicMaterial color={palette.eye.glint} />
+        <meshBasicMaterial color={palette.eye.glint} depthTest={false} />
       </mesh>
       {/* tear droplet — revealed by the animator when tearing */}
-      <mesh position={[0, -0.18, 0.2]} name={`tear-${side}`} visible={false}>
+      <mesh position={[0, -0.18, 0.2]} name={`tear-${side}`} visible={false} renderOrder={12}>
         <sphereGeometry args={[0.05, 12, 12]} />
-        <meshStandardMaterial color={palette.eye.tear} transparent opacity={0.85} roughness={0.1} />
+        <meshBasicMaterial color={palette.eye.tear} transparent opacity={0.85} depthTest={false} />
       </mesh>
     </group>
   );

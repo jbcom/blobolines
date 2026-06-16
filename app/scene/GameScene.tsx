@@ -4,6 +4,7 @@ import { GRAVITY } from "@/sim/physics";
 import { useGameStore } from "@/state";
 import { BlobActor, PlayerBlob } from "./blob";
 import { CameraRig } from "./CameraRig";
+import { PostFX } from "./postfx";
 import { TrampolineField } from "./trampoline";
 import { Lighting, SkyDome } from "./world";
 
@@ -36,6 +37,8 @@ export function GameScene() {
           <BlobActor skin={skin} expression="idle" />
         )}
       </Suspense>
+
+      <PostFX />
     </>
   );
 }

@@ -2,6 +2,7 @@ import { useFrame, useThree } from "@react-three/fiber";
 import { useMemo, useRef } from "react";
 import type { Color, Group, Mesh, ShaderMaterial, Vector3 } from "three";
 import type { BlobSkin } from "@/core/types";
+import { packMetaballField } from "@/render/goo";
 import { MAX_GOO_BALLS, MetaballGooMaterial } from "@/render/materials";
 import type { Droplet } from "@/render/vfx";
 import { getBlobDiagnostics } from "@/state";
@@ -37,43 +38,32 @@ export function GooField({ skin, blobRadius, getDroplets }: GooFieldProps) {
     // Hull follows the blob so the raymarch stays in a small local volume.
     hull.position.set(bx, by, bz);
 
-    // Eyes ride on the goo front: sit at the blob center, nudged toward the camera on
-    // the horizontal plane, and yaw to face the camera while staying upright (so they
-    // never tilt off the face when the camera looks down).
+    // Eyes anchor at the blob's world center and face the camera; BlobEyes' own small
+    // forward z-offset lifts the eyeballs onto the goo face. (The goo metaball now renders
+    // at this same world center — see the u_balls world-space fix below — so the eyes sit
+    // on the face instead of floating where the body should be.)
     const eyes = eyesRef.current;
     if (eyes) {
-      const dx = camera.position.x - bx;
-      const dz = camera.position.z - bz;
-      const len = Math.hypot(dx, dz) || 1;
-      const push = blobRadius * 0.7;
-      eyes.position.set(bx + (dx / len) * push, by + blobRadius * 0.12, bz + (dz / len) * push);
-      eyes.rotation.set(0, Math.atan2(dx, dz), 0);
+      eyes.position.set(bx, by, bz);
+      eyes.lookAt(camera.position);
     }
 
     // Mutate the uniform arrays in place (drei holds them by reference; no allocs).
     const balls = material.uniforms.u_balls.value as Vector3[];
     const radii = material.uniforms.u_radii.value as Float32Array;
 
-    // Ball 0 = the blob body, at the hull origin (which is the blob).
-    balls[0].set(0, 0, 0);
-    radii[0] = blobRadius;
-    let count = 1;
-
-    const droplets = getDroplets();
-    for (let i = 0; i < droplets.length && count < MAX_GOO_BALLS; i++) {
-      const d = droplets[i];
-      // Only merge droplets near the blob; distant ones render as free particles.
-      const dx = d.position[0] - bx;
-      const dy = d.position[1] - by;
-      const dz = d.position[2] - bz;
-      if (dx * dx + dy * dy + dz * dz < 9) {
-        balls[count].set(dx, dy, dz);
-        radii[count] = d.radius;
-        count++;
-      }
+    // The fragment shader raymarches in WORLD space (ro = vWorldPos, the hull's world
+    // surface), so the metaball centers MUST be world-space too — packMetaballField keeps
+    // them world-space. (Packing blob-local offsets while the march is world-space pinned
+    // the whole field to world origin: the goo rendered on the floor and the eyes, placed
+    // at the blob, floated above it.)
+    const field = packMetaballField([bx, by, bz], blobRadius, getDroplets(), MAX_GOO_BALLS);
+    for (let i = 0; i < field.count; i++) {
+      balls[i].set(field.centers[i][0], field.centers[i][1], field.centers[i][2]);
+      radii[i] = field.radii[i];
     }
 
-    material.uniforms.u_count.value = count;
+    material.uniforms.u_count.value = field.count;
     material.uniforms.u_time.value = state.clock.elapsedTime;
     (material.uniforms.u_color.value as Color).set(palette.blob[skin]);
     (material.uniforms.u_rim.value as Color).set(palette.goo.rim);
