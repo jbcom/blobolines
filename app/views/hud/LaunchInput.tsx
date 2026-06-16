@@ -1,5 +1,5 @@
 import { useDrag } from "@use-gesture/react";
-import { AnimatePresence, motion } from "motion/react";
+import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { useState } from "react";
 import { computeAim, computeAirSteer } from "@/input";
 import { getBlobDiagnostics, requestLaunch, setAim, setAirSteer, useGameStore } from "@/state";
@@ -16,6 +16,9 @@ const MAX_CHARGE = 0.85;
 export function LaunchInput() {
   const sensitivity = useGameStore((s) => s.settings.slingshotSensitivity);
   const [charge, setCharge] = useState(0);
+  // Honor prefers-reduced-motion: drop the infinite pulse loops to a single static cue.
+  const reduced = useReducedMotion();
+  const repeat = reduced ? 0 : Number.POSITIVE_INFINITY;
 
   const bind = useDrag(({ movement: [mx, my], down, last }) => {
     const airborne = getBlobDiagnostics().airborne;
@@ -57,9 +60,9 @@ export function LaunchInput() {
           <motion.div
             aria-hidden
             initial={{ opacity: 0 }}
-            animate={{ opacity: [0.5, 0.85, 0.5] }}
+            animate={{ opacity: reduced ? 0.7 : [0.5, 0.85, 0.5] }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.7, repeat: Number.POSITIVE_INFINITY, ease: "easeInOut" }}
+            transition={{ duration: 0.7, repeat, ease: "easeInOut" }}
             className="absolute inset-0"
             style={{
               boxShadow: "inset 0 0 90px 18px var(--color-tramp-gold)",
@@ -81,9 +84,9 @@ export function LaunchInput() {
               <motion.span
                 aria-hidden
                 initial={{ scale: 0.4, opacity: 0 }}
-                animate={{ scale: [1, 1.15, 1], opacity: 1 }}
+                animate={{ scale: reduced ? 1 : [1, 1.15, 1], opacity: 1 }}
                 exit={{ opacity: 0 }}
-                transition={{ duration: 0.4, repeat: Number.POSITIVE_INFINITY }}
+                transition={{ duration: 0.4, repeat }}
                 className="font-display text-sm font-bold uppercase tracking-[0.2em] text-tramp-gold"
               >
                 Max!
@@ -93,8 +96,8 @@ export function LaunchInput() {
           <motion.div
             className="h-2 w-44 overflow-hidden rounded-full border border-border bg-bg/70"
             // Pulse the bar's scale when maxed so it visibly strains at full power.
-            animate={maxed ? { scaleY: [1, 1.5, 1] } : { scaleY: 1 }}
-            transition={{ duration: 0.4, repeat: maxed ? Number.POSITIVE_INFINITY : 0 }}
+            animate={maxed && !reduced ? { scaleY: [1, 1.5, 1] } : { scaleY: 1 }}
+            transition={{ duration: 0.4, repeat: maxed ? repeat : 0 }}
           >
             <div
               className="h-full rounded-full"

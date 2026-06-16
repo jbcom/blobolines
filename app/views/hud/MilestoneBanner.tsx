@@ -15,9 +15,10 @@ const BANNER_MS = 1600;
  * index so it fires exactly once per crossing, never per frame.
  */
 export function MilestoneBanner() {
-  const height = useGameStore((s) => s.run.height);
+  // Select the FLOORED milestone index, not raw height — the component then re-renders only
+  // when a 100m band is crossed (rarely), not on every per-frame height change.
+  const milestone = useGameStore((s) => Math.floor(Math.max(0, s.run.height) / MILESTONE_STEP));
   const phase = useGameStore((s) => s.phase);
-  const milestone = Math.floor(Math.max(0, height) / MILESTONE_STEP);
   const lastMilestone = useRef(0);
   const [shown, setShown] = useState<number | null>(null);
 

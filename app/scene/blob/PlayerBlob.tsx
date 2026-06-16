@@ -212,7 +212,8 @@ export function PlayerBlob() {
       dangerBeat.current -= dt;
       if (dangerBeat.current <= 0) {
         dangerBeat.current = 0.45 - danger * 0.33;
-        void vibrate(12 + Math.round(danger * 20));
+        // Respect the haptics setting (matches the landing-impact gate above).
+        if (useGameStore.getState().settings.haptics) void vibrate(12 + Math.round(danger * 20));
       }
     } else {
       dangerBeat.current = 0;
