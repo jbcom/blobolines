@@ -21,7 +21,16 @@ export interface GeneratedChunk {
   highestY: number;
 }
 
-const TYPE_BAG: TrampType[] = ["standard", "standard", "standard", "booster", "moving", "fragile"];
+// `super` is the rare bonus mega-launch pad — one slot so it's a treat, not the norm.
+const TYPE_BAG: TrampType[] = [
+  "standard",
+  "standard",
+  "standard",
+  "booster",
+  "moving",
+  "fragile",
+  "super",
+];
 
 /**
  * Generate trampolines (and crystals) from `fromY` up to at least `targetY`.

@@ -37,6 +37,10 @@ export const reboundMultiplier: Record<TrampType, number> = trampCfg.reboundMult
  *  a resting puddle instead of jittering forever (and stops the runaway clean-combo). */
 export const REBOUND_SETTLE_SPEED = trampCfg.reboundSettleSpeed;
 
+/** `super` bonus pads guarantee at least this rebound speed (m/s) — a big mega-launch
+ *  regardless of how gently the blob lands on them. */
+export const SUPER_MIN_REBOUND = trampCfg.superMinRebound;
+
 /**
  * Compute the impulse the pad receives from an impact, as a target depress depth and
  * tilt (radians) toward the relative hit point on the pad surface ([-0.5,0.5] each axis).

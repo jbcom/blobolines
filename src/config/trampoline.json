@@ -3,8 +3,10 @@
     "standard": 1.12,
     "booster": 1.8,
     "moving": 1.05,
-    "fragile": 1.05
+    "fragile": 1.05,
+    "super": 2.8
   },
+  "superMinRebound": 26,
   "reboundSettleSpeed": 3.2,
   "depressSpring": { "stiffness": 170, "damping": 26 },
   "tiltSpring": { "stiffness": 150, "damping": 22 },

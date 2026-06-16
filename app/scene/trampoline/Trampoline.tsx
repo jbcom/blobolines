@@ -11,6 +11,7 @@ import {
   impactTargets,
   REBOUND_SETTLE_SPEED,
   reboundMultiplier,
+  SUPER_MIN_REBOUND,
   stepTramp,
   type TrampState,
 } from "@/sim/trampoline";
@@ -152,7 +153,12 @@ export function Trampoline({ position, width, depth, type, onImpact }: Trampolin
           // each jitter re-fired this sensor). Below a settle threshold the pad does NOT
           // rebound — the goo comes to rest. Standard pads are slightly springy (>1) so a
           // clean drop sustains the climb; the player's slingshot adds the real energy.
-          const reboundSpeed = speed * reboundMultiplier[type];
+          // `super` bonus pads guarantee a big mega-launch regardless of how gently you
+          // land (the treat); all others scale with impact and can settle.
+          const reboundSpeed =
+            type === "super"
+              ? Math.max(speed * reboundMultiplier.super, SUPER_MIN_REBOUND)
+              : speed * reboundMultiplier[type];
           if (reboundSpeed >= REBOUND_SETTLE_SPEED) {
             reportRebound({ speed: reboundSpeed, type });
             playBounce(type);

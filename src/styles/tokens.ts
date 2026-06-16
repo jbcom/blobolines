@@ -17,6 +17,7 @@ export const palette = {
     gold: "#f2c14e",
     orange: "#f08a3c",
     green: "#6cc04a",
+    violet: "#9d6cf0",
   },
   sky: {
     // Cheerful, saturated daytime gradient (was a flat desaturated blue-grey that read
@@ -73,14 +74,15 @@ export const blobSkinColor: Record<BlobSkin, string> = {
   ink: palette.blob.ink,
 };
 
-/** Trampoline gameplay types → token color. */
-export type TrampType = "standard" | "booster" | "moving" | "fragile";
+/** Trampoline gameplay types → token color. `super` is the bonus mega-launch pad. */
+export type TrampType = "standard" | "booster" | "moving" | "fragile" | "super";
 
 export const trampColor: Record<TrampType, string> = {
   standard: palette.tramp.blue,
   booster: palette.tramp.orange,
   moving: palette.tramp.gold,
   fragile: palette.tramp.green,
+  super: palette.tramp.violet,
 };
 
 export const motion = {
