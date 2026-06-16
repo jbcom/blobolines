@@ -1,7 +1,7 @@
 import { useDrag } from "@use-gesture/react";
 import { useState } from "react";
 import { computeAim, computeAirSteer } from "@/input";
-import { getBlobDiagnostics, requestLaunch, setAirSteer, useGameStore } from "@/state";
+import { getBlobDiagnostics, requestLaunch, setAim, setAirSteer, useGameStore } from "@/state";
 
 /**
  * Full-screen input surface (PLAYING only). Dual-mode, matching the PoC:
@@ -31,6 +31,8 @@ export function LaunchInput() {
     // Slingshot on a pad: charge while dragging, launch on release.
     const aim = computeAim(mx, my, { maxDragDist: 140, sensitivity });
     setCharge(down ? aim.strength : 0);
+    // Publish the live aim so the in-scene trajectory preview shows where it'll go.
+    setAim(down && aim.strength > 0.05 ? { dir: aim.dir, charge: aim.strength } : null);
     if (last && aim.strength > 0.12) {
       requestLaunch({ dir: aim.dir, charge: aim.strength });
     }

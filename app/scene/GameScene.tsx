@@ -2,7 +2,7 @@ import { Physics } from "@react-three/rapier";
 import { Suspense } from "react";
 import { GRAVITY } from "@/sim/physics";
 import { useGameStore } from "@/state";
-import { BlobActor, PlayerBlob } from "./blob";
+import { BlobActor, PlayerBlob, TrajectoryPreview } from "./blob";
 import { CameraRig } from "./CameraRig";
 import { PostFX } from "./postfx";
 import { TrampolineField } from "./trampoline";
@@ -42,6 +42,7 @@ export function GameScene() {
           outside the Physics Suspense boundary so they can never unmount the blob/pads. */}
       {playing && <CrystalField />}
       {playing && <PowerUpField />}
+      {playing && <TrajectoryPreview />}
 
       <PostFX />
     </>

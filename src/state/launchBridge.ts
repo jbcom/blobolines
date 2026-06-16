@@ -24,6 +24,19 @@ export function consumeLaunch(): LaunchRequest | null {
   return r;
 }
 
+/** Live AIM preview while charging the slingshot (dir + charge), or null when not aiming.
+ *  Read each frame by the in-scene trajectory preview so the player sees where they'll go
+ *  BEFORE releasing — the targeting feedback the PoC had and this lacked. */
+let aim: LaunchRequest | null = null;
+
+export function setAim(req: LaunchRequest | null): void {
+  aim = req;
+}
+
+export function getAim(): LaunchRequest | null {
+  return aim;
+}
+
 /** Continuous mid-air steering force on the world X/Z plane (lateral accel). */
 let steer: readonly [number, number] = [0, 0];
 

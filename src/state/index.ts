@@ -3,12 +3,14 @@ export {
   consumeImpact,
   consumeLaunch,
   consumeRebound,
+  getAim,
   getAirSteer,
   type LaunchRequest,
   type ReboundRequest,
   reportImpact,
   reportRebound,
   requestLaunch,
+  setAim,
   setAirSteer,
 } from "./launchBridge";
 export { attachPersistence, hydrateStore } from "./persistence";
