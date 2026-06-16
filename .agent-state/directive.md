@@ -360,7 +360,12 @@ game — touch/drag is primary; keyboard is a minor desktop-only secondary, don'
 - [ ] Fake caustics / moving light dapple cast under the goo on the pad.
 - [ ] Render the free (separated) droplets — currently culled from the field and shown nowhere; instanced wet spheres so flung goo arcs+falls.
 - [ ] Controlled drip/stretch strands (teardrop necks) that thin then snap over ~0.2s — the signature WoG look (re-tune smin per-droplet stretch weight).
-- [ ] Launch burst VFX: expanding ring/flash + radial speed streaks at the pad on release.
+- [x] Launch burst VFX: LaunchRing — an additive expanding+fading ring blooms at the pad on
+      slingshot release (the in-world "pop"), pooled (4 slots, no per-frame alloc), driven off a
+      new launch-burst bridge (reportLaunchBurst/consumeLaunchBursts), size+brightness scaled by
+      charge. Joins the existing downward goo-droplet burst + the DOM screen flash. Browser
+      fixture proves it blooms real pixels on a reported burst. (Radial speed streaks are the
+      separate "speed lines" item.)
 - [ ] Landing impact rings on the membrane, sized by impact speed (ImpactRing).
 - [ ] Speed lines / motion streaks above a velocity threshold (PostFX/overlay).
 - [ ] Continuous tapered trail ribbon behind the airborne blob (igniting toward flame at high combo), replacing sparse trail dots.

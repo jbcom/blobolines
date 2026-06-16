@@ -11,6 +11,7 @@ import {
   BlobFollowLight,
   BlobShadow,
   CrystalField,
+  LaunchRing,
   Lighting,
   PowerUpField,
   SkyDome,
@@ -54,6 +55,7 @@ export function GameScene() {
       {playing && <BlobShadow />}
       {playing && <CrystalField />}
       {playing && <PowerUpField />}
+      {playing && <LaunchRing />}
       {playing && <TrajectoryPreview />}
 
       <PostFX />

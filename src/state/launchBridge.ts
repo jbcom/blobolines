@@ -60,6 +60,29 @@ export function consumeSplats(): SplatBurst[] {
   return out;
 }
 
+/** A launch "pop" event: an expanding ring/flash blooms at the pad on release. Reported by
+ *  the blob on a slingshot launch, drained by the LaunchRing VFX. `charge` [0,1] scales the
+ *  ring's size + brightness so a big charged launch reads bigger. */
+export interface LaunchBurstEvent {
+  position: readonly [number, number, number];
+  charge: number;
+}
+
+let launchBurstQueue: LaunchBurstEvent[] = [];
+
+export function reportLaunchBurst(ev: LaunchBurstEvent): void {
+  launchBurstQueue.push(ev);
+  if (launchBurstQueue.length > 4) launchBurstQueue = launchBurstQueue.slice(-4);
+}
+
+/** Drain pending launch-burst events (returns them once, then clears). */
+export function consumeLaunchBursts(): LaunchBurstEvent[] {
+  if (launchBurstQueue.length === 0) return launchBurstQueue;
+  const out = launchBurstQueue;
+  launchBurstQueue = [];
+  return out;
+}
+
 /** Continuous mid-air steering force on the world X/Z plane (lateral accel). */
 let steer: readonly [number, number] = [0, 0];
 
@@ -120,6 +143,7 @@ export function resetBridges(): void {
   aim = null;
   rebound = null;
   splatQueue = [];
+  launchBurstQueue = [];
   steer = [0, 0];
   landingImpact = 0;
 }

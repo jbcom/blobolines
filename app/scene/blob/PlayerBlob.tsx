@@ -18,6 +18,7 @@ import {
   flash,
   getAirSteer,
   isPowerupActive,
+  reportLaunchBurst,
   reportSplat,
   resetBridges,
   resetFlash,
@@ -151,6 +152,8 @@ export function PlayerBlob() {
       playLaunch(req.charge);
       // Kick a downward goo burst off the pad as the blob pops.
       launchBurst([p.x, p.y - BLOB.radius, p.z], req.charge);
+      // Expanding launch RING at the pad — the in-world "pop" that sells the slingshot release.
+      reportLaunchBurst({ position: [p.x, p.y - BLOB.radius, p.z], charge: req.charge });
       // Blue flash on a big charged launch (the bigger the charge, the brighter the pop).
       if (req.charge > 0.6) flash("blue", req.charge);
     } else if (airborne) {
