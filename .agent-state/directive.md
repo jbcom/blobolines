@@ -437,7 +437,15 @@ permeability (permeable one-way pads rejected by owner).
       tests next.
 
 ### Mechanics depth
-- [ ] Add a real SCORE system (height + crystals + combo + style), persisted high score separate from best height.
+- [x] Real SCORE system: pure computeScore (src/sim/score) weights height·heightPoints +
+      crystals·crystalPoints + a GEOMETRIC combo-style bonus (a long clean streak is worth
+      disproportionately more than the same total in short streaks). RunStats.score +
+      PlayerProgress.bestScore persisted SEPARATELY from bestHeight — a shorter crystal/combo-
+      rich run can set a score record without a height record (and the GameOver card celebrates
+      EITHER). Score is the headline stat on the game-over card (gold + "+N over best" on a
+      score record); share text leads with score. Tunable via config/score.json. Tests: score
+      weighting/monotonicity/super-linear-combo unit, store commit (score + separate records),
+      GameOver score-record-without-height-record browser fixture.
 - [ ] Crystal depth: tiers/bonus/multiplier, not flat +1; consumable/upgrade sinks beyond cosmetic skins.
 - [ ] Altitude-weighted pad type distribution (super/booster rarer low, more bonus variety high) — currently uniform at all heights.
 - [ ] Make the `moving` pad meaningful (rebound 1.05 is nearly a dead type) — give it a real role/mechanic.

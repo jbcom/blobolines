@@ -16,9 +16,12 @@ export function GameOver() {
   const crystals = useGameStore((s) => s.run.crystals);
   const maxCombo = useGameStore((s) => s.run.maxCombo);
   const recordDelta = useGameStore((s) => s.run.recordDelta);
+  const runScore = useGameStore((s) => s.run.score);
+  const scoreDelta = useGameStore((s) => s.run.scoreDelta);
   const lifetimeCrystals = useGameStore((s) => s.progress.crystals);
   const unlockedSkins = useGameStore((s) => s.progress.unlockedSkins);
   const best = useGameStore((s) => s.progress.bestHeight);
+  const bestScore = useGameStore((s) => s.progress.bestScore);
   const setPhase = useGameStore((s) => s.setPhase);
   const setCustomizerIntent = useGameStore((s) => s.setCustomizerIntent);
   const resetRun = useGameStore((s) => s.resetRun);
@@ -64,7 +67,7 @@ export function GameOver() {
     [],
   );
   const share = async () => {
-    const text = `I climbed ${height}m in Blobolines! 🫧`;
+    const text = `I scored ${runScore.toLocaleString()} (${height}m) in Blobolines! 🫧`;
     const url = "https://jbcom.github.io/blobolines/";
     try {
       if (typeof navigator !== "undefined" && navigator.share) {
@@ -80,10 +83,13 @@ export function GameOver() {
     }
   };
 
-  // commitBestHeight already merged this run into `best` before game-over, so on a new
-  // record best === height. `>=` is therefore correct: it's a record exactly when this
-  // run reached the (now-updated) best. A losing run has height < best.
-  const isRecord = height >= best && height > 0;
+  // commitBestHeight already merged this run into `best`/`bestScore` before game-over, so on a
+  // new record they equal this run's value. A record on EITHER axis (height OR composite
+  // score) earns the trophy card — a crystal/combo-rich short run can set a score record
+  // without a height record, and vice versa.
+  const heightRecord = height >= best && height > 0;
+  const scoreRecord = scoreDelta > 0;
+  const isRecord = heightRecord || scoreRecord;
   // Delta vs the all-time best: on a record show how far over the *previous* best we went;
   // on a losing run show how short. (best already includes this run, so a record's gap is
   // 0 against itself — fall back to a celebratory label instead of "+0m".)
@@ -134,8 +140,26 @@ export function GameOver() {
         style={isRecord ? { boxShadow: "0 0 32px var(--color-tramp-gold)" } : undefined}
       >
         <h2 id="gameover-title" className="font-display text-2xl font-bold text-cream">
-          {isRecord ? "New best climb!" : "Splat!"}
+          {isRecord ? "New record!" : "Splat!"}
         </h2>
+
+        {/* SCORE is the headline metric — big, gold on a score record, with the +over-best
+            flourish. Height/crystals/combo below are the breakdown that fed it. */}
+        <div className="flex flex-col items-center gap-0.5">
+          <span className="font-ui text-[11px] uppercase tracking-wider text-fg-subtle">Score</span>
+          <span
+            className={`font-display text-4xl font-bold tabular-nums ${
+              scoreRecord ? "text-tramp-gold" : "text-cream"
+            }`}
+          >
+            {runScore.toLocaleString()}
+          </span>
+          <span className="font-ui text-[11px] font-semibold text-fg-subtle">
+            {scoreRecord
+              ? `+${scoreDelta.toLocaleString()} over best`
+              : `best ${bestScore.toLocaleString()}`}
+          </span>
+        </div>
 
         <div className="flex w-full flex-col gap-2 font-ui text-sm">
           <Row label="Altitude" value={`${height} m`} accent="text-accent" />
@@ -144,7 +168,7 @@ export function GameOver() {
             value={`${best} m`}
             accent="text-tramp-gold"
             sub={
-              isRecord
+              heightRecord
                 ? recordDelta > 0
                   ? `+${recordDelta} m over best`
                   : "New record!"

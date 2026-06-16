@@ -17,6 +17,7 @@ import collectCfg from "./collect.json";
 import gooCfg from "./goo.json";
 import launchCfg from "./launch.json";
 import physicsCfg from "./physics.json";
+import scoreCfg from "./score.json";
 import trampolineCfg from "./trampoline.json";
 import worldCfg from "./world.json";
 
@@ -91,4 +92,16 @@ export const world = worldCfg as {
   maxRetainedTramps: number;
   maxCrystals: number;
   skinCost: Record<BlobSkin, number>;
+};
+
+export const score = scoreCfg as {
+  /** Points per metre of height climbed. */
+  heightPoints: number;
+  /** Points per crystal collected. */
+  crystalPoints: number;
+  /** Base points for the first combo tier of the run's best streak. */
+  comboStyleBase: number;
+  /** Geometric growth per combo tier, so a long clean streak is worth disproportionately
+   *  more than the same total spread over short streaks — style is rewarded. */
+  comboStyleGrowth: number;
 };

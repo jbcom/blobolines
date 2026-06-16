@@ -22,6 +22,9 @@ export type PowerUpType = "magnet" | "thruster";
 /** Persistent player progress. */
 export interface PlayerProgress {
   bestHeight: number;
+  /** All-time best composite SCORE (height + crystals + combo style), persisted separately
+   *  from bestHeight — you can set a score record on a shorter run with more crystals/combo. */
+  bestScore: number;
   crystals: number;
   skin: BlobSkin;
   unlockedSkins: BlobSkin[];

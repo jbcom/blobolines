@@ -80,15 +80,18 @@ function ensureReachable(prev: TrampolineSpec, pad: TrampolineSpec): TrampolineS
   // Still short: pull the pad straight toward prev until it's reachable, RE-AIMING at each step
   // (flat-or-cant) so prev always points at the pad's current position — a stale cant would
   // overshoot a pulled-in, near-overhead pad. Shrinking the gap monotonically raises
-  // reachability and bottoms out at miss=0, so this terminates with reaches() true.
+  // reachability and BOTTOMS OUT AT k=0 (the pad directly above prev: lateral miss = 0, and
+  // the vertical step always clears a flat launch at CLIMB_SPEED — max stepY ≈ 14.3, clearance
+  // vy²/2g ≈ 20.4), so this provably terminates with reaches() true. The loop MUST reach k=0
+  // (>= 0, not > 0) or that guaranteed base case is never tested.
   const dx = pad.position[0] - px;
   const dz = pad.position[2] - pz;
-  let k = 0.85;
   let result = pad;
-  while (k > 0) {
+  // Descending fractions ending EXACTLY at 0 — the k=0 (directly-overhead) base case must be
+  // evaluated, since that's the geometry the termination guarantee rests on.
+  for (const k of [0.85, 0.7, 0.55, 0.4, 0.25, 0.1, 0]) {
     result = { ...pad, position: [px + dx * k, pad.position[1], pz + dz * k] };
     if (aimAt(result)) break;
-    k -= 0.1;
   }
   return result;
 }

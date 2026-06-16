@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { world as worldCfg } from "@/config";
 import type { BlobSkin, GamePhase, GameSettings, PlayerProgress } from "@/core/types";
+import { computeScore } from "@/sim/score";
 import { palette } from "@/styles/tokens";
 
 /**
@@ -20,6 +21,10 @@ export interface RunStats {
   /** Metres this run beat the PREVIOUS all-time best by (0 if not a record). Set by
    *  commitBestHeight at run end so the game-over card can show "+N m over best". */
   recordDelta: number;
+  /** Composite score for this run (height + crystals + combo style). Set at run end. */
+  score: number;
+  /** Points this run beat the PREVIOUS best SCORE by (0 if not a score record). */
+  scoreDelta: number;
 }
 
 export interface GameState {
@@ -56,13 +61,22 @@ export const DEFAULT_SETTINGS: GameSettings = {
 
 export const DEFAULT_PROGRESS: PlayerProgress = {
   bestHeight: 0,
+  bestScore: 0,
   crystals: 0,
   skin: "blue",
   unlockedSkins: ["blue"],
   tutorialSeen: false,
 };
 
-const EMPTY_RUN: RunStats = { height: 0, crystals: 0, combo: 0, maxCombo: 0, recordDelta: 0 };
+const EMPTY_RUN: RunStats = {
+  height: 0,
+  crystals: 0,
+  combo: 0,
+  maxCombo: 0,
+  recordDelta: 0,
+  score: 0,
+  scoreDelta: 0,
+};
 
 export const useGameStore = create<GameState>((set) => ({
   phase: "menu",
@@ -94,9 +108,22 @@ export const useGameStore = create<GameState>((set) => ({
       const h = Math.floor(height);
       // Metres over the PREVIOUS best (before this commit overwrites it) — 0 if not a record.
       const recordDelta = Math.max(0, h - s.progress.bestHeight);
+      // Composite run score from the final height + this run's crystals + best combo, vs the
+      // PREVIOUS best score. Score is a SEPARATE record from height: a shorter, crystal/combo-
+      // rich run can beat the score best without beating the height best.
+      const runScore = computeScore({
+        height: h,
+        crystals: s.run.crystals,
+        maxCombo: s.run.maxCombo,
+      });
+      const scoreDelta = Math.max(0, runScore - s.progress.bestScore);
       return {
-        run: { ...s.run, recordDelta },
-        progress: { ...s.progress, bestHeight: Math.max(s.progress.bestHeight, h) },
+        run: { ...s.run, recordDelta, score: runScore, scoreDelta },
+        progress: {
+          ...s.progress,
+          bestHeight: Math.max(s.progress.bestHeight, h),
+          bestScore: Math.max(s.progress.bestScore, runScore),
+        },
       };
     }),
 
