@@ -30,6 +30,8 @@ export function PowerUpBadges() {
   const [active, setActive] = useState<Record<string, boolean>>({});
   // Bar fill DOM nodes keyed by type, written imperatively each frame (no React churn).
   const barRefs = useRef<Record<string, HTMLDivElement | null>>({});
+  // Last known on/off per type, so we only call setActive on an actual edge — not 60×/s.
+  const lastOn = useRef<Record<string, boolean>>({});
 
   useEffect(() => {
     let raf = 0;
@@ -37,7 +39,12 @@ export function PowerUpBadges() {
       for (const { key } of TYPES) {
         const remain = powerupRemaining(key);
         const on = remain > 0;
-        setActive((prev) => (prev[key] === on ? prev : { ...prev, [key]: on }));
+        // Flip React state only when the active edge actually changes (mount/unmount the
+        // badge); the bar itself updates imperatively every frame below.
+        if (lastOn.current[key] !== on) {
+          lastOn.current[key] = on;
+          setActive((prev) => ({ ...prev, [key]: on }));
+        }
         const bar = barRefs.current[key];
         if (bar) {
           const frac = Math.max(0, Math.min(1, remain / POWERUP_DURATION[key]));

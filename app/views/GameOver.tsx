@@ -55,6 +55,14 @@ export function GameOver() {
   // Share the run — native share sheet where available, clipboard fallback otherwise.
   // Both are user-initiated (this button); the text carries no personal data.
   const [shared, setShared] = useState(false);
+  const sharedTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Clear a pending "Copied!" reset on unmount so it can't setState after the card closes.
+  useEffect(
+    () => () => {
+      if (sharedTimer.current) clearTimeout(sharedTimer.current);
+    },
+    [],
+  );
   const share = async () => {
     const text = `I climbed ${height}m in Blobolines! 🫧`;
     const url = "https://jbcom.github.io/blobolines/";
@@ -64,7 +72,8 @@ export function GameOver() {
       } else if (typeof navigator !== "undefined" && navigator.clipboard) {
         await navigator.clipboard.writeText(`${text} ${url}`);
         setShared(true);
-        setTimeout(() => setShared(false), 1600);
+        if (sharedTimer.current) clearTimeout(sharedTimer.current);
+        sharedTimer.current = setTimeout(() => setShared(false), 1600);
       }
     } catch {
       // user cancelled the share sheet, or clipboard denied — no-op.
@@ -85,7 +94,9 @@ export function GameOver() {
   const nextSkin = (Object.entries(SKIN_COST) as [BlobSkin, number][])
     .filter(([id]) => !unlockedSkins.includes(id))
     .sort((a, b) => a[1] - b[1])[0];
-  const nextSkinPct = nextSkin ? Math.min(100, (lifetimeCrystals / nextSkin[1]) * 100) : 100;
+  // Guard the divide: a cost of 0 (test/config) would yield NaN/Infinity → treat as 100%.
+  const nextSkinPct =
+    nextSkin && nextSkin[1] > 0 ? Math.min(100, (lifetimeCrystals / nextSkin[1]) * 100) : 100;
 
   const toCustomizer = () => {
     setCustomizerIntent(true);
@@ -94,9 +105,14 @@ export function GameOver() {
     setPhase("menu");
   };
 
-  // Distinct celebratory chime once when a record card appears.
+  // Distinct celebratory chime exactly once when a record card appears (a ref guard so
+  // re-renders while isRecord stays true can't replay it).
+  const chimedRef = useRef(false);
   useEffect(() => {
-    if (isRecord) playChime();
+    if (isRecord && !chimedRef.current) {
+      chimedRef.current = true;
+      playChime();
+    }
   }, [isRecord]);
 
   return (
