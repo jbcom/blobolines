@@ -22,6 +22,8 @@ export function usePunchOnChange<T extends HTMLElement>(
   const flip = useRef(1);
   const { scale = 1.35, rotate = 0 } = opts;
 
+  // `value` is intentionally the trigger (we punch ON its change), not read in the body.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: value is the change trigger
   useEffect(() => {
     if (first.current) {
       first.current = false;

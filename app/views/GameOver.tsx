@@ -17,9 +17,24 @@ export function GameOver() {
   const resetWorld = useWorldStore((s) => s.reset);
   const replayRef = useRef<HTMLButtonElement>(null);
 
-  // Move focus to the primary action when the dialog appears (WCAG 2.4.3 focus order).
+  const toMenu = () => {
+    resetRun();
+    stopMusic();
+    setPhase("menu");
+  };
+
+  // Move focus to the primary action when the dialog appears (WCAG 2.4.3), and let Escape
+  // dismiss to the menu (expected for a modal). No focus TRAP is claimed (aria-modal is
+  // intentionally omitted) — during gameover the HUD is unmounted, so the only focusables
+  // are this dialog's own buttons; asserting aria-modal without enforcing it would lie.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: toMenu is stable for mount lifetime
   useEffect(() => {
     replayRef.current?.focus();
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") toMenu();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
   }, []);
 
   const replay = () => {
@@ -27,12 +42,6 @@ export function GameOver() {
     resetWorld();
     startMusic();
     setPhase("playing");
-  };
-
-  const toMenu = () => {
-    resetRun();
-    stopMusic();
-    setPhase("menu");
   };
 
   // commitBestHeight already merged this run into `best` before game-over, so on a new
@@ -45,7 +54,6 @@ export function GameOver() {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       role="dialog"
-      aria-modal="true"
       aria-labelledby="gameover-title"
       className="pointer-events-auto absolute inset-0 flex flex-col items-center justify-center gap-6 bg-bg/70 px-6 backdrop-blur-md"
     >

@@ -53,6 +53,10 @@ export function Dialog({
             <RadixDialog.Content
               forceMount
               data-testid={testId}
+              // Radix always emits aria-describedby={descriptionId}; when we render no
+              // Description that id dangles (axe aria-valid-attr-value). Clear it when no
+              // description is given; when one IS given, omit the prop so Radix wires it.
+              {...(ariaDescription ? {} : { "aria-describedby": undefined })}
               className="fixed left-1/2 top-1/2 z-[calc(var(--z-modal)+1)] w-[min(90vw,480px)] -translate-x-1/2 -translate-y-1/2 focus:outline-none"
             >
               <RadixDialog.Title asChild>

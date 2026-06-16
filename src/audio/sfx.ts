@@ -71,7 +71,8 @@ export function playPowerup(now = performance.now()): void {
     envelope: { attack: 0.003, decay: 0.12, sustain: 0, release: 0.08 },
   }).connect(out);
   const t = T.now();
-  ["C5", "E5", "G5", "C6"].forEach((n, i) => synth.triggerAttackRelease(n, 0.1, t + i * 0.06));
+  const arp = ["C5", "E5", "G5", "C6"];
+  for (let i = 0; i < arp.length; i++) synth.triggerAttackRelease(arp[i], 0.1, t + i * 0.06);
   setTimeout(() => synth.dispose(), 900);
 }
 

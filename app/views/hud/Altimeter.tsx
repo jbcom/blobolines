@@ -16,6 +16,7 @@ export function Altimeter() {
     // would machine-gun a screen reader. The aria-label lets a user poll the value; the
     // animated inner spans are aria-hidden so the per-frame churn isn't re-announced.
     <div
+      role="img"
       className="pointer-events-auto flex flex-col gap-1 rounded-xl border border-border bg-surface px-4 py-3 backdrop-blur-md"
       aria-label={`Altitude ${height} meters, best ${best} meters`}
     >

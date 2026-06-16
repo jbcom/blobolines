@@ -17,11 +17,13 @@ test("LaunchInput exposes the gameplay control as a labelled application region"
     .toBeInTheDocument();
 });
 
-test("CrystalCounter is a polite live region with the count as its accessible name", async () => {
+test("CrystalCounter is a polite live region announcing via visible text content", async () => {
   const screen = await render(<CrystalCounter />);
-  // role=status + aria-label carrying the value (the animated number is aria-hidden).
+  // role=status + aria-live=polite; the value lives in the region's TEXT (reliable to
+  // announce), not in a mutating aria-label. The sr-only "crystals" gives it context.
   const status = screen.getByRole("status");
   await expect.element(status).toBeInTheDocument();
   await expect.element(status).toHaveAttribute("aria-live", "polite");
-  await expect.element(status).toHaveAttribute("aria-label", expect.stringMatching(/crystals/));
+  await expect.element(status).not.toHaveAttribute("aria-label");
+  await expect.element(status).toHaveTextContent(/crystals/);
 });

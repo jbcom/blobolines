@@ -27,8 +27,10 @@ export function ComboBadge() {
           role="status"
           aria-live="polite"
           aria-atomic="true"
-          aria-label={`Clean combo ${multiplier} times`}
         >
+          {/* The announced content is a real sr-only text node (not a mutating
+              aria-label, which is unreliable); the visual badge below is decorative. */}
+          <span className="sr-only">Clean combo {multiplier} times</span>
           <span
             aria-hidden
             className="text-[10px] font-bold uppercase tracking-[0.18em] text-tramp-gold"

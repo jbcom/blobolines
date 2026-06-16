@@ -46,11 +46,9 @@ export function BlobCustomizer({
     <Dialog open={open} onOpenChange={onOpenChange} ariaLabel="Blob customizer" testId="customizer">
       <div className="flex items-center justify-between">
         <h2 className="font-display text-xl font-bold text-cream">Goo Customizer</h2>
-        <span
-          className="flex items-center gap-1 font-display text-sm text-blob-blue"
-          aria-label={`${crystals} crystals available`}
-        >
+        <span className="flex items-center gap-1 font-display text-sm text-blob-blue">
           <Gem className="size-4" strokeWidth={2.5} aria-hidden /> {crystals}
+          <span className="sr-only"> crystals available</span>
         </span>
       </div>
       <p className="mt-1 font-ui text-xs text-fg-subtle">
