@@ -67,3 +67,4 @@ pnpm-debug.log*
 .agent-state/.last-compaction
 .agent-state/batch.json
 .claude/scheduled_tasks.lock
+.agent-state/.last-stop-fingerprint
