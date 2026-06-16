@@ -35,6 +35,7 @@ export function SplatChunks({ skin }: { skin: BlobSkin }) {
         if (b && t && t.y > -500) {
           b.setTranslation({ x: t.x, y: -1000, z: t.z }, false);
           b.setLinvel({ x: 0, y: 0, z: 0 }, false);
+          b.setAngvel({ x: 0, y: 0, z: 0 }, false); // clear spin so a reused chunk isn't spinning
           b.sleep();
         }
       }

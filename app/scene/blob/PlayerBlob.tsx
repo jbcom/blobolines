@@ -89,7 +89,9 @@ export function PlayerBlob() {
       body.wakeUp();
       body.setLinvel({ x: v.x, y: bounce.speed, z: v.z }, true);
       const run = useGameStore.getState().run;
-      setRun({ combo: run.combo + 1 });
+      // Ice pads are slippery: a big bouncy launch but it BREAKS the clean-combo streak
+      // (risk/reward). Every other pad builds the combo.
+      setRun({ combo: bounce.type === "ice" ? 0 : run.combo + 1 });
     }
 
     // Launch: set velocity directly for a crisp, predictable pop.

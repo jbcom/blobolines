@@ -4,7 +4,8 @@
     "booster": 1.8,
     "moving": 1.05,
     "fragile": 1.05,
-    "super": 2.8
+    "super": 2.8,
+    "ice": 1.55
   },
   "superMinRebound": 26,
   "reboundSettleSpeed": 3.2,
