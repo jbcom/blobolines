@@ -378,16 +378,13 @@ Camera follow + shake, in-game deformation, wet glistening shader + color gradie
 Right now every trampoline is one shape + one flat angle → climbing is impossible/luck.
 DECISION: fix it with DIFFERENT PLATFORM CANTS AND SHAPES + golden-path placement — NOT
 permeability (permeable one-way pads rejected by owner).
-- [ ] Canted/angled trampoline pad type(s): a pad with a real tilt whose normal redirects
-      the bounce LATERALLY (not just straight up) — the building block of the climb. The
-      bounce should reflect off the tilted membrane so a blob is thrown sideways-and-up
-      toward the next pad.
+- [x] Canted/angled trampoline pad type(s): tilt redirects the bounce laterally (cant.ts +
+      ReboundRequest.normal + PlayerBlob launches along the normal + membrane leans).
 - [ ] Varied platform shapes + sizes (not all one rectangle): mix widths/depths and a few
       silhouettes so the tower reads varied and gives different bounce footprints.
-- [ ] GOLDEN-PATH placement rules in the world generator: emit a mix of horizontal + canted
-      pads under a GUARANTEE that for every pad there is at least one reachable next pad
-      (canted where needed) that bounces you onward — the generator proves a continuous
-      reachable route upward. This is THE navigability fix.
+- [x] GOLDEN-PATH placement rules in the world generator: far successors get the previous pad
+      canted toward them (forgiving start clamps into reach instead); generator test proves
+      every laterally-distant pad has a canted predecessor pointing at it. THE navigability fix.
 - [ ] Real-browser component test proving the climb: a blob launched up the generated tower
       can actually progress upward across canted pads (the playability safety net).
 - [ ] Better aim/curve control (mid-air steer / hook-shot) so a skilled player can also
