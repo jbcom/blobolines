@@ -211,7 +211,7 @@ add the PoC's ENERGY (shake, follow-light, bloom, speed FX, color), NOT neon-cyb
 - [x] Goo deformation in-game: squash/stretch wired into GooField (u_deform/u_center) — verified alive airborne (artifacts/launch-up.png); fixed the teardrop-merge by tightening MERGE_DIST_SQ + pinching off droplets that drop below the body (artifacts/start.png clean).
 - [~] Real color: type-tinted trampoline membranes + warm saturated sky DONE (verified); crystal/powerup color + richer grade still open.
 - [x] PR #5 merged + deployed live.
-- [ ] [WAIT] PR #6 (feat/goo-depth) CI green + bot threads addressed → squash-merge (monitor armed).
+- [x] PR #6 (feat/goo-depth) merged + deployed live (splat physics, ice pad, gradient, biome strata).
 - [x] Splat: bigger juicier World-of-Goo splat — wider spray (maxCount 28, MAX_GOO_BALLS 32), larger impact-scaled decal + satellite splats on hard hits (verified: large multi-lobe goo covering the pad).
 - [x] Aim/targeting feedback: in-scene dotted ballistic trajectory arc while charging (aim bridge + TrajectoryPreview, arc-length spacing) — verified readable aim line.
 - [x] Gameplay: off-pad death fixed — death now measured below highest LANDED pad (safeY), not airborne apex; a tall launch lands + survives (verified alt 37m no Splat).
