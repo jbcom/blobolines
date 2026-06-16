@@ -101,7 +101,20 @@ export function GooField({ skin, blobRadius, getDroplets }: GooFieldProps) {
     // same model as the hero blob, now driven into the in-game goo so it's alive (was a
     // rigid sphere). Spring toward the target so it bounces rather than snaps.
     const [vx, vy, vz] = diag.velocity;
-    const target = combineScale(speedStretch(vx, vy, vz), impactSquash(imp));
+    let target = combineScale(speedStretch(vx, vy, vz), impactSquash(imp));
+
+    // Puddle at rest: when grounded and slow, the goo isn't a hovering ball — it settles
+    // into a wide flat happy puddle on the pad. Blend toward a squat shape by how settled
+    // it is (slow + not airborne), and form back into a blob as it speeds up / launches.
+    const settled = diag.airborne ? 0 : 1 - Math.min(diag.speed / 4, 1);
+    if (settled > 0.01) {
+      const puddle = { x: 1.55, y: 0.42, z: 1.55 };
+      target = {
+        x: target.x + (puddle.x - target.x) * settled,
+        y: target.y + (puddle.y - target.y) * settled,
+        z: target.z + (puddle.z - target.z) * settled,
+      };
+    }
     const sk = 1 - Math.exp(-dt / 0.06);
     deform.current.x += (target.x - deform.current.x) * sk;
     deform.current.y += (target.y - deform.current.y) * sk;

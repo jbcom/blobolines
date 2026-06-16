@@ -30,11 +30,15 @@ const TILT_SPRING = { stiffness: 150, damping: 22 };
 
 /** Per-type launch rebound multiplier. */
 export const reboundMultiplier: Record<TrampType, number> = {
-  standard: 1,
+  standard: 1.12,
   booster: 1.8,
-  moving: 1,
+  moving: 1.05,
   fragile: 1.05,
 };
+
+/** Below this rebound speed (m/s) the pad does NOT bounce the blob — the goo settles into
+ *  a resting puddle instead of jittering forever (and stops the runaway clean-combo). */
+export const REBOUND_SETTLE_SPEED = 3.2;
 
 /**
  * Compute the impulse the pad receives from an impact, as a target depress depth and

@@ -9,6 +9,7 @@ import { createSplatCanvas } from "@/render/vfx";
 import {
   createTrampState,
   impactTargets,
+  REBOUND_SETTLE_SPEED,
   reboundMultiplier,
   stepTramp,
   type TrampState,
@@ -130,12 +131,17 @@ export function Trampoline({ position, width, depth, type, onImpact }: Trampolin
           splat.paint(relX + 0.5, relZ + 0.5, palette.blob[skin], size);
           splat.texture.needsUpdate = true;
           reportImpact(speed);
-          // Trampoline rebound: bounce back at impact speed × type multiplier, with a
-          // floor so even a gentle landing pops (the pad is springy). The blob's
-          // slingshot drag adds an extra charged launch on top.
-          const reboundSpeed = Math.max(speed, 8) * reboundMultiplier[type];
-          reportRebound({ speed: reboundSpeed, type });
-          playBounce(type);
+          // Trampoline rebound: bounce back at impact speed × type multiplier (NO minimum
+          // floor — a floor made every micro-bounce re-pop at 8 m/s, so the blob bounced
+          // forever, never settled into a resting puddle, and the clean-combo ran away as
+          // each jitter re-fired this sensor). Below a settle threshold the pad does NOT
+          // rebound — the goo comes to rest. Standard pads are slightly springy (>1) so a
+          // clean drop sustains the climb; the player's slingshot adds the real energy.
+          const reboundSpeed = speed * reboundMultiplier[type];
+          if (reboundSpeed >= REBOUND_SETTLE_SPEED) {
+            reportRebound({ speed: reboundSpeed, type });
+            playBounce(type);
+          }
           // Fragile pads start disintegrating after this bounce (gives one last launch).
           if (type === "fragile") breaking.current = true;
           onImpact?.(speed, relX, relZ);
