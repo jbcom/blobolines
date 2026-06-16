@@ -317,7 +317,9 @@ Camera follow + shake, in-game deformation, wet glistening shader + color gradie
       --ui-scale from its own corner origin. Verified live at 1568px wide AND 420px portrait
       (claude-in-chrome) — clean at both. Hud.layout browser fixture asserts the altimeter stays
       in the left third (not stretched center).
-- [ ] TitleScreen/GameOver respect safe-left/right in landscape/notch.
+- [x] TitleScreen/GameOver respect safe-left/right (+top/bottom on GameOver) via env-inset
+      padding, so neither tucks under a landscape notch / rounded corner. Dropped the redundant
+      fixed px-6. Desktop layout unchanged (insets 0) — verified live.
 - [ ] Modal max-height + internal scroll for short/landscape screens.
 - [ ] Goo-language pass on DOM chrome (organic corners/squish on CTA + badges).
 - [ ] Consolidate bespoke accent buttons onto the shared Button primitive.

@@ -127,7 +127,14 @@ export function GameOver() {
       animate={{ opacity: 1 }}
       role="dialog"
       aria-labelledby="gameover-title"
-      className="pointer-events-auto absolute inset-0 flex flex-col items-center justify-center gap-6 bg-bg/70 px-6 backdrop-blur-md"
+      className="pointer-events-auto absolute inset-0 flex flex-col items-center justify-center gap-6 bg-bg/70 backdrop-blur-md"
+      style={{
+        // Honor notch/rounded-corner insets so the card never sits under a landscape notch.
+        paddingLeft: "calc(var(--safe-left) + 1.5rem)",
+        paddingRight: "calc(var(--safe-right) + 1.5rem)",
+        paddingTop: "calc(var(--safe-top) + 1rem)",
+        paddingBottom: "calc(var(--safe-bottom) + 1rem)",
+      }}
     >
       <motion.div
         initial={{ scale: 0.85, y: 16 }}

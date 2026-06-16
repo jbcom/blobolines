@@ -44,8 +44,14 @@ export function TitleScreen() {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.5 }}
-      className="pointer-events-auto flex h-full w-full flex-col items-center justify-end gap-6 px-6"
-      style={{ paddingBottom: "calc(var(--safe-bottom) + 2.5rem)" }}
+      className="pointer-events-auto flex h-full w-full flex-col items-center justify-end gap-6"
+      style={{
+        // Respect the notch/rounded-corner insets in landscape too (not just the bottom) so
+        // the menu never tucks under a notch or the home indicator on a sideways phone.
+        paddingBottom: "calc(var(--safe-bottom) + 2.5rem)",
+        paddingLeft: "calc(var(--safe-left) + 1.5rem)",
+        paddingRight: "calc(var(--safe-right) + 1.5rem)",
+      }}
     >
       <div className="flex flex-col items-center text-center">
         <motion.h1
