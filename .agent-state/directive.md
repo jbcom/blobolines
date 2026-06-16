@@ -165,7 +165,7 @@ tokens own palette.
 
 ## M5 — Goo VFX & juice (the messy fluidity)
 - [x] Gooey splash droplet system on every collision (metaball droplets merge into the goo) — replaces PoC cubic sparks
-- [x] Splat decals (Canvas2D goo-splat painter, src/render/vfx/splat) — wire onto pads Phase 2
+- [x] Splat decals: Canvas2D goo-splat painter wired onto each pad as a per-trampoline CanvasTexture decal plane; accumulating skin-tinted smears on landing (browser-verified)
 - [x] Wet goo trail behind blob (distance-throttled droplet wake); launch burst (downward pad kick); combo flame (molten u_heat shader glow, browser-verified)
 - [x] @react-three/postprocessing stack: bloom + vignette + chromatic (speed-reactive) + color grade (app/scene/postfx); DOF/N8AO optional Phase 2
 - [x] haptics on mobile impacts (impact-scaled Heavy/Medium/Light on landing, setting-gated)
