@@ -32,9 +32,13 @@ export interface PlayerProgress {
 /** User-tunable settings. */
 export interface GameSettings {
   masterVolume: number;
+  /** SFX channel volume [0,1], independent of music. */
+  sfxVolume: number;
   musicEnabled: boolean;
   slingshotSensitivity: number;
   haptics: boolean;
+  /** Force reduced motion in-app (on top of the OS preference). */
+  reducedMotion: boolean;
 }
 
 /** Snapshot of the blob each frame (read by render + UI; written by sim). */

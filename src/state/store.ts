@@ -45,9 +45,11 @@ export interface GameState {
 
 export const DEFAULT_SETTINGS: GameSettings = {
   masterVolume: 0.8,
+  sfxVolume: 0.9,
   musicEnabled: true,
   slingshotSensitivity: 1,
   haptics: true,
+  reducedMotion: false,
 };
 
 export const DEFAULT_PROGRESS: PlayerProgress = {

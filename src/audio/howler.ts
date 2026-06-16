@@ -23,6 +23,8 @@ let ambient: Howl | null = null;
 let ambientBand = "";
 let started = false;
 let muted = false;
+/** SFX channel level [0,1], settable independently of music (settings.sfxVolume). */
+let sfxVolume = 1;
 
 function howlFor(path: string, loop: boolean, volume: number): Howl {
   let h = howls.get(path);
@@ -77,7 +79,14 @@ export function isAudioInitialized(): boolean {
 function playSfx(id: SfxId): void {
   const path = (audioCfg.sfx as Record<string, string>)[id];
   if (!path) return;
-  howlFor(path, false, vol.sfx).play();
+  const h = howlFor(path, false, vol.sfx);
+  h.volume(vol.sfx * sfxVolume); // apply the live SFX-channel level (config base × setting)
+  h.play();
+}
+
+/** Set the SFX channel volume [0,1], independent of music. */
+export function setSfxVolume(v: number): void {
+  sfxVolume = Math.max(0, Math.min(1, v));
 }
 
 // ── SFX API (same surface the game already calls) ──────────────────────────────

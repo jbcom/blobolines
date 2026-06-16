@@ -1,5 +1,5 @@
 import { Dialog, Slider, Switch } from "@app/components/ui";
-import { setMasterVolume, setMusicEnabled } from "@/audio";
+import { setMasterVolume, setMusicEnabled, setSfxVolume } from "@/audio";
 import { useGameStore } from "@/state";
 
 /**
@@ -35,6 +35,20 @@ export function SettingsModal({
           />
         </Row>
 
+        <Row label="SFX volume" value={`${Math.round(settings.sfxVolume * 100)}%`}>
+          <Slider
+            aria-label="SFX volume"
+            min={0}
+            max={1}
+            step={0.05}
+            value={[settings.sfxVolume]}
+            onValueChange={([v]) => {
+              update({ sfxVolume: v });
+              setSfxVolume(v);
+            }}
+          />
+        </Row>
+
         <Toggle
           label="Music"
           checked={settings.musicEnabled}
@@ -59,6 +73,12 @@ export function SettingsModal({
           label="Haptics (mobile)"
           checked={settings.haptics}
           onChange={(on) => update({ haptics: on })}
+        />
+
+        <Toggle
+          label="Reduce motion"
+          checked={settings.reducedMotion}
+          onChange={(on) => update({ reducedMotion: on })}
         />
       </div>
 

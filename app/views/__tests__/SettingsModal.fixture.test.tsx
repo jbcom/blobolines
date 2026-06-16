@@ -20,6 +20,7 @@ test("SettingsModal controls have accessible names", async () => {
   const screen = await render(<SettingsModal open onOpenChange={() => {}} />);
   await expect.element(screen.getByTestId("settings")).toBeVisible();
   await expect.element(screen.getByRole("slider", { name: "Master volume" })).toBeInTheDocument();
+  await expect.element(screen.getByRole("slider", { name: "SFX volume" })).toBeInTheDocument();
   await expect
     .element(screen.getByRole("slider", { name: "Slingshot sensitivity" }))
     .toBeInTheDocument();
@@ -27,4 +28,5 @@ test("SettingsModal controls have accessible names", async () => {
   await expect
     .element(screen.getByRole("switch", { name: "Haptics (mobile)" }))
     .toBeInTheDocument();
+  await expect.element(screen.getByRole("switch", { name: "Reduce motion" })).toBeInTheDocument();
 });
