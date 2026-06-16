@@ -71,7 +71,7 @@ export const MetaballGooMaterial = shaderMaterial(
       float w = sin(p.x * 4.0 + u_time * 9.0)
               + sin(p.y * 5.0 - u_time * 7.0)
               + sin(p.z * 4.5 + u_time * 11.0);
-      return w * (1.0 / 3.0) * u_wobble * 0.28;
+      return w * (1.0 / 3.0) * u_wobble * 0.18;
     }
 
     float field(vec3 p) {
@@ -103,6 +103,8 @@ export const MetaballGooMaterial = shaderMaterial(
       // above 1 and a full unscaled step would overstep the surface (holes in the goo).
       // Shorten the step by a bound on that gradient while wobble is active — full-speed
       // marching when cold (u_wobble == 0), so there's no idle perf cost.
+      // Divisor bounds the wobble term's spatial gradient (freqs 4/5/4.5, amp 0.18 →
+      // grad ≲ 0.81) so the marcher stays conservative and never oversteps the surface.
       float stepScale = 1.0 / (1.0 + u_wobble * 0.85);
       for (int i = 0; i < MAX_STEPS; i++) {
         vec3 p = ro + rd * t;

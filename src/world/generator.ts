@@ -50,7 +50,8 @@ export function generateUpTo(rng: Rng, fromY: number, targetY: number): Generate
 
     const type: TrampType = y < 25 ? "standard" : rng.pick(TYPE_BAG);
 
-    trampolines.push({ position: [x, y, z], width, depth, type });
+    // id = the pad's generation Y (strictly increasing across the whole tower → unique).
+    trampolines.push({ id: y, position: [x, y, z], width, depth, type });
 
     // ~60% of pads float a crystal above them.
     if (rng.next() > 0.38) {
@@ -79,5 +80,5 @@ export function generateUpTo(rng: Rng, fromY: number, targetY: number): Generate
 
 /** The fixed starting pad (large, centered, standard) the blob begins on. */
 export function starterPad(): TrampolineSpec {
-  return { position: [0, 0, 0], width: 7.5, depth: 7.5, type: "standard" };
+  return { id: 0, position: [0, 0, 0], width: 7.5, depth: 7.5, type: "standard" };
 }
