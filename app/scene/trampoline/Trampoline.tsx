@@ -65,11 +65,20 @@ export function Trampoline({ position, width, depth, type, onImpact }: Trampolin
     if (!g) return;
     const step = Math.min(dt, 1 / 30);
     spring.current = stepTramp(spring.current, target.current, step);
-    // The group is a child of the RigidBody, so it's in body-LOCAL space — the depress
-    // is the only Y offset; adding position[1] (the body's world Y) would double it.
-    g.position.y = spring.current.depress.value;
-    g.rotation.x = spring.current.tiltX.value;
-    g.rotation.z = spring.current.tiltZ.value;
+    const depress = spring.current.depress.value; // ≤ 0 on impact
+
+    // Real trampoline: the rigid FRAME stays put; only the MEMBRANE sheet dips inward
+    // under the blob's weight and tilts toward the contact, then springs back. (Sinking
+    // the whole pad read like the platform dropping, not a flexing membrane.)
+    const membrane = membraneRef.current;
+    if (membrane) {
+      membrane.position.y = THICKNESS / 2 + 0.02 + depress; // dip the sheet in
+      membrane.rotation.x = spring.current.tiltX.value;
+      membrane.rotation.z = spring.current.tiltZ.value;
+      // Flatten + widen as it stretches down (a sheet under load), proportional to dip.
+      const dip = Math.min(-depress / 5.4, 1); // 0..1
+      membrane.scale.set(1 + dip * 0.06, 1 - dip * 0.5, 1 + dip * 0.06);
+    }
     target.current.depress *= 0.86;
     target.current.tiltX *= 0.86;
     target.current.tiltZ *= 0.86;
