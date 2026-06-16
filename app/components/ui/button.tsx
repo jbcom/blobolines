@@ -27,10 +27,17 @@ const buttonVariants = cva(
         lg: "h-12 px-7 text-[length:var(--text-lg)]",
         icon: "h-10 w-10 rounded-[var(--radius-md)]",
       },
+      /** The big arcade CTA voice (display font, uppercase, wide tracking) the menus/cards
+       *  share. Off by default so generic buttons stay in the UI font; on for primary CTAs. */
+      cta: {
+        true: "font-[family-name:var(--font-display)] font-bold uppercase tracking-wider",
+        false: "",
+      },
     },
     defaultVariants: {
       variant: "default",
       size: "default",
+      cta: false,
     },
   },
 );

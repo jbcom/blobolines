@@ -1,4 +1,4 @@
-import { Dialog, Slider, Switch } from "@app/components/ui";
+import { Button, Dialog, Slider, Switch } from "@app/components/ui";
 import { useEffect, useState } from "react";
 import { setMasterVolume, setMusicEnabled, setSfxVolume } from "@/audio";
 import { ImpactStyle, impact } from "@/platform";
@@ -140,16 +140,17 @@ export function SettingsModal({
         </div>
       </div>
 
-      <button
-        type="button"
+      <Button
+        cta
+        size="lg"
         onClick={() => {
           setConfirmReset(false);
           onOpenChange(false);
         }}
-        className="mt-6 w-full rounded-xl bg-accent py-2.5 font-display font-bold uppercase tracking-wider text-bg"
+        className="mt-6 w-full"
       >
         Done
-      </button>
+      </Button>
     </Dialog>
   );
 }

@@ -1,3 +1,4 @@
+import { Button } from "@app/components/ui";
 import { Progress } from "@app/components/ui/progress";
 import { Check, RotateCcw, Share2 } from "lucide-react";
 import { motion } from "motion/react";
@@ -221,19 +222,10 @@ export function GameOver() {
           </button>
         )}
 
-        <button
-          ref={replayRef}
-          type="button"
-          onClick={replay}
-          className="flex w-full items-center justify-center gap-2 rounded-xl bg-accent py-3 font-display font-bold uppercase tracking-wider text-bg"
-        >
+        <Button ref={replayRef} cta size="lg" onClick={replay} className="w-full">
           <RotateCcw className="size-4" aria-hidden /> Climb again
-        </button>
-        <button
-          type="button"
-          onClick={share}
-          className="flex w-full items-center justify-center gap-2 rounded-xl border border-border py-2.5 font-display font-bold uppercase tracking-wider text-fg-muted hover:text-cream"
-        >
+        </Button>
+        <Button variant="surface" cta size="lg" onClick={share} className="w-full">
           {shared ? (
             <>
               <Check className="size-4" aria-hidden /> Copied!
@@ -243,7 +235,7 @@ export function GameOver() {
               <Share2 className="size-4" aria-hidden /> Share
             </>
           )}
-        </button>
+        </Button>
         <button
           type="button"
           onClick={toMenu}

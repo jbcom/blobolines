@@ -1,4 +1,4 @@
-import { Dialog } from "@app/components/ui";
+import { Button, Dialog } from "@app/components/ui";
 import { usePunchOnChange } from "@app/hooks";
 import { Check, Gem, Lock } from "lucide-react";
 import { useRef, useState } from "react";
@@ -192,13 +192,9 @@ export function BlobCustomizer({
         })}
       </div>
 
-      <button
-        type="button"
-        onClick={() => onOpenChange(false)}
-        className="mt-5 w-full rounded-xl bg-accent py-2.5 font-display font-bold uppercase tracking-wider text-bg"
-      >
+      <Button cta size="lg" onClick={() => onOpenChange(false)} className="mt-5 w-full">
         Done
-      </button>
+      </Button>
     </Dialog>
   );
 }

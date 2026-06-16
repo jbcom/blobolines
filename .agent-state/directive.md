@@ -327,7 +327,12 @@ Camera follow + shake, in-game deformation, wet glistening shader + color gradie
       in the primitive → all three modals benefit. SettingsModal fixture asserts the cap +
       scroll container.
 - [ ] Goo-language pass on DOM chrome (organic corners/squish on CTA + badges).
-- [ ] Consolidate bespoke accent buttons onto the shared Button primitive.
+- [x] Consolidate bespoke accent buttons onto the shared Button primitive: added a `cta`
+      variant (display font + uppercase + wide tracking — the arcade CTA voice) to button.tsx,
+      then migrated all 5 hand-rolled accent CTAs (SettingsModal/ManualModal/BlobCustomizer
+      "Done/Got it", GameOver "Climb again" + "Share" as surface) to <Button cta size="lg">,
+      and the TitleScreen hero Play to buttonVariants (kept as motion.button for the spring).
+      Verified live (PLAY + Settings Done/Reset render identically). One button identity now.
 - [ ] anime.js squish-stretch on title Play press.
 - [ ] Reduced-motion guards on every new flourish (static cue fallback).
 

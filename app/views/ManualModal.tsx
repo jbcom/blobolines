@@ -1,4 +1,4 @@
-import { Dialog } from "@app/components/ui";
+import { Button, Dialog } from "@app/components/ui";
 import { Magnet, MoveVertical, Rocket, Target } from "lucide-react";
 
 /**
@@ -54,13 +54,9 @@ export function ManualModal({
         ))}
       </div>
 
-      <button
-        type="button"
-        onClick={() => onOpenChange(false)}
-        className="mt-6 w-full rounded-xl bg-accent py-2.5 font-display font-bold uppercase tracking-wider text-bg"
-      >
+      <Button cta size="lg" onClick={() => onOpenChange(false)} className="mt-6 w-full">
         Got it
-      </button>
+      </Button>
     </Dialog>
   );
 }

@@ -1,7 +1,9 @@
+import { buttonVariants } from "@app/components/ui";
 import { HelpCircle, Palette, Play, Settings } from "lucide-react";
 import { motion } from "motion/react";
 import { useEffect, useState } from "react";
 import { initAudio, startMusic } from "@/audio";
+import { cn } from "@/lib/utils";
 import { useGameStore, useWorldStore } from "@/state";
 import { BlobCustomizer } from "./BlobCustomizer";
 import { ManualModal } from "./ManualModal";
@@ -67,13 +69,18 @@ export function TitleScreen() {
         </p>
       </div>
 
+      {/* The hero Play CTA reuses the shared button's variant styling (buttonVariants) so it
+          matches the modal/card CTAs, but stays a motion.button for the spring hover/tap. */}
       <motion.button
         type="button"
         onClick={play}
         whileTap={{ scale: 0.94 }}
         whileHover={{ scale: 1.04 }}
         transition={{ type: "spring", stiffness: 400, damping: 18 }}
-        className="flex items-center gap-3 rounded-2xl bg-accent px-10 py-4 font-display text-xl font-bold uppercase tracking-wider text-bg shadow-[var(--glow-blue)]"
+        className={cn(
+          buttonVariants({ variant: "default", size: "lg", cta: true }),
+          "gap-3 rounded-2xl px-10 py-4 text-xl",
+        )}
       >
         Play <Play className="size-5 fill-current" aria-hidden />
       </motion.button>
