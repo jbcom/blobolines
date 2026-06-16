@@ -183,7 +183,8 @@ tokens own palette.
 
 ## M8 — Mobile & ship
 - [x] Pages live & app RUNS (Phase 1, screenshot-verified); Android assembleDebug green in CI
-- [ ] Safe-area/touch tuning + Pixel-5a 60fps perf pass (metaball raymarch budget) — Phase 2
+- [x] Pixel-5a 60fps perf pass: profiled at 6x CPU throttle — raymarch is cheap (p50 8.3ms); bounded the trampoline render window (was unbounded → climb spikes), p95 158ms→16.9ms. Wobble amp tuned to keep march budget flat.
+- [ ] Safe-area/touch tuning — Phase 2
 - [ ] Quality pass: a11y, error states, perf budget — Phase 2
 
 ## M9 — Docs (pillar + agentic + HADS)
