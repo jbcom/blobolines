@@ -83,21 +83,12 @@ importers:
       howler:
         specifier: ^2.2.4
         version: 2.2.4
-      koota:
-        specifier: ^0.6.6
-        version: 0.6.6(@types/react@19.2.17)(react@19.2.7)
       lucide-react:
         specifier: ^1.18.0
         version: 1.18.0(react@19.2.7)
-      maath:
-        specifier: ^0.10.8
-        version: 0.10.8(@types/three@0.184.1)(three@0.184.0)
       motion:
         specifier: ^12.40.0
         version: 12.40.0(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
-      n8ao:
-        specifier: ^1.10.2
-        version: 1.10.2(postprocessing@6.39.1(three@0.184.0))(three@0.184.0)
       postprocessing:
         specifier: ^6.39.1
         version: 6.39.1(three@0.184.0)
@@ -113,12 +104,6 @@ importers:
       three:
         specifier: ^0.184.0
         version: 0.184.0
-      three-bvh-csg:
-        specifier: ^0.0.18
-        version: 0.0.18(three-mesh-bvh@0.9.10(three@0.184.0))(three@0.184.0)
-      three-mesh-bvh:
-        specifier: ^0.9.10
-        version: 0.9.10(three@0.184.0)
       zod:
         specifier: ^4.3.0
         version: 4.4.3
@@ -1452,17 +1437,6 @@ packages:
     resolution: {integrity: sha512-o+NO+8WrRiQEE4/7nwRJhN1HWpVmJm511pBHUxPLtp0BUISzlBplORYSmTclCnJvQq2tKu/sgl3xVpkc7ZWuQQ==}
     engines: {node: '>=6'}
 
-  koota@0.6.6:
-    resolution: {integrity: sha512-Fn8lSooH3u9TIP+eAMugFrOju40Ec70+sB7x1eZBB3H0Lki2hyIbFAodk3NDB/RIRzoMs54O4422BVN6SbtWfw==}
-    peerDependencies:
-      '@types/react': '>=18.0.0'
-      react: '>=18.0.0'
-    peerDependenciesMeta:
-      '@types/react':
-        optional: true
-      react:
-        optional: true
-
   lie@3.3.0:
     resolution: {integrity: sha512-UaiMJzeWRlEujzAuw5LokY1L5ecNQYZKfmyZ9L7wDHb/p5etKaxXhohBcrw0EYby+G/NA52vRSN4N39dxHAIwQ==}
 
@@ -1874,19 +1848,8 @@ packages:
     resolution: {integrity: sha512-56adEpPMouktRlBLXiaYFFzZ/3+JXa8P9n7WbR+ibIjtviN55mEaOkiysCnPnWm+7kkui1Dn8J9l+g6zV8731w==}
     engines: {node: '>=18'}
 
-  three-bvh-csg@0.0.18:
-    resolution: {integrity: sha512-M3GCZMmGFgASGuDf+YMamM83nVlD/vdwzVHcYbFxgW+g1S7/nKPiuY00YVHOMbjmJPh8mLevGZL65ItHUuGt2w==}
-    peerDependencies:
-      three: '>=0.179.0'
-      three-mesh-bvh: '>=0.9.7'
-
   three-mesh-bvh@0.8.3:
     resolution: {integrity: sha512-4G5lBaF+g2auKX3P0yqx+MJC6oVt6sB5k+CchS6Ob0qvH0YIhuUk1eYr7ktsIpY+albCqE80/FVQGV190PmiAg==}
-    peerDependencies:
-      three: '>= 0.159.0'
-
-  three-mesh-bvh@0.9.10:
-    resolution: {integrity: sha512-UOlTgPIeqUURcwaG8knxvBaruwZlC4X3/WSHEFO7rYvMVv/YNUrkfFEszvfj36pXV88dCHoHNnIp0PifkirnTQ==}
     peerDependencies:
       three: '>= 0.159.0'
 
@@ -3365,11 +3328,6 @@ snapshots:
 
   kleur@4.1.5: {}
 
-  koota@0.6.6(@types/react@19.2.17)(react@19.2.7):
-    optionalDependencies:
-      '@types/react': 19.2.17
-      react: 19.2.7
-
   lie@3.3.0:
     dependencies:
       immediate: 3.0.6
@@ -3732,16 +3690,7 @@ snapshots:
       minizlib: 3.1.0
       yallist: 5.0.0
 
-  three-bvh-csg@0.0.18(three-mesh-bvh@0.9.10(three@0.184.0))(three@0.184.0):
-    dependencies:
-      three: 0.184.0
-      three-mesh-bvh: 0.9.10(three@0.184.0)
-
   three-mesh-bvh@0.8.3(three@0.184.0):
-    dependencies:
-      three: 0.184.0
-
-  three-mesh-bvh@0.9.10(three@0.184.0):
     dependencies:
       three: 0.184.0
 

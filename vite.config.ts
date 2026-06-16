@@ -43,15 +43,15 @@ export default defineConfig({
             // WASM relative-URL module graph stays intact (splitting it 404s the .wasm
             // in the production build and Physics suspends forever). Matches will-it-blow.
             if (
-              /[\\/](three|@react-three[\\/](fiber|drei|rapier)|@dimforge[\\/]rapier3d-compat|three-bvh-csg|three-mesh-bvh)[\\/]/.test(
+              /[\\/](three|@react-three[\\/](fiber|drei|rapier)|@dimforge[\\/]rapier3d-compat)[\\/]/.test(
                 id,
               )
             )
               return "three";
-            if (/[\\/](@react-three[\\/]postprocessing|postprocessing|n8ao)[\\/]/.test(id))
+            if (/[\\/](@react-three[\\/]postprocessing|postprocessing)[\\/]/.test(id))
               return "postprocessing";
-            if (/[\\/]tone[\\/]/.test(id)) return "audio";
-            if (/[\\/](react|react-dom|koota|zod|motion)[\\/]/.test(id)) return "vendor";
+            if (/[\\/]howler[\\/]/.test(id)) return "audio";
+            if (/[\\/](react|react-dom|zod|motion)[\\/]/.test(id)) return "vendor";
           }
           return undefined;
         },
