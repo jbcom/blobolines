@@ -19,6 +19,9 @@ export interface GeneratedChunk {
   powerups: PowerUpSpec[];
   /** Highest Y generated so far (feed back as `fromY` next call). */
   highestY: number;
+  /** Last pad placed — feed back as `prevPad` next call so the golden-path cant can reach
+   *  ACROSS chunk boundaries (otherwise the first pad of each chunk could be unreachable). */
+  lastPad: TrampolineSpec | null;
 }
 
 // `super` is the rare bonus mega-launch pad — one slot so it's a treat, not the norm.
@@ -43,13 +46,19 @@ const TYPE_BAG: TrampType[] = [
  *  has a launch that carries the blob onward. Below this, a flat pad + air-steer suffices. */
 const CANT_REACH = 4.5;
 
-export function generateUpTo(rng: Rng, fromY: number, targetY: number): GeneratedChunk {
+export function generateUpTo(
+  rng: Rng,
+  fromY: number,
+  targetY: number,
+  prevPad: TrampolineSpec | null = null,
+): GeneratedChunk {
   const trampolines: TrampolineSpec[] = [];
   const crystals: Vec3[] = [];
   const powerups: PowerUpSpec[] = [];
   let y = fromY;
-  /** Previous pad, so we can cant it toward this one (golden-path reachability). */
-  let prev: TrampolineSpec | null = null;
+  /** Previous pad, so we can cant it toward this one (golden-path reachability). Threaded in
+   *  from the prior chunk's lastPad so canting reaches across the chunk boundary. */
+  let prev: TrampolineSpec | null = prevPad;
 
   while (y < targetY) {
     const stepY = 7.5 + rng.next() * 6.8;
@@ -134,7 +143,7 @@ export function generateUpTo(rng: Rng, fromY: number, targetY: number): Generate
     }
   }
 
-  return { trampolines, crystals, powerups, highestY: y };
+  return { trampolines, crystals, powerups, highestY: y, lastPad: prev };
 }
 
 /** The fixed starting pad (large, centered, standard) the blob begins on. */

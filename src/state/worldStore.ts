@@ -17,6 +17,9 @@ interface WorldState {
   crystals: Vec3[];
   powerups: PowerUpSpec[];
   highestY: number;
+  /** Last pad placed — threaded into the next generateUpTo so the golden-path cant reaches
+   *  across chunk boundaries (no unreachable pad at the seam). */
+  lastPad: TrampolineSpec | null;
   rng: Rng;
 
   /** Reset to a fresh tower for a new run (optionally with a given seed). */
@@ -40,13 +43,16 @@ function tail<T>(list: T[], max: number): T[] {
 
 function freshTower(seed: number) {
   const rng = createRng(seed);
-  const chunk = generateUpTo(rng, 0, INITIAL_TARGET);
+  const start = starterPad();
+  // Thread the starter pad in as prev so the first generated pad is reachable from it too.
+  const chunk = generateUpTo(rng, 0, INITIAL_TARGET, start);
   return {
     rng,
-    trampolines: [starterPad(), ...chunk.trampolines],
+    trampolines: [start, ...chunk.trampolines],
     crystals: chunk.crystals,
     powerups: chunk.powerups,
     highestY: chunk.highestY,
+    lastPad: chunk.lastPad,
   };
 }
 
@@ -63,9 +69,11 @@ export const useWorldStore = create<WorldState>((set, get) => ({
   },
 
   ensureHeight: (targetY) => {
-    const { highestY, rng, trampolines, crystals, powerups } = get();
+    const { highestY, rng, trampolines, crystals, powerups, lastPad } = get();
     if (targetY <= highestY) return;
-    const chunk = generateUpTo(rng, highestY, targetY);
+    // Thread lastPad in so the first pad of this chunk gets a canted predecessor if it lands
+    // far — no unreachable pad at the chunk seam.
+    const chunk = generateUpTo(rng, highestY, targetY, lastPad);
     // Retain only the recent tail of each list — entries far below are unreachable (the
     // blob dies after falling a fixed distance), so they'd only leak memory on a long
     // climb. Trampolines are also render-windowed; this bounds the underlying store too.
@@ -74,6 +82,7 @@ export const useWorldStore = create<WorldState>((set, get) => ({
       crystals: [...crystals, ...chunk.crystals],
       powerups: [...powerups, ...chunk.powerups],
       highestY: chunk.highestY,
+      lastPad: chunk.lastPad,
     });
   },
 }));

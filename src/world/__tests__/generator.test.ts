@@ -43,8 +43,29 @@ describe("world generator", () => {
   it("can extend incrementally from a prior height", () => {
     const rng = createRng(7);
     const first = generateUpTo(rng, 0, 100);
-    const second = generateUpTo(rng, first.highestY, first.highestY + 100);
+    const second = generateUpTo(rng, first.highestY, first.highestY + 100, first.lastPad);
     expect(second.trampolines[0]?.position[1]).toBeGreaterThan(first.highestY);
+  });
+
+  // Cross-chunk reachability: threading lastPad lets the cant reach across the seam, so the
+  // first pad of the next chunk isn't stranded when it lands far from the prior chunk's last.
+  it("cants across the chunk seam (threaded lastPad)", () => {
+    const rng = createRng("seam");
+    const first = generateUpTo(rng, 0, 100);
+    const second = generateUpTo(rng, first.highestY, first.highestY + 100, first.lastPad);
+    const a = first.lastPad;
+    const b = second.trampolines[0];
+    expect(a).not.toBeNull();
+    if (a && b) {
+      const lateral = Math.hypot(b.position[0] - a.position[0], b.position[2] - a.position[2]);
+      if (lateral > 4.5) {
+        // The seam pad is far → the prior chunk's last pad must now be canted toward it.
+        expect(a.type).toBe("canted");
+        expect(a.cant).toBeDefined();
+      }
+    }
+    // Sanity: lastPad is exposed on every chunk for threading.
+    expect(second.lastPad).not.toBeNull();
   });
 
   it("spawns power-ups (magnet/thruster) only above the forgiving start", () => {

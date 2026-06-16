@@ -198,12 +198,14 @@ export function Trampoline({ position, width, depth, type, cant, onImpact }: Tra
             } else if (type === "wobbler") {
               // Unstable: the pad TIPS toward where you landed, so an off-center hit deflects
               // the bounce that way (risk/reward — hit center for a clean launch). Tilt by the
-              // hit offset, scaled to the configured max tilt.
+              // hit offset, scaled to the configured max tilt. Explicitly normalize so the
+              // launch speed is never inflated at extreme corner hits / large tilt configs.
               const s = Math.sin(WOBBLER_MAX_TILT);
               const lx = relX * 2 * s;
               const lz = relZ * 2 * s;
-              const up = Math.sqrt(Math.max(0.1, 1 - lx * lx - lz * lz));
-              normal = [lx, up, lz];
+              const up = Math.sqrt(Math.max(0.01, 1 - lx * lx - lz * lz));
+              const mag = Math.hypot(lx, up, lz) || 1;
+              normal = [lx / mag, up / mag, lz / mag];
             }
             reportRebound({ speed: reboundSpeed, type, normal });
             playBounce(type);
