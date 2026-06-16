@@ -63,4 +63,31 @@ describe("world generator", () => {
     expect(s.type).toBe("standard");
     expect(s.width).toBeGreaterThan(7);
   });
+
+  // Golden-path navigability: any pad whose successor is laterally far away must be CANTED
+  // toward that successor, so the bounce can actually carry the blob onward (the tower is
+  // provably climbable, not a grid of unreachable flat pads).
+  it("cants a pad toward a laterally-distant next pad (reachable chain)", () => {
+    const { trampolines } = generateUpTo(createRng("climb"), 0, 400);
+    let cantedCount = 0;
+    for (let i = 0; i < trampolines.length - 1; i++) {
+      const a = trampolines[i];
+      const b = trampolines[i + 1];
+      const lateral = Math.hypot(b.position[0] - a.position[0], b.position[2] - a.position[2]);
+      if (lateral > 4.5) {
+        // Far successor → this pad must be canted toward it.
+        expect(a.type).toBe("canted");
+        expect(a.cant).toBeDefined();
+        const [cx, cz] = a.cant ?? [0, 0];
+        const dx = b.position[0] - a.position[0];
+        const dz = b.position[2] - a.position[2];
+        // Cant points toward the successor (positive dot with the offset) + is a unit vec.
+        expect(cx * dx + cz * dz).toBeGreaterThan(0);
+        expect(Math.hypot(cx, cz)).toBeCloseTo(1, 5);
+        cantedCount++;
+      }
+    }
+    // A spiral-placed tower should produce several canted pads.
+    expect(cantedCount).toBeGreaterThan(0);
+  });
 });
