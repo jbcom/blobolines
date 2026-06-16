@@ -1,12 +1,11 @@
 import { afterEach, beforeEach, expect, test } from "vitest";
 import { cleanup, render } from "vitest-browser-react";
-import { useGameStore } from "@/state";
+import { DEFAULT_PROGRESS, useGameStore } from "@/state";
 import { BlobCustomizer } from "../BlobCustomizer";
 
 beforeEach(() => {
-  useGameStore.setState({
-    progress: { ...useGameStore.getState().progress, unlockedSkins: ["blue"] },
-  });
+  // Reset the full progress object (not a merge) so state can't leak between tests.
+  useGameStore.setState({ progress: { ...DEFAULT_PROGRESS } });
 });
 afterEach(() => cleanup());
 

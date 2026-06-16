@@ -140,7 +140,11 @@ export function BlobCustomizer({
                       <span className="h-1 w-full overflow-hidden rounded-full bg-bg/70">
                         <span
                           className="block h-full rounded-full bg-blob-blue/70"
-                          style={{ width: `${Math.min(100, (crystals / cost) * 100)}%` }}
+                          // Clamp both ends: negative crystals (debug/state bugs) → 0%, not
+                          // a negative width.
+                          style={{
+                            width: `${Math.max(0, Math.min(100, (crystals / cost) * 100))}%`,
+                          }}
                         />
                       </span>
                     </>
