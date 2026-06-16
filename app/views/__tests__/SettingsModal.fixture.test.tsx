@@ -25,10 +25,8 @@ test("SettingsModal controls have accessible names", async () => {
     .element(screen.getByRole("slider", { name: "Slingshot sensitivity" }))
     .toBeInTheDocument();
   await expect.element(screen.getByRole("switch", { name: "Music" })).toBeInTheDocument();
-  await expect
-    .element(screen.getByRole("switch", { name: "Haptics (mobile)" }))
-    .toBeInTheDocument();
   await expect.element(screen.getByRole("switch", { name: "Reduce motion" })).toBeInTheDocument();
+  // Haptics switch is intentionally gated to touch devices, so it's not asserted here.
 });
 
 test("Reset progress requires a two-step confirm", async () => {

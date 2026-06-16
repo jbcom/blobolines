@@ -1,7 +1,14 @@
 import { Dialog, Slider, Switch } from "@app/components/ui";
 import { useState } from "react";
 import { setMasterVolume, setMusicEnabled, setSfxVolume } from "@/audio";
+import { ImpactStyle, impact } from "@/platform";
 import { useGameStore } from "@/state";
+
+/** Touch-capable device? Pointer-only desktops don't vibrate, so the haptics control is
+ *  pointless there — hide it. Guarded for SSR/test (no window). */
+const TOUCH_CAPABLE =
+  typeof window !== "undefined" &&
+  ("ontouchstart" in window || (navigator.maxTouchPoints ?? 0) > 0);
 
 /**
  * Settings — volumes, music/haptics/reduce-motion toggles, slingshot sensitivity, and a
@@ -74,11 +81,29 @@ export function SettingsModal({
           />
         </Row>
 
-        <Toggle
-          label="Haptics (mobile)"
-          checked={settings.haptics}
-          onChange={(on) => update({ haptics: on })}
-        />
+        {/* Haptics only on touch devices (a pointer-only desktop can't vibrate). When on,
+            a Test button fires a sample buzz so the player can feel the strength. */}
+        {TOUCH_CAPABLE && (
+          <div className="flex items-center justify-between">
+            <span className="font-semibold">Haptics</span>
+            <div className="flex items-center gap-3">
+              {settings.haptics && (
+                <button
+                  type="button"
+                  onClick={() => impact(ImpactStyle.Medium)}
+                  className="rounded-lg border border-border px-2.5 py-1 font-ui text-[11px] font-bold text-fg-subtle hover:text-cream"
+                >
+                  Test
+                </button>
+              )}
+              <Switch
+                checked={settings.haptics}
+                onCheckedChange={(on) => update({ haptics: on })}
+                aria-label="Haptics"
+              />
+            </div>
+          </div>
+        )}
 
         <Toggle
           label="Reduce motion"
