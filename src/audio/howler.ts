@@ -33,6 +33,37 @@ function howlFor(path: string, loop: boolean, volume: number): Howl {
   return h;
 }
 
+/** Pending fade-out-then-stop timers, keyed by audio path. Because Howls are cached and
+ *  reused, a delayed stop() from a previous fade-out can land *after* the same path has
+ *  been restarted (quick restart, rapid altitude crossings) and silence the live sound.
+ *  Tracking per path lets us cancel a stale stop before replaying that path. */
+const pendingStops = new Map<string, ReturnType<typeof setTimeout>>();
+
+/** Fade `howl` out and stop it after the fade, cancelable by a later play of `path`. */
+function scheduleStop(path: string, howl: Howl): void {
+  howl.fade(howl.volume(), 0, vol.themeFadeMs);
+  const t = setTimeout(() => {
+    howl.stop();
+    pendingStops.delete(path);
+  }, vol.themeFadeMs);
+  pendingStops.set(path, t);
+}
+
+/** Start (or restart) a looping bed at `path`, canceling any pending stop on that same
+ *  path so a stale fade-out timer can't kill the sound we're starting here. */
+function startBed(path: string, volume: number): Howl {
+  const pending = pendingStops.get(path);
+  if (pending) {
+    clearTimeout(pending);
+    pendingStops.delete(path);
+  }
+  const h = howlFor(path, true, 0);
+  h.mute(muted);
+  h.play();
+  h.fade(0, volume, vol.themeFadeMs);
+  return h;
+}
+
 /** Unlock the AudioContext from a user gesture (the PLAY click). */
 export async function initAudio(): Promise<void> {
   const ctx = Howler.ctx;
@@ -72,25 +103,18 @@ export function playPowerup(): void {
 export function startMusic(): void {
   if (started) return;
   started = true;
-  music = howlFor(audioCfg.music.play, true, 0);
-  music.play();
-  music.fade(0, vol.music, vol.themeFadeMs);
-  // Start the ground ambient bed.
+  // startBed applies the current `muted` state and cancels any stale stop on that path —
+  // without it a quick restart plays at full volume / gets killed by a leftover fade timer.
+  music = startBed(audioCfg.music.play, vol.music);
   ambientBand = "sky";
-  ambient = howlFor(audioCfg.ambient.sky, true, 0);
-  ambient.play();
-  ambient.fade(0, vol.ambient, vol.themeFadeMs);
+  ambient = startBed(audioCfg.ambient.sky, vol.ambient);
 }
 
 export function stopMusic(): void {
   if (!started) return;
   started = false;
-  for (const ch of [music, ambient]) {
-    if (!ch) continue;
-    ch.fade(ch.volume(), 0, vol.themeFadeMs);
-    const c = ch;
-    setTimeout(() => c.stop(), vol.themeFadeMs);
-  }
+  if (music) scheduleStop(audioCfg.music.play, music);
+  if (ambient) scheduleStop((audioCfg.ambient as Record<string, string>)[ambientBand], ambient);
   music = null;
   ambient = null;
   ambientBand = "";
@@ -101,16 +125,11 @@ export function setMusicAltitude(height: number): void {
   if (!started) return;
   const band = height > 650 ? "space" : "sky";
   if (band === ambientBand) return;
-  ambientBand = band;
+  const oldPath = (audioCfg.ambient as Record<string, string>)[ambientBand];
   const path = (audioCfg.ambient as Record<string, string>)[band];
-  if (ambient) {
-    ambient.fade(ambient.volume(), 0, vol.themeFadeMs);
-    const old = ambient;
-    setTimeout(() => old.stop(), vol.themeFadeMs);
-  }
-  ambient = howlFor(path, true, 0);
-  ambient.play();
-  ambient.fade(0, vol.ambient, vol.themeFadeMs);
+  ambientBand = band;
+  if (ambient) scheduleStop(oldPath, ambient);
+  ambient = startBed(path, vol.ambient);
 }
 
 // ── Settings ─────────────────────────────────────────────────────────────────
