@@ -66,21 +66,21 @@ export function TitleScreen() {
         <button
           type="button"
           onClick={() => setCustomizing(true)}
-          className="flex items-center gap-2 font-ui text-sm font-semibold text-fg-muted hover:text-cream"
+          className="-my-2 flex min-h-11 items-center gap-2 py-2 font-ui text-sm font-semibold text-fg-muted hover:text-cream"
         >
           <Palette className="size-4" aria-hidden /> Customize
         </button>
         <button
           type="button"
           onClick={() => setSettingsOpen(true)}
-          className="flex items-center gap-2 font-ui text-sm font-semibold text-fg-muted hover:text-cream"
+          className="-my-2 flex min-h-11 items-center gap-2 py-2 font-ui text-sm font-semibold text-fg-muted hover:text-cream"
         >
           <Settings className="size-4" aria-hidden /> Settings
         </button>
         <button
           type="button"
           onClick={() => setManualOpen(true)}
-          className="flex items-center gap-2 font-ui text-sm font-semibold text-fg-muted hover:text-cream"
+          className="-my-2 flex min-h-11 items-center gap-2 py-2 font-ui text-sm font-semibold text-fg-muted hover:text-cream"
         >
           <HelpCircle className="size-4" aria-hidden /> How to play
         </button>

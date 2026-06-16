@@ -18,6 +18,7 @@ export function Hud() {
         className="pointer-events-none flex h-full w-full flex-col p-4"
         style={{
           paddingTop: "calc(var(--safe-top) + 0.75rem)",
+          paddingBottom: "calc(var(--safe-bottom) + 0.75rem)",
           paddingLeft: "calc(var(--safe-left) + 1rem)",
           paddingRight: "calc(var(--safe-right) + 1rem)",
         }}
