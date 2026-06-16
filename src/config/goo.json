@@ -1,6 +1,9 @@
 {
-  "maxGooBalls": 32,
-  "mergeDistSq": 2.6,
+  "csg": {
+    "maxMerges": 6,
+    "blobSegments": 24,
+    "dropletDetail": 1
+  },
   "splash": {
     "countScale": 22,
     "maxCount": 28,
@@ -8,7 +11,5 @@
     "maxSpeed": 13,
     "minLife": 0.6,
     "maxLife": 1.4
-  },
-  "wobbleAmplitude": 0.18,
-  "raymarchSteps": 48
+  }
 }

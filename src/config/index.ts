@@ -68,8 +68,12 @@ export const collect = collectCfg as {
 };
 
 export const goo = gooCfg as {
-  maxGooBalls: number;
-  mergeDistSq: number;
+  /** three-bvh-csg merged-mesh goo (the one goo path — no fallback). */
+  csg: {
+    maxMerges: number;
+    blobSegments: number;
+    dropletDetail: number;
+  };
   splash: {
     countScale: number;
     maxCount: number;
@@ -78,8 +82,6 @@ export const goo = gooCfg as {
     minLife: number;
     maxLife: number;
   };
-  wobbleAmplitude: number;
-  raymarchSteps: number;
 };
 
 export const world = worldCfg as {

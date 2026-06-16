@@ -21,7 +21,7 @@ import {
   useGameStore,
   useWorldStore,
 } from "@/state";
-import { GooField } from "./GooField";
+import { GooCsg } from "./GooCsg";
 import { useDroplets } from "./useDroplets";
 
 /**
@@ -208,8 +208,9 @@ export function PlayerBlob() {
         <BallCollider args={[BLOB.radius]} />
       </RigidBody>
       {/* Goo skin lives in world space (follows the blob via the diagnostics bridge),
-          NOT as a physics child — it merges the blob with the live splash droplets. */}
-      <GooField skin={skin} blobRadius={BLOB.radius} getDroplets={getDroplets} />
+          NOT as a physics child — it merges the blob with the live splash droplets into
+          one continuous CSG mesh (real goo, not a ball). */}
+      <GooCsg skin={skin} blobRadius={BLOB.radius} getDroplets={getDroplets} />
     </>
   );
 }

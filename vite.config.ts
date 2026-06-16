@@ -21,6 +21,11 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src"),
       "@app": path.resolve(__dirname, "./app"),
     },
+    // three-bvh-csg attaches a BVH (geometry.boundsTree) and the Evaluator reads it back;
+    // if three resolves to two module instances, the BVH is written on one BufferGeometry
+    // prototype and read on the other → `Cannot read properties of null (reading 'bvhcast')`
+    // every frame. Force a single three instance so the BVH round-trips correctly.
+    dedupe: ["three"],
   },
   server: { port: 5173, host: true },
   preview: { port: 5173 },
@@ -28,6 +33,9 @@ export default defineConfig({
   // forever). Excluding it is the canonical fix (matches arcade-cabinet/will-it-blow).
   optimizeDeps: {
     exclude: ["@react-three/rapier", "@dimforge/rapier3d-compat"],
+    // Pre-bundle the CSG goo libs together with three so they share the SAME optimized
+    // three instance (see resolve.dedupe) — otherwise the BVH attach/read split breaks.
+    include: ["three", "three-bvh-csg", "three-mesh-bvh"],
   },
   build: {
     outDir: "dist",
