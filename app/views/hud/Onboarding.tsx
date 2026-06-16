@@ -1,12 +1,11 @@
 import { AnimatePresence, motion } from "motion/react";
 import { useEffect, useState } from "react";
-import { getAim, useGameStore } from "@/state";
+import { getAim, getBlobDiagnostics, useGameStore } from "@/state";
 
 /**
  * First-run coachmark over the launch surface: a looping drag-ghost (finger pulling back)
  * with "Drag back & release to fling". Shows only until the player's first real launch, then
- * marks the tutorial seen (persisted) so it never shows again. Polls the aim bridge to
- * detect the first drag — once they start aiming, the hint has done its job and fades.
+ * marks the tutorial seen (persisted) so it never shows again.
  */
 export function Onboarding() {
   const phase = useGameStore((s) => s.phase);
@@ -16,16 +15,25 @@ export function Onboarding() {
 
   const show = phase === "playing" && !tutorialSeen && !dismissed;
 
-  // Dismiss + persist on the first drag (aim becomes non-null). Poll at human cadence.
+  // Dismiss + persist once the player aims OR the blob leaves the ground. Checked per rAF
+  // frame (not a 150ms poll) so a quick flick — a drag+release under one poll interval that
+  // never leaves `aim` set long enough to sample — still dismisses via the airborne edge.
   useEffect(() => {
     if (!show) return;
-    const id = setInterval(() => {
-      if (getAim()) {
+    let raf = 0;
+    const startY = getBlobDiagnostics().position[1];
+    const tick = () => {
+      const diag = getBlobDiagnostics();
+      const launched = getAim() != null || diag.airborne || diag.position[1] > startY + 0.5;
+      if (launched) {
         setDismissed(true);
         markTutorialSeen();
+        return; // stop the loop
       }
-    }, 150);
-    return () => clearInterval(id);
+      raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
   }, [show, markTutorialSeen]);
 
   return (

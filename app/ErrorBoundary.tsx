@@ -6,25 +6,30 @@ interface Props {
 }
 
 interface State {
-  error: Error | null;
+  // A thrown value may be a non-Error (string/object) — keep it as unknown and coerce later.
+  error: unknown;
+  hasError: boolean;
 }
 
 /** Top-level error boundary so a render/scene crash shows a readable overlay
  *  instead of a blank canvas — important for the unattended build loop. */
 export class ErrorBoundary extends Component<Props, State> {
-  state: State = { error: null };
+  state: State = { error: null, hasError: false };
 
-  static getDerivedStateFromError(error: Error): State {
-    return { error };
+  static getDerivedStateFromError(error: unknown): State {
+    return { error, hasError: true };
   }
 
-  componentDidCatch(error: Error, info: ErrorInfo): void {
+  componentDidCatch(error: unknown, info: ErrorInfo): void {
     console.error(`[Blobolines:${this.props.source ?? "app"}]`, error, info.componentStack);
   }
 
   render(): ReactNode {
-    if (this.state.error) {
-      const msg = this.state.error.message;
+    if (this.state.hasError) {
+      // JS can throw non-Error values (strings, objects), so `.message` may be absent —
+      // coerce to a safe string before testing/displaying it.
+      const err = this.state.error;
+      const msg = err instanceof Error ? err.message : String(err);
       // WebGL context loss / Rapier-WASM init failures read as cryptic GL/wasm errors —
       // show a friendly cause for those instead of the raw message.
       const isGraphics = /webgl|context|wasm|rapier|gl_|shader/i.test(msg);

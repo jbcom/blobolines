@@ -13,10 +13,11 @@ export function LoadingScreen() {
 
   useEffect(() => {
     let raf = 0;
+    let mounted = true;
     let target = 35; // before any real checkpoint, creep toward a modest ceiling
     if (typeof document !== "undefined" && "fonts" in document) {
       document.fonts.ready.then(() => {
-        target = 80; // fonts done; the remaining unknown is WASM/Canvas (no clean hook)
+        if (mounted) target = 80; // fonts done; remaining unknown is WASM/Canvas (no hook)
       });
     } else {
       target = 80;
@@ -26,7 +27,10 @@ export function LoadingScreen() {
       raf = requestAnimationFrame(tick);
     };
     raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
+    return () => {
+      mounted = false;
+      cancelAnimationFrame(raf);
+    };
   }, []);
 
   return (
