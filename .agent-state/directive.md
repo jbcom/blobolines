@@ -221,11 +221,12 @@ add the PoC's ENERGY (shake, follow-light, bloom, speed FX, color), NOT neon-cyb
 - [x] Backdrop CHANGES with height: SkyDome lerps biome bands (ground→sky→upper-atmo→stratosphere→space→deep-space) from blob altitude (config/biomes.json). Verified ground band; lerp unit-tested.
 - [x] Trampoline COLOR by height: pad hue blends toward the biome mid-color with altitude (mixHex), so pads cool/darken into space with the backdrop.
 - [x] BONUS trampolines: added the violet SUPER mega-launch pad (guaranteed big boost). More bonus types can follow this pattern.
-- [ ] BONUS trampolines: additional new mechanics beyond super (e.g. redirect/ice/sticky) — Phase next.
-- [x] Powerup MODELS: rocket (Space Kit) + magnet (U-curve) GLBs from 3DLowPoly → public/assets/models, loaded via useGLTF w/ primitive Suspense fallback. Builds; in-scene capture pending (powerups spawn high).
-- [ ] WET look: nail it — balls feel too SOLID right now, need real wet/translucent/jiggly goo surface.
-- [ ] Splat pieces get REAL PHYSICS: droplets that splat off the blob should be their own physics bodies (bounce/roll/settle), not just kinematic particles.
-- [ ] World STRATA / BIOMES: proper layered strata — real biomes for different atmospheric + post-atmospheric height bands (ground → sky → upper atmosphere → space → beyond), each with its own look/palette/hazards.
+- [x] Powerup MODELS: rocket (Space Kit) + magnet (U-curve) GLBs from 3DLowPoly → public/assets/models, loaded via useGLTF w/ primitive Suspense fallback (self-contained re-export so no 404).
+- [x] WET look: dual-spec + subsurface + translucent wet shader (verified glistening). [next: color gradient]
+- [ ] [NEXT-BRANCH] BONUS trampolines: more mechanics beyond super (redirect/ice/sticky).
+- [ ] [NEXT-BRANCH] Splat pieces get REAL PHYSICS: droplets as their own Rapier bodies (bounce/roll/settle), not kinematic particles.
+- [ ] [NEXT-BRANCH] World STRATA / BIOMES geometry: real biome environment props/hazards per height band (backdrop colors done; geometry/strata next).
+- [ ] [NEXT-BRANCH] crystal/powerup color variety + blob color gradient across the body.
 
 ### M10c — the blob IS goo, not a globe (user feedback 2026-06-16, batch 3) — HIGH PRIORITY
 The single biggest "it's not a blob" issue: right now it's a solid matte-colored GLOBE.
@@ -234,10 +235,6 @@ A real Blobolines blob should:
   forms back into a blob as it speeds up. Also fixed the runaway auto-bounce (removed the
   rebound floor + settle threshold) so it actually comes to rest. Verified in harness.
   (Still to refine: lift puddle center so it sits ON the pad, not half-sunk.)
-- [ ] DEFORM toward the finger/drag direction when tapped+dragged — the goo stretches up
-  toward the pull (taffy/slime), gathering for the slingshot. Drag direction shapes it.
-- [ ] LAUNCH by FORMING into a cohesive blob — puddle gathers → rounds into a flying blob
-  on release, then deforms with flight (already have flight stretch).
 - [x] WET GLISTENING surface: dual specular (tight water hotspot + broad lobe + sheen),
   subsurface glow, translucent grazing edges — verified glistening in harness (was matte).
   (Still to refine: an actual color GRADIENT across the body, and drag-direction deform.)
@@ -246,6 +243,5 @@ A real Blobolines blob should:
 
 ### M10d — architecture (user feedback 2026-06-16, batch 4)
 - [x] All tunables moved to JSON in src/config, decomposed by domain (physics/blob/launch/
-  trampoline/collect/goo/world) + typed barrel; sim/render read bases so modifiers can
-  scale them. Behavior-preserving, 162 tests green.
-- [ ] Per change: drive harness, READ the capture, fix, repeat. Then PR.
+  trampoline/collect/goo/world/biomes) + typed barrel; sim/render read bases so modifiers
+  can scale them. Behavior-preserving, 166 tests green.
