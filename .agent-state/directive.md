@@ -224,7 +224,7 @@ add the PoC's ENERGY (shake, follow-light, bloom, speed FX, color), NOT neon-cyb
 - [x] Powerup MODELS: rocket (Space Kit) + magnet (U-curve) GLBs from 3DLowPoly → public/assets/models, loaded via useGLTF w/ primitive Suspense fallback (self-contained re-export so no 404).
 - [x] WET look: dual-spec + subsurface + translucent wet shader (verified glistening). [next: color gradient]
 - [ ] [feat/goo-depth] BONUS trampolines: more mechanics beyond super (redirect/ice/sticky).
-- [ ] [feat/goo-depth] Splat pieces get REAL PHYSICS: droplets as their own Rapier bodies (bounce/roll/settle), not kinematic particles.
+- [x] Splat pieces REAL PHYSICS: SplatChunks — a pooled set of Rapier rigid bodies flung from the contact on a hard landing that bounce/roll/settle on pads, then recycle. Verified in harness (chunks scattered + rolled on the pad).
 - [ ] [feat/goo-depth] World STRATA / BIOMES geometry: real biome environment props/hazards per height band (backdrop colors done; geometry/strata next).
 - [ ] [feat/goo-depth] crystal/powerup color variety + blob color gradient across the body.
 

@@ -12,6 +12,7 @@ import {
   consumeRebound,
   getAirSteer,
   isPowerupActive,
+  reportSplat,
   resetPowerups,
   setBlobDiagnostics,
   tickPowerups,
@@ -143,6 +144,10 @@ export function PlayerBlob() {
       if (p.y > safeY.current) safeY.current = p.y;
       // Fling a gooey splash from the contact point (just under the blob).
       splash([p.x, p.y - BLOB.radius, p.z], strength);
+      // On a meaningful impact, also fling REAL physics goo chunks that bounce/roll/settle
+      // on the pad (the kinematic splash above is the metaball merge; this is the physical
+      // mess). Gated so micro-bounces don't spawn bodies.
+      if (strength > 0.25) reportSplat({ position: [p.x, p.y - BLOB.radius, p.z], strength });
       // Haptic thump on landing (mobile), scaled to impact; respects the setting.
       if (useGameStore.getState().settings.haptics) {
         impact_(

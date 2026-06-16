@@ -2,7 +2,7 @@ import { Physics } from "@react-three/rapier";
 import { Suspense } from "react";
 import { GRAVITY } from "@/sim/physics";
 import { useGameStore } from "@/state";
-import { BlobActor, PlayerBlob, TrajectoryPreview } from "./blob";
+import { BlobActor, PlayerBlob, SplatChunks, TrajectoryPreview } from "./blob";
 import { CameraRig } from "./CameraRig";
 import { PostFX } from "./postfx";
 import { TrampolineField } from "./trampoline";
@@ -32,6 +32,7 @@ export function GameScene() {
           <Physics gravity={GRAVITY}>
             <TrampolineField />
             <PlayerBlob />
+            <SplatChunks skin={skin} />
           </Physics>
         ) : (
           <BlobActor skin={skin} expression="idle" />
