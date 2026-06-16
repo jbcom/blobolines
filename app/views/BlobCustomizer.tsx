@@ -3,7 +3,7 @@ import { usePunchOnChange } from "@app/hooks";
 import { Check, Gem, Lock } from "lucide-react";
 import type { BlobSkin } from "@/core/types";
 import { SKIN_COST, useGameStore } from "@/state";
-import { palette } from "@/styles/tokens";
+import { mixHex, palette } from "@/styles/tokens";
 
 /**
  * Blob customizer — pick or unlock a goo skin with collected crystals. Equipped skins
@@ -95,10 +95,16 @@ export function BlobCustomizer({
                   : "border-border bg-surface hover:border-border-strong"
               } ${!isUnlocked && !affordable ? "opacity-50" : ""}`}
             >
+              {/* Wet-goo preview swatch: a radial gradient + glossy highlight that reads as
+                  a 3D goo droplet (not a flat disc), tinted to the skin — cheaper than 4
+                  live WebGL canvases on mobile but conveys the gooey material per skin.
+                  Highlight + shade derive from palette tokens (no raw hex, brand gate). */}
               <span
                 aria-hidden
                 className="size-12 rounded-full shadow-[var(--shadow-sm)]"
-                style={{ backgroundColor: palette.blob[s.id] }}
+                style={{
+                  background: `radial-gradient(circle at 35% 28%, ${palette.goo.wet} 0%, ${palette.blob[s.id]} 42%, ${mixHex(palette.blob[s.id], palette.blob.ink, 0.4)} 100%)`,
+                }}
               />
               <span aria-hidden className="font-display text-sm font-bold text-cream">
                 {s.name}
