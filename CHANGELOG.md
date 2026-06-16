@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.2](https://github.com/jbcom/blobolines/compare/blobolines-v0.1.1...blobolines-v0.1.2) (2026-06-16)
+
+
+### Features
+
+* **core:** deterministic math foundation (RNG, clock, springs) ([#2](https://github.com/jbcom/blobolines/issues/2)) ([703f6c6](https://github.com/jbcom/blobolines/commit/703f6c6082fe5a5c47be1a5463a05148e8e20c01))
+
 ## [0.1.1](https://github.com/jbcom/blobolines/compare/blobolines-v0.1.0...blobolines-v0.1.1) (2026-06-16)
 
 
