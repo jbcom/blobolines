@@ -1,9 +1,10 @@
-import { Palette, Play } from "lucide-react";
+import { Palette, Play, Settings } from "lucide-react";
 import { motion } from "motion/react";
 import { useState } from "react";
 import { initAudio } from "@/audio";
 import { useGameStore, useWorldStore } from "@/state";
 import { BlobCustomizer } from "./BlobCustomizer";
+import { SettingsModal } from "./SettingsModal";
 
 /**
  * Title / main menu. The blob identity, the one-line pitch, and the launch CTA into
@@ -15,6 +16,7 @@ export function TitleScreen() {
   const resetWorld = useWorldStore((s) => s.reset);
   const best = useGameStore((s) => s.progress.bestHeight);
   const [customizing, setCustomizing] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
   const play = () => {
     // This click is the user gesture that unlocks the AudioContext.
@@ -57,13 +59,22 @@ export function TitleScreen() {
         Play <Play className="size-5 fill-current" />
       </motion.button>
 
-      <button
-        type="button"
-        onClick={() => setCustomizing(true)}
-        className="flex items-center gap-2 font-ui text-sm font-semibold text-fg-muted hover:text-cream"
-      >
-        <Palette className="size-4" /> Customize blob
-      </button>
+      <div className="flex items-center gap-5">
+        <button
+          type="button"
+          onClick={() => setCustomizing(true)}
+          className="flex items-center gap-2 font-ui text-sm font-semibold text-fg-muted hover:text-cream"
+        >
+          <Palette className="size-4" /> Customize
+        </button>
+        <button
+          type="button"
+          onClick={() => setSettingsOpen(true)}
+          className="flex items-center gap-2 font-ui text-sm font-semibold text-fg-muted hover:text-cream"
+        >
+          <Settings className="size-4" /> Settings
+        </button>
+      </div>
 
       {best > 0 && (
         <span className="font-ui text-xs font-semibold text-fg-subtle">
@@ -72,6 +83,7 @@ export function TitleScreen() {
       )}
 
       <BlobCustomizer open={customizing} onOpenChange={setCustomizing} />
+      <SettingsModal open={settingsOpen} onOpenChange={setSettingsOpen} />
     </motion.div>
   );
 }
