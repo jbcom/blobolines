@@ -14,8 +14,10 @@ import { hex, palette } from "@/styles/tokens";
  * (fading out along the path). Hidden when not aiming. This is the launch feedback the
  * PoC had and the rebuild was missing.
  */
-const DOTS = 22;
-const STEP = 0.07; // seconds between plotted points
+const DOTS = 26;
+/** World-distance between plotted dots — fixed spacing reads as an even aim line
+ *  regardless of launch speed (time-stepping flung the dots metres apart on a hard pull). */
+const DOT_SPACING = 1.1;
 const tmpPos = new Vector3();
 const tmpScale = new Vector3();
 const tmpQuat = new Quaternion();
@@ -39,18 +41,32 @@ export function TrajectoryPreview() {
     const combo = useGameStore.getState().run.combo;
     const v = launchVelocity(aim.dir, aim.charge, "standard", combo);
 
-    // Plot the ballistic arc: p(t) = p0 + v·t + ½·g·t².
+    // Plot the ballistic arc p(t) = p0 + v·t + ½·g·t², but place a dot every DOT_SPACING
+    // world-units of arc length (not per fixed time) so the line is evenly readable at any
+    // launch power. Walk t forward in small sub-steps, dropping a dot each time we've
+    // travelled another DOT_SPACING.
+    const speed = Math.hypot(v[0], v[1], v[2]) || 1;
+    const dt = DOT_SPACING / speed / 3; // 3 sub-steps per spacing for a smooth arc
     let shown = 0;
-    for (let i = 1; i <= DOTS; i++) {
-      const t = i * STEP;
+    let acc = 0;
+    let px = bx;
+    let py = by;
+    let pz = bz;
+    for (let i = 1; i <= DOTS * 6 && shown < DOTS; i++) {
+      const t = i * dt;
       const x = bx + v[0] * t;
       const y = by + v[1] * t + 0.5 * GRAVITY[1] * t * t;
       const z = bz + v[2] * t;
-      // Stop the preview once it would dip below the launch height (past the apex+down a bit).
-      if (y < by - 1 && i > 3) break;
+      acc += Math.hypot(x - px, y - py, z - pz);
+      px = x;
+      py = y;
+      pz = z;
+      if (y < by - 1 && shown > 2) break; // stop a bit past the apex
+      if (acc < DOT_SPACING) continue;
+      acc = 0;
       tmpPos.set(x, y, z);
       // Dots shrink along the path for a tapering aim line.
-      const s = 0.16 * (1 - (i / DOTS) * 0.6);
+      const s = 0.18 * (1 - (shown / DOTS) * 0.6);
       tmpScale.setScalar(s);
       tmpMat.compose(tmpPos, tmpQuat, tmpScale);
       mesh.setMatrixAt(shown, tmpMat);
