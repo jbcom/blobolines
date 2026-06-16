@@ -330,9 +330,10 @@ game — touch/drag is primary; keyboard is a minor desktop-only secondary, don'
 - [ ] Stronger fluid dynamics in the goo skin: surface-tension wobble that propagates +
       overshoots, droplet bulge/pinch at the contact point, a wet sag at rest — push the CSG/
       shader goo toward World-of-Goo fluidity, away from rigid-ball reads.
-- [ ] MOUTH for Blobby: a procedural mouth (alongside the eyes) that expresses state — open
-      "wheee" on launch/airborne, flat/grimace on hard impact, smile at rest/record, "o" of
-      surprise near death. Drive it off the same diagnostics the eyes use. castShadow/receiveShadow blob+pads (castShadow set but Canvas has no shadows prop — dead). (RESOLVED differently: a fixed directional shadow frustum can't follow the blob to ~1400m and is costly on mobile; grounding comes from the blob-following BlobShadow contact disc instead. No Canvas shadow map.)
+- [x] MOUTH for Blobby: procedural BlobMouth (lip + curving corners) driven by mouthShape per
+      expression — idle smile, "wheee" open on launch/wide, grimace on hard impact, dread "o"
+      near death; depthTest-off on the face, diagnostics-driven like the eyes. (visual sweep
+      pending devtools recovery; covered by mouthShape unit + BlobActor browser fixture.) castShadow/receiveShadow blob+pads (castShadow set but Canvas has no shadows prop — dead). (RESOLVED differently: a fixed directional shadow frustum can't follow the blob to ~1400m and is costly on mobile; grounding comes from the blob-following BlobShadow contact disc instead. No Canvas shadow map.)
 - [x] Soft fake contact shadow under the blob, scaled by altitude+squash (BlobShadow). (flat alpha disc on groundY, NOT drei ContactShadows — avoids the composer depth conflict; also fixed the dark-ring splat-decal bug: gradient faded to rgba(0,0,0,0) → dark edges; now toTransparent(color))
 - [x] ACESFilmic toneMapping + outputColorSpace on Canvas gl; drop the manual soft-clamp hack in metaballGoo. (soft-clamp gone with metaballGoo's deletion; CSG goo uses GooMaterial)
 - [x] Wire biome fog into the scene (biomeSkyAt.fog is computed but unused) — fogExp2 by altitude, hides far cutoff.

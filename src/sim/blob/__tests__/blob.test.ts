@@ -1,5 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { classifyExpression, combineScale, eyeShape, impactSquash, speedStretch } from "../index";
+import {
+  classifyExpression,
+  combineScale,
+  eyeShape,
+  impactSquash,
+  mouthShape,
+  speedStretch,
+} from "../index";
 
 describe("speedStretch", () => {
   it("is round at rest", () => {
@@ -89,5 +96,29 @@ describe("eyeShape", () => {
 
   it("blink closes the eyes regardless of expression", () => {
     expect(eyeShape("wide", 1).openY).toBeCloseTo(0, 5);
+  });
+});
+
+describe("mouthShape", () => {
+  it("idle is a gentle closed smile", () => {
+    const m = mouthShape("idle");
+    expect(m.open).toBeLessThan(0.3);
+    expect(m.curve).toBeGreaterThan(0); // smiling
+  });
+
+  it("wide (rocketing up) opens wide + smiles", () => {
+    const m = mouthShape("wide");
+    expect(m.open).toBeGreaterThan(0.6);
+    expect(m.curve).toBeGreaterThan(0);
+  });
+
+  it("squint (hard impact) grimaces (frown)", () => {
+    expect(mouthShape("squint").curve).toBeLessThan(0);
+  });
+
+  it("tear (near death) opens in dread (frown)", () => {
+    const m = mouthShape("tear");
+    expect(m.open).toBeGreaterThan(0.3);
+    expect(m.curve).toBeLessThan(0);
   });
 });

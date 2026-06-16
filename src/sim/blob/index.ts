@@ -10,6 +10,8 @@ export {
   type ExpressionThresholds,
   type EyeShape,
   eyeShape,
+  type MouthShape,
+  mouthShape,
 } from "./expression";
 export {
   combineScale,

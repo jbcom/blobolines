@@ -5,6 +5,7 @@ import type { EyeExpression } from "@/core/types";
 import { eyeShape } from "@/sim/blob";
 import { getBlobDiagnostics } from "@/state";
 import { palette } from "@/styles/tokens";
+import { BlobMouth } from "./BlobMouth";
 
 /**
  * Procedural blob eyes — NOT sprites. Each eye is a big white sclera sphere with a thin
@@ -85,9 +86,13 @@ export function BlobEyes({ expression, radius, live = false }: BlobEyesProps) {
   });
 
   return (
-    <group ref={groupRef} position={[0, 0, radius * 0.15]}>
-      <Eye side={-1} />
-      <Eye side={1} />
-    </group>
+    <>
+      <group ref={groupRef} position={[0, 0, radius * 0.15]}>
+        <Eye side={-1} />
+        <Eye side={1} />
+      </group>
+      {/* Mouth lives outside the eye group so blink/squint scaling doesn't warp it. */}
+      <BlobMouth expression={expression} radius={radius} live={live} />
+    </>
   );
 }
