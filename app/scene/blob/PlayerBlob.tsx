@@ -6,7 +6,7 @@ import { useEffect, useRef } from "react";
 import { playLaunch, playSplat, setMusicAltitude } from "@/audio";
 import { Blob, Transform, Velocity } from "@/ecs";
 import { spawnBlob } from "@/factories";
-import { ImpactStyle, impact as impact_ } from "@/platform";
+import { ImpactStyle, impact as impact_, vibrate } from "@/platform";
 import { blobTraitsFromSnapshot, classifyExpression } from "@/sim/blob";
 import { MAX_COMBO } from "@/sim/combo";
 import { launchVelocity } from "@/sim/launch";
@@ -15,10 +15,12 @@ import {
   consumeImpact,
   consumeLaunch,
   consumeRebound,
+  flash,
   getAirSteer,
   isPowerupActive,
   reportSplat,
   resetBridges,
+  resetFlash,
   resetPowerups,
   setBlobDiagnostics,
   tickPowerups,
@@ -58,6 +60,8 @@ export function PlayerBlob() {
   const dead = useRef(false);
   /** Recent impact amount [0,1], set on landing and decaying each frame. */
   const impact = useRef(0);
+  /** Countdown to the next near-death heartbeat haptic (shrinks as death nears). */
+  const dangerBeat = useRef(0);
 
   // Spawn the blob ECS entity for this run; destroy it on unmount (PlayerBlob remounts per
   // run). The entity is the blob's queryable logical state, synced from Rapier each step.
@@ -85,7 +89,9 @@ export function PlayerBlob() {
     resetPowerups();
     resetDroplets();
     resetBridges(); // clear any launch/aim/rebound/splat left pending from the prior run
+    resetFlash(); // no leftover combo/launch/death flash crossing into the new run
     impact.current = 0;
+    dangerBeat.current = 0;
   }, [resetDroplets]);
 
   useFrame((_, dt) => {
@@ -114,7 +120,10 @@ export function PlayerBlob() {
       // Ice pads are slippery: a big bouncy launch but it BREAKS the clean-combo streak
       // (risk/reward). Every other pad builds the combo, capped at MAX_COMBO (the launch
       // multiplier is balanced around that cap; leaving it unclamped overshot).
-      setRun({ combo: bounce.type === "ice" ? 0 : Math.min(run.combo + 1, MAX_COMBO) });
+      const nextCombo = bounce.type === "ice" ? 0 : Math.min(run.combo + 1, MAX_COMBO);
+      setRun({ combo: nextCombo });
+      // Gold screen flash as the streak escalates (from 3×), intensity ramping with heat.
+      if (nextCombo >= 3) flash("gold", Math.min(1, (nextCombo - 2) / 6));
     }
 
     // Launch: set velocity directly for a crisp, predictable pop.
@@ -126,6 +135,8 @@ export function PlayerBlob() {
       playLaunch(req.charge);
       // Kick a downward goo burst off the pad as the blob pops.
       launchBurst([p.x, p.y - BLOB.radius, p.z], req.charge);
+      // Blue flash on a big charged launch (the bigger the charge, the brighter the pop).
+      if (req.charge > 0.6) flash("blue", req.charge);
     } else if (airborne) {
       // Mid-air steering: nudge lateral velocity on the X/Z plane (PoC air control).
       const [sx, sz] = getAirSteer();
@@ -191,6 +202,23 @@ export function PlayerBlob() {
     const fallDepth = safeY.current - p.y;
     const expr = classifyExpression({ vy: v.y, impact: impact.current, fallDepth, airborne });
 
+    // Near-death danger: as the blob falls past half the death distance, pulse a red edge
+    // vignette that intensifies toward the fatal depth (a clear "you're about to die" cue),
+    // plus an escalating heartbeat haptic whose interval shrinks as death nears.
+    if (fallDepth > DEATH_FALL_DISTANCE * 0.5) {
+      const danger = (fallDepth - DEATH_FALL_DISTANCE * 0.5) / (DEATH_FALL_DISTANCE * 0.5);
+      flash("red", danger);
+      // Heartbeat: interval 0.45s → 0.12s as danger ramps 0→1; fire a short buzz each beat.
+      dangerBeat.current -= dt;
+      if (dangerBeat.current <= 0) {
+        dangerBeat.current = 0.45 - danger * 0.33;
+        // Respect the haptics setting (matches the landing-impact gate above).
+        if (useGameStore.getState().settings.haptics) void vibrate(12 + Math.round(danger * 20));
+      }
+    } else {
+      dangerBeat.current = 0;
+    }
+
     // Visual state for BlobActor (read via the bridge — no per-frame React render).
     const squash = 1 - impact.current * 0.3;
     setBlobDiagnostics({
@@ -201,6 +229,7 @@ export function PlayerBlob() {
       expression: expr,
       squash,
       maxHeight: maxY.current,
+      groundY: safeY.current,
     });
 
     // Project the Rapier-driven state onto the blob's ECS entity so systems + UI can query

@@ -34,7 +34,12 @@ export function createSplatCanvas(resolution = 256): SplatCanvas {
       const g = ctx.createRadialGradient(ox, oy, 0, ox, oy, lobe);
       g.addColorStop(0, color);
       g.addColorStop(0.7, color);
-      g.addColorStop(1, "transparent");
+      // Fade to a fully-transparent copy of the SAME rgb, NOT the CSS keyword
+      // "transparent" (= rgba(0,0,0,0)). Canvas lerps rgb across stops, so a black
+      // end-stop drags edge texels toward black; with straight-alpha NormalBlending
+      // those dark-rgb low-alpha edges paint as dark rings. Same-rgb end keeps the
+      // edge the blob color all the way to a=0.
+      g.addColorStop(1, toTransparent(color));
       ctx.fillStyle = g;
       ctx.beginPath();
       ctx.arc(ox, oy, lobe, 0, Math.PI * 2);
@@ -50,6 +55,40 @@ export function createSplatCanvas(resolution = 256): SplatCanvas {
   };
 
   return { canvas, ctx, paint, fade };
+}
+
+/**
+ * Return `color` with alpha forced to 0, preserving its rgb. Supports `#rgb`,
+ * `#rrggbb`, `#rrggbbaa`, and `rgb()/rgba()` inputs. Used as the outer gradient
+ * stop so the lobe fades to transparent-of-the-blob-color rather than
+ * transparent-black (the dark-ring bug).
+ */
+export function toTransparent(color: string): string {
+  const c = color.trim();
+  if (c.startsWith("#")) {
+    const hex = c.slice(1);
+    const expand = (h: string) =>
+      h.length === 3 || h.length === 4
+        ? h
+            .slice(0, 3)
+            .split("")
+            .map((ch) => ch + ch)
+            .join("")
+        : h.slice(0, 6);
+    const full = expand(hex);
+    const r = Number.parseInt(full.slice(0, 2), 16);
+    const g = Number.parseInt(full.slice(2, 4), 16);
+    const b = Number.parseInt(full.slice(4, 6), 16);
+    return `rgba(${r},${g},${b},0)`;
+  }
+  const m = c.match(/^rgba?\(([^)]+)\)$/i);
+  if (m) {
+    const [r, g, b] = m[1].split(",").map((p) => p.trim());
+    return `rgba(${r},${g},${b},0)`;
+  }
+  // Unknown format (named color, hsl, etc.): fall back to the input so we at
+  // least don't crash; named-color fades are not used by the splat painter.
+  return c;
 }
 
 /** Deterministic [0,1) hash from two numbers — small irregular lobe placement. */

@@ -17,6 +17,7 @@ test("GooCsg renders the merged goo body (with nearby droplets) in WebGL", async
     expression: "idle",
     squash: 1,
     maxHeight: 0,
+    groundY: 0,
   });
   // Two droplets overlapping the blob so the union chain actually runs (exercises the
   // result-as-input reuse path that previously threw `bvhcast of null`).

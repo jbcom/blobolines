@@ -1,7 +1,7 @@
 import { useFrame } from "@react-three/fiber";
 import { CuboidCollider, type RapierRigidBody, RigidBody } from "@react-three/rapier";
 import { useEffect, useMemo, useRef } from "react";
-import { CanvasTexture, type Group, type Mesh } from "three";
+import { CanvasTexture, type Group, type Mesh, SRGBColorSpace } from "three";
 import { playBounce } from "@/audio";
 import { biomeSkyAt } from "@/config";
 import { clamp } from "@/core/math";
@@ -57,6 +57,9 @@ export function Trampoline({ position, width, depth, type, onImpact }: Trampolin
   const splat = useMemo(() => {
     const sc = createSplatCanvas(128);
     const texture = new CanvasTexture(sc.canvas);
+    // The canvas holds sRGB colors (palette hexes); without this the goo decal renders in
+    // linear space — the blue gets crushed to dark muddy rings (worse under ACES tonemapping).
+    texture.colorSpace = SRGBColorSpace;
     return { ...sc, texture };
   }, []);
   // Release the GPU texture when the pad unmounts (tower recycles pads as you climb).

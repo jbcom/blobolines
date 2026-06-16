@@ -1,9 +1,13 @@
-import { useFrame } from "@react-three/fiber";
-import { useMemo, useRef } from "react";
+import { useFrame, useThree } from "@react-three/fiber";
+import { useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 import { biomeSkyAt } from "@/config";
 import { getBlobDiagnostics } from "@/state";
 import { hex, palette } from "@/styles/tokens";
+
+/** Exponential fog density — subtle, just enough to melt the far world cutoff into the
+ *  biome color so distant pads fade in instead of popping at the far plane. */
+const FOG_DENSITY = 0.0016;
 
 /**
  * Height-reactive gradient sky dome. The backdrop TRANSITIONS as the blob climbs —
@@ -51,6 +55,18 @@ export function SkyDome() {
   }, []);
   matRef.current = material;
 
+  // Biome fog: install an exponential fog and tint it to the current band's fog color each
+  // frame so the far cutoff dissolves into the backdrop (atmosphere haze → space black).
+  const scene = useThree((s) => s.scene);
+  const fog = useMemo(() => new THREE.FogExp2(hex(palette.sky.mid), FOG_DENSITY), []);
+  useEffect(() => {
+    const prev = scene.fog;
+    scene.fog = fog;
+    return () => {
+      scene.fog = prev;
+    };
+  }, [scene, fog]);
+
   useFrame(() => {
     const m = matRef.current;
     if (!m) return;
@@ -59,6 +75,8 @@ export function SkyDome() {
     (m.uniforms.uTop.value as THREE.Color).set(hex(b.top));
     (m.uniforms.uMid.value as THREE.Color).set(hex(b.mid));
     (m.uniforms.uDeep.value as THREE.Color).set(hex(b.deep));
+    // Match fog to the band's fog color so distance haze reads as the right atmosphere.
+    fog.color.set(hex(b.fog));
   });
 
   return (

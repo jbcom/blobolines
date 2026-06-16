@@ -273,12 +273,12 @@ Camera follow + shake, in-game deformation, wet glistening shader + color gradie
 
 ## M12 — UI/UX depth (from UI audit, 2026-06-16)
 ### Tier 1 — game-feel & HUD
-- [ ] Altitude-milestone celebration: transient "100m/200m…" banner + number-pop + sound on each 100m crossing (Altimeter/Hud).
-- [ ] ScreenFlash component on the unused --z-flash layer: gold on combo escalation, blue on big launch, red vignette near death (new app/views/hud/ScreenFlash.tsx).
-- [ ] Escalate ComboBadge by tier: color/glow/size ramp gold→orange→goo.flame, "ON FIRE" state at 5×.
-- [ ] In-run personal-best flourish: pulse Best line gold + banner when height crosses best mid-run (Altimeter).
-- [ ] Big-launch/max-charge flourish in LaunchInput: pulse bar + "MAX" label + edge glow near charge 1.0.
-- [ ] Near-miss danger feedback: escalating red screen-edge pulse + haptic while falling toward death (Hud).
+- [x] Altitude-milestone celebration: transient "100m/200m…" banner + number-pop + sound on each 100m crossing (Altimeter/Hud).
+- [x] ScreenFlash component on the unused --z-flash layer: gold on combo escalation, blue on big launch, red vignette near death (new app/views/hud/ScreenFlash.tsx).
+- [x] Escalate ComboBadge by tier: color/glow/size ramp gold→orange→goo.flame, "ON FIRE" state at 5×.
+- [x] In-run personal-best flourish: pulse Best line gold + banner when height crosses best mid-run (Altimeter).
+- [x] Big-launch/max-charge flourish in LaunchInput: pulse bar + "MAX" label + edge glow near charge 1.0.
+- [x] Near-miss danger feedback: escalating red screen-edge pulse + haptic while falling toward death (Hud).
 - [ ] PowerUpBadges countdown ring/bar per badge (use Progress primitive) instead of binary on/off.
 - [ ] Replace PowerUpBadges 120ms polling with bridge subscription (exact timing, cheaper render).
 ### Tier 2 — game-over recap
@@ -314,11 +314,11 @@ Camera follow + shake, in-game deformation, wet glistening shader + color gradie
 - [ ] Reduced-motion guards on every new flourish (static cue fallback).
 
 ## M13 — visual/render/VFX depth (from visual audit, 2026-06-16)
-- [ ] Enable Canvas shadows + shadow camera on key light; castShadow/receiveShadow blob+pads (castShadow set but Canvas has no shadows prop — dead).
-- [ ] Soft fake contact shadow under the blob, scaled by altitude+squash (BlobShadow).
-- [ ] ACESFilmic toneMapping + outputColorSpace on Canvas gl; drop the manual soft-clamp hack in metaballGoo.
-- [ ] Wire biome fog into the scene (biomeSkyAt.fog is computed but unused) — fogExp2 by altitude, hides far cutoff.
-- [ ] Fix camera far plane vs world scale (far:200 clips dome@150 + biomes to 1400m); attach dome to camera or push far.
+- [x] Enable Canvas shadows + shadow camera on key light; castShadow/receiveShadow blob+pads (castShadow set but Canvas has no shadows prop — dead). (RESOLVED differently: a fixed directional shadow frustum can't follow the blob to ~1400m and is costly on mobile; grounding comes from the blob-following BlobShadow contact disc instead. No Canvas shadow map.)
+- [x] Soft fake contact shadow under the blob, scaled by altitude+squash (BlobShadow). (flat alpha disc on groundY, NOT drei ContactShadows — avoids the composer depth conflict; also fixed the dark-ring splat-decal bug: gradient faded to rgba(0,0,0,0) → dark edges; now toTransparent(color))
+- [x] ACESFilmic toneMapping + outputColorSpace on Canvas gl; drop the manual soft-clamp hack in metaballGoo. (soft-clamp gone with metaballGoo's deletion; CSG goo uses GooMaterial)
+- [x] Wire biome fog into the scene (biomeSkyAt.fog is computed but unused) — fogExp2 by altitude, hides far cutoff.
+- [x] Fix camera far plane vs world scale (far:200 clips dome@150 + biomes to 1400m); attach dome to camera or push far.
 - [ ] Unify the two divergent goo shaders (menu GooMaterial vs in-game MetaballGoo) — shared wet/lighting GLSL so the blob matches menu↔play.
 - [ ] Biome-reactive goo lighting: feed biome key color + darkening as uniforms (blob warm at ground, cool/moody in space).
 - [ ] Goo refraction: sample backbuffer along normal×fresnel so the blob bends what's behind it (marquee jelly upgrade).
