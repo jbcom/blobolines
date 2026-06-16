@@ -15,6 +15,11 @@ export interface RunStats {
   height: number;
   crystals: number;
   combo: number;
+  /** Highest combo reached this run (for the game-over recap). */
+  maxCombo: number;
+  /** Metres this run beat the PREVIOUS all-time best by (0 if not a record). Set by
+   *  commitBestHeight at run end so the game-over card can show "+N m over best". */
+  recordDelta: number;
 }
 
 export interface GameState {
@@ -22,8 +27,12 @@ export interface GameState {
   settings: GameSettings;
   progress: PlayerProgress;
   run: RunStats;
+  /** Transient (not persisted): set true to request the menu open the blob customizer on
+   *  arrival — e.g. tapping "Customize" from the game-over card. TitleScreen consumes it. */
+  customizerIntent: boolean;
 
   setPhase: (phase: GamePhase) => void;
+  setCustomizerIntent: (open: boolean) => void;
   updateSettings: (patch: Partial<GameSettings>) => void;
   setRun: (patch: Partial<RunStats>) => void;
   resetRun: () => void;
@@ -47,15 +56,17 @@ export const DEFAULT_PROGRESS: PlayerProgress = {
   unlockedSkins: ["blue"],
 };
 
-const EMPTY_RUN: RunStats = { height: 0, crystals: 0, combo: 0 };
+const EMPTY_RUN: RunStats = { height: 0, crystals: 0, combo: 0, maxCombo: 0, recordDelta: 0 };
 
 export const useGameStore = create<GameState>((set) => ({
   phase: "menu",
   settings: { ...DEFAULT_SETTINGS },
   progress: { ...DEFAULT_PROGRESS },
   run: { ...EMPTY_RUN },
+  customizerIntent: false,
 
   setPhase: (phase) => set({ phase }),
+  setCustomizerIntent: (open) => set({ customizerIntent: open }),
 
   updateSettings: (patch) => set((s) => ({ settings: { ...s.settings, ...patch } })),
 
@@ -70,12 +81,15 @@ export const useGameStore = create<GameState>((set) => ({
     })),
 
   commitBestHeight: (height) =>
-    set((s) => ({
-      progress: {
-        ...s.progress,
-        bestHeight: Math.max(s.progress.bestHeight, Math.floor(height)),
-      },
-    })),
+    set((s) => {
+      const h = Math.floor(height);
+      // Metres over the PREVIOUS best (before this commit overwrites it) — 0 if not a record.
+      const recordDelta = Math.max(0, h - s.progress.bestHeight);
+      return {
+        run: { ...s.run, recordDelta },
+        progress: { ...s.progress, bestHeight: Math.max(s.progress.bestHeight, h) },
+      };
+    }),
 
   setSkin: (skin) => set((s) => ({ progress: { ...s.progress, skin } })),
 

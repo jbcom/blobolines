@@ -279,14 +279,14 @@ Camera follow + shake, in-game deformation, wet glistening shader + color gradie
 - [x] In-run personal-best flourish: pulse Best line gold + banner when height crosses best mid-run (Altimeter).
 - [x] Big-launch/max-charge flourish in LaunchInput: pulse bar + "MAX" label + edge glow near charge 1.0.
 - [x] Near-miss danger feedback: escalating red screen-edge pulse + haptic while falling toward death (Hud).
-- [ ] PowerUpBadges countdown ring/bar per badge (use Progress primitive) instead of binary on/off.
-- [ ] Replace PowerUpBadges 120ms polling with bridge subscription (exact timing, cheaper render).
+- [x] PowerUpBadges countdown ring/bar per badge (use Progress primitive) instead of binary on/off. (per-badge scaleX countdown bar)
+- [x] Replace PowerUpBadges 120ms polling with bridge subscription (exact timing, cheaper render). (single rAF loop reads powerupRemaining for exact timing + imperative bar writes; React state flips only on on/off edge)
 ### Tier 2 — game-over recap
-- [ ] GameOver run recap: max combo, crystals this run vs lifetime, delta-to-best (+Nm / Nm short); extend RunStats with maxCombo.
-- [ ] GameOver Share button (navigator.share + clipboard fallback).
-- [ ] Real personal-best celebration on GameOver: goo-splat/confetti burst, gold card glow, distinct sound, "+Nm over best".
-- [ ] GameOver delta-vs-best progress bar (run height as fraction of best).
-- [ ] GameOver: crystals → next-skin progress + jump to customizer.
+- [x] GameOver run recap: max combo, crystals this run vs lifetime, delta-to-best (+Nm / Nm short); extend RunStats with maxCombo.
+- [x] GameOver Share button (navigator.share + clipboard fallback).
+- [x] Real personal-best celebration on GameOver: goo-splat/confetti burst, gold card glow, distinct sound, "+Nm over best". (gold card glow + border, chime on record, "+N m over best" via run.recordDelta captured at commitBestHeight)
+- [x] GameOver delta-vs-best progress bar (run height as fraction of best).
+- [x] GameOver: crystals → next-skin progress + jump to customizer.
 ### Tier 3 — onboarding & states
 - [ ] First-run tutorial overlay: drag-ghost coachmark over LaunchInput, dismiss on first launch (new Onboarding.tsx).
 - [ ] First-play hint instead of burying how-to behind a menu button.

@@ -1,6 +1,6 @@
 import { HelpCircle, Palette, Play, Settings } from "lucide-react";
 import { motion } from "motion/react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { initAudio, startMusic } from "@/audio";
 import { useGameStore, useWorldStore } from "@/state";
 import { BlobCustomizer } from "./BlobCustomizer";
@@ -19,6 +19,16 @@ export function TitleScreen() {
   const [customizing, setCustomizing] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [manualOpen, setManualOpen] = useState(false);
+
+  // Open the customizer on arrival if the game-over card requested it, then clear the flag.
+  const customizerIntent = useGameStore((s) => s.customizerIntent);
+  const setCustomizerIntent = useGameStore((s) => s.setCustomizerIntent);
+  useEffect(() => {
+    if (customizerIntent) {
+      setCustomizing(true);
+      setCustomizerIntent(false);
+    }
+  }, [customizerIntent, setCustomizerIntent]);
 
   const play = () => {
     // This click is the user gesture that unlocks the AudioContext; start ambient music
