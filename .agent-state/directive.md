@@ -250,4 +250,4 @@ A real Blobolines blob should:
 ### M10e — polish refinements (feat/goo-polish-2)
 - [x] Puddle sits ON the pad: render center drops by the lost half-height when squashed, so the resting puddle rests on the surface (eyes peek over) instead of half-sunk.
   the puddle rests on the surface (eyes peek over the top), not half-sunk through it.
-- [ ] [WAIT] open PR for this batch → CI green + threads → squash-merge.
+- [ ] [WAIT] PR #7 (feat/goo-polish-2) CI green + threads → squash-merge (monitor armed).
