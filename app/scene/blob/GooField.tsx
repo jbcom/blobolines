@@ -27,6 +27,8 @@ interface GooFieldProps {
 export function GooField({ skin, blobRadius, getDroplets }: GooFieldProps) {
   const hullRef = useRef<Mesh>(null);
   const eyesRef = useRef<Group>(null);
+  /** Surface-tension wobble envelope [0,1] — spikes on impact, decays each frame. */
+  const wobble = useRef(0);
   const camera = useThree((s) => s.camera);
   const material = useMemo(() => new MetaballGooMaterial() as unknown as ShaderMaterial, []);
   // Hand-built material isn't JSX-declared, so R3F won't auto-dispose it — release the
@@ -34,10 +36,11 @@ export function GooField({ skin, blobRadius, getDroplets }: GooFieldProps) {
   // programs until the mobile driver drops draw calls.
   useEffect(() => () => material.dispose(), [material]);
 
-  useFrame((state) => {
+  useFrame((state, dt) => {
     const hull = hullRef.current;
     if (!hull) return;
-    const [bx, by, bz] = getBlobDiagnostics().position;
+    const diag = getBlobDiagnostics();
+    const [bx, by, bz] = diag.position;
 
     // Hull follows the blob so the raymarch stays in a small local volume.
     hull.position.set(bx, by, bz);
@@ -76,6 +79,13 @@ export function GooField({ skin, blobRadius, getDroplets }: GooFieldProps) {
     // ~8 in a row. Read imperatively (combo changes rarely) so GooField never re-renders.
     const combo = useGameStore.getState().run.combo;
     material.uniforms.u_heat.value = Math.min(1, Math.max(0, (combo - 2) / 6));
+
+    // Surface-tension jiggle: recover the impact amount from the squash the bridge writes
+    // (squash = 1 - impact*0.3), pump the wobble envelope up on a fresh impact, then let
+    // it decay so the goo skin ripples and settles like a water balloon.
+    const imp = Math.min(1, Math.max(0, (1 - diag.squash) / 0.3));
+    wobble.current = Math.max(wobble.current * Math.exp(-dt / 0.7), imp);
+    material.uniforms.u_wobble.value = wobble.current;
   });
 
   return (

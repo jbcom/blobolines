@@ -27,6 +27,7 @@ export function useDroplets(seed = 1): {
   splash: (origin: Vec3, strength: number) => void;
   launchBurst: (origin: Vec3, charge: number) => void;
   trail: (origin: Vec3, dir: Vec3, speed: number) => void;
+  reset: () => void;
   get: () => readonly Droplet[];
 } {
   const droplets = useRef<Droplet[]>([]);
@@ -47,11 +48,19 @@ export function useDroplets(seed = 1): {
     list.length = w;
   });
 
+  /** Write cursor for the ring buffer (overwrites oldest when full — O(1), no shift). */
+  const head = useRef(0);
+
   const push = useCallback((d: Droplet) => {
     const list = droplets.current;
-    // Evict the oldest when full so fresh goo always shows during a hard streak.
-    if (list.length >= MAX_DROPLETS) list.shift();
-    list.push(d);
+    if (list.length < MAX_DROPLETS) {
+      list.push(d);
+    } else {
+      // Full: overwrite the oldest in place (ring buffer) so fresh goo always shows
+      // during a hard streak without an O(n) Array.shift each emission.
+      list[head.current] = d;
+      head.current = (head.current + 1) % MAX_DROPLETS;
+    }
   }, []);
 
   const splash = useCallback(
@@ -86,7 +95,14 @@ export function useDroplets(seed = 1): {
     [push],
   );
 
+  const reset = useCallback(() => {
+    droplets.current.length = 0;
+    head.current = 0;
+    trailAccum.current = 0;
+    lastTrailPos.current = null;
+  }, []);
+
   const get = useCallback(() => droplets.current, []);
 
-  return { splash, launchBurst, trail, get };
+  return { splash, launchBurst, trail, reset, get };
 }

@@ -28,6 +28,7 @@ export const MetaballGooMaterial = shaderMaterial(
     u_flame: new THREE.Color(palette.goo.flame),
     u_time: 0,
     u_heat: 0,
+    u_wobble: 0,
   },
   /* glsl */ `
     varying vec3 vWorldPos;
@@ -52,12 +53,25 @@ export const MetaballGooMaterial = shaderMaterial(
     uniform vec3 u_flame;
     uniform float u_time;
     uniform float u_heat;
+    uniform float u_wobble;
 
     varying vec3 vWorldPos;
 
     float smin(float a, float b, float k) {
       float h = clamp(0.5 + 0.5 * (b - a) / k, 0.0, 1.0);
       return mix(b, a, h) - k * h * (1.0 - h);
+    }
+
+    // Surface-tension jiggle: a signed multi-lobe ripple in world space, scaled by the
+    // impact wobble envelope, that pushes the isosurface in and out so a landing sends a
+    // wave across the goo that settles like a water balloon. Added to the SDF so it warps
+    // every ball uniformly (the whole skin ripples, not just the body sphere).
+    float wobbleField(vec3 p) {
+      if (u_wobble < 0.001) return 0.0;
+      float w = sin(p.x * 4.0 + u_time * 9.0)
+              + sin(p.y * 5.0 - u_time * 7.0)
+              + sin(p.z * 4.5 + u_time * 11.0);
+      return w * (1.0 / 3.0) * u_wobble * 0.28;
     }
 
     float field(vec3 p) {
@@ -67,7 +81,7 @@ export const MetaballGooMaterial = shaderMaterial(
         float ball = length(p - u_balls[i]) - u_radii[i];
         d = smin(d, ball, 0.5);
       }
-      return d;
+      return d + wobbleField(p);
     }
 
     vec3 fieldNormal(vec3 p) {
@@ -115,6 +129,14 @@ export const MetaballGooMaterial = shaderMaterial(
       vec3 col = base * (0.55 + 0.4 * diff) + spec + fres * rim * 0.8;
       // Hot fresnel edge licks brighter than white where the streak is at full heat.
       col += u_flame * fres * u_heat * 1.8 * flicker;
+
+      // This material renders outside the renderer's tonemapping pass (drei shaderMaterial
+      // has no tonemapping chunk), so soft-clamp here — without it the flame rim blows out
+      // to flat white at full heat and loses its hue. Reinhard keeps the warm color.
+      col = col / (col + vec3(1.0));
+      // Reinhard darkens midtones; lift back toward the original LDR look (approx inverse
+      // at the base goo level) so only the genuinely-hot regions roll off.
+      col = pow(col, vec3(0.7));
 
       gl_FragColor = vec4(col, 1.0);
     }

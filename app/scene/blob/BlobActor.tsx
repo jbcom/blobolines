@@ -46,6 +46,8 @@ export function BlobActor({
 }: BlobActorProps) {
   const groupRef = useRef<Group>(null);
   const material = useMemo(() => new GooMaterial() as unknown as ShaderMaterial, []);
+  /** Surface-tension wobble envelope [0,1] — spikes on impact, decays each frame. */
+  const wobble = useRef(0);
 
   // Release the compiled shader program when this blob unmounts (respawn, skin swap, HMR).
   useEffect(() => () => material.dispose(), [material]);
@@ -73,6 +75,11 @@ export function BlobActor({
     g.scale.x += (s.x - g.scale.x) * k;
     g.scale.y += (s.y - g.scale.y) * k;
     g.scale.z += (s.z - g.scale.z) * k;
+
+    // Surface-tension wobble: a fresh impact pumps the envelope up (toward the impact
+    // amount), then it decays so the goo skin ripples and settles like a water balloon.
+    wobble.current = Math.max(wobble.current * Math.exp(-dt / 0.5), imp);
+    material.uniforms.uWobble.value = wobble.current;
   });
 
   return (

@@ -37,7 +37,7 @@ export function PlayerBlob() {
   const setPhase = useGameStore((s) => s.setPhase);
   const commitBestHeight = useGameStore((s) => s.commitBestHeight);
   const ensureHeight = useWorldStore((s) => s.ensureHeight);
-  const { splash, launchBurst, trail, get: getDroplets } = useDroplets();
+  const { splash, launchBurst, trail, reset: resetDroplets, get: getDroplets } = useDroplets();
   const maxY = useRef(0);
   const lastEnsureY = useRef(0);
   const dead = useRef(false);
@@ -56,8 +56,9 @@ export function PlayerBlob() {
     lastEnsureY.current = 3;
     dead.current = false;
     resetPowerups();
+    resetDroplets();
     impact.current = 0;
-  }, []);
+  }, [resetDroplets]);
 
   useFrame((_, dt) => {
     const body = bodyRef.current;
