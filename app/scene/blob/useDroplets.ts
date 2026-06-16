@@ -35,6 +35,8 @@ export function useDroplets(seed = 1): {
   /** Distance travelled since the last trail droplet was emitted. */
   const trailAccum = useRef(0);
   const lastTrailPos = useRef<Vec3 | null>(null);
+  /** Write cursor for the ring buffer (overwrites oldest when full — O(1), no shift). */
+  const head = useRef(0);
 
   useFrame((_, dt) => {
     const list = droplets.current;
@@ -46,10 +48,10 @@ export function useDroplets(seed = 1): {
       if (next) list[w++] = next;
     }
     list.length = w;
+    // Compaction shifted survivors to the front; if we dropped below capacity the ring
+    // cursor is stale, so reset it to overwrite from the true oldest when next full.
+    if (w < MAX_DROPLETS) head.current = 0;
   });
-
-  /** Write cursor for the ring buffer (overwrites oldest when full — O(1), no shift). */
-  const head = useRef(0);
 
   const push = useCallback((d: Droplet) => {
     const list = droplets.current;

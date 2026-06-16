@@ -1,5 +1,5 @@
 import { useFrame } from "@react-three/fiber";
-import { useRef } from "react";
+import { useEffect, useRef } from "react";
 import type { Group } from "three";
 import { playPowerup } from "@/audio";
 import { activatePowerup, getBlobDiagnostics, useWorldStore } from "@/state";
@@ -16,6 +16,13 @@ export function PowerUpField() {
   const groupRef = useRef<Group>(null);
   const powerups = useWorldStore((s) => s.powerups);
   const collected = useRef<Set<number>>(new Set());
+
+  // A world reset swaps the `powerups` array identity; clear the collected set so a new
+  // power-up reusing an old index isn't immediately hidden as already-taken.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: reset keyed on array identity
+  useEffect(() => {
+    collected.current.clear();
+  }, [powerups]);
 
   useFrame((state) => {
     const g = groupRef.current;

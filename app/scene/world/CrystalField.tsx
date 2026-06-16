@@ -1,5 +1,5 @@
 import { useFrame } from "@react-three/fiber";
-import { useRef } from "react";
+import { useEffect, useRef } from "react";
 import type { InstancedMesh } from "three";
 import { Color, Matrix4, Quaternion, Vector3 } from "three";
 import { playChime } from "@/audio";
@@ -26,6 +26,15 @@ export function CrystalField() {
   const collected = useRef<Set<number>>(new Set());
   // Live positions (mutated by the magnet); seeded from the store list.
   const positions = useRef<[number, number, number][]>([]);
+
+  // A world reset/reseed swaps the `crystals` array identity. These refs persist across
+  // renders, so without this they'd keep last run's moved positions + collected set —
+  // ghost crystals. Clear them whenever the source list identity changes.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: reset keyed on array identity
+  useEffect(() => {
+    positions.current = [];
+    collected.current.clear();
+  }, [crystals]);
 
   useFrame((state, delta) => {
     const mesh = meshRef.current;
