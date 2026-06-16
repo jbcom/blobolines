@@ -1,13 +1,19 @@
-import { useMemo } from "react";
+import { useFrame } from "@react-three/fiber";
+import { useMemo, useRef } from "react";
 import * as THREE from "three";
+import { biomeSkyAt } from "@/config";
+import { getBlobDiagnostics } from "@/state";
 import { hex, palette } from "@/styles/tokens";
 
 /**
- * Painterly vertical gradient sky dome (cover-art atmosphere): warm cream high up
- * fading down through dusty blue-teal to deep ruins haze. Rendered on the inside of
- * a large sphere with a vertex-driven gradient. Real final sky layer.
+ * Height-reactive gradient sky dome. The backdrop TRANSITIONS as the blob climbs —
+ * ground → sky → upper atmosphere → stratosphere → space → deep space (biome bands in
+ * config/biomes.json), lerped continuously from the blob's altitude. Rendered on the
+ * inside of a large sphere with a vertex-driven vertical gradient.
  */
 export function SkyDome() {
+  const matRef = useRef<THREE.ShaderMaterial | null>(null);
+
   const material = useMemo(() => {
     return new THREE.ShaderMaterial({
       side: THREE.BackSide,
@@ -43,6 +49,17 @@ export function SkyDome() {
       `,
     });
   }, []);
+  matRef.current = material;
+
+  useFrame(() => {
+    const m = matRef.current;
+    if (!m) return;
+    const height = getBlobDiagnostics().position[1];
+    const b = biomeSkyAt(height);
+    (m.uniforms.uTop.value as THREE.Color).set(hex(b.top));
+    (m.uniforms.uMid.value as THREE.Color).set(hex(b.mid));
+    (m.uniforms.uDeep.value as THREE.Color).set(hex(b.deep));
+  });
 
   return (
     <mesh material={material} scale={150}>

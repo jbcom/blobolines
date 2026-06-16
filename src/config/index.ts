@@ -10,6 +10,9 @@
  */
 import type { BlobSkin, TrampType } from "@/core/types";
 import blobCfg from "./blob.json";
+
+export { type BiomeColors, biomeBands, biomeSkyAt } from "./biomes";
+
 import collectCfg from "./collect.json";
 import gooCfg from "./goo.json";
 import launchCfg from "./launch.json";
