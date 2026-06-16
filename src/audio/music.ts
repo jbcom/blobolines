@@ -10,6 +10,8 @@ import { getMusicOutput, getTone } from "./engine";
 let nodes: any[] = [];
 // biome-ignore lint/suspicious/noExplicitAny: Tone.Loop instance.
 let loop: any = null;
+// biome-ignore lint/suspicious/noExplicitAny: Tone.Filter on the pad drone, retuned by altitude.
+let padFilterRef: any = null;
 let playing = false;
 
 const PAD_NOTES = ["C2", "G2"];
@@ -45,7 +47,22 @@ export function startMusic(): void {
 
   T.getTransport().bpm.value = 76;
   T.getTransport().start();
+  padFilterRef = padFilter;
   nodes = [pad, padFilter, pluck];
+}
+
+/**
+ * Shift the ambient bed with altitude: as the blob climbs toward space the pad filter
+ * opens up (brighter, more ethereal) and the tempo lifts slightly, so the music breathes
+ * with the biome backdrop instead of staying flat. Called from the blob frame loop.
+ */
+export function setMusicAltitude(height: number): void {
+  const T = getTone();
+  if (!playing || !T || !padFilterRef) return;
+  const climb = Math.min(Math.max(height, 0) / 1200, 1); // 0 ground .. 1 deep space
+  // Pad filter cutoff opens 420Hz → 2200Hz with altitude (smoothed by Tone).
+  padFilterRef.frequency.rampTo(420 + climb * 1780, 0.8);
+  T.getTransport().bpm.rampTo(76 + climb * 16, 1.5);
 }
 
 export function stopMusic(): void {
@@ -68,4 +85,5 @@ export function stopMusic(): void {
   }
   nodes = [];
   loop = null;
+  padFilterRef = null;
 }

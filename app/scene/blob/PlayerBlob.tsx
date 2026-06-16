@@ -1,7 +1,7 @@
 import { useFrame } from "@react-three/fiber";
 import { BallCollider, type RapierRigidBody, RigidBody } from "@react-three/rapier";
 import { useEffect, useRef } from "react";
-import { playLaunch, playSplat } from "@/audio";
+import { playLaunch, playSplat, setMusicAltitude } from "@/audio";
 import { ImpactStyle, impact as impact_ } from "@/platform";
 import { classifyExpression } from "@/sim/blob";
 import { launchVelocity } from "@/sim/launch";
@@ -132,6 +132,7 @@ export function PlayerBlob() {
       if (p.y - lastEnsureY.current > 10) {
         lastEnsureY.current = p.y;
         ensureHeight(p.y + 180);
+        setMusicAltitude(p.y); // shift the ambient bed with altitude (throttled to ~10m)
       }
     }
 
