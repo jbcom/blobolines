@@ -25,6 +25,17 @@ interface WorldState {
 }
 
 const INITIAL_TARGET = 180;
+/** Retain only the recent tail of the trampoline list — pads far below are unreachable
+ *  (the blob dies after falling DEATH_FALL_DISTANCE) and TrampolineField keys by stable
+ *  id, so dropping long-passed pads is safe and bounds the store over a long climb.
+ *  (Crystals/powerups are NOT trimmed: their fields sync by array index, so a front-trim
+ *  would shift indices and desync; their growth is slow + render-capped — left as-is.) */
+const MAX_RETAINED_TRAMPS = 400;
+
+/** Keep the last `max` items of an append-only list (drops the lowest, long-passed ones). */
+function tail<T>(list: T[], max: number): T[] {
+  return list.length > max ? list.slice(list.length - max) : list;
+}
 
 function freshTower(seed: number) {
   const rng = createRng(seed);
@@ -51,8 +62,11 @@ export const useWorldStore = create<WorldState>((set, get) => ({
     const { highestY, rng, trampolines, crystals, powerups } = get();
     if (targetY <= highestY) return;
     const chunk = generateUpTo(rng, highestY, targetY);
+    // Retain only the recent tail of each list — entries far below are unreachable (the
+    // blob dies after falling a fixed distance), so they'd only leak memory on a long
+    // climb. Trampolines are also render-windowed; this bounds the underlying store too.
     set({
-      trampolines: [...trampolines, ...chunk.trampolines],
+      trampolines: tail([...trampolines, ...chunk.trampolines], MAX_RETAINED_TRAMPS),
       crystals: [...crystals, ...chunk.crystals],
       powerups: [...powerups, ...chunk.powerups],
       highestY: chunk.highestY,

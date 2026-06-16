@@ -36,7 +36,13 @@ export function Game() {
       <Canvas
         className="absolute inset-0"
         dpr={[1, 2]}
-        gl={{ antialias: true, powerPreference: "high-performance", preserveDrawingBuffer: true }}
+        gl={{
+          antialias: true,
+          powerPreference: "high-performance",
+          // preserveDrawingBuffer is only needed so the dev harness can read the canvas
+          // via toDataURL(); it carries a real mobile perf cost, so keep it OUT of prod.
+          preserveDrawingBuffer: import.meta.env.DEV,
+        }}
         camera={{ position: [0, 6, 12], fov: 60, near: 0.1, far: 200 }}
         onCreated={handleCanvasCreated}
         // The 3D scene conveys nothing actionable a screen reader can't get from the DOM

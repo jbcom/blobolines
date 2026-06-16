@@ -3,7 +3,7 @@ import { useRef } from "react";
 import type { InstancedMesh } from "three";
 import { Color, Matrix4, Quaternion, Vector3 } from "three";
 import { playChime } from "@/audio";
-import { magnetStep, PICKUP_RADIUS } from "@/sim/collect";
+import { stepCrystal } from "@/sim/collect";
 import { getBlobDiagnostics, isPowerupActive, useGameStore, useWorldStore } from "@/state";
 import { hex, palette } from "@/styles/tokens";
 
@@ -38,10 +38,9 @@ export function CrystalField() {
       pos.push([crystals[i][0], crystals[i][1], crystals[i][2]]);
     }
 
-    const [bx, by, bz] = getBlobDiagnostics().position;
+    const blobPos = getBlobDiagnostics().position;
     const t = state.clock.elapsedTime;
     const count = Math.min(pos.length, MAX_CRYSTALS);
-    const r2 = PICKUP_RADIUS * PICKUP_RADIUS;
     const magnet = isPowerupActive("magnet");
     const dt = Math.min(delta, 1 / 30);
 
@@ -51,21 +50,14 @@ export function CrystalField() {
     let gathered = 0;
     for (let i = 0; i < count; i++) {
       if (collected.current.has(i)) continue;
-      if (magnet) {
-        const m = magnetStep(pos[i], [bx, by, bz], dt);
-        pos[i][0] = m[0];
-        pos[i][1] = m[1];
-        pos[i][2] = m[2];
-      }
-      const p = pos[i];
-      const dx = p[0] - bx;
-      const dy = p[1] - by;
-      const dz = p[2] - bz;
-      if (dx * dx + dy * dy + dz * dz <= r2) {
+      // Magnet-pull (if active) + pickup test in one pure step — keeps the magnetStep arg
+      // order correct at the integration boundary (it was previously swapped here).
+      if (stepCrystal(blobPos, pos[i], dt, magnet)) {
         collected.current.add(i);
         gathered++;
         continue;
       }
+      const p = pos[i];
       const bob = Math.sin(t * 2 + i) * 0.2;
       tmpObj.set(p[0], p[1] + bob, p[2]);
       tmpQuat.setFromAxisAngle(UP, t * 1.5 + i);

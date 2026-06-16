@@ -4,4 +4,5 @@ export {
   MAGNET_RADIUS,
   magnetStep,
   PICKUP_RADIUS,
+  stepCrystal,
 } from "./collect";
