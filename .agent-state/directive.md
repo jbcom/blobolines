@@ -250,4 +250,7 @@ A real Blobolines blob should:
 ### M10e — polish refinements (feat/goo-polish-2)
 - [x] Puddle sits ON the pad: render center drops by the lost half-height when squashed, so the resting puddle rests on the surface (eyes peek over) instead of half-sunk.
   the puddle rests on the surface (eyes peek over the top), not half-sunk through it.
-- [ ] [WAIT] PR #7 (feat/goo-polish-2) CI green + threads → squash-merge (monitor armed).
+- [x] PR #7 (feat/goo-polish-2) merged + deployed (puddle sits on pad; cache gitignore).
+
+## All M10 "make it alive" feedback shipped (PRs #5 #6 #7)
+Camera follow + shake, in-game deformation, wet glistening shader + color gradient, resting puddle (sits on pad) + charge-gather, aim trajectory, membrane bend, off-pad-death fix, real color + height biome backdrop/strata + pad recolor, GLB powerups, super+ice bonus pads, real-physics splat chunks, juicy splat, blob-follow light, multi-hue crystals, JSON config architecture. Next polish batch (when requested): drag-direction shear deform, biome hazards, more bonus mechanics, audio/FX depth.
