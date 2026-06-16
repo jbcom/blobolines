@@ -1,9 +1,10 @@
-import { Palette, Play, Settings } from "lucide-react";
+import { HelpCircle, Palette, Play, Settings } from "lucide-react";
 import { motion } from "motion/react";
 import { useState } from "react";
 import { initAudio } from "@/audio";
 import { useGameStore, useWorldStore } from "@/state";
 import { BlobCustomizer } from "./BlobCustomizer";
+import { ManualModal } from "./ManualModal";
 import { SettingsModal } from "./SettingsModal";
 
 /**
@@ -17,6 +18,7 @@ export function TitleScreen() {
   const best = useGameStore((s) => s.progress.bestHeight);
   const [customizing, setCustomizing] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [manualOpen, setManualOpen] = useState(false);
 
   const play = () => {
     // This click is the user gesture that unlocks the AudioContext.
@@ -74,6 +76,13 @@ export function TitleScreen() {
         >
           <Settings className="size-4" /> Settings
         </button>
+        <button
+          type="button"
+          onClick={() => setManualOpen(true)}
+          className="flex items-center gap-2 font-ui text-sm font-semibold text-fg-muted hover:text-cream"
+        >
+          <HelpCircle className="size-4" /> How to play
+        </button>
       </div>
 
       {best > 0 && (
@@ -84,6 +93,7 @@ export function TitleScreen() {
 
       <BlobCustomizer open={customizing} onOpenChange={setCustomizing} />
       <SettingsModal open={settingsOpen} onOpenChange={setSettingsOpen} />
+      <ManualModal open={manualOpen} onOpenChange={setManualOpen} />
     </motion.div>
   );
 }

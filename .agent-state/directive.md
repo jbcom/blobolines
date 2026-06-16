@@ -176,7 +176,7 @@ tokens own palette.
 
 ## M7 — Game loop, UI, meta
 - [x] Game states (menu/playing/gameover) + store; HUD (altimeter, crystals, combo)
-- [x] Menus via shadcn + Motion: main menu, game over, blob customizer, settings (volume/music/sensitivity/haptics → store + audio). Mechanics manual modal — Phase 2
+- [x] Menus via shadcn + Motion: main menu, game over, blob customizer, settings (volume/music/sensitivity/haptics → store + audio), mechanics manual (how-to-play)
 - [x] Persistence (Capacitor Preferences): best height, crystals, settings
 - [x] Combo/multiplier + scoring; best-height records. Milestone juice — Phase 2
 
