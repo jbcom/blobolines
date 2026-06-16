@@ -1,0 +1,40 @@
+{
+  "bands": [
+    {
+      "name": "ground",
+      "minHeight": 0,
+      "sky": { "top": "#ffe3c4", "mid": "#6fc8f0", "deep": "#5a4fb0" },
+      "fog": "#bfe0f5"
+    },
+    {
+      "name": "sky",
+      "minHeight": 120,
+      "sky": { "top": "#cfeefe", "mid": "#4aa6e8", "deep": "#2d5fb0" },
+      "fog": "#7fbfe8"
+    },
+    {
+      "name": "upper-atmosphere",
+      "minHeight": 320,
+      "sky": { "top": "#9fd0f5", "mid": "#3a6fc0", "deep": "#1a2f6e" },
+      "fog": "#4a6fae"
+    },
+    {
+      "name": "stratosphere",
+      "minHeight": 600,
+      "sky": { "top": "#6a8fd0", "mid": "#243a7a", "deep": "#0c1340" },
+      "fog": "#1c2a5e"
+    },
+    {
+      "name": "space",
+      "minHeight": 950,
+      "sky": { "top": "#2a2a55", "mid": "#0e1030", "deep": "#040414" },
+      "fog": "#080a1e"
+    },
+    {
+      "name": "deep-space",
+      "minHeight": 1400,
+      "sky": { "top": "#180a30", "mid": "#08040f", "deep": "#000000" },
+      "fog": "#020208"
+    }
+  ]
+}

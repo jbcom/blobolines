@@ -1,11 +1,13 @@
 import { useFrame, useThree } from "@react-three/fiber";
 import { useEffect, useMemo, useRef } from "react";
 import type { Color, Group, Mesh, ShaderMaterial, Vector3 } from "three";
+import { blob as blobCfg } from "@/config";
 import type { BlobSkin } from "@/core/types";
 import { packMetaballField } from "@/render/goo";
 import { MAX_GOO_BALLS, MetaballGooMaterial } from "@/render/materials";
 import type { Droplet } from "@/render/vfx";
-import { getBlobDiagnostics, useGameStore } from "@/state";
+import { combineScale, impactSquash, speedStretch } from "@/sim/blob";
+import { getAim, getBlobDiagnostics, useGameStore } from "@/state";
 import { palette } from "@/styles/tokens";
 import { BlobEyes } from "./BlobEyes";
 
@@ -29,8 +31,17 @@ export function GooField({ skin, blobRadius, getDroplets }: GooFieldProps) {
   const eyesRef = useRef<Group>(null);
   /** Surface-tension wobble envelope [0,1] — spikes on impact, decays each frame. */
   const wobble = useRef(0);
+  /** Current squash/stretch deform, sprung toward the target each frame. */
+  const deform = useRef({ x: 1, y: 1, z: 1 });
   const camera = useThree((s) => s.camera);
-  const material = useMemo(() => new MetaballGooMaterial() as unknown as ShaderMaterial, []);
+  const material = useMemo(() => {
+    const m = new MetaballGooMaterial() as unknown as ShaderMaterial;
+    // Wet/translucent goo: blend grazing edges over the scene. Keep depthWrite so the
+    // body still occludes the eyes/world correctly (the edge alpha is subtle).
+    m.transparent = true;
+    m.depthWrite = true;
+    return m;
+  }, []);
   // Hand-built material isn't JSX-declared, so R3F won't auto-dispose it — release the
   // compiled GL program on unmount (gameover→retry remounts GooField) to avoid leaking
   // programs until the mobile driver drops draw calls.
@@ -84,8 +95,50 @@ export function GooField({ skin, blobRadius, getDroplets }: GooFieldProps) {
     // (squash = 1 - impact*0.3), pump the wobble envelope up on a fresh impact, then let
     // it decay so the goo skin ripples and settles like a water balloon.
     const imp = Math.min(1, Math.max(0, (1 - diag.squash) / 0.3));
-    wobble.current = Math.max(wobble.current * Math.exp(-dt / 0.7), imp);
+    wobble.current = Math.max(wobble.current * Math.exp(-dt / blobCfg.wobbleDecayTau), imp);
     material.uniforms.u_wobble.value = wobble.current;
+
+    // Squash-and-stretch: stretch along velocity while flying, flatten on impact — the
+    // same model as the hero blob, now driven into the in-game goo so it's alive (was a
+    // rigid sphere). Spring toward the target so it bounces rather than snaps.
+    const [vx, vy, vz] = diag.velocity;
+    let target = combineScale(speedStretch(vx, vy, vz), impactSquash(imp));
+
+    // Puddle at rest: when grounded and slow, the goo isn't a hovering ball — it settles
+    // into a wide flat happy puddle on the pad. Blend toward a squat shape by how settled
+    // it is (slow + not airborne), and form back into a blob as it speeds up / launches.
+    const settled = diag.airborne ? 0 : 1 - Math.min(diag.speed / blobCfg.puddle.settleSpeed, 1);
+    if (settled > 0.01) {
+      const [px, py, pz] = blobCfg.puddle.scale;
+      target = {
+        x: target.x + (px - target.x) * settled,
+        y: target.y + (py - target.y) * settled,
+        z: target.z + (pz - target.z) * settled,
+      };
+    }
+
+    // Charging the slingshot: the resting puddle GATHERS UP toward the pull — it tenses
+    // into a taller, narrower goo ready to fling, scaled by drag charge. (The puddle is
+    // pulled up toward the finger; on release it forms into the flying blob.)
+    const aim = getAim();
+    if (aim && !diag.airborne) {
+      const g = Math.min(aim.charge, 1);
+      target = {
+        x: target.x * (1 - g * 0.22),
+        y: target.y * (1 + g * 0.45),
+        z: target.z * (1 - g * 0.22),
+      };
+    }
+    const sk = 1 - Math.exp(-dt / blobCfg.deformSpringTau);
+    deform.current.x += (target.x - deform.current.x) * sk;
+    deform.current.y += (target.y - deform.current.y) * sk;
+    deform.current.z += (target.z - deform.current.z) * sk;
+    (material.uniforms.u_center.value as Vector3).set(bx, by, bz);
+    (material.uniforms.u_deform.value as Vector3).set(
+      deform.current.x,
+      deform.current.y,
+      deform.current.z,
+    );
   });
 
   return (

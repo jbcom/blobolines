@@ -56,8 +56,11 @@ describe("stepTramp", () => {
 });
 
 describe("reboundMultiplier", () => {
-  it("booster rebounds hardest, standard is baseline", () => {
+  it("booster rebounds hardest, standard is the gently-springy baseline", () => {
     expect(reboundMultiplier.booster).toBeGreaterThan(reboundMultiplier.standard);
-    expect(reboundMultiplier.standard).toBe(1);
+    // Standard is slightly >1 so a clean drop roughly sustains the climb (a flat 1.0 let
+    // physics damping bleed all energy → blob always settled); booster is the big pop.
+    expect(reboundMultiplier.standard).toBeGreaterThan(1);
+    expect(reboundMultiplier.standard).toBeLessThan(1.3);
   });
 });

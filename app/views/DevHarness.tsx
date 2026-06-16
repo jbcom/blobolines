@@ -1,6 +1,6 @@
 import { useState } from "react";
 import type { BlobSkin } from "@/core/types";
-import { getBlobDiagnostics, requestLaunch, useGameStore, useWorldStore } from "@/state";
+import { getBlobDiagnostics, requestLaunch, setAim, useGameStore, useWorldStore } from "@/state";
 
 /**
  * Dev harness overlay — manual triggers for blob events so gameplay can be exercised
@@ -124,6 +124,13 @@ export function DevHarness() {
             }
           >
             + 50m altitude 📸
+          </button>
+          <button
+            type="button"
+            className={btn}
+            onClick={() => fire("aim", () => setAim({ dir: norm([0.35, 1, 0]), charge: 0.8 }))}
+          >
+            🎯 show aim 📸
           </button>
           <button
             type="button"

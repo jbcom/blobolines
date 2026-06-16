@@ -1,0 +1,11 @@
+{
+  "initialTarget": 180,
+  "maxRetainedTramps": 400,
+  "maxCrystals": 512,
+  "skinCost": {
+    "blue": 0,
+    "slime": 15,
+    "ghost": 30,
+    "ink": 50
+  }
+}

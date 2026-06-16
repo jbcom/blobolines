@@ -1,3 +1,4 @@
+import { launch as launchCfg } from "@/config";
 import type { TrampType } from "@/core/types";
 import { reboundMultiplier } from "@/sim/trampoline";
 
@@ -5,14 +6,18 @@ import { reboundMultiplier } from "@/sim/trampoline";
  * Launch + scoring math (pure). Converts an aim direction + charge into a launch
  * velocity, applying the trampoline's rebound and the clean-bounce combo multiplier.
  * The whole game is "go as high as possible", so launch power is the central lever.
+ * Tunables are data-driven from src/config/launch.json.
  */
 
-export const BASE_POWER = 14;
-export const POWER_PER_CHARGE = 17.5;
+export const BASE_POWER = launchCfg.basePower;
+export const POWER_PER_CHARGE = launchCfg.powerPerCharge;
 
-/** Combo multiplier from a clean-bounce streak (≥2 starts compounding). */
+/** Combo multiplier from a clean-bounce streak: 1× until `comboStart`, then +comboStep per
+ *  bounce. Anchored at comboStart (not hardcoded to 2) so the config value is respected —
+ *  at combo === comboStart the first bonus is exactly +comboStep. */
 export function comboMultiplier(combo: number): number {
-  return combo > 1 ? 1 + (combo - 1) * 0.15 : 1;
+  const { comboStart, comboStep } = launchCfg;
+  return combo >= comboStart ? 1 + (combo - comboStart + 1) * comboStep : 1;
 }
 
 /**

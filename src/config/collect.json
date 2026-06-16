@@ -1,0 +1,5 @@
+{
+  "pickupRadius": 1.5,
+  "magnetRadius": 12,
+  "magnetPullSpeed": 14
+}

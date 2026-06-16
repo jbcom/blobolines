@@ -18,9 +18,9 @@
   --tramp-green: #6cc04a;
 
   /* ---- Atmosphere: painterly sky/background ---- */
-  --sky-top: #cfe0e8; /* hazy upper sky */
-  --sky-mid: #8fb3c4; /* dusty blue-teal */
-  --sky-deep: #4f7488; /* deep ruins haze */
+  --sky-top: #ffe3c4; /* warm peach high light */
+  --sky-mid: #6fc8f0; /* bright sky blue */
+  --sky-deep: #5a4fb0; /* rich indigo base */
   --cream: #f3efd6; /* warm light shafts */
   --cream-soft: #f6f0c2;
 

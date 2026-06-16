@@ -1,3 +1,4 @@
+import { blob as blobCfg } from "@/config";
 import { clamp } from "@/core/math";
 
 /**
@@ -23,8 +24,8 @@ export interface SpeedStretchConfig {
 }
 
 export const DEFAULT_SPEED_STRETCH: SpeedStretchConfig = {
-  maxSpeed: 30,
-  maxStretch: 0.4,
+  maxSpeed: blobCfg.speedStretch.maxSpeed,
+  maxStretch: blobCfg.speedStretch.maxStretch,
 };
 
 /**
@@ -52,7 +53,10 @@ export function speedStretch(
  * Impact squash: a [0,1] impact amount flattens the blob on Y and bulges X/Z. Combine
  * (multiply) with speedStretch and a spring-back envelope for the full effect.
  */
-export function impactSquash(amount: number, maxFlatten = 0.45): SquashScale {
+export function impactSquash(
+  amount: number,
+  maxFlatten = blobCfg.impactSquash.maxFlatten,
+): SquashScale {
   const a = clamp(amount, 0, 1);
   const flat = a * maxFlatten;
   return { x: 1 + flat * 0.6, y: 1 - flat, z: 1 + flat * 0.6 };

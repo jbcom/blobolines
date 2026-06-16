@@ -1,0 +1,14 @@
+{
+  "maxGooBalls": 32,
+  "mergeDistSq": 2.6,
+  "splash": {
+    "countScale": 22,
+    "maxCount": 28,
+    "minSpeed": 4,
+    "maxSpeed": 13,
+    "minLife": 0.6,
+    "maxLife": 1.4
+  },
+  "wobbleAmplitude": 0.18,
+  "raymarchSteps": 48
+}

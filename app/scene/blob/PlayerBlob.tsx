@@ -39,6 +39,10 @@ export function PlayerBlob() {
   const ensureHeight = useWorldStore((s) => s.ensureHeight);
   const { splash, launchBurst, trail, reset: resetDroplets, get: getDroplets } = useDroplets();
   const maxY = useRef(0);
+  /** Highest pad the blob has actually landed on — death is measured below THIS, not the
+   *  airborne apex (a tall launch arcs >DEATH_FALL_DISTANCE above its own pad and would
+   *  otherwise self-destruct on the way back down to the very pad it left). */
+  const safeY = useRef(0);
   const lastEnsureY = useRef(0);
   const dead = useRef(false);
   /** Recent impact amount [0,1], set on landing and decaying each frame. */
@@ -53,6 +57,7 @@ export function PlayerBlob() {
     body.setTranslation({ x: 0, y: 3, z: 0 }, true);
     body.setLinvel({ x: 0, y: 0, z: 0 }, true);
     maxY.current = 3;
+    safeY.current = 3;
     lastEnsureY.current = 3;
     dead.current = false;
     resetPowerups();
@@ -133,6 +138,9 @@ export function PlayerBlob() {
     if (landed > 0) {
       const strength = Math.min(1, landed / MAX_IMPACT_SPEED);
       impact.current = strength;
+      // This pad is now the safe floor — death is measured below the highest pad reached,
+      // so a tall launch can fall back past DEATH_FALL_DISTANCE of its own apex and live.
+      if (p.y > safeY.current) safeY.current = p.y;
       // Fling a gooey splash from the contact point (just under the blob).
       splash([p.x, p.y - BLOB.radius, p.z], strength);
       // Haptic thump on landing (mobile), scaled to impact; respects the setting.
@@ -147,7 +155,9 @@ export function PlayerBlob() {
       }
     }
     impact.current = Math.max(0, impact.current - dt * 2.5);
-    const fallDepth = maxY.current - p.y;
+    // Death is fall below the highest pad LANDED on (safeY), not the airborne apex (maxY) —
+    // otherwise a big launch kills itself on the way back down to its own pad.
+    const fallDepth = safeY.current - p.y;
     const expr = classifyExpression({ vy: v.y, impact: impact.current, fallDepth, airborne });
 
     // Visual state for BlobActor (read via the bridge — no per-frame React render).

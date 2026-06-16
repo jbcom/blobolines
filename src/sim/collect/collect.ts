@@ -1,14 +1,16 @@
+import { collect as collectCfg } from "@/config";
 import type { Vec3 } from "@/core/types";
 
 /**
  * Collection + magnet sim (pure). Determines which crystals the blob gathers this step
  * and how the magnet power-up pulls nearby crystals toward the blob. No DOM/three —
- * operates on plain positions so it's unit-testable and deterministic.
+ * operates on plain positions so it's unit-testable and deterministic. Radii/speeds are
+ * data-driven from src/config/collect.json.
  */
 
-export const PICKUP_RADIUS = 1.5;
-export const MAGNET_RADIUS = 12;
-export const MAGNET_PULL_SPEED = 14;
+export const PICKUP_RADIUS = collectCfg.pickupRadius;
+export const MAGNET_RADIUS = collectCfg.magnetRadius;
+export const MAGNET_PULL_SPEED = collectCfg.magnetPullSpeed;
 
 const dist = (a: Vec3, b: Vec3): number => Math.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2]);
 

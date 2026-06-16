@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { world as worldCfg } from "@/config";
 import { createRng, type Rng } from "@/core/math";
 import type { TrampolineSpec, Vec3 } from "@/core/types";
 import { generateUpTo, type PowerUpSpec, starterPad } from "@/world";
@@ -24,13 +25,13 @@ interface WorldState {
   ensureHeight: (targetY: number) => void;
 }
 
-const INITIAL_TARGET = 180;
+const INITIAL_TARGET = worldCfg.initialTarget;
 /** Retain only the recent tail of the trampoline list — pads far below are unreachable
  *  (the blob dies after falling DEATH_FALL_DISTANCE) and TrampolineField keys by stable
  *  id, so dropping long-passed pads is safe and bounds the store over a long climb.
  *  (Crystals/powerups are NOT trimmed: their fields sync by array index, so a front-trim
  *  would shift indices and desync; their growth is slow + render-capped — left as-is.) */
-const MAX_RETAINED_TRAMPS = 400;
+const MAX_RETAINED_TRAMPS = worldCfg.maxRetainedTramps;
 
 /** Keep the last `max` items of an append-only list (drops the lowest, long-passed ones). */
 function tail<T>(list: T[], max: number): T[] {

@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { reboundMultiplier } from "@/sim/trampoline";
 import { BASE_POWER, comboMultiplier, launchVelocity } from "../launch";
 
 describe("comboMultiplier", () => {
@@ -16,9 +17,9 @@ describe("comboMultiplier", () => {
 describe("launchVelocity", () => {
   const up = [0, 1, 0] as const;
 
-  it("base power at zero charge straight up", () => {
+  it("base power at zero charge straight up (scaled by the pad's rebound)", () => {
     const v = launchVelocity(up, 0, "standard", 0);
-    expect(v[1]).toBeCloseTo(BASE_POWER, 5);
+    expect(v[1]).toBeCloseTo(BASE_POWER * reboundMultiplier.standard, 5);
     expect(v[0]).toBe(0);
     expect(v[2]).toBe(0);
   });

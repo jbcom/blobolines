@@ -1,3 +1,4 @@
+import { trampoline as trampCfg } from "@/config";
 import { type SpringState, stepSpring } from "@/core/math";
 import type { TrampType } from "@/core/types";
 
@@ -25,16 +26,20 @@ export function createTrampState(): TrampState {
   };
 }
 
-const DEPRESS_SPRING = { stiffness: 170, damping: 26 };
-const TILT_SPRING = { stiffness: 150, damping: 22 };
+// Spring + rebound tuning is data-driven from src/config/trampoline.json.
+const DEPRESS_SPRING = trampCfg.depressSpring;
+const TILT_SPRING = trampCfg.tiltSpring;
 
 /** Per-type launch rebound multiplier. */
-export const reboundMultiplier: Record<TrampType, number> = {
-  standard: 1,
-  booster: 1.8,
-  moving: 1,
-  fragile: 1.05,
-};
+export const reboundMultiplier: Record<TrampType, number> = trampCfg.reboundMultiplier;
+
+/** Below this rebound speed (m/s) the pad does NOT bounce the blob — the goo settles into
+ *  a resting puddle instead of jittering forever (and stops the runaway clean-combo). */
+export const REBOUND_SETTLE_SPEED = trampCfg.reboundSettleSpeed;
+
+/** `super` bonus pads guarantee at least this rebound speed (m/s) — a big mega-launch
+ *  regardless of how gently the blob lands on them. */
+export const SUPER_MIN_REBOUND = trampCfg.superMinRebound;
 
 /**
  * Compute the impulse the pad receives from an impact, as a target depress depth and

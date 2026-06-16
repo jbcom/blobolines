@@ -1,3 +1,4 @@
+import { goo as gooCfg } from "@/config";
 import type { Rng } from "@/core/math";
 import type { Vec3 } from "@/core/types";
 
@@ -27,14 +28,7 @@ export interface SplashConfig {
   maxLife: number;
 }
 
-export const DEFAULT_SPLASH: SplashConfig = {
-  countScale: 14,
-  maxCount: 18,
-  minSpeed: 3,
-  maxSpeed: 9,
-  minLife: 0.5,
-  maxLife: 1.1,
-};
+export const DEFAULT_SPLASH: SplashConfig = gooCfg.splash;
 
 /**
  * Spawn a radial burst of droplets from `origin` for an impact of `strength` [0,1].

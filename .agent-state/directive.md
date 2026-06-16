@@ -192,3 +192,56 @@ tokens own palette.
 - [x] STANDARDS.md, docs/STATE.md, CONTRIBUTING — present and substantive (verified, not stubs)
 - [x] Agentic: AGENTS.md (existed), per-system READMEs (src/sim, src/render, src/state, src/audio, app/scene), .github/copilot-instructions.md, .cursor/rules/blobolines.mdc
 - [x] HADS-format docs: docs/reference/ENGINEERING-NOTES.hads.md (AI manifest + [SPEC]/[BUG] blocks capturing verified facts + the real bugs hit this build)
+
+## M10 — "Make it ALIVE" (post-ship fixes; user feedback 2026-06-16)
+
+**Mandate (verbatim):** "no targeting, camera doesn't track the blob (zooms off camera),
+much more lifeless and dull vs the cyberpunk PoC, no real use of color (just blue+white),
+no deformation physics, no splat. + read the harness screenshots/diagnostics you've been
+capturing — close that loop."
+
+**Process fix:** READ artifacts/*.png + *.json after every change (I built capture but never
+read it back — write-only loop. That's why I missed all of the above).
+
+**Direction (user decision):** "Juice up the goo look" — keep the gooey daytime aesthetic,
+add the PoC's ENERGY (shake, follow-light, bloom, speed FX, color), NOT neon-cyberpunk.
+
+### Queue
+- [x] Camera follows the real blob x/y/z (was height-only, X/Z hard-locked) + impact shake — verified in artifacts/launch-up.png (blob now framed).
+- [x] Goo deformation in-game: squash/stretch wired into GooField (u_deform/u_center) — verified alive airborne (artifacts/launch-up.png); fixed the teardrop-merge by tightening MERGE_DIST_SQ + pinching off droplets that drop below the body (artifacts/start.png clean).
+- [~] Real color: type-tinted trampoline membranes + warm saturated sky DONE (verified); crystal/powerup color + richer grade still open.
+- [ ] [WAIT] PR #5 (feat/goo-alive) CI green + bot-review threads addressed → squash-merge (monitor armed).
+- [x] Splat: bigger juicier World-of-Goo splat — wider spray (maxCount 28, MAX_GOO_BALLS 32), larger impact-scaled decal + satellite splats on hard hits (verified: large multi-lobe goo covering the pad).
+- [x] Aim/targeting feedback: in-scene dotted ballistic trajectory arc while charging (aim bridge + TrajectoryPreview, arc-length spacing) — verified readable aim line.
+- [x] Gameplay: off-pad death fixed — death now measured below highest LANDED pad (safeY), not airborne apex; a tall launch lands + survives (verified alt 37m no Splat).
+- [x] Juice: BlobFollowLight follows + tints the scene to the blob skin (warms with combo, flashes on impact). (speed-FX/bloom polish still possible later.)
+
+### M10b — deeper feature requests (user feedback 2026-06-16, batch 2)
+- [x] Trampoline DEPRESSION: membrane (not the whole pad) now dips inward + tilts + flattens on impact, proportional to force, springs back — reads as a flexing sheet under the blob's weight.
+- [x] Backdrop CHANGES with height: SkyDome lerps biome bands (ground→sky→upper-atmo→stratosphere→space→deep-space) from blob altitude (config/biomes.json). Verified ground band; lerp unit-tested.
+- [x] Trampoline COLOR by height: pad hue blends toward the biome mid-color with altitude (mixHex), so pads cool/darken into space with the backdrop.
+- [x] BONUS trampolines: added the violet SUPER mega-launch pad (guaranteed big boost). More bonus types can follow this pattern.
+- [x] Powerup MODELS: rocket (Space Kit) + magnet (U-curve) GLBs from 3DLowPoly → public/assets/models, loaded via useGLTF w/ primitive Suspense fallback (self-contained re-export so no 404).
+- [x] WET look: dual-spec + subsurface + translucent wet shader (verified glistening). [next: color gradient]
+- [ ] [NEXT-BRANCH] BONUS trampolines: more mechanics beyond super (redirect/ice/sticky).
+- [ ] [NEXT-BRANCH] Splat pieces get REAL PHYSICS: droplets as their own Rapier bodies (bounce/roll/settle), not kinematic particles.
+- [ ] [NEXT-BRANCH] World STRATA / BIOMES geometry: real biome environment props/hazards per height band (backdrop colors done; geometry/strata next).
+- [ ] [NEXT-BRANCH] crystal/powerup color variety + blob color gradient across the body.
+
+### M10c — the blob IS goo, not a globe (user feedback 2026-06-16, batch 3) — HIGH PRIORITY
+The single biggest "it's not a blob" issue: right now it's a solid matte-colored GLOBE.
+A real Blobolines blob should:
+- [x] REST as a happy goo PUDDLE: grounded+slow blends deform toward a wide flat puddle;
+  forms back into a blob as it speeds up. Also fixed the runaway auto-bounce (removed the
+  rebound floor + settle threshold) so it actually comes to rest. Verified in harness.
+  (Still to refine: lift puddle center so it sits ON the pad, not half-sunk.)
+- [x] WET GLISTENING surface: dual specular (tight water hotspot + broad lobe + sheen),
+  subsurface glow, translucent grazing edges — verified glistening in harness (was matte).
+  (Still to refine: an actual color GRADIENT across the body, and drag-direction deform.)
+- [x] DEFORM on charge: the resting puddle GATHERS UP (taller, narrower) toward the pull while charging the slingshot, scaled by drag charge — tenses to fling. (Full directional lean toward the finger needs a shear; upward gather is the readable approximation.)
+- [x] LAUNCH FORMING: puddle gathers on charge → on release the deform springs to the flight blob shape (speedStretch) as it leaves — puddle→blob handled by the same spring.
+
+### M10d — architecture (user feedback 2026-06-16, batch 4)
+- [x] All tunables moved to JSON in src/config, decomposed by domain (physics/blob/launch/
+  trampoline/collect/goo/world/biomes) + typed barrel; sim/render read bases so modifiers
+  can scale them. Behavior-preserving, 166 tests green.

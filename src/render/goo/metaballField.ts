@@ -1,3 +1,4 @@
+import { goo as gooCfg } from "@/config";
 import type { Vec3 } from "@/core/types";
 
 /**
@@ -24,8 +25,11 @@ export interface MetaballField {
   radii: number[];
 }
 
-/** Squared world distance under which a droplet merges into the blob's goo. */
-export const MERGE_DIST_SQ = 9;
+/** Squared world distance under which a droplet merges into the blob's goo. Kept tight
+ *  so only freshly-flung droplets still touching the body blend in — once a droplet has
+ *  separated/fallen it pinches off cleanly instead of stringing a long teardrop tail.
+ *  Data-driven from src/config/goo.json. */
+export const MERGE_DIST_SQ = gooCfg.mergeDistSq;
 
 /**
  * Pack the blob body + nearby droplets into world-space metaball sources. Droplet 0 is
@@ -46,6 +50,10 @@ export function packMetaballField(
     const dx = d.position[0] - blob[0];
     const dy = d.position[1] - blob[1];
     const dz = d.position[2] - blob[2];
+    // Don't merge a droplet that has dropped clearly below the blob body — that's a
+    // separated/settling droplet, and bridging it strings a teardrop neck down to the
+    // pad. It pinches off as a free particle instead.
+    if (dy < -(blobRadius + 0.4)) continue;
     if (dx * dx + dy * dy + dz * dz < MERGE_DIST_SQ) {
       centers.push([d.position[0], d.position[1], d.position[2]]);
       radii.push(d.radius);

@@ -6,8 +6,14 @@ describe("design tokens", () => {
     expect(Object.keys(blobSkinColor).sort()).toEqual(["blue", "ghost", "ink", "slime"]);
   });
 
-  it("exposes the four trampoline gameplay types", () => {
-    expect(Object.keys(trampColor).sort()).toEqual(["booster", "fragile", "moving", "standard"]);
+  it("exposes the trampoline gameplay types (incl. the super bonus pad)", () => {
+    expect(Object.keys(trampColor).sort()).toEqual([
+      "booster",
+      "fragile",
+      "moving",
+      "standard",
+      "super",
+    ]);
   });
 
   it("maps every palette color to a valid 6-digit hex", () => {
