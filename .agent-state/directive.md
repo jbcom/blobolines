@@ -76,10 +76,22 @@ while queue has [ ] items: implement → verify (typecheck+lint+test, run the ap
 screenshot for visual/UI work) → commit (Conventional Commits) → dispatch pipelined local
 review (comprehensive-review:full-review + security-sast + code-simplifier, scoped to the
 diff, background) → fold findings forward → mark [x] → IMMEDIATELY next item. Never stop
-between packages, never schedule a politeness wakeup, never wait idly. While CI/review run
-in the background, start the next independent package. If one item is blocked, pick another
-[ ] item — there is always parallel work. Milestone boundaries get a broader review pass.
+between packages, never wait idly. While CI/review run in the background, start the next
+independent package. If one item is blocked, pick another [ ] item — there is always
+parallel work. Milestone boundaries get a broader review pass.
 Reference `~/src/arcade-cabinet/{kings-road,marmalade-drops,ebb-and-bloom,will-it-blow,bioluminescent-sea}` for patterns.
+
+### The end of EVERY turn opens the NEXT item — no scheduling crutch
+**Banned: ScheduleWakeup / cron / `/loop` self-pacing as a way to "continue later."** Those
+are pauses wearing a timer. The contiguous loop runs IN-TURN: finish an item, immediately
+start the next one in the same flow of work. The ONLY legitimate yields are the true
+blockers (interactive auth, a spend needing approval, real hardware, or remote state I
+already triggered — CI/deploy/dispatched-review — watched via Monitor with a heartbeat).
+A drained-feeling queue is not a stop: re-run the audit fan-out (review/UI/visual/audio/
+perf/game-design agents) to GENERATE the next batch of directives, append them here, and
+keep going. The queue is meant to stay long; growing it is part of the work.
+Batch into a PR roughly every ~6-10 commits of coherent work, open it, keep building the
+next batch on a fresh branch while CI runs — do not idle waiting on CI.
 
 ## Not an MVP — the long haul
 The goal is a COMPLETE, polished, fun game, not a minimal-visible demo. "It renders"
