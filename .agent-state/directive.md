@@ -367,8 +367,8 @@ Camera follow + shake, in-game deformation, wet glistening shader + color gradie
 
 ## M15 — game-design depth + CONFIRMED BUGS (from mechanics inventory, 2026-06-16)
 ### Bugs (do first — real correctness)
-- [ ] BUG: HUD comboLabel uses 1+(streak-1)*0.5 but actual comboMultiplier is 1+(combo-comboStart+1)*0.15 — player sees the wrong multiplier. Unify on the sim function.
-- [ ] BUG: MAX_COMBO=8 in combo.ts is never enforced at runtime (run.combo increments unclamped); onCleanBounce/breakCombo helpers exist but aren't wired. Either wire them or clamp.
+- [x] BUG fixed: ComboBadge now shows the real comboMultiplier (was a divergent 0.5 formula); deleted the dead buggy comboLabel.
+- [x] BUG fixed: runtime combo increment now clamps to MAX_COMBO (was unclamped).
 ### Mechanics depth
 - [ ] Add a real SCORE system (height + crystals + combo + style), persisted high score separate from best height.
 - [ ] Crystal depth: tiers/bonus/multiplier, not flat +1; consumable/upgrade sinks beyond cosmetic skins.

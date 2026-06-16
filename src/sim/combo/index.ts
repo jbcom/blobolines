@@ -1,8 +1,1 @@
-export {
-  breakCombo,
-  type ComboState,
-  comboLabel,
-  createCombo,
-  MAX_COMBO,
-  onCleanBounce,
-} from "./combo";
+export { breakCombo, type ComboState, createCombo, MAX_COMBO, onCleanBounce } from "./combo";

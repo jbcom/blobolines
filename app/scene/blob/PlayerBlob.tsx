@@ -4,6 +4,7 @@ import { useEffect, useRef } from "react";
 import { playLaunch, playSplat, setMusicAltitude } from "@/audio";
 import { ImpactStyle, impact as impact_ } from "@/platform";
 import { classifyExpression } from "@/sim/blob";
+import { MAX_COMBO } from "@/sim/combo";
 import { launchVelocity } from "@/sim/launch";
 import { BLOB, DEATH_FALL_DISTANCE, MAX_IMPACT_SPEED, WORLD_BOUND_XZ } from "@/sim/physics";
 import {
@@ -90,8 +91,9 @@ export function PlayerBlob() {
       body.setLinvel({ x: v.x, y: bounce.speed, z: v.z }, true);
       const run = useGameStore.getState().run;
       // Ice pads are slippery: a big bouncy launch but it BREAKS the clean-combo streak
-      // (risk/reward). Every other pad builds the combo.
-      setRun({ combo: bounce.type === "ice" ? 0 : run.combo + 1 });
+      // (risk/reward). Every other pad builds the combo, capped at MAX_COMBO (the launch
+      // multiplier is balanced around that cap; leaving it unclamped overshot).
+      setRun({ combo: bounce.type === "ice" ? 0 : Math.min(run.combo + 1, MAX_COMBO) });
     }
 
     // Launch: set velocity directly for a crisp, predictable pop.
