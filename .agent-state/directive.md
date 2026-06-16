@@ -152,7 +152,7 @@ tokens own palette.
 ## M3 — Gooey blob (the star)
 - [x] Blob rendering: dual path — goo-shaded sphere (menu/fixtures) + raymarched metaball goo skin (in-game, GooField + MetaballGooMaterial) that merges blob+droplets
 - [x] Squash-and-stretch deformation driven by velocity/impact; springy approach to target scale
-- [ ] Jiggle / surface-tension wobble secondary motion (vertex-level) — Phase 2 polish
+- [x] Jiggle / surface-tension wobble secondary motion (vertex-level): uWobble vertex displacement on GooMaterial + wobbleField SDF term on MetaballGooMaterial, impact-driven envelope (browser-verified rippled silhouette)
 - [x] Gooey surface shader: fresnel rim, light-wrap, wet specular + shimmer
 - [x] Blob skins: all 4 (blue/slime/ghost/ink) wired to store; BlobCustomizer modal (pick/unlock with crystals) on title — verified rendering. (Fixed a real shadcn Dialog bug: Motion can't interpolate calc()↔% transforms — split centering to CSS, animate only opacity/y/scale.)
 - [x] **Big expressive blinking eyes** — procedural geometry on the goo face (depthTest-on-top), idle/blink/squint/wide/tear via eyeShape; world-space goo+eye alignment fixed
@@ -166,9 +166,10 @@ tokens own palette.
 ## M5 — Goo VFX & juice (the messy fluidity)
 - [x] Gooey splash droplet system on every collision (metaball droplets merge into the goo) — replaces PoC cubic sparks
 - [x] Splat decals (Canvas2D goo-splat painter, src/render/vfx/splat) — wire onto pads Phase 2
-- [ ] Wet goo trail behind blob; launch burst; combo flame — Phase 2
+- [x] Wet goo trail behind blob (distance-throttled droplet wake); launch burst (downward pad kick); combo flame (molten u_heat shader glow, browser-verified)
 - [x] @react-three/postprocessing stack: bloom + vignette + chromatic (speed-reactive) + color grade (app/scene/postfx); DOF/N8AO optional Phase 2
-- [ ] anime.js + Motion micro-interactions across HUD/menus; haptics on mobile impacts — Phase 2
+- [x] haptics on mobile impacts (impact-scaled Heavy/Medium/Light on landing, setting-gated)
+- [x] anime.js + Motion micro-interactions across HUD/menus: usePunchOnChange hook (anime.js elastic punch) on combo badge + crystal counter; Motion entrances retained
 
 ## M6 — Audio (Tone.js)
 - [x] Tone.js engine (lazy, gain-bus) + bounce/launch/chime/powerup/splat synths, wired into gameplay; no-op-before-init tests
