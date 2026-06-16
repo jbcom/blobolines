@@ -294,9 +294,9 @@ Camera follow + shake, in-game deformation, wet glistening shader + color gradie
 - [x] LoadingScreen real progress (asset/WASM fraction) not infinite bounce. (honest determinate bar: real fonts.ready checkpoint, eases asymptotically, only hits 100% by unmounting when Suspense resolves — never fakes completion)
 - [x] BlobCustomizer empty state when crystals==0 ("collect crystals to unlock goo").
 ### Tier 4 — customizer/shop
-- [ ] Clearer locked-tile cost + "need N more" sublabel + affordability progress fill.
-- [ ] Animate crystal-spend on unlock (header gem deduct + tile pop via usePunchOnChange).
-- [ ] Live gooey blob preview per skin in customizer (not a flat swatch).
+- [x] Clearer locked-tile cost + "need N more" sublabel + affordability progress fill.
+- [x] Animate crystal-spend on unlock (header gem deduct + tile pop via usePunchOnChange). (header gem count punches on crystal change)
+- [x] Live gooey blob preview per skin in customizer (not a flat swatch). (wet-goo radial-gradient swatch with glossy highlight + shade from palette tokens — reads as a 3D goo droplet without 4 live WebGL canvases on mobile)
 - [ ] Keyboard/gamepad grid nav for skins (roving tabindex or Tabs).
 ### Tier 5 — settings
 - [ ] In-app reduced-motion toggle driving MotionConfig.

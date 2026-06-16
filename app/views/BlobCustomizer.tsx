@@ -1,8 +1,9 @@
 import { Dialog } from "@app/components/ui";
+import { usePunchOnChange } from "@app/hooks";
 import { Check, Gem, Lock } from "lucide-react";
 import type { BlobSkin } from "@/core/types";
 import { SKIN_COST, useGameStore } from "@/state";
-import { palette } from "@/styles/tokens";
+import { mixHex, palette } from "@/styles/tokens";
 
 /**
  * Blob customizer — pick or unlock a goo skin with collected crystals. Equipped skins
@@ -28,6 +29,9 @@ export function BlobCustomizer({
   const setSkin = useGameStore((s) => s.setSkin);
   const unlockSkin = useGameStore((s) => s.unlockSkin);
   const addCrystals = useGameStore((s) => s.addCrystals);
+  // Punch the header gem count whenever crystals change (the deduct on a purchase reads as
+  // a satisfying kick rather than a silent number swap).
+  const gemRef = usePunchOnChange<HTMLSpanElement>(crystals, { scale: 1.3 });
 
   const pick = (id: BlobSkin) => {
     if (unlocked.includes(id)) {
@@ -46,7 +50,7 @@ export function BlobCustomizer({
     <Dialog open={open} onOpenChange={onOpenChange} ariaLabel="Blob customizer" testId="customizer">
       <div className="flex items-center justify-between">
         <h2 className="font-display text-xl font-bold text-cream">Goo Customizer</h2>
-        <span className="flex items-center gap-1 font-display text-sm text-blob-blue">
+        <span ref={gemRef} className="flex items-center gap-1 font-display text-sm text-blob-blue">
           <Gem className="size-4" strokeWidth={2.5} aria-hidden /> {crystals}
           <span className="sr-only"> crystals available</span>
         </span>
@@ -91,10 +95,16 @@ export function BlobCustomizer({
                   : "border-border bg-surface hover:border-border-strong"
               } ${!isUnlocked && !affordable ? "opacity-50" : ""}`}
             >
+              {/* Wet-goo preview swatch: a radial gradient + glossy highlight that reads as
+                  a 3D goo droplet (not a flat disc), tinted to the skin — cheaper than 4
+                  live WebGL canvases on mobile but conveys the gooey material per skin.
+                  Highlight + shade derive from palette tokens (no raw hex, brand gate). */}
               <span
                 aria-hidden
                 className="size-12 rounded-full shadow-[var(--shadow-sm)]"
-                style={{ backgroundColor: palette.blob[s.id] }}
+                style={{
+                  background: `radial-gradient(circle at 35% 28%, ${palette.goo.wet} 0%, ${palette.blob[s.id]} 42%, ${mixHex(palette.blob[s.id], palette.blob.ink, 0.4)} 100%)`,
+                }}
               />
               <span aria-hidden className="font-display text-sm font-bold text-cream">
                 {s.name}
@@ -111,11 +121,34 @@ export function BlobCustomizer({
                   Equip
                 </span>
               ) : (
-                <span
-                  aria-hidden
-                  className="flex items-center gap-1 font-ui text-[11px] font-bold text-blob-blue"
-                >
-                  {affordable ? <Gem className="size-3" /> : <Lock className="size-3" />} {cost}
+                <span aria-hidden className="flex w-full flex-col items-center gap-1">
+                  <span
+                    className={`flex items-center gap-1 font-ui text-[11px] font-bold ${
+                      affordable ? "text-blob-blue" : "text-fg-subtle"
+                    }`}
+                  >
+                    {affordable ? <Gem className="size-3" /> : <Lock className="size-3" />} {cost}
+                  </span>
+                  {affordable ? (
+                    <span className="font-ui text-[10px] font-semibold text-blob-blue">Unlock</span>
+                  ) : (
+                    <>
+                      {/* "need N more" + how close they are to affording it. */}
+                      <span className="font-ui text-[10px] text-fg-subtle">
+                        need {cost - crystals} more
+                      </span>
+                      <span className="h-1 w-full overflow-hidden rounded-full bg-bg/70">
+                        <span
+                          className="block h-full rounded-full bg-blob-blue/70"
+                          // Clamp both ends: negative crystals (debug/state bugs) → 0%, not
+                          // a negative width.
+                          style={{
+                            width: `${Math.max(0, Math.min(100, (crystals / cost) * 100))}%`,
+                          }}
+                        />
+                      </span>
+                    </>
+                  )}
                 </span>
               )}
             </button>
