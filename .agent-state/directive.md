@@ -42,10 +42,17 @@ ADD(union) blob+nearby droplets into a merged goo Brush in-place (batched, no al
 SUB splats from pads — no Paper.js→extrude proxy, no fluid-sim (obsolete). Fallback:
 drei <MarchingCubes> metaballs. Goo shader + procedural eyes render the merged Brush.
 
-## CURRENT PHASE-1 BLOCKER
-Rapier <Physics> suspends forever in Vite — PlayerBlob/TrampolineField never mount
-(verified: mount log never fires, blob diagnostics frozen at defaults, scene empty in
-playing). stuck-loop-debugger dispatched. Dev harness (app/views/DevHarness; ?dev or DEV
+## Phase-1 PLAYABLE: PROVEN (commit e21f9c9)
+Game is playable end-to-end: blob rests on pad → drag-slingshot launch → climbs (altimeter
+rises) → fall → game over → replay. Proven by e2e/playable.spec.ts against BOTH dev and the
+production preview build. Rapier <Physics>-suspension blocker SOLVED (optimizeDeps.exclude
+rapier+compat; prod manualChunks keeps rapier in `three` chunk; rapier3d-compat inlines WASM
+so no .wasm asset needed). 122 unit + 3 browser + 1 e2e green.
+Remaining for Phase-1 merge: address PR feedback (CodeRabbit/bots/CI) on PR #2 → squash-merge.
+Then Phase 2 (polish) on a fresh branch: goo CSG skin, splat VFX, jiggle, audio depth, juice.
+
+## (resolved) Dev harness
+Dev harness (app/views/DevHarness; ?dev or DEV
 button) fires blob events + auto-writes screenshot + before/after diagnostics JSON to
 gitignored artifacts/ via Vite middleware (scripts/capturePlugin.ts) — proven working;
 USE IT to verify gameplay headlessly instead of timing manual screenshots.
@@ -130,11 +137,11 @@ tokens own palette.
 - [ ] Loading screen, app icon / favicon, splash (blob identity)
 
 ## M2 — Core engine & deterministic sim
-- [ ] RNG facade src/core/math/rng.ts (cyrb128 → mulberry32) + clock facade + unit tests
-- [ ] Fixed-timestep engine loop (accumulator) driven from useFrame; koota world + traits
-- [ ] Physics: @react-three/rapier world, gravity, blob rigidbody, kinematic trampolines
-- [ ] Camera rig: vertical follow, FOV warp on launch, screen shake, look-ahead
-- [ ] Input: @use-gesture/react unified pointer/touch + keyboard; slingshot vs air-steer modes
+- [x] RNG facade + clock facade + unit tests (M0.5)
+- [x] Fixed-timestep engine loop (accumulator) + unit tests (M0.5)
+- [x] Physics: @react-three/rapier world, gravity, blob rigidbody, fixed trampoline colliders + sensors (WASM-suspension fix proven)
+- [x] Camera rig: menu orbit + in-run vertical follow (damped). FOV warp on launch + screen shake — polish, Phase 2.
+- [x] Input: @use-gesture slingshot drag → launch impulse (LaunchInput). Air-steer + keyboard binding (pure math done) wired in Phase 2.
 
 ## M3 — Gooey blob (the star)
 - [x] Blob rendering: goo-shaded deformable 3D sphere (chosen over metaball field for the single player body; metaball reserved for splash VFX) + WebGL fixture test
