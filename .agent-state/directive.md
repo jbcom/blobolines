@@ -297,7 +297,7 @@ Camera follow + shake, in-game deformation, wet glistening shader + color gradie
 - [x] Clearer locked-tile cost + "need N more" sublabel + affordability progress fill.
 - [x] Animate crystal-spend on unlock (header gem deduct + tile pop via usePunchOnChange). (header gem count punches on crystal change)
 - [x] Live gooey blob preview per skin in customizer (not a flat swatch). (wet-goo radial-gradient swatch with glossy highlight + shade from palette tokens — reads as a 3D goo droplet without 4 live WebGL canvases on mobile)
-- [ ] Keyboard/gamepad grid nav for skins (roving tabindex or Tabs).
+- [x] Keyboard/gamepad grid nav for skins (roving tabindex or Tabs). (roving tabindex + arrow-key nav over the 2-col skin grid; a desktop/a11y secondary — mobile is touch-first)
 ### Tier 5 — settings
 - [x] In-app reduced-motion toggle driving MotionConfig. (settings.reducedMotion → MotionConfig reducedMotion "always"/"user", moved into App so it's reactive)
 - [x] Reset-progress action (confirm) clearing best/crystals/unlocks. (store.resetProgress + two-step confirm button in Settings)
@@ -319,7 +319,20 @@ Camera follow + shake, in-game deformation, wet glistening shader + color gradie
 - [ ] Reduced-motion guards on every new flourish (static cue fallback).
 
 ## M13 — visual/render/VFX depth (from visual audit, 2026-06-16)
-- [x] Enable Canvas shadows + shadow camera on key light; castShadow/receiveShadow blob+pads (castShadow set but Canvas has no shadows prop — dead). (RESOLVED differently: a fixed directional shadow frustum can't follow the blob to ~1400m and is costly on mobile; grounding comes from the blob-following BlobShadow contact disc instead. No Canvas shadow map.)
+### Blobby the protagonist — MORE BLOBBY, less ball (owner feedback 2026-06-16, HIGH PRIORITY)
+Blobby reads too much like a deforming sphere. Make it genuinely gooey/fluid with a wide
+range of deformation, and give it a MOUTH for expressiveness. (Input note: this is a MOBILE
+game — touch/drag is primary; keyboard is a minor desktop-only secondary, don't over-invest.)
+- [ ] A MYRIAD of deformation possibilities, not just uniform squash/stretch: directional
+      shear toward drag/velocity, asymmetric lobes/blobbing, jiggle that travels around the
+      body, wind/settle sag, anticipation pinch before launch — driven by velocity, impact,
+      charge, and surface contact. Blobby should rarely look like a clean sphere.
+- [ ] Stronger fluid dynamics in the goo skin: surface-tension wobble that propagates +
+      overshoots, droplet bulge/pinch at the contact point, a wet sag at rest — push the CSG/
+      shader goo toward World-of-Goo fluidity, away from rigid-ball reads.
+- [ ] MOUTH for Blobby: a procedural mouth (alongside the eyes) that expresses state — open
+      "wheee" on launch/airborne, flat/grimace on hard impact, smile at rest/record, "o" of
+      surprise near death. Drive it off the same diagnostics the eyes use. castShadow/receiveShadow blob+pads (castShadow set but Canvas has no shadows prop — dead). (RESOLVED differently: a fixed directional shadow frustum can't follow the blob to ~1400m and is costly on mobile; grounding comes from the blob-following BlobShadow contact disc instead. No Canvas shadow map.)
 - [x] Soft fake contact shadow under the blob, scaled by altitude+squash (BlobShadow). (flat alpha disc on groundY, NOT drei ContactShadows — avoids the composer depth conflict; also fixed the dark-ring splat-decal bug: gradient faded to rgba(0,0,0,0) → dark edges; now toTransparent(color))
 - [x] ACESFilmic toneMapping + outputColorSpace on Canvas gl; drop the manual soft-clamp hack in metaballGoo. (soft-clamp gone with metaballGoo's deletion; CSG goo uses GooMaterial)
 - [x] Wire biome fog into the scene (biomeSkyAt.fog is computed but unused) — fogExp2 by altitude, hides far cutoff.
