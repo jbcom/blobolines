@@ -1,9 +1,11 @@
 import { useFrame } from "@react-three/fiber";
-import { useEffect, useRef } from "react";
+import { Suspense, useEffect, useRef } from "react";
 import type { Group } from "three";
 import { playPowerup } from "@/audio";
+import type { PowerUpType } from "@/core/types";
 import { activatePowerup, getBlobDiagnostics, useWorldStore } from "@/state";
 import { palette } from "@/styles/tokens";
+import { PowerUpModel } from "./PowerUpModel";
 
 /**
  * PowerUpField — renders the generated power-ups (magnet = blue torus, thruster = orange
@@ -60,29 +62,41 @@ export function PowerUpField() {
       {powerups.map((p, i) => (
         // biome-ignore lint/suspicious/noArrayIndexKey: append-only world list
         <group key={i}>
-          {p.type === "magnet" ? (
-            <mesh>
-              <torusGeometry args={[0.45, 0.16, 10, 24]} />
-              <meshStandardMaterial
-                color={palette.tramp.blue}
-                emissive={palette.tramp.blue}
-                emissiveIntensity={0.7}
-                roughness={0.2}
-              />
-            </mesh>
-          ) : (
-            <mesh rotation={[Math.PI, 0, 0]}>
-              <coneGeometry args={[0.4, 0.9, 16]} />
-              <meshStandardMaterial
-                color={palette.tramp.orange}
-                emissive={palette.tramp.orange}
-                emissiveIntensity={0.7}
-                roughness={0.2}
-              />
-            </mesh>
-          )}
+          {/* GLB model (3DLowPoly) with the primitive as the Suspense fallback so the
+              powerup never blanks while the model streams in. */}
+          <Suspense fallback={<PrimitivePowerup type={p.type} />}>
+            <PowerUpModel type={p.type} />
+          </Suspense>
         </group>
       ))}
     </group>
+  );
+}
+
+/** Primitive fallback (cone/torus) shown until the GLB model loads. */
+function PrimitivePowerup({ type }: { type: PowerUpType }) {
+  if (type === "magnet") {
+    return (
+      <mesh>
+        <torusGeometry args={[0.45, 0.16, 10, 24]} />
+        <meshStandardMaterial
+          color={palette.tramp.blue}
+          emissive={palette.tramp.blue}
+          emissiveIntensity={0.7}
+          roughness={0.2}
+        />
+      </mesh>
+    );
+  }
+  return (
+    <mesh rotation={[Math.PI, 0, 0]}>
+      <coneGeometry args={[0.4, 0.9, 16]} />
+      <meshStandardMaterial
+        color={palette.tramp.orange}
+        emissive={palette.tramp.orange}
+        emissiveIntensity={0.7}
+        roughness={0.2}
+      />
+    </mesh>
   );
 }
