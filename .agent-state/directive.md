@@ -474,7 +474,13 @@ permeability (permeable one-way pads rejected by owner).
 - [ ] Hazards: add at least 2 (e.g. crumbling gap, spike pad, wind gust, drifting obstacle) gated by biome/height.
 - [ ] More powerups beyond magnet/thruster: shield/second-life, slow-mo, score-doubler, multi-bounce; allow stacking or distinct refresh.
 - [ ] Comeback/revive mechanic on death (watch-style or one-shot shield) for run length.
-- [ ] Difficulty curve beyond pad-shrink: vary spacing, gravity, type mix, crystal/powerup density by height.
+- [x] Difficulty curve beyond pad-shrink: vertical SPACING now widens with altitude (+0→3m
+      base by y=600, capped under the flat-launch clearance so the climb proof still passes);
+      TYPE MIX already altitude-weighted (pickPadType) and CRYSTAL tiers altitude-gated
+      (crystalTier). Gravity is deliberately NOT varied — it's a global Rapier constant; per-
+      height gravity would fight determinism + the reachability model for marginal gain.
+      Crystal/powerup spawn density is uniform-by-design (the tier/type weighting carries the
+      progression); revisit only if playtest shows the high tower feels sparse.
 - [ ] Daily-challenge seed plumbing (Rng is seedable; add a daily seed + leaderboard-ready run hash).
 - [ ] Missions/objectives/achievements layer (e.g. "reach 200m", "10-combo", "100 crystals").
 - [ ] Charge-time/overcharge nuance on the slingshot (hold penalty or perfect-release window).

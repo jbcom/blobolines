@@ -41,6 +41,22 @@ describe("world generator", () => {
     if (low && high) expect(high.width).toBeLessThan(low.width);
   });
 
+  it("widens vertical spacing with altitude (difficulty curve)", () => {
+    const { trampolines } = generateUpTo(createRng(2), 0, 700);
+    // Average gap over the low stretch vs the high stretch — gaps should grow as it climbs.
+    const gaps: { y: number; gap: number }[] = [];
+    for (let i = 1; i < trampolines.length; i++) {
+      gaps.push({
+        y: trampolines[i].position[1],
+        gap: trampolines[i].position[1] - trampolines[i - 1].position[1],
+      });
+    }
+    const lowGaps = gaps.filter((g) => g.y < 100).map((g) => g.gap);
+    const highGaps = gaps.filter((g) => g.y > 500).map((g) => g.gap);
+    const avg = (xs: number[]) => xs.reduce((a, b) => a + b, 0) / xs.length;
+    expect(avg(highGaps)).toBeGreaterThan(avg(lowGaps));
+  });
+
   it("can extend incrementally from a prior height", () => {
     const rng = createRng(7);
     const first = generateUpTo(rng, 0, 100);

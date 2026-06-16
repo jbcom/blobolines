@@ -105,7 +105,12 @@ export function generateUpTo(
   let prev: TrampolineSpec | null = prevPad;
 
   while (y < targetY) {
-    const stepY = 7.5 + rng.next() * 6.8;
+    // Vertical spacing GROWS with altitude (difficulty curve): gaps widen from ~7.5–14.3m low
+    // to ~+4m higher, so the climb demands more launch commitment as it goes. Capped well under
+    // the flat-launch clearance at CLIMB_SPEED (vy²/2g ≈ 20.4m) so the reachability guarantee
+    // holds — the climb-proof sweep verifies the widened steps still chain.
+    const spacingBoost = Math.min(1, y / 600) * 3;
+    const stepY = 7.5 + spacingBoost + rng.next() * 6.8;
     y += stepY;
 
     // Spiral placement: angle advances with height, radius gently oscillates.
