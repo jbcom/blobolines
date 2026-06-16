@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { createRng } from "@/core/math";
 import type { Vec3 } from "@/core/types";
-import { spawnSplash, stepDroplet } from "../droplets";
+import { spawnLaunchBurst, spawnSplash, spawnTrailDroplet, stepDroplet } from "../droplets";
 
 const ORIGIN: Vec3 = [0, 5, 0];
 
@@ -27,6 +27,55 @@ describe("spawnSplash", () => {
     for (const d of ds) expect(d.velocity[1]).toBeGreaterThanOrEqual(0);
     // At least some lateral spread.
     expect(ds.some((d) => Math.abs(d.velocity[0]) + Math.abs(d.velocity[2]) > 0.5)).toBe(true);
+  });
+});
+
+describe("spawnLaunchBurst", () => {
+  it("kicks droplets downward off the pad", () => {
+    const ds = spawnLaunchBurst(ORIGIN, 1, createRng(5));
+    expect(ds.length).toBeGreaterThan(0);
+    // Downward bias: every droplet starts with vy <= 0 (opposite of a splash).
+    for (const d of ds) expect(d.velocity[1]).toBeLessThanOrEqual(0);
+  });
+
+  it("scales droplet count with charge", () => {
+    const weak = spawnLaunchBurst(ORIGIN, 0, createRng(1));
+    const strong = spawnLaunchBurst(ORIGIN, 1, createRng(1));
+    expect(strong.length).toBeGreaterThan(weak.length);
+  });
+
+  it("is deterministic per seed", () => {
+    expect(spawnLaunchBurst(ORIGIN, 1, createRng(9))).toEqual(
+      spawnLaunchBurst(ORIGIN, 1, createRng(9)),
+    );
+  });
+});
+
+describe("spawnTrailDroplet", () => {
+  const DIR: Vec3 = [0, 1, 0];
+
+  it("lags behind the blob (velocity opposes travel direction)", () => {
+    // With near-zero jitter dominance: a fast blob's trail droplet should drift back.
+    let backward = 0;
+    for (let i = 0; i < 20; i++) {
+      const d = spawnTrailDroplet(ORIGIN, DIR, 20, createRng(i + 1));
+      if (d.velocity[1] < 0) backward++;
+    }
+    // The -dir*speed*0.15 term (≈ -0.6) dominates the ±0.6 jitter most of the time.
+    expect(backward).toBeGreaterThan(10);
+  });
+
+  it("spawns a single short-lived droplet near the origin", () => {
+    const d = spawnTrailDroplet(ORIGIN, DIR, 10, createRng(2));
+    expect(d.life).toBeLessThan(0.7);
+    expect(Math.abs(d.position[0] - ORIGIN[0])).toBeLessThan(0.5);
+    expect(Math.abs(d.position[2] - ORIGIN[2])).toBeLessThan(0.5);
+  });
+
+  it("is deterministic per seed", () => {
+    expect(spawnTrailDroplet(ORIGIN, DIR, 12, createRng(4))).toEqual(
+      spawnTrailDroplet(ORIGIN, DIR, 12, createRng(4)),
+    );
   });
 });
 

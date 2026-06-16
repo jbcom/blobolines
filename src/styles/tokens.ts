@@ -28,6 +28,8 @@ export const palette = {
     splash: "#2e8bf0",
     rim: "#bfe3ff",
     wet: "#ffffff",
+    /** Combo "flame" glow — ignites the goo rim warm as the bounce streak builds. */
+    flame: "#ff8a3c",
   },
   /** Procedural-eye colors (sclera/bezel/pupil/glint/tear) — functional, kept here so
    *  the brand gate has one source of truth. */

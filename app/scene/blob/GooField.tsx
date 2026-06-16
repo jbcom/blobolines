@@ -5,7 +5,7 @@ import type { BlobSkin } from "@/core/types";
 import { packMetaballField } from "@/render/goo";
 import { MAX_GOO_BALLS, MetaballGooMaterial } from "@/render/materials";
 import type { Droplet } from "@/render/vfx";
-import { getBlobDiagnostics } from "@/state";
+import { getBlobDiagnostics, useGameStore } from "@/state";
 import { palette } from "@/styles/tokens";
 import { BlobEyes } from "./BlobEyes";
 
@@ -71,6 +71,11 @@ export function GooField({ skin, blobRadius, getDroplets }: GooFieldProps) {
     material.uniforms.u_time.value = state.clock.elapsedTime;
     (material.uniforms.u_color.value as Color).set(palette.blob[skin]);
     (material.uniforms.u_rim.value as Color).set(palette.goo.rim);
+
+    // Combo flame: a streak of 3+ clean bounces lights the goo, ramping to full heat by
+    // ~8 in a row. Read imperatively (combo changes rarely) so GooField never re-renders.
+    const combo = useGameStore.getState().run.combo;
+    material.uniforms.u_heat.value = Math.min(1, Math.max(0, (combo - 2) / 6));
   });
 
   return (

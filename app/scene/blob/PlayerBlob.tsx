@@ -37,7 +37,7 @@ export function PlayerBlob() {
   const setPhase = useGameStore((s) => s.setPhase);
   const commitBestHeight = useGameStore((s) => s.commitBestHeight);
   const ensureHeight = useWorldStore((s) => s.ensureHeight);
-  const { splash, get: getDroplets } = useDroplets();
+  const { splash, launchBurst, trail, get: getDroplets } = useDroplets();
   const maxY = useRef(0);
   const lastEnsureY = useRef(0);
   const dead = useRef(false);
@@ -92,12 +92,22 @@ export function PlayerBlob() {
       body.wakeUp();
       body.setLinvel({ x: lv[0], y: lv[1], z: lv[2] }, true);
       playLaunch(req.charge);
+      // Kick a downward goo burst off the pad as the blob pops.
+      launchBurst([p.x, p.y - BLOB.radius, p.z], req.charge);
     } else if (airborne) {
       // Mid-air steering: nudge lateral velocity on the X/Z plane (PoC air control).
       const [sx, sz] = getAirSteer();
       if (sx !== 0 || sz !== 0) {
         body.setLinvel({ x: v.x + sx * dt, y: v.y, z: v.z + sz * dt }, true);
       }
+    }
+
+    // Wet goo trail: while flying fast, shed a lagging droplet wake behind the blob.
+    // Distance-throttled inside useDroplets so the spacing is frame-rate independent.
+    const speed = Math.hypot(v.x, v.y, v.z);
+    if (airborne && speed > 6) {
+      const inv = 1 / speed;
+      trail([p.x, p.y, p.z], [v.x * inv, v.y * inv, v.z * inv], speed);
     }
 
     // Keep the blob inside the lateral play bounds.
@@ -143,7 +153,7 @@ export function PlayerBlob() {
     setBlobDiagnostics({
       position: [p.x, p.y, p.z],
       velocity: [v.x, v.y, v.z],
-      speed: Math.hypot(v.x, v.y, v.z),
+      speed,
       airborne,
       expression: expr,
       squash: 1 - impact.current * 0.3,

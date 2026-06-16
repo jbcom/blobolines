@@ -28,6 +28,7 @@
   --goo-splash: #2e8bf0;
   --goo-rim: #bfe3ff; /* fresnel rim highlight */
   --goo-wet: #ffffff; /* specular sheen */
+  --goo-flame: #ff8a3c; /* combo streak glow */
 
   /* ---- Semantic UI surface (dark, glassy, soft) ---- */
   --bg: #0e1822;

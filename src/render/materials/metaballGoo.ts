@@ -12,7 +12,8 @@ import { palette } from "@/styles/tokens";
  * topology every frame and have no working cabinet precedent.
  *
  * Uniforms: u_balls[] world-space metaball centers, u_radii[] per-ball radius,
- * u_count active count, u_color/u_rim the goo palette, u_time for shimmer.
+ * u_count active count, u_color/u_rim the goo palette, u_time for shimmer, u_heat [0,1]
+ * the combo "flame" charge that ignites a warm pulsing fresnel glow as the streak builds.
  */
 
 export const MAX_GOO_BALLS = 24;
@@ -24,7 +25,9 @@ export const MetaballGooMaterial = shaderMaterial(
     u_count: 0,
     u_color: new THREE.Color(palette.blob.blue),
     u_rim: new THREE.Color(palette.goo.rim),
+    u_flame: new THREE.Color(palette.goo.flame),
     u_time: 0,
+    u_heat: 0,
   },
   /* glsl */ `
     varying vec3 vWorldPos;
@@ -46,7 +49,9 @@ export const MetaballGooMaterial = shaderMaterial(
     uniform int u_count;
     uniform vec3 u_color;
     uniform vec3 u_rim;
+    uniform vec3 u_flame;
     uniform float u_time;
+    uniform float u_heat;
 
     varying vec3 vWorldPos;
 
@@ -100,7 +105,17 @@ export const MetaballGooMaterial = shaderMaterial(
       float shimmer = 1.0 + 0.06 * sin(u_time * 3.0 + p.x * 4.0 + p.y * 3.0);
       float spec = pow(max(dot(n, H), 0.0), 48.0) * 1.6 * shimmer;
 
-      vec3 col = u_color * (0.55 + 0.4 * diff) + spec + fres * u_rim * 0.8;
+      // Combo flame: as the streak heats up, the goo turns molten — its body color is
+      // pushed toward the warm flame hue and the fresnel edge ignites with a pulsing
+      // glow, so it reads as fire (not a blue blob with an orange outline).
+      float flicker = 0.7 + 0.3 * sin(u_time * 14.0 + p.y * 6.0);
+      vec3 base = mix(u_color, u_flame, u_heat * 0.7);
+      vec3 rim = mix(u_rim, u_flame, u_heat);
+
+      vec3 col = base * (0.55 + 0.4 * diff) + spec + fres * rim * 0.8;
+      // Hot fresnel edge licks brighter than white where the streak is at full heat.
+      col += u_flame * fres * u_heat * 1.8 * flicker;
+
       gl_FragColor = vec4(col, 1.0);
     }
   `,
