@@ -211,7 +211,6 @@ function SensitivityPreview({ sensitivity }: { sensitivity: number }) {
   };
 
   return (
-    // biome-ignore lint/a11y/noStaticElementInteractions: a non-essential drag-feel preview; the slider above is the accessible control
     <div
       ref={setEl}
       className="relative mt-1 h-8 select-none rounded-lg border border-border bg-bg/50 touch-none"

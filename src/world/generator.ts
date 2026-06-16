@@ -1,5 +1,6 @@
 import type { Rng } from "@/core/math";
 import type { PowerUpType, TrampolineSpec, TrampType, Vec3 } from "@/core/types";
+import { reaches } from "./reachable";
 
 export interface PowerUpSpec {
   position: Vec3;
@@ -41,10 +42,6 @@ const TYPE_BAG: TrampType[] = [
  * Generate trampolines (and crystals) from `fromY` up to at least `targetY`.
  * The first pads (low) are always `standard` so the start is forgiving.
  */
-/** Lateral offset (world units) beyond which a flat straight-up bounce can't reach the next
- *  pad, so the CURRENT pad is canted toward it — the golden-path guarantee that every pad
- *  has a launch that carries the blob onward. Below this, a flat pad + air-steer suffices. */
-const CANT_REACH = 4.5;
 
 export function generateUpTo(
   rng: Rng,
@@ -93,23 +90,31 @@ export function generateUpTo(
     // bounce reach so the early pads stay flat + easy, or (above the start) CANT the previous
     // pad toward it so its bounce throws the blob here. Reachability beats pad variety, so
     // canting overrides whatever special type the previous pad rolled.
+    // GOLDEN-PATH REACHABILITY: build a candidate for this pad, then GUARANTEE the previous
+    // pad can launch the blob to it. `reaches()` is the shipped-tuning predicate (launch
+    // speed, gravity, canted tilt, steer budget) — the same one the climb proof asserts, so
+    // the placement rule and the playability check can't drift. If the flat previous pad
+    // can't reach: in the forgiving start (prev below y=25) PULL this pad inward so the early
+    // pads stay flat + easy; otherwise CANT the previous pad toward it (overriding whatever
+    // special type it rolled — reachability beats variety).
     if (prev) {
-      let dx = x - prev.position[0];
-      let dz = z - prev.position[2];
-      const lateral = Math.hypot(dx, dz);
-      if (lateral > CANT_REACH) {
+      let candidate: TrampolineSpec = { id: y, position: [x, y, z], width, depth, type };
+      if (!reaches(prev, candidate)) {
+        const dx = x - prev.position[0];
+        const dz = z - prev.position[2];
+        const lateral = Math.hypot(dx, dz) || 1;
         if (prev.position[1] < 25) {
-          // Forgiving zone: clamp this pad into reach of the (flat) previous pad.
-          const k = CANT_REACH / lateral;
-          x = prev.position[0] + dx * k;
-          z = prev.position[2] + dz * k;
-          dx = x - prev.position[0];
-          dz = z - prev.position[2];
+          // Forgiving zone: pull this pad straight toward prev until the flat bounce reaches.
+          // Step inward in fractions; the footprint guarantees a small number of steps lands.
+          for (let k = 0.85; k > 0.05 && !reaches(prev, candidate); k -= 0.15) {
+            x = prev.position[0] + dx * k;
+            z = prev.position[2] + dz * k;
+            candidate = { id: y, position: [x, y, z], width, depth, type };
+          }
         } else {
-          // Cant the previous pad toward this one (override its type — reachability first).
+          // Cant prev toward this pad (override its type — reachability first), then verify.
           prev.type = "canted";
-          const m = Math.hypot(dx, dz) || 1;
-          (prev as { cant?: readonly [number, number] }).cant = [dx / m, dz / m];
+          (prev as { cant?: readonly [number, number] }).cant = [dx / lateral, dz / lateral];
         }
       }
     }

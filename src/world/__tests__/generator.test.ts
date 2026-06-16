@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { createRng } from "@/core/math";
 import { generateUpTo, starterPad } from "../generator";
+import { reaches } from "../reachable";
 
 describe("world generator", () => {
   it("is deterministic for the same seed", () => {
@@ -57,12 +58,9 @@ describe("world generator", () => {
     const b = second.trampolines[0];
     expect(a).not.toBeNull();
     if (a && b) {
-      const lateral = Math.hypot(b.position[0] - a.position[0], b.position[2] - a.position[2]);
-      if (lateral > 4.5) {
-        // The seam pad is far → the prior chunk's last pad must now be canted toward it.
-        expect(a.type).toBe("canted");
-        expect(a.cant).toBeDefined();
-      }
+      // The seam pair must be reachable — the cant (if any) reaches across the boundary.
+      // Either a's flat bounce already reaches b, or threading let it be cant-promoted.
+      expect(reaches(a, b)).toBe(true);
     }
     // Sanity: lastPad is exposed on every chunk for threading.
     expect(second.lastPad).not.toBeNull();
@@ -85,28 +83,25 @@ describe("world generator", () => {
     expect(s.width).toBeGreaterThan(7);
   });
 
-  // Golden-path navigability: any pad whose successor is laterally far away must be CANTED
-  // toward that successor, so the bounce can actually carry the blob onward (the tower is
-  // provably climbable, not a grid of unreachable flat pads).
-  it("cants a pad toward a laterally-distant next pad (reachable chain)", () => {
+  // Golden-path navigability — STRUCTURAL property: every canted pad's cant is a unit vector
+  // pointing toward its successor (so its tilted bounce throws the blob the right way). The
+  // *sufficiency* of canting (that the launch actually reaches) is proven separately by the
+  // climb proof in reachable.test.ts; here we just assert the placement is well-formed.
+  it("cants pads toward their successor (unit vector, correct direction)", () => {
     const { trampolines } = generateUpTo(createRng("climb"), 0, 400);
     let cantedCount = 0;
     for (let i = 0; i < trampolines.length - 1; i++) {
       const a = trampolines[i];
       const b = trampolines[i + 1];
-      const lateral = Math.hypot(b.position[0] - a.position[0], b.position[2] - a.position[2]);
-      if (lateral > 4.5) {
-        // Far successor → this pad must be canted toward it.
-        expect(a.type).toBe("canted");
-        expect(a.cant).toBeDefined();
-        const [cx, cz] = a.cant ?? [0, 0];
-        const dx = b.position[0] - a.position[0];
-        const dz = b.position[2] - a.position[2];
-        // Cant points toward the successor (positive dot with the offset) + is a unit vec.
-        expect(cx * dx + cz * dz).toBeGreaterThan(0);
-        expect(Math.hypot(cx, cz)).toBeCloseTo(1, 5);
-        cantedCount++;
-      }
+      if (a.type !== "canted") continue;
+      expect(a.cant).toBeDefined();
+      const [cx, cz] = a.cant ?? [0, 0];
+      const dx = b.position[0] - a.position[0];
+      const dz = b.position[2] - a.position[2];
+      // Cant points toward the successor (positive dot with the offset) + is a unit vec.
+      expect(cx * dx + cz * dz).toBeGreaterThan(0);
+      expect(Math.hypot(cx, cz)).toBeCloseTo(1, 5);
+      cantedCount++;
     }
     // A spiral-placed tower should produce several canted pads.
     expect(cantedCount).toBeGreaterThan(0);

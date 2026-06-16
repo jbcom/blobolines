@@ -404,8 +404,15 @@ permeability (permeable one-way pads rejected by owner).
 - [x] GOLDEN-PATH placement rules in the world generator: far successors get the previous pad
       canted toward them (forgiving start clamps into reach instead); generator test proves
       every laterally-distant pad has a canted predecessor pointing at it. THE navigability fix.
-- [ ] Real-browser component test proving the climb: a blob launched up the generated tower
-      can actually progress upward across canted pads (the playability safety net).
+- [x] CLIMB PROOF (the playability safety net): src/world/reachable.ts models a ballistic
+      launch off each pad (its surface normal × the shipped launch speed, under gravity, plus
+      the player's mid-air steer budget) and asserts it lands within the next pad's footprint.
+      reachable.test.ts proves the WHOLE generated chain is reachable end-to-end across many
+      seeds, that every canted pad is load-bearing (its flat self would strand the climb), and
+      that the launch reaches. The generator now CANTS exactly when reaches() fails — one
+      tuning source (reachable.ts) shared by generator + proof, so they can never drift. This
+      replaced the brittle fixed CANT_REACH constant (footprints shrink with altitude, so a
+      fixed lateral threshold silently stranded small high pads).
 - [ ] Better aim/curve control (mid-air steer / hook-shot) so a skilled player can also
       curve onto an offset pad — complements the canted-layout fix.
 ### Pad-variety types (owner feedback 2026-06-16 — more platform kinds for navigability + challenge)
