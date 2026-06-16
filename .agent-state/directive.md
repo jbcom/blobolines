@@ -288,11 +288,11 @@ Camera follow + shake, in-game deformation, wet glistening shader + color gradie
 - [x] GameOver delta-vs-best progress bar (run height as fraction of best).
 - [x] GameOver: crystals → next-skin progress + jump to customizer.
 ### Tier 3 — onboarding & states
-- [ ] First-run tutorial overlay: drag-ghost coachmark over LaunchInput, dismiss on first launch (new Onboarding.tsx).
-- [ ] First-play hint instead of burying how-to behind a menu button.
+- [x] First-run tutorial overlay: drag-ghost coachmark over LaunchInput, dismiss on first launch (new Onboarding.tsx).
+- [x] First-play hint instead of burying how-to behind a menu button. (the Onboarding coachmark IS the first-play hint — shows the controls inline on first run instead of behind the How-to menu button)
 - [ ] Branded error/boot-failure screen + boundary (Rapier-WASM/Canvas fail → "tap to retry").
 - [ ] LoadingScreen real progress (asset/WASM fraction) not infinite bounce.
-- [ ] BlobCustomizer empty state when crystals==0 ("collect crystals to unlock goo").
+- [x] BlobCustomizer empty state when crystals==0 ("collect crystals to unlock goo").
 ### Tier 4 — customizer/shop
 - [ ] Clearer locked-tile cost + "need N more" sublabel + affordability progress fill.
 - [ ] Animate crystal-spend on unlock (header gem deduct + tile pop via usePunchOnChange).
