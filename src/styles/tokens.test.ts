@@ -7,12 +7,7 @@ describe("design tokens", () => {
   });
 
   it("exposes the four trampoline gameplay types", () => {
-    expect(Object.keys(trampColor).sort()).toEqual([
-      "booster",
-      "fragile",
-      "moving",
-      "standard",
-    ]);
+    expect(Object.keys(trampColor).sort()).toEqual(["booster", "fragile", "moving", "standard"]);
   });
 
   it("maps every palette color to a valid 6-digit hex", () => {

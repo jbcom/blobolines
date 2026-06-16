@@ -79,7 +79,7 @@ tokens own palette.
 - [ ] enable Pages via gh; README + CHANGELOG (README done)
 
 ## M0.5 — Real foundational subpackages (each = barreled package + tests, one commit)
-- [ ] src/core/math: createRng (cyrb128→mulberry32), clock facade, spring/lerp/vec helpers + unit tests + barrel
+- [x] src/core/math: createRng (cyrb128→mulberry32), clock facade, spring/lerp helpers + unit tests + barrel
 - [ ] src/core/types: shared domain types/enums/ids + barrel
 - [ ] src/ecs: koota world (done) + traits + queries + react hooks + barrel
 - [ ] src/engine: fixed-timestep accumulator loop + world tick orchestration + unit tests + barrel

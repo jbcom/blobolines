@@ -1,6 +1,6 @@
-import { render } from "vitest-browser-react";
-import { expect, test, vi } from "vitest";
 import { FixtureStage } from "@app/fixtures";
+import { expect, test, vi } from "vitest";
+import { render } from "vitest-browser-react";
 import { SkyDome } from "../SkyDome";
 
 // Visual fixture: the painterly sky dome must actually paint colored pixels in a real
