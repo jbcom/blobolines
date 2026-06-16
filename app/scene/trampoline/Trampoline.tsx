@@ -4,6 +4,7 @@ import { useMemo, useRef } from "react";
 import type { Group, Mesh } from "three";
 import type { TrampType } from "@/core/types";
 import { createTrampState, impactTargets, stepTramp, type TrampState } from "@/sim/trampoline";
+import { reportImpact } from "@/state";
 import { trampColor } from "@/styles/tokens";
 
 /**
@@ -37,7 +38,9 @@ export function Trampoline({ position, width, depth, type, onImpact }: Trampolin
     const g = meshRef.current;
     if (!g) return;
     spring.current = stepTramp(spring.current, target.current, Math.min(dt, 1 / 30));
-    g.position.y = position[1] + spring.current.depress.value;
+    // The group is a child of the RigidBody, so it's in body-LOCAL space — the depress
+    // is the only Y offset; adding position[1] (the body's world Y) would double it.
+    g.position.y = spring.current.depress.value;
     g.rotation.x = spring.current.tiltX.value;
     g.rotation.z = spring.current.tiltZ.value;
     // Decay impact target back to rest so it springs up.
@@ -62,6 +65,7 @@ export function Trampoline({ position, width, depth, type, onImpact }: Trampolin
           const speed = lv ? Math.abs(lv.y) : 0;
           const t = impactTargets(speed, 0, 0);
           target.current = t;
+          reportImpact(speed);
           onImpact?.(speed, 0, 0);
         }}
       />

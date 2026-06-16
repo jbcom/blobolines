@@ -1,18 +1,26 @@
 import { useFrame } from "@react-three/fiber";
 import { BallCollider, type RapierRigidBody, RigidBody } from "@react-three/rapier";
-import { useEffect, useRef, useState } from "react";
-import type { EyeExpression } from "@/core/types";
+import { useEffect, useRef } from "react";
 import { classifyExpression } from "@/sim/blob";
 import { launchVelocity } from "@/sim/launch";
-import { BLOB, DEATH_FALL_DISTANCE } from "@/sim/physics";
-import { consumeLaunch, setBlobDiagnostics, useGameStore, useWorldStore } from "@/state";
+import { BLOB, DEATH_FALL_DISTANCE, MAX_IMPACT_SPEED, WORLD_BOUND_XZ } from "@/sim/physics";
+import {
+  consumeImpact,
+  consumeLaunch,
+  getAirSteer,
+  setBlobDiagnostics,
+  useGameStore,
+  useWorldStore,
+} from "@/state";
 import { BlobActor } from "./BlobActor";
 
 /**
  * The PLAYABLE blob — a dynamic Rapier body wrapping the gooey visual. It reports its
- * height to the store (the core-goal readout), extends the tower as it climbs, picks an
- * eye expression from its motion, and triggers game-over when it falls too far. Launch
- * impulses are applied via the imperative ref by the input layer.
+ * height to the store (the core-goal readout), extends the tower as it climbs, applies
+ * launch impulses + mid-air steering, and triggers game-over when it falls too far.
+ *
+ * Drives the blob's visual deformation/eyes through the diagnostics bridge (read by
+ * BlobActor's own useFrame) rather than React state, so it never re-renders per frame.
  */
 
 export function PlayerBlob() {
@@ -22,60 +30,87 @@ export function PlayerBlob() {
   const setPhase = useGameStore((s) => s.setPhase);
   const commitBestHeight = useGameStore((s) => s.commitBestHeight);
   const ensureHeight = useWorldStore((s) => s.ensureHeight);
-
-  const [expression, setExpression] = useState<EyeExpression>("idle");
-  const [velocity, setVelocity] = useState<readonly [number, number, number]>([0, 0, 0]);
   const maxY = useRef(0);
+  const lastEnsureY = useRef(0);
+  const dead = useRef(false);
+  /** Recent impact amount [0,1], set on landing and decaying each frame. */
+  const impact = useRef(0);
 
-  // Reset body to the starter pad whenever a run begins.
+  // Reset body to the starter pad whenever a run begins. PlayerBlob remounts on each
+  // run (GameScene mounts <Physics> only while playing), so [] is correct; the refs
+  // below also re-init here for safety if it ever stays mounted across runs.
   useEffect(() => {
     const body = bodyRef.current;
     if (!body) return;
     body.setTranslation({ x: 0, y: 3, z: 0 }, true);
     body.setLinvel({ x: 0, y: 0, z: 0 }, true);
     maxY.current = 3;
+    lastEnsureY.current = 3;
+    dead.current = false;
+    impact.current = 0;
   }, []);
 
-  useFrame(() => {
+  useFrame((_, dt) => {
     const body = bodyRef.current;
     if (!body) return;
     const p = body.translation();
     const v = body.linvel();
-    setVelocity([v.x, v.y, v.z]);
+    const airborne = Math.abs(v.y) > 0.5;
 
-    // Apply a queued launch (set the velocity directly for a crisp, predictable pop).
+    // Launch: set velocity directly for a crisp, predictable pop.
     const req = consumeLaunch();
     if (req) {
       const lv = launchVelocity(req.dir, req.charge, "standard", useGameStore.getState().run.combo);
       body.wakeUp();
       body.setLinvel({ x: lv[0], y: lv[1], z: lv[2] }, true);
+    } else if (airborne) {
+      // Mid-air steering: nudge lateral velocity on the X/Z plane (PoC air control).
+      const [sx, sz] = getAirSteer();
+      if (sx !== 0 || sz !== 0) {
+        body.setLinvel({ x: v.x + sx * dt, y: v.y, z: v.z + sz * dt }, true);
+      }
     }
 
-    // Height-chase readout + tower extension.
+    // Keep the blob inside the lateral play bounds.
+    if (Math.abs(p.x) > WORLD_BOUND_XZ || Math.abs(p.z) > WORLD_BOUND_XZ) {
+      body.setLinvel({ x: -v.x * 0.5, y: v.y, z: -v.z * 0.5 }, true);
+    }
+
+    // Height-chase readout + tower extension. Throttle generation to every ~10m so the
+    // RNG/world build doesn't run inside the frame loop on every ascent frame (mobile).
     if (p.y > maxY.current) {
       maxY.current = p.y;
       setRun({ height: p.y });
-      ensureHeight(p.y + 180);
+      if (p.y - lastEnsureY.current > 10) {
+        lastEnsureY.current = p.y;
+        ensureHeight(p.y + 180);
+      }
     }
 
-    // Expression from motion.
+    // Landings (reported by a trampoline sensor) spike impact; it decays each frame and
+    // drives the squint eyes + squash. Normalized against MAX_IMPACT_SPEED.
+    const landed = consumeImpact();
+    if (landed > 0) {
+      impact.current = Math.min(1, landed / MAX_IMPACT_SPEED);
+    }
+    impact.current = Math.max(0, impact.current - dt * 2.5);
     const fallDepth = maxY.current - p.y;
-    const expr = classifyExpression({ vy: v.y, impact: 0, fallDepth, airborne: true });
-    setExpression(expr);
+    const expr = classifyExpression({ vy: v.y, impact: impact.current, fallDepth, airborne });
 
-    // Live diagnostics for the dev-harness before/after dumps.
+    // Visual state for BlobActor (read via the bridge — no per-frame React render).
     setBlobDiagnostics({
       position: [p.x, p.y, p.z],
       velocity: [v.x, v.y, v.z],
       speed: Math.hypot(v.x, v.y, v.z),
-      airborne: Math.abs(v.y) > 0.1,
+      airborne,
       expression: expr,
-      squash: 1,
+      squash: 1 - impact.current * 0.3,
       maxHeight: maxY.current,
     });
 
-    // Death: fell too far below the best height reached.
-    if (fallDepth > DEATH_FALL_DISTANCE) {
+    // Death: fire exactly once (guard against firing every frame while still falling).
+    if (!dead.current && fallDepth > DEATH_FALL_DISTANCE) {
+      dead.current = true;
       commitBestHeight(maxY.current);
       setPhase("gameover");
     }
@@ -94,7 +129,7 @@ export function PlayerBlob() {
       enabledRotations={[false, false, false]}
     >
       <BallCollider args={[BLOB.radius]} />
-      <BlobActor skin={skin} velocity={velocity} expression={expression} radius={BLOB.radius} />
+      <BlobActor skin={skin} radius={BLOB.radius} live />
     </RigidBody>
   );
 }

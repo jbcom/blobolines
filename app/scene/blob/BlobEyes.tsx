@@ -3,6 +3,7 @@ import { useRef } from "react";
 import type { Group } from "three";
 import type { EyeExpression } from "@/core/types";
 import { eyeShape } from "@/sim/blob";
+import { getBlobDiagnostics } from "@/state";
 
 /**
  * Procedural blob eyes — NOT sprites. Each eye is a big white sclera sphere with a thin
@@ -14,6 +15,8 @@ import { eyeShape } from "@/sim/blob";
 interface BlobEyesProps {
   expression: EyeExpression;
   radius: number;
+  /** Read the live expression from the diagnostics bridge each frame (in-game blob). */
+  live?: boolean;
 }
 
 const EYE_OFFSET_X = 0.32;
@@ -51,7 +54,7 @@ function Eye({ side }: { side: 1 | -1 }) {
   );
 }
 
-export function BlobEyes({ expression, radius }: BlobEyesProps) {
+export function BlobEyes({ expression, radius, live = false }: BlobEyesProps) {
   const groupRef = useRef<Group>(null);
   const timer = useRef(0);
 
@@ -64,7 +67,8 @@ export function BlobEyes({ expression, radius }: BlobEyesProps) {
     const cycle = timer.current % 3.5;
     const blink = cycle < 0.14 ? Math.sin((cycle / 0.14) * Math.PI) : 0;
 
-    const shape = eyeShape(expression, blink);
+    const expr = live ? getBlobDiagnostics().expression : expression;
+    const shape = eyeShape(expr, blink);
     // Keep the parent group UNIFORM so pupils/tears stay round; the vertical eye
     // opening (blink/squint/wide) is applied only to the lid meshes (sclera + bezel).
     g.scale.setScalar(shape.scale * radius);

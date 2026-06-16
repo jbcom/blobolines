@@ -19,6 +19,11 @@ export function capturePlugin(): Plugin {
         new Promise<string>((res) => {
           let body = "";
           req.on("data", (c: Buffer) => {
+            // Cap body size — a captured PNG dataURL is well under this; guards OOM.
+            if (body.length > 16_000_000) {
+              res(body);
+              return;
+            }
             body += c;
           });
           req.on("end", () => res(body));

@@ -1,18 +1,34 @@
 import { useDrag } from "@use-gesture/react";
 import { useState } from "react";
-import { computeAim } from "@/input";
-import { requestLaunch, useGameStore } from "@/state";
+import { computeAim, computeAirSteer } from "@/input";
+import { getBlobDiagnostics, requestLaunch, setAirSteer, useGameStore } from "@/state";
 
 /**
- * Full-screen launch input surface (PLAYING only). Drag back to aim + charge the
- * slingshot, release to launch the blob. Shows a live charge meter. Pointer-events on
- * so it captures drags above the canvas; the canvas still renders beneath it.
+ * Full-screen input surface (PLAYING only). Dual-mode, matching the PoC:
+ *  - blob resting on a pad → drag back to aim + charge the slingshot, release to launch.
+ *  - blob airborne → drag to steer mid-air (X/Z), released → steering stops.
+ * Pointer-events on so it captures drags above the canvas; the canvas renders beneath.
  */
 export function LaunchInput() {
   const sensitivity = useGameStore((s) => s.settings.slingshotSensitivity);
   const [charge, setCharge] = useState(0);
 
   const bind = useDrag(({ movement: [mx, my], down, last }) => {
+    const airborne = getBlobDiagnostics().airborne;
+
+    if (airborne) {
+      // Mid-air 3D steering: drag → continuous lateral force; release → stop.
+      if (down) {
+        const [sx, sz] = computeAirSteer(mx, my);
+        setAirSteer(sx, sz);
+      } else {
+        setAirSteer(0, 0);
+      }
+      setCharge(0);
+      return;
+    }
+
+    // Slingshot on a pad: charge while dragging, launch on release.
     const aim = computeAim(mx, my, { maxDragDist: 140, sensitivity });
     setCharge(down ? aim.strength : 0);
     if (last && aim.strength > 0.12) {

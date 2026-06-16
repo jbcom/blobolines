@@ -1,5 +1,13 @@
 export { type BlobDiagnostics, getBlobDiagnostics, setBlobDiagnostics } from "./diagnostics";
-export { consumeLaunch, type LaunchRequest, requestLaunch } from "./launchBridge";
+export {
+  consumeImpact,
+  consumeLaunch,
+  getAirSteer,
+  type LaunchRequest,
+  reportImpact,
+  requestLaunch,
+  setAirSteer,
+} from "./launchBridge";
 export { attachPersistence, hydrateStore } from "./persistence";
 export {
   DEFAULT_PROGRESS,

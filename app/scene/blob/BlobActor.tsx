@@ -4,33 +4,41 @@ import type { Color, Group, ShaderMaterial } from "three";
 import type { BlobSkin, EyeExpression } from "@/core/types";
 import { GooMaterial } from "@/render/materials";
 import { combineScale, impactSquash, speedStretch } from "@/sim/blob";
+import { getBlobDiagnostics } from "@/state";
 import { palette } from "@/styles/tokens";
 import { BlobEyes } from "./BlobEyes";
 
 /**
  * The gooey blob actor — a goo-shaded sphere that squashes and stretches with motion +
- * impact, wearing the procedural expressive eyes. Velocity/impact/expression are passed
- * in (driven by the sim); this component owns only the visual deformation + material.
+ * impact, wearing the procedural expressive eyes. This component owns only the visual
+ * deformation + material.
+ *
+ * Two modes:
+ *  - `live`: read velocity/impact/expression from the diagnostics bridge each frame
+ *    (the in-game blob, driven by Rapier) — NO per-frame React re-render.
+ *  - props: static velocity/impact/expression (menu hero blob + fixture tests).
  */
 
 interface BlobActorProps {
   skin?: BlobSkin;
-  /** Current velocity (drives stretch). */
+  /** Current velocity (drives stretch). Ignored when `live`. */
   velocity?: readonly [number, number, number];
-  /** Recent impact amount [0,1] (drives squash). */
+  /** Recent impact amount [0,1] (drives squash). Ignored when `live`. */
   impact?: number;
+  /** Eye expression. Ignored when `live`. */
   expression?: EyeExpression;
   radius?: number;
+  /** Read live state from the diagnostics bridge instead of props. */
+  live?: boolean;
 }
 
-// drei shaderMaterial registers a lowercase JSX tag, but constructing directly keeps
-// types simple and lets us drive uniforms imperatively.
 export function BlobActor({
   skin = "blue",
   velocity = [0, 0, 0],
   impact = 0,
   expression = "idle",
   radius = 0.85,
+  live = false,
 }: BlobActorProps) {
   const groupRef = useRef<Group>(null);
   const material = useMemo(() => new GooMaterial() as unknown as ShaderMaterial, []);
@@ -49,8 +57,12 @@ export function BlobActor({
 
     const g = groupRef.current;
     if (!g) return;
-    const stretch = speedStretch(velocity[0], velocity[1], velocity[2]);
-    const squash = impactSquash(impact);
+
+    const vel = live ? getBlobDiagnostics().velocity : velocity;
+    const imp = live ? 1 - getBlobDiagnostics().squash : impact;
+
+    const stretch = speedStretch(vel[0], vel[1], vel[2]);
+    const squash = impactSquash(imp);
     const s = combineScale(stretch, squash);
     // Smooth toward the target deformation so it springs rather than snaps.
     const k = 1 - Math.exp(-dt / 0.06);
@@ -64,7 +76,7 @@ export function BlobActor({
       <mesh material={material}>
         <sphereGeometry args={[radius, 48, 48]} />
       </mesh>
-      <BlobEyes expression={expression} radius={radius} />
+      <BlobEyes expression={expression} radius={radius} live={live} />
     </group>
   );
 }

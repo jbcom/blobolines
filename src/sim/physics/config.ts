@@ -24,3 +24,6 @@ export const DEATH_FALL_DISTANCE = 24;
 
 /** Lateral world bounds (blob bounces off these). */
 export const WORLD_BOUND_XZ = 35;
+
+/** Impact speed that maps to a full-strength (1.0) squash/squint. */
+export const MAX_IMPACT_SPEED = 28;
