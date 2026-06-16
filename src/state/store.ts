@@ -17,6 +17,9 @@ export interface RunStats {
   combo: number;
   /** Highest combo reached this run (for the game-over recap). */
   maxCombo: number;
+  /** Metres this run beat the PREVIOUS all-time best by (0 if not a record). Set by
+   *  commitBestHeight at run end so the game-over card can show "+N m over best". */
+  recordDelta: number;
 }
 
 export interface GameState {
@@ -49,7 +52,7 @@ export const DEFAULT_PROGRESS: PlayerProgress = {
   unlockedSkins: ["blue"],
 };
 
-const EMPTY_RUN: RunStats = { height: 0, crystals: 0, combo: 0, maxCombo: 0 };
+const EMPTY_RUN: RunStats = { height: 0, crystals: 0, combo: 0, maxCombo: 0, recordDelta: 0 };
 
 export const useGameStore = create<GameState>((set) => ({
   phase: "menu",
@@ -72,12 +75,15 @@ export const useGameStore = create<GameState>((set) => ({
     })),
 
   commitBestHeight: (height) =>
-    set((s) => ({
-      progress: {
-        ...s.progress,
-        bestHeight: Math.max(s.progress.bestHeight, Math.floor(height)),
-      },
-    })),
+    set((s) => {
+      const h = Math.floor(height);
+      // Metres over the PREVIOUS best (before this commit overwrites it) — 0 if not a record.
+      const recordDelta = Math.max(0, h - s.progress.bestHeight);
+      return {
+        run: { ...s.run, recordDelta },
+        progress: { ...s.progress, bestHeight: Math.max(s.progress.bestHeight, h) },
+      };
+    }),
 
   setSkin: (skin) => set((s) => ({ progress: { ...s.progress, skin } })),
 

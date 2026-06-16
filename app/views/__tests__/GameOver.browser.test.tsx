@@ -6,7 +6,7 @@ import { GameOver } from "../GameOver";
 beforeEach(() => {
   useGameStore.setState({
     phase: "gameover",
-    run: { height: 80, crystals: 3, combo: 0, maxCombo: 5 },
+    run: { height: 80, crystals: 3, combo: 0, maxCombo: 5, recordDelta: 0 },
     progress: { ...useGameStore.getState().progress, bestHeight: 134, crystals: 42 },
   });
 });
@@ -31,10 +31,11 @@ test("shows the run recap: altitude, max combo, crystals run + lifetime, short-b
 
 test("celebrates a record run instead of a short-by delta", async () => {
   useGameStore.setState({
-    run: { height: 150, crystals: 1, combo: 0, maxCombo: 2 },
+    run: { height: 150, crystals: 1, combo: 0, maxCombo: 2, recordDelta: 16 },
     progress: { ...useGameStore.getState().progress, bestHeight: 150 },
   });
   const screen = await render(<GameOver />);
   await expect.element(screen.getByText("New best climb!")).toBeInTheDocument();
-  await expect.element(screen.getByText("New record!")).toBeInTheDocument();
+  // recordDelta 16 → "+16 m over best".
+  await expect.element(screen.getByText("+16 m over best")).toBeInTheDocument();
 });

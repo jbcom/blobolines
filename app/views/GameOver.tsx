@@ -2,7 +2,7 @@ import { Progress } from "@app/components/ui/progress";
 import { RotateCcw } from "lucide-react";
 import { motion } from "motion/react";
 import { useEffect, useRef } from "react";
-import { startMusic, stopMusic } from "@/audio";
+import { playChime, startMusic, stopMusic } from "@/audio";
 import { comboMultiplier } from "@/sim/launch";
 import { useGameStore, useWorldStore } from "@/state";
 
@@ -14,6 +14,7 @@ export function GameOver() {
   const height = useGameStore((s) => Math.max(0, Math.floor(s.run.height)));
   const crystals = useGameStore((s) => s.run.crystals);
   const maxCombo = useGameStore((s) => s.run.maxCombo);
+  const recordDelta = useGameStore((s) => s.run.recordDelta);
   const lifetimeCrystals = useGameStore((s) => s.progress.crystals);
   const best = useGameStore((s) => s.progress.bestHeight);
   const setPhase = useGameStore((s) => s.setPhase);
@@ -58,6 +59,11 @@ export function GameOver() {
   const shortBy = Math.max(0, best - height);
   const comboLabel = maxCombo >= 2 ? `${comboMultiplier(maxCombo).toFixed(2)}×` : "—";
 
+  // Distinct celebratory chime once when a record card appears.
+  useEffect(() => {
+    if (isRecord) playChime();
+  }, [isRecord]);
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -70,7 +76,11 @@ export function GameOver() {
         initial={{ scale: 0.85, y: 16 }}
         animate={{ scale: 1, y: 0 }}
         transition={{ type: "spring", stiffness: 260, damping: 18 }}
-        className="flex w-full max-w-xs flex-col items-center gap-5 rounded-xl border border-border bg-surface p-6 text-center"
+        className={`flex w-full max-w-xs flex-col items-center gap-5 rounded-xl border bg-surface p-6 text-center ${
+          isRecord ? "border-tramp-gold" : "border-border"
+        }`}
+        // Gold glow on a record card — the climb's trophy moment.
+        style={isRecord ? { boxShadow: "0 0 32px var(--color-tramp-gold)" } : undefined}
       >
         <h2 id="gameover-title" className="font-display text-2xl font-bold text-cream">
           {isRecord ? "New best climb!" : "Splat!"}
@@ -82,7 +92,15 @@ export function GameOver() {
             label="Best"
             value={`${best} m`}
             accent="text-tramp-gold"
-            sub={isRecord ? "New record!" : shortBy > 0 ? `${shortBy} m short` : undefined}
+            sub={
+              isRecord
+                ? recordDelta > 0
+                  ? `+${recordDelta} m over best`
+                  : "New record!"
+                : shortBy > 0
+                  ? `${shortBy} m short`
+                  : undefined
+            }
           />
           <Row label="Max combo" value={comboLabel} accent="text-tramp-orange" />
           <Row
