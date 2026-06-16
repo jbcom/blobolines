@@ -1,0 +1,26 @@
+import { FixtureStage } from "@app/fixtures";
+import { expect, test, vi } from "vitest";
+import { render } from "vitest-browser-react";
+import { BlobActor } from "../BlobActor";
+
+// Visual fixture: the gooey blob (goo shader + procedural eyes) renders painted pixels
+// in a real WebGL context — regression guard for the material + eye geometry.
+test("BlobActor renders the gooey blob with eyes", async () => {
+  const screen = await render(
+    <FixtureStage testId="blob-fixture" cameraDistance={3}>
+      <BlobActor skin="blue" expression="wide" />
+    </FixtureStage>,
+  );
+
+  await expect.element(screen.getByTestId("blob-fixture")).toBeInTheDocument();
+  await new Promise((r) => setTimeout(r, 100));
+
+  await vi.waitFor(
+    () => {
+      const canvas = document.querySelector("canvas");
+      if (!canvas) throw new Error("canvas not mounted");
+      expect(canvas.toDataURL("image/png").length).toBeGreaterThan(4000);
+    },
+    { timeout: 5000, interval: 50 },
+  );
+});
