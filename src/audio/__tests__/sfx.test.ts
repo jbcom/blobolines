@@ -6,20 +6,21 @@ import {
   playLaunch,
   playPowerup,
   playSplat,
+  setMusicAltitude,
 } from "../index";
 
-// Audio is gated on a user gesture (Tone.start), so before initAudio() everything must
-// be a safe no-op — never throw, never create an AudioContext. Real audio-graph wiring
-// is exercised in the browser test env; here we lock the no-op contract.
-describe("sfx before init", () => {
+// Audio (Howler) unlocks on a user gesture, so before initAudio() resolves the
+// AudioContext, every cue must be a safe no-op — never throw, never force playback. Real
+// playback is exercised in-browser; here we lock the no-op/uninitialized contract.
+describe("audio before init", () => {
   it("reports uninitialized", () => {
     expect(isAudioInitialized()).toBe(false);
   });
 
-  it("every SFX is a safe no-op (no throw) before init", () => {
+  it("every SFX cue is a safe no-op (no throw) before init", () => {
     expect(() => playBounce("standard")).not.toThrow();
     expect(() => playBounce("booster")).not.toThrow();
-    // Bonus pads have distinct bounce sounds (super = triumphant, ice = glassy MetalSynth).
+    // Bonus pads map to distinct samples (ice → bright click, fragile → soft).
     expect(() => playBounce("super")).not.toThrow();
     expect(() => playBounce("ice")).not.toThrow();
     expect(() => playLaunch(1)).not.toThrow();
@@ -28,7 +29,12 @@ describe("sfx before init", () => {
     expect(() => playSplat()).not.toThrow();
   });
 
-  it("rate-limits repeated calls without error", () => {
-    for (let i = 0; i < 20; i++) expect(() => playBounce("standard", 1000)).not.toThrow();
+  it("rate-limits / repeats without error", () => {
+    for (let i = 0; i < 20; i++) expect(() => playBounce("standard")).not.toThrow();
+  });
+
+  it("setMusicAltitude is a safe no-op before music starts", () => {
+    expect(() => setMusicAltitude(0)).not.toThrow();
+    expect(() => setMusicAltitude(900)).not.toThrow();
   });
 });
