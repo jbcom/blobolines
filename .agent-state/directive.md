@@ -214,4 +214,14 @@ add the PoC's ENERGY (shake, follow-light, bloom, speed FX, color), NOT neon-cyb
 - [ ] Aim/targeting feedback: a visible trajectory/aim indicator while charging the slingshot (PoC had launch feedback; we have none).
 - [ ] Gameplay: blob dies too fast / launches off the pads — tune so a normal launch lands on the next pad (verify it's playable, not just renders).
 - [ ] Juice: blob-follow point light tinting the scene, stronger speed-reactive FX, punchier bloom/contrast.
+
+### M10b — deeper feature requests (user feedback 2026-06-16, batch 2)
+- [ ] Trampoline DEPRESSION: real trampoline-like depress/recoil responsive to hit force (spring exists in sim — make it read like a real bouncing trampoline membrane, visibly).
+- [ ] Backdrop CHANGES with height: progress through atmosphere → space → beyond, the sky/backdrop transitioning as you climb.
+- [ ] Trampoline COLOR changes with height/progress too.
+- [ ] BONUS trampolines of different colors that do different things (beyond standard/booster/moving/fragile — new mechanics).
+- [ ] Powerup MODELS: find + identify GLB powerup models from 3DLowPoly in /Volumes/home/assets, use them (replace the torus/cone primitives).
+- [ ] WET look: nail it — balls feel too SOLID right now, need real wet/translucent/jiggly goo surface.
+- [ ] Splat pieces get REAL PHYSICS: droplets that splat off the blob should be their own physics bodies (bounce/roll/settle), not just kinematic particles.
+- [ ] World STRATA / BIOMES: proper layered strata — real biomes for different atmospheric + post-atmospheric height bands (ground → sky → upper atmosphere → space → beyond), each with its own look/palette/hazards.
 - [ ] Per change: drive harness, READ the capture, fix, repeat. Then PR.

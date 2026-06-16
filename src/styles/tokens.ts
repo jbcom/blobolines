@@ -19,9 +19,11 @@ export const palette = {
     green: "#6cc04a",
   },
   sky: {
-    top: "#cfe0e8",
-    mid: "#8fb3c4",
-    deep: "#4f7488",
+    // Cheerful, saturated daytime gradient (was a flat desaturated blue-grey that read
+    // monochrome): warm peach high up → bright sky-blue → richer indigo at the base.
+    top: "#ffe3c4",
+    mid: "#6fc8f0",
+    deep: "#5a4fb0",
   },
   cream: "#f3efd6",
   goo: {
@@ -44,6 +46,22 @@ export const palette = {
 
 /** Hex string → 0xRRGGBB int for three.js Color/material constructors. */
 export const hex = (s: string): number => Number.parseInt(s.replace("#", ""), 16);
+
+/** Blend two hex colors by `t` (0 = a, 1 = b) → "#rrggbb". For tinting tokens together. */
+export const mixHex = (a: string, b: string, t: number): string => {
+  const pa = hex(a);
+  const pb = hex(b);
+  const k = Math.max(0, Math.min(1, t));
+  const ch = (shift: number) => {
+    const ca = (pa >> shift) & 0xff;
+    const cb = (pb >> shift) & 0xff;
+    return Math.round(ca + (cb - ca) * k);
+  };
+  const r = ch(16);
+  const g = ch(8);
+  const bl = ch(0);
+  return `#${((1 << 24) | (r << 16) | (g << 8) | bl).toString(16).slice(1)}`;
+};
 
 /** Blob skin identifiers (the playable characters from the cover art). */
 export type BlobSkin = "blue" | "slime" | "ghost" | "ink";

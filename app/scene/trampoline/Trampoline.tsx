@@ -14,7 +14,7 @@ import {
   type TrampState,
 } from "@/sim/trampoline";
 import { reportImpact, reportRebound, useGameStore } from "@/state";
-import { palette, trampColor } from "@/styles/tokens";
+import { mixHex, palette, trampColor } from "@/styles/tokens";
 
 /**
  * A single trampoline: a fixed Rapier body (the blob bounces off it) with a squishy
@@ -90,6 +90,9 @@ export function Trampoline({ position, width, depth, type, onImpact }: Trampolin
   });
 
   const emissive = useMemo(() => color, [color]);
+  // Membrane = mostly bright cream but pulled ~45% toward the pad type color so each pad
+  // reads its own hue from above (the top face is what the camera mostly sees).
+  const membraneColor = useMemo(() => mixHex(palette.cream, color, 0.45), [color]);
 
   return (
     <RigidBody
@@ -150,14 +153,17 @@ export function Trampoline({ position, width, depth, type, onImpact }: Trampolin
             metalness={0.1}
           />
         </mesh>
-        {/* glossy membrane (the bounce surface) */}
+        {/* glossy membrane (the bounce surface) — tinted toward the pad TYPE color (was
+            always cream, which made every pad read the same and the world colorless), with
+            a punchy emissive so each type glows its own hue. */}
         <mesh ref={membraneRef} position={[0, THICKNESS / 2 + 0.02, 0]}>
           <boxGeometry args={[width * 0.92, 0.18, depth * 0.92]} />
           <meshStandardMaterial
-            color={palette.cream}
+            color={membraneColor}
             emissive={emissive}
-            emissiveIntensity={0.18}
-            roughness={0.25}
+            emissiveIntensity={0.5}
+            roughness={0.2}
+            metalness={0.15}
           />
         </mesh>
         {/* Accumulating goo-splat decal — a transparent plane skimming the membrane top,
