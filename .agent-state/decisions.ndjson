@@ -1,0 +1,1 @@
+{"ts":"2026-06-16T06:59:22.067Z","sha":"825262f4828ac29c333f1f264996e28cc596c1ef","subject":"feat(foundation): types, state, platform subpackages + early HUD + store tests","decision":null,"why":null,"resolves":[],"overrides":[{"tag":"no-visual-impact","reason":"HUD components are pure CSS text readouts with no canvas or WebGL content requiring visual fixture coverage"}]}

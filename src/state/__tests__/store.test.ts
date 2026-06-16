@@ -2,8 +2,8 @@ import { beforeEach, describe, expect, it } from "vitest";
 import {
   DEFAULT_PROGRESS,
   DEFAULT_SETTINGS,
-  SKIN_COST,
   equippedSkinColor,
+  SKIN_COST,
   useGameStore,
 } from "../store";
 

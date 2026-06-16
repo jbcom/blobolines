@@ -41,6 +41,19 @@ describe("stepSpring", () => {
     expect(Math.abs(s.velocity)).toBeLessThan(0.01);
   });
 
+  it("stays stable at the clock's default maxDelta (1/30) with the standard config", () => {
+    // Regression: stiffness 170 diverged at the old maxDelta of 1/15. The clock now
+    // caps at 1/30, which must keep the documented trampoline spring config stable.
+    let s = { value: 0, velocity: 0 };
+    const cfg = { stiffness: 170, damping: 26 };
+    for (let i = 0; i < 400; i++) {
+      s = stepSpring(s, 1, cfg, 1 / 30);
+      expect(Number.isFinite(s.value)).toBe(true);
+      expect(Math.abs(s.value)).toBeLessThan(5);
+    }
+    expect(s.value).toBeCloseTo(1, 1);
+  });
+
   it("is deterministic", () => {
     const run = () => {
       let s = { value: -3, velocity: 2 };
