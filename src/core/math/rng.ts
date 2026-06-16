@@ -2,7 +2,10 @@
  * Deterministic RNG facade. The whole sim seeds from this — never `Math.random()`
  * (gates.json bans it in src/sim) so a given seed always replays identically.
  *
- * cyrb128 hashes a string/number seed into 4×32-bit state; mulberry32 is the stream.
+ * cyrb128 mixes a string seed, then XOR-folds its four lanes into a single 32-bit
+ * seed for the mulberry32 stream (mulberry32 takes one u32 of state). This is a seed
+ * normalizer, not a full 128-bit generator — folding trades a small collision risk for
+ * simplicity; swap in xoshiro128** if a 128-bit state is ever needed.
  * Pattern adapted from arcade-cabinet (infinite-headaches/src/random/seedrandom.ts).
  */
 
@@ -25,7 +28,7 @@ export interface Rng {
   readonly seed: number;
 }
 
-/** cyrb128 — string → 4×32-bit hash (good seed spread). */
+/** cyrb128 — mixes a string and XOR-folds the four lanes into one u32 seed. */
 function cyrb128(str: string): number {
   let h1 = 1779033703;
   let h2 = 3144134277;

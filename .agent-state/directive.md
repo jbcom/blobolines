@@ -79,23 +79,22 @@ tokens own palette.
 - [x] capacitor.config.ts (appId com.jbcom.blobolines)
 - [x] App shell entry: app/main.tsx, App.tsx (koota WorldProvider + ErrorBoundary)
 - [x] docs/ARCHITECTURE.md package map
-- [x] shadcn/ui base components in app/components/ui (button, dialog, slider, switch, tabs, tooltip, progress) + barrel; cn() in src/lib
-- [ ] Vitest dual config done — add src/__tests__ helpers + app/fixtures/FixtureStage barrel + first passing example tests (unit + fixture)
+- [ ] shadcn/ui base components in app/components/ui (button, dialog, slider, switch, tabs, tooltip, progress) + barrel; cn() in src/lib (cn DONE)
 - [x] Vitest dual config + src/__tests__/setup.ts + app/fixtures/FixtureStage + passing unit (tokens) + fixture (SkyDome WebGL) tests
-- [ ] Capacitor android platform added; haptics/screen-orientation/keep-awake wired via src/platform barrel (web fallbacks)
+- [ ] Capacitor android platform added (`cap add android`) — wrappers wired via src/platform barrel (DONE); platform scaffold pending
 - [x] release-please config + manifest; .github/dependabot.yml
 - [x] CI workflow (lint → tsc → unit → build → playwright install → browser fixtures + screenshot artifacts → Android assembleDebug APK artifact)
 - [x] release.yml + cd.yml deploying dist/ to GitHub Pages
-- [ ] enable Pages via gh; README + CHANGELOG (README done)
+- [x] enable Pages via gh (build_type=workflow, base /blobolines/); README done; CHANGELOG pending
 
 ## M0.5 — Real foundational subpackages (each = barreled package + tests, one commit)
 - [x] src/core/math: createRng (cyrb128→mulberry32), clock facade, spring/lerp helpers + unit tests + barrel
-- [ ] src/core/types: shared domain types/enums/ids + barrel
+- [x] src/core/types: shared domain types/enums/ids + barrel
 - [ ] src/ecs: koota world (done) + traits + queries + react hooks + barrel
 - [ ] src/engine: fixed-timestep accumulator loop + world tick orchestration + unit tests + barrel
-- [ ] src/state: game store (menu/playing/gameover) + settings + persistence bridge + tests + barrel
+- [x] src/state: zustand game store (menu/playing/gameover) + settings + progress + Capacitor-Preferences persistence + barrel
 - [ ] src/input: @use-gesture + keyboard → intents + tests + barrel
-- [ ] src/platform: Capacitor wrappers (haptics/orientation/keep-awake/preferences) + web fallbacks + barrel
+- [x] src/platform: Capacitor wrappers (haptics/orientation/keep-awake/preferences) + barrel
 
 ## M1 — Design system & identity
 - [ ] Design tokens (color/space/radius/shadow/motion/type) as CSS vars + TS token module + Tailwind theme; juicy gooey palette (not neon-cyberpunk)

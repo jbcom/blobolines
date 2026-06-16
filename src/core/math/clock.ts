@@ -5,7 +5,8 @@
  */
 
 export interface Clock {
-  /** Seconds since the clock was created/reset. */
+  /** Accumulated SIM time: the sum of clamped tick() deltas, not wall-clock. Safe for
+   *  replay/scoring — after a stall it advances by the clamped delta, not real time. */
   elapsed(): number;
   /** Seconds since the previous `tick()`; clamped to `maxDelta`. */
   tick(nowSeconds: number): number;
@@ -13,32 +14,34 @@ export interface Clock {
 }
 
 export interface ClockOptions {
-  /** Max delta returned by tick(), to avoid huge steps after a stall. Default 1/15. */
+  /** Max delta returned by tick(), to avoid huge steps after a stall. Default 1/30 —
+   *  kept below the stability threshold of the documented spring configs so a frame
+   *  stall (e.g. tab backgrounding) never blows up spring integration. */
   maxDelta?: number;
 }
 
 export function createClock(options: ClockOptions = {}): Clock {
-  const maxDelta = options.maxDelta ?? 1 / 15;
-  let start = 0;
+  const maxDelta = options.maxDelta ?? 1 / 30;
   let last = 0;
+  let simElapsed = 0;
   let initialized = false;
 
   return {
-    elapsed: () => (initialized ? last - start : 0),
+    elapsed: () => simElapsed,
     tick: (now) => {
       if (!initialized) {
-        start = now;
         last = now;
         initialized = true;
         return 0;
       }
       const dt = Math.min(Math.max(0, now - last), maxDelta);
       last = now;
+      simElapsed += dt;
       return dt;
     },
     reset: (now = 0) => {
-      start = now;
       last = now;
+      simElapsed = 0;
       initialized = false;
     },
   };

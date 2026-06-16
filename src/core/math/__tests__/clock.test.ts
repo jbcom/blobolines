@@ -21,6 +21,21 @@ describe("createClock", () => {
     expect(c.tick(5)).toBe(0.1);
   });
 
+  it("elapsed() accumulates CLAMPED sim time, not wall-clock", () => {
+    const c = createClock({ maxDelta: 0.1 });
+    c.tick(0);
+    c.tick(5); // wall jump of 5s, but clamped to 0.1
+    expect(c.elapsed()).toBeCloseTo(0.1, 6);
+    c.tick(5.05); // +0.05
+    expect(c.elapsed()).toBeCloseTo(0.15, 6);
+  });
+
+  it("defaults maxDelta to 1/30", () => {
+    const c = createClock();
+    c.tick(0);
+    expect(c.tick(10)).toBeCloseTo(1 / 30, 6);
+  });
+
   it("never returns negative deltas", () => {
     const c = createClock();
     c.tick(10);
