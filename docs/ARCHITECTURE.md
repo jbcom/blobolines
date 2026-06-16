@@ -15,12 +15,12 @@ public surface; modules stay small and single-responsibility — no monolithic s
 
 ## Hard boundaries
 
-1. **Sim purity** — `src/sim/**`, `src/engine/**`, `src/systems/**` are pure TS:
+1. **Sim purity** — `src/sim/**` is pure TS:
    no DOM, no three.js, no `Math.random()` (use `createRng`), no `performance.now()`
    (use the clock facade). Enforced by `.claude/gates.json`.
 2. **Render ≠ UI** — DOM UI (`app/views/**`, shadcn) never imports three objects.
    It reads/writes game state through the **store bridge** (`src/state`). R3F scene
-   components (`app/scene/**`) render ECS/state; they don't own game rules.
+   components (`app/scene/**`) render from the store/bridges; they don't own game rules.
 3. **Factories own spawning** — entities are created via `src/factories/**`, never
    `world.spawn(...)` ad hoc.
 4. **Tokens own the palette** — colors/type/space come from `src/styles/tokens.{css,ts}`.
@@ -34,15 +34,14 @@ public surface; modules stay small and single-responsibility — no monolithic s
 |---------|--------|----------------|
 | `src/core/math` | ✓ | `createRng` (cyrb128→mulberry32), clock facade, vec/lerp/spring helpers |
 | `src/core/types` | ✓ | shared domain types (ids, enums, AABB) |
-| `src/engine` | ✓ | fixed-timestep loop (accumulator), world tick orchestration |
-| `src/ecs` | ✓ | koota world, traits, queries, react hooks |
+| `src/config` | ✓ | all tunables as per-domain JSON + typed barrel (physics/blob/launch/trampoline/collect/goo/world/biomes/audio) |
 | `src/sim/physics` | ✓ | Rapier config, collision categories, spring/depress math (pure where possible) |
 | `src/sim/blob` | ✓ | blob state: squash/stretch springs, expression state machine (eyes), velocity model |
 | `src/sim/trampoline` | ✓ | trampoline spring + tilt model, type behaviors (standard/booster/moving/fragile) |
 | `src/sim/launch` | ✓ | slingshot aim→velocity, combo/multiplier, 3D air-steer model |
 | `src/world` | ✓ | seeded procedural vertical generator, difficulty curve |
 | `src/factories` | ✓ | spawn blob / trampoline / crystal / powerup / particle entities |
-| `src/audio` | ✓ | Tone.js engine: synths (bounce/launch/chime/powerup), ambient pad, bus |
+| `src/audio` | ✓ | Howler.js engine playing the itch.io sample library (config/audio.json); music/ambient/sfx channels |
 | `src/render/materials` | ✓ | metaball goo material, eye materials, trampoline material |
 | `src/render/shaders` | ✓ | GLSL (metaball density field, fresnel/wet goo, splat) |
 | `src/render/vfx` | ✓ | goo splash burst, splat-decal texture painter, trail |
@@ -61,7 +60,7 @@ public surface; modules stay small and single-responsibility — no monolithic s
 | `app/scene/trampoline` | ✓ | `<Trampoline>`, `<TrampolineField>` |
 | `app/scene/world` | ✓ | `<SkyDome>`, `<Lighting>`, `<Ambiance>` (rings/grid/clouds) |
 | `app/scene/vfx` | ✓ | `<GooSplash>`, `<SplatDecals>`, `<BlobTrail>` |
-| `app/scene/postfx` | ✓ | `<PostFX>` (bloom, vignette, chromatic, N8AO, color grade) |
+| `app/scene/postfx` | ✓ | `<PostFX>` (bloom, vignette, speed-reactive chromatic) |
 | `app/views` | ✓ | DOM overlay: `<HudOverlay>`, `<MainMenu>`, `<GameOver>`, modals |
 | `app/components/ui` | ✓ | shadcn primitives (button, dialog, slider, switch, tabs, tooltip, progress) |
 | `app/hooks` | ✓ | React glue hooks (useGameLoop, useInput, useHaptics) |
@@ -77,7 +76,7 @@ input (gesture/keyboard) → intents → src/state
               │             sim: blob springs, trampoline depress, launch,
               │             world-gen, collision (Rapier), expression FSM
               │                     │
-              │                  ECS world (koota) updated
+
               ▼                     ▼
    app/scene/* read ECS/state → render meshes, goo material, eyes, vfx, postfx
    app/views/* read state via bridge → HUD/menus (shadcn + motion), haptics
@@ -88,7 +87,7 @@ input (gesture/keyboard) → intents → src/state
 - Same seed → same world & sim. `createRng(seed)` + clock facade make sim replayable.
 - Unit tests (happy-dom): sim/engine/factories/world/launch math.
 - Browser fixture tests (Chromium + WebGL): scene components render + screenshot.
-- Audio-graph tests: Tone.js node wiring.
+- Audio tests: before-init no-op contract (Howler).
 
 See `docs/GAME-DESIGN.md` for mechanics/tuning constants and `docs/TESTING.md` for the
 test strategy.

@@ -1,9 +1,10 @@
 import { useFrame } from "@react-three/fiber";
 import { BallCollider, type RapierRigidBody, RigidBody } from "@react-three/rapier";
 import { useEffect, useRef } from "react";
-import { playLaunch, playSplat } from "@/audio";
+import { playLaunch, playSplat, setMusicAltitude } from "@/audio";
 import { ImpactStyle, impact as impact_ } from "@/platform";
 import { classifyExpression } from "@/sim/blob";
+import { MAX_COMBO } from "@/sim/combo";
 import { launchVelocity } from "@/sim/launch";
 import { BLOB, DEATH_FALL_DISTANCE, MAX_IMPACT_SPEED, WORLD_BOUND_XZ } from "@/sim/physics";
 import {
@@ -13,6 +14,7 @@ import {
   getAirSteer,
   isPowerupActive,
   reportSplat,
+  resetBridges,
   resetPowerups,
   setBlobDiagnostics,
   tickPowerups,
@@ -63,6 +65,7 @@ export function PlayerBlob() {
     dead.current = false;
     resetPowerups();
     resetDroplets();
+    resetBridges(); // clear any launch/aim/rebound/splat left pending from the prior run
     impact.current = 0;
   }, [resetDroplets]);
 
@@ -90,8 +93,9 @@ export function PlayerBlob() {
       body.setLinvel({ x: v.x, y: bounce.speed, z: v.z }, true);
       const run = useGameStore.getState().run;
       // Ice pads are slippery: a big bouncy launch but it BREAKS the clean-combo streak
-      // (risk/reward). Every other pad builds the combo.
-      setRun({ combo: bounce.type === "ice" ? 0 : run.combo + 1 });
+      // (risk/reward). Every other pad builds the combo, capped at MAX_COMBO (the launch
+      // multiplier is balanced around that cap; leaving it unclamped overshot).
+      setRun({ combo: bounce.type === "ice" ? 0 : Math.min(run.combo + 1, MAX_COMBO) });
     }
 
     // Launch: set velocity directly for a crisp, predictable pop.
@@ -132,6 +136,7 @@ export function PlayerBlob() {
       if (p.y - lastEnsureY.current > 10) {
         lastEnsureY.current = p.y;
         ensureHeight(p.y + 180);
+        setMusicAltitude(p.y); // shift the ambient bed with altitude (throttled to ~10m)
       }
     }
 

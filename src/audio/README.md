@@ -1,26 +1,31 @@
-# `src/audio` — Tone.js engine, SFX, and music
+# `src/audio` — Howler.js sample playback
 
-All sound. A lazily-initialized Tone.js engine with a gain-bus split (sfx / music),
-procedural sound effects, and procedural ambient music. No samples — everything is
-synthesized, so there are no audio assets to ship.
+All sound. Plays the real itch.io sample library (owned packs) via **Howler.js** —
+replaced the earlier procedural Tone.js synthesis. Cue → file mappings, themes, and
+volumes are data in [`src/config/audio.json`](../config/audio.json); the samples live in
+`public/assets/audio/` (`sfx/`, `music/`, `ambient/`).
 
 ## Files
 
 | File | Owns |
 |------|------|
-| `engine.ts` | Lazy `initAudio` (concurrency-safe via a shared init promise), the master + sfx + music gain buses, `setMasterVolume`/`setMusicEnabled`, `getTone`/`getSfxOutput`/`getMusicOutput`, `isAudioInitialized`. |
-| `sfx.ts` | Procedural one-shots: `playBounce`/`playLaunch`/`playChime`/`playPowerup`/`playSplat`. No-op before `initAudio` resolves. |
-| `music.ts` | Procedural ambient bed: `startMusic`/`stopMusic` (a pad drone + a `Tone.Loop` plucked sequence on the music bus). |
+| `howler.ts` | The engine: lazy per-path `Howl` cache, three channels (music loop, altitude-swapped ambient bed, fire-and-forget SFX), gesture unlock, master volume + mute. Paths resolve under `import.meta.env.BASE_URL` (correct on Pages + Capacitor). |
+| `index.ts` | Public cue surface re-exported from the engine. |
+
+## API
+
+- `initAudio()` — resume the AudioContext from a user gesture (the PLAY click).
+- `playBounce(type)` / `playLaunch()` / `playSplat()` / `playChime()` / `playPowerup()`
+  — fire-and-forget cues (per-pad bounce sample; ice → bright click, fragile → soft).
+- `startMusic()` / `stopMusic()` — fade the looping theme + ambient bed in/out.
+- `setMusicAltitude(height)` — swap the ambient bed (sky → space) as the blob climbs.
+- `setMasterVolume(v)` / `setMusicEnabled(on)` — settings, mapped onto Howler.
 
 ## Rules
 
-- **The AudioContext can only start from a user gesture.** `initAudio` is called
-  from the PLAY click; SFX/music are silent no-ops until it resolves, so it's safe
-  to call play functions early.
-- **`initAudio` is concurrency-safe** — multiple callers share one init promise; it
-  never double-initializes the context.
-- SFX route through the sfx bus, music through the music bus, both under master —
-  so the settings (master volume, music toggle) map cleanly onto gain nodes.
+- **Gesture-gated**: cues are safe no-ops until `initAudio` resolves the context.
+- **Lazy + cached**: a `Howl` is created on first use of a path and reused for the
+  session; Howler overlaps SFX plays natively.
+- **Add a sound = edit `audio.json`** (drop the file in `public/assets/audio/`), not code.
 
-Tests live in `__tests__/` and assert the play functions are safe no-ops before
-init. See [`docs/ARCHITECTURE.md`](../../docs/ARCHITECTURE.md).
+Tests (`__tests__/sfx.test.ts`) lock the before-init no-op contract.

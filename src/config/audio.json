@@ -1,0 +1,19 @@
+{
+  "volumes": { "music": 0.4, "ambient": 0.35, "sfx": 0.7, "themeFadeMs": 1400 },
+  "sfx": {
+    "bounce": "assets/audio/sfx/bounce.mp3",
+    "bounce_soft": "assets/audio/sfx/bounce_soft.mp3",
+    "bounce_ice": "assets/audio/sfx/bounce_ice.mp3",
+    "launch": "assets/audio/sfx/launch.mp3",
+    "splat": "assets/audio/sfx/splat.mp3",
+    "crystal": "assets/audio/sfx/crystal.mp3",
+    "powerup": "assets/audio/sfx/powerup.mp3"
+  },
+  "music": {
+    "play": "assets/audio/music/theme.mp3"
+  },
+  "ambient": {
+    "sky": "assets/audio/ambient/sky.mp3",
+    "space": "assets/audio/ambient/high.mp3"
+  }
+}

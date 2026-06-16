@@ -24,8 +24,3 @@ export function onCleanBounce(state: ComboState): ComboState {
 export function breakCombo(): ComboState {
   return { streak: 0 };
 }
-
-/** The HUD multiplier label value for a streak (1.0x below 2). */
-export function comboLabel(streak: number): number {
-  return streak < 2 ? 1 : 1 + (streak - 1) * 0.5;
-}

@@ -1,6 +1,23 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { useWorldStore } from "../worldStore";
 
+describe("worldStore.reset seeding", () => {
+  it("uses an explicit seed when given (reproducible / daily run)", () => {
+    useWorldStore.getState().reset(42);
+    expect(useWorldStore.getState().seed).toBe(42);
+  });
+
+  it("advances the seed deterministically when none is given (no performance.now)", () => {
+    useWorldStore.getState().reset(1);
+    useWorldStore.getState().reset(); // derive from prev seed
+    const a = useWorldStore.getState().seed;
+    useWorldStore.getState().reset(1);
+    useWorldStore.getState().reset(); // same prior → same next
+    expect(useWorldStore.getState().seed).toBe(a);
+    expect(a).not.toBe(1);
+  });
+});
+
 describe("worldStore.ensureHeight", () => {
   beforeEach(() => useWorldStore.getState().reset(1));
 

@@ -1,16 +1,19 @@
 import { usePunchOnChange } from "@app/hooks";
 import { Flame } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
+import { comboMultiplier } from "@/sim/launch";
 import { useGameStore } from "@/state";
 
 /**
  * Clean-bounce combo multiplier. Appears with a springy pop once the streak is ≥2 and
- * scales/glows with the multiplier — reward feedback for chaining trampolines.
+ * scales/glows with the multiplier — reward feedback for chaining trampolines. The shown
+ * number is the REAL launch multiplier (comboMultiplier) — it previously used a different
+ * formula (1+(combo-1)*0.5) and lied about the actual bonus.
  */
 export function ComboBadge() {
   const combo = useGameStore((s) => s.run.combo);
   const show = combo >= 2;
-  const multiplier = (1 + (combo - 1) * 0.5).toFixed(1);
+  const multiplier = comboMultiplier(combo).toFixed(2);
   // anime.js punch: kick the badge with a scale + alternating tilt on every new clean
   // bounce, so a building streak feels percussive (Motion owns the appear/exit).
   const punchRef = usePunchOnChange<HTMLDivElement>(combo, { scale: 1.4, rotate: 6 });

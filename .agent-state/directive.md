@@ -76,10 +76,22 @@ while queue has [ ] items: implement → verify (typecheck+lint+test, run the ap
 screenshot for visual/UI work) → commit (Conventional Commits) → dispatch pipelined local
 review (comprehensive-review:full-review + security-sast + code-simplifier, scoped to the
 diff, background) → fold findings forward → mark [x] → IMMEDIATELY next item. Never stop
-between packages, never schedule a politeness wakeup, never wait idly. While CI/review run
-in the background, start the next independent package. If one item is blocked, pick another
-[ ] item — there is always parallel work. Milestone boundaries get a broader review pass.
+between packages, never wait idly. While CI/review run in the background, start the next
+independent package. If one item is blocked, pick another [ ] item — there is always
+parallel work. Milestone boundaries get a broader review pass.
 Reference `~/src/arcade-cabinet/{kings-road,marmalade-drops,ebb-and-bloom,will-it-blow,bioluminescent-sea}` for patterns.
+
+### The end of EVERY turn opens the NEXT item — no scheduling crutch
+**Banned: ScheduleWakeup / cron / `/loop` self-pacing as a way to "continue later."** Those
+are pauses wearing a timer. The contiguous loop runs IN-TURN: finish an item, immediately
+start the next one in the same flow of work. The ONLY legitimate yields are the true
+blockers (interactive auth, a spend needing approval, real hardware, or remote state I
+already triggered — CI/deploy/dispatched-review — watched via Monitor with a heartbeat).
+A drained-feeling queue is not a stop: re-run the audit fan-out (review/UI/visual/audio/
+perf/game-design agents) to GENERATE the next batch of directives, append them here, and
+keep going. The queue is meant to stay long; growing it is part of the work.
+Batch into a PR roughly every ~6-10 commits of coherent work, open it, keep building the
+next batch on a fresh branch while CI runs — do not idle waiting on CI.
 
 ## Not an MVP — the long haul
 The goal is a COMPLETE, polished, fun game, not a minimal-visible demo. "It renders"
@@ -254,3 +266,150 @@ A real Blobolines blob should:
 
 ## All M10 "make it alive" feedback shipped (PRs #5 #6 #7)
 Camera follow + shake, in-game deformation, wet glistening shader + color gradient, resting puddle (sits on pad) + charge-gather, aim trajectory, membrane bend, off-pad-death fix, real color + height biome backdrop/strata + pad recolor, GLB powerups, super+ice bonus pads, real-physics splat chunks, juicy splat, blob-follow light, multi-hue crystals, JSON config architecture. Next polish batch (when requested): drag-direction shear deform, biome hazards, more bonus mechanics, audio/FX depth.
+
+## M11 — features polish & improvements (/loop, dynamic)
+- [x] Audio: distinct bounce SFX for the super (triumphant 420Hz) + ice (glassy MetalSynth ping) bonus pads — they were both falling to the default standard pitch.
+- [x] Real audio: switched Tone.js synth → Howler.js playing the owned itch.io sample library (impact bounces, whoosh launch, explosion splat, UI crystal/powerup, menu theme, wind/magic ambient beds). Cue→file map in config/audio.json; ambient bed swaps sky→space by altitude. Verified Howls load + play in-browser.
+
+## M12 — UI/UX depth (from UI audit, 2026-06-16)
+### Tier 1 — game-feel & HUD
+- [ ] Altitude-milestone celebration: transient "100m/200m…" banner + number-pop + sound on each 100m crossing (Altimeter/Hud).
+- [ ] ScreenFlash component on the unused --z-flash layer: gold on combo escalation, blue on big launch, red vignette near death (new app/views/hud/ScreenFlash.tsx).
+- [ ] Escalate ComboBadge by tier: color/glow/size ramp gold→orange→goo.flame, "ON FIRE" state at 5×.
+- [ ] In-run personal-best flourish: pulse Best line gold + banner when height crosses best mid-run (Altimeter).
+- [ ] Big-launch/max-charge flourish in LaunchInput: pulse bar + "MAX" label + edge glow near charge 1.0.
+- [ ] Near-miss danger feedback: escalating red screen-edge pulse + haptic while falling toward death (Hud).
+- [ ] PowerUpBadges countdown ring/bar per badge (use Progress primitive) instead of binary on/off.
+- [ ] Replace PowerUpBadges 120ms polling with bridge subscription (exact timing, cheaper render).
+### Tier 2 — game-over recap
+- [ ] GameOver run recap: max combo, crystals this run vs lifetime, delta-to-best (+Nm / Nm short); extend RunStats with maxCombo.
+- [ ] GameOver Share button (navigator.share + clipboard fallback).
+- [ ] Real personal-best celebration on GameOver: goo-splat/confetti burst, gold card glow, distinct sound, "+Nm over best".
+- [ ] GameOver delta-vs-best progress bar (run height as fraction of best).
+- [ ] GameOver: crystals → next-skin progress + jump to customizer.
+### Tier 3 — onboarding & states
+- [ ] First-run tutorial overlay: drag-ghost coachmark over LaunchInput, dismiss on first launch (new Onboarding.tsx).
+- [ ] First-play hint instead of burying how-to behind a menu button.
+- [ ] Branded error/boot-failure screen + boundary (Rapier-WASM/Canvas fail → "tap to retry").
+- [ ] LoadingScreen real progress (asset/WASM fraction) not infinite bounce.
+- [ ] BlobCustomizer empty state when crystals==0 ("collect crystals to unlock goo").
+### Tier 4 — customizer/shop
+- [ ] Clearer locked-tile cost + "need N more" sublabel + affordability progress fill.
+- [ ] Animate crystal-spend on unlock (header gem deduct + tile pop via usePunchOnChange).
+- [ ] Live gooey blob preview per skin in customizer (not a flat swatch).
+- [ ] Keyboard/gamepad grid nav for skins (roving tabindex or Tabs).
+### Tier 5 — settings
+- [ ] In-app reduced-motion toggle driving MotionConfig.
+- [ ] Reset-progress action (confirm) clearing best/crystals/unlocks.
+- [ ] Separate SFX volume from music volume.
+- [ ] Gate/hide haptics control on non-touch; add intensity/test.
+- [ ] Slingshot sensitivity drag-to-test preview area.
+### Tier 6 — responsive & cohesion
+- [ ] Hud wide/tall breakpoints: anchor readouts to safe-area corners, don't stretch.
+- [ ] TitleScreen/GameOver respect safe-left/right in landscape/notch.
+- [ ] Modal max-height + internal scroll for short/landscape screens.
+- [ ] Goo-language pass on DOM chrome (organic corners/squish on CTA + badges).
+- [ ] Consolidate bespoke accent buttons onto the shared Button primitive.
+- [ ] anime.js squish-stretch on title Play press.
+- [ ] Reduced-motion guards on every new flourish (static cue fallback).
+
+## M13 — visual/render/VFX depth (from visual audit, 2026-06-16)
+- [ ] Enable Canvas shadows + shadow camera on key light; castShadow/receiveShadow blob+pads (castShadow set but Canvas has no shadows prop — dead).
+- [ ] Soft fake contact shadow under the blob, scaled by altitude+squash (BlobShadow).
+- [ ] ACESFilmic toneMapping + outputColorSpace on Canvas gl; drop the manual soft-clamp hack in metaballGoo.
+- [ ] Wire biome fog into the scene (biomeSkyAt.fog is computed but unused) — fogExp2 by altitude, hides far cutoff.
+- [ ] Fix camera far plane vs world scale (far:200 clips dome@150 + biomes to 1400m); attach dome to camera or push far.
+- [ ] Unify the two divergent goo shaders (menu GooMaterial vs in-game MetaballGoo) — shared wet/lighting GLSL so the blob matches menu↔play.
+- [ ] Biome-reactive goo lighting: feed biome key color + darkening as uniforms (blob warm at ground, cool/moody in space).
+- [ ] Goo refraction: sample backbuffer along normal×fresnel so the blob bends what's behind it (marquee jelly upgrade).
+- [ ] Thickness-based inner glow (Beer-Lambert) in the raymarch — deeper goo more saturated.
+- [ ] Fake caustics / moving light dapple cast under the goo on the pad.
+- [ ] Render the free (separated) droplets — currently culled from the field and shown nowhere; instanced wet spheres so flung goo arcs+falls.
+- [ ] Controlled drip/stretch strands (teardrop necks) that thin then snap over ~0.2s — the signature WoG look (re-tune smin per-droplet stretch weight).
+- [ ] Launch burst VFX: expanding ring/flash + radial speed streaks at the pad on release.
+- [ ] Landing impact rings on the membrane, sized by impact speed (ImpactRing).
+- [ ] Speed lines / motion streaks above a velocity threshold (PostFX/overlay).
+- [ ] Continuous tapered trail ribbon behind the airborne blob (igniting toward flame at high combo), replacing sparse trail dots.
+- [ ] Crystal sparkle glint + collect burst (CrystalField).
+- [ ] Powerup attract aura/halo + collect flash (PowerUpField/PowerUpModel).
+- [ ] Per-biome particle ambience (petals ground, ice/wind stratosphere, nebula dust space) — extend BiomeProps.
+- [ ] Per-biome color grade + bloom driven by biomeSkyAt (warm ground, cold high-contrast space) in PostFX.
+- [ ] Depth-of-field focused on the blob (quality-gated).
+- [ ] God rays + sun sprite in the sky bands (the shader paints shafts but there's no light source).
+- [ ] Wet/jelly trampoline membrane material (fresnel sheen + impact ripple) matching the goo.
+- [ ] Wet-shaded splat decals (normal/height + specular) instead of flat Canvas2D basic.
+- [ ] Distinct pad geometry/silhouette per type (ice translucent, super glowing frame, fragile cracked, booster chevrons, moving rails).
+- [ ] Biome environment geometry per stratum (parallax hills/islands/satellites), altitude-windowed (BiomeGeometry).
+- [ ] Expressive eyes: lit glossy sclera + tracking glint, lid/eyebrow shaping per expression, pupil dart toward velocity.
+- [ ] Quality-tier system (src/render/quality.ts): scale raymarch steps, pool sizes, DOF/god-rays/bloom by device/FPS — gate the heavy effects above.
+- [ ] Selective (emissive-channel) bloom instead of global luminance threshold — only goo hotspots/flame/crystals/powerups glow.
+- [ ] Low-amplitude perpetual idle jiggle (breathing) on the goo so it's always alive at rest.
+
+## M14 — audio depth (from audio audit, 2026-06-16)
+- [ ] Distinct bounce samples for ALL pad types (standard soft RR, booster springy, super heavy+whoosh, ice magic, fragile wood+crack, moving metal) — 4 of 6 currently share one sample.
+- [ ] Impact-strength → Howl rate(0.85-1.15)+volume scaling; pass sensor speed into playBounce.
+- [ ] Round-robin engine (playRandom with no-immediate-repeat) for per-cue variant sets.
+- [ ] Charged-launch whoosh by power (soft→fast→hard, rate scaled by charge) — playLaunch ignores charge today.
+- [ ] Combo-escalation rising-pitch blip per clean bounce (rate=1+combo*0.06), reset on break.
+- [ ] Combo-milestone fanfares (5/10/25) from the victory-stinger pack.
+- [ ] New personal-best stinger on gameover when maxY>best.
+- [ ] Real game-over death sting (downer + gooey explosion) instead of reusing the splat.
+- [ ] Powerup activate/expire cues distinct from pickup (thruster laser-charge loop, magnet buff, expire power-down).
+- [ ] Crystal pickup variation + multi-gather sparkle run (rate per gem); magnet "sweep" loop while active.
+- [ ] Near-miss whoosh when passing a pad close at speed without landing.
+- [ ] Three music tracks swapped by phase+altitude (menu / in-game / high-space) with crossfade.
+- [ ] Expand ambient beds per biome band (forest/wind/strong-wind/space/snow/magic) off biomeSkyAt.
+- [ ] UI sounds (hover/click/confirm/cancel/popup/coin) wired to the shadcn overlay.
+- [ ] Music ducking (sidechain) under super-bounce/death/milestone — duckMusic(ms) helper.
+- [ ] Three-bus mix (music/sfx/ambient/master) with independent enable+volume; retune ambient down to 0.25.
+- [ ] Audio thump layer mirroring the Light/Medium/Heavy haptic split.
+- [ ] Preload critical cues at startMusic to avoid first-play decode hitch (mobile).
+
+## M15 — game-design depth + CONFIRMED BUGS (from mechanics inventory, 2026-06-16)
+### Bugs (do first — real correctness)
+- [x] BUG fixed: ComboBadge now shows the real comboMultiplier (was a divergent 0.5 formula); deleted the dead buggy comboLabel.
+- [x] BUG fixed: runtime combo increment now clamps to MAX_COMBO (was unclamped).
+### Mechanics depth
+- [ ] Add a real SCORE system (height + crystals + combo + style), persisted high score separate from best height.
+- [ ] Crystal depth: tiers/bonus/multiplier, not flat +1; consumable/upgrade sinks beyond cosmetic skins.
+- [ ] Altitude-weighted pad type distribution (super/booster rarer low, more bonus variety high) — currently uniform at all heights.
+- [ ] Make the `moving` pad meaningful (rebound 1.05 is nearly a dead type) — give it a real role/mechanic.
+- [ ] Hazards: add at least 2 (e.g. crumbling gap, spike pad, wind gust, drifting obstacle) gated by biome/height.
+- [ ] More powerups beyond magnet/thruster: shield/second-life, slow-mo, score-doubler, multi-bounce; allow stacking or distinct refresh.
+- [ ] Comeback/revive mechanic on death (watch-style or one-shot shield) for run length.
+- [ ] Difficulty curve beyond pad-shrink: vary spacing, gravity, type mix, crystal/powerup density by height.
+- [ ] Daily-challenge seed plumbing (Rng is seedable; add a daily seed + leaderboard-ready run hash).
+- [ ] Missions/objectives/achievements layer (e.g. "reach 200m", "10-combo", "100 crystals").
+- [ ] Charge-time/overcharge nuance on the slingshot (hold penalty or perfect-release window).
+- [ ] Wire walls/misses to break combo if that's the intended rule (docs claim it; runtime only breaks on ice).
+
+## M16 — perf/architecture/quality (from perf audit, 2026-06-16)
+### More confirmed bugs
+- [x] BUG fixed: resetBridges() clears launch/aim/rebound/splat/steer/impact on run start (PlayerBlob mount) — no stale value firing next run.
+- [x] BUG fixed: worldStore.reset derives the next seed via LCG from the previous (was performance.now) — deterministic/replayable; explicit seed still honored. Tested.
+### Quality tier (biggest mobile gap)
+- [ ] Runtime quality-tier system (low/med/high) in store.settings → DPR, raymarch steps, postfx passes, shadows, AA, pool/particle counts. Expose in SettingsModal.
+- [ ] Make raymarchSteps a uniform (u_maxSteps loop bound), not a compile-time #define, so tiers scale without rebuild.
+- [ ] Drive Canvas dpr from tier (mid/low → [1,1.5]); gate antialias off on mid/low.
+- [ ] Gate PostFX passes by tier (strip bloom + chromatic on low); gate shadows off low/mid + set explicit shadow-mapSize.
+### Hot-path / alloc
+- [ ] packMetaballField: write into caller-owned scratch buffers each frame instead of allocating Vec3[]+number[] (the one real per-frame GC offender).
+- [ ] GooField: set palette colors on change only, not every frame.
+- [ ] BlobEyes: cache lid/pupil/tear refs instead of per-frame traverse()+startsWith.
+- [ ] PowerUpField: skip collected entries (live-only list), no distance calc for hidden.
+- [ ] BiomeProps: early-out the star pass on opacity<0.01 like clouds.
+- [ ] metaball fieldNormal: forward-difference (4 evals) instead of central (6) to cut normal cost ~33%.
+- [ ] Instance/share trampoline geometry+materials (per-type), keep only splat texture per-pad; 64px splat on mobile.
+### Dead code / deps
+- [ ] Remove koota ECS (src/ecs/** + WorldProvider + koota dep) — 100% dead (nothing spawns/queries), OR migrate per-frame data into it. Fix ARCHITECTURE.md drift.
+- [ ] Remove src/engine/loop.ts (zero importers; references a non-existent hook). Keep core/math/clock.
+- [ ] Drop unused deps: maath, n8ao, three-bvh-csg, three-mesh-bvh (zero imports). Fix ARCHITECTURE.md N8AO claim.
+### Audio/asset loading
+- [ ] html5:true for music+ambient Howls (stream, not full-decode); keep html5:false for short SFX.
+- [ ] Preload SFX Howls on LoadingScreen behind the gesture unlock (no first-play hitch).
+- [ ] Re-encode theme.mp3 smaller (~96kbps mono / shorter loop) and/or lazy-load post-interaction.
+### Bundle/build
+- [ ] Lazy-load heavy modals (Manual/BlobCustomizer/Settings) + defer Rapier Physics chunk to first PLAY; address the large three chunk vs masking with chunkSizeWarningLimit.
+### Tests
+- [ ] Perf-regression e2e: Playwright frame-time budget over a scripted climb.
+- [ ] Broaden e2e: powerups, magnet collect, fragile/moving/super/ice pads, combo streak, gameover→retry remount, WebGL context-restore.

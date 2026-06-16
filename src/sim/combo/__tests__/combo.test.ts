@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { breakCombo, comboLabel, createCombo, MAX_COMBO, onCleanBounce } from "../combo";
+import { breakCombo, createCombo, MAX_COMBO, onCleanBounce } from "../combo";
 
 describe("combo tracking", () => {
   it("starts at zero", () => {
@@ -23,17 +23,5 @@ describe("combo tracking", () => {
     const built = onCleanBounce(onCleanBounce(createCombo()));
     expect(built.streak).toBe(2);
     expect(breakCombo().streak).toBe(0);
-  });
-});
-
-describe("comboLabel", () => {
-  it("is 1x below a streak of 2", () => {
-    expect(comboLabel(0)).toBe(1);
-    expect(comboLabel(1)).toBe(1);
-  });
-
-  it("scales 0.5 per streak above 1", () => {
-    expect(comboLabel(2)).toBe(1.5);
-    expect(comboLabel(3)).toBe(2);
   });
 });

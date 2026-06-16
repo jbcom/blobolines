@@ -1,11 +1,19 @@
+/**
+ * Game audio — real itch.io sample library played via Howler.js (see ./howler and
+ * config/audio.json). Replaced the procedural Tone.js synthesis. The public cue surface
+ * is unchanged, so game call sites are untouched.
+ */
 export {
-  getMusicOutput,
-  getSfxOutput,
-  getTone,
   initAudio,
   isAudioInitialized,
+  playBounce,
+  playChime,
+  playLaunch,
+  playPowerup,
+  playSplat,
   setMasterVolume,
+  setMusicAltitude,
   setMusicEnabled,
-} from "./engine";
-export { startMusic, stopMusic } from "./music";
-export { playBounce, playChime, playLaunch, playPowerup, playSplat } from "./sfx";
+  startMusic,
+  stopMusic,
+} from "./howler";
