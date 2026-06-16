@@ -14,6 +14,7 @@ dist-ssr/
 # Test output
 coverage/
 __screenshots__/
+.vitest-attachments/
 
 # Dev harness captured screenshots (re-derivable)
 artifacts/
@@ -54,6 +55,9 @@ pnpm-debug.log*
 .env
 .env.*
 !.env.example
+
+# Claude runtime cache (gates.json is tracked; state/ is re-derivable task-batch cache)
+.claude/state/
 
 # Agent-state cache (re-derivable; tracked files are directive.md + decisions.ndjson)
 .agent-state/digest.md
