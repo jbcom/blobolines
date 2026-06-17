@@ -21,6 +21,7 @@ import {
 } from "@/sim/trampoline";
 import { reportImpact, reportRebound, useGameStore } from "@/state";
 import { mixHex, palette, trampColor } from "@/styles/tokens";
+import { PadTypeDecor } from "./PadTypeDecor";
 
 /**
  * A single trampoline: a fixed Rapier body (the blob bounces off it) with a squishy
@@ -248,6 +249,12 @@ export function Trampoline({ position, width, depth, type, cant, onImpact }: Tra
             sheenRoughness={0.4}
           />
         </mesh>
+        {/* Per-type silhouette cue (super frame / booster chevrons / ice slab / fragile cracks
+            / wobbler ring / canted arrow) on top of the membrane so the pad KIND reads at a
+            glance, not just by color. */}
+        <group position={[0, THICKNESS / 2 + 0.02, 0]}>
+          <PadTypeDecor type={type} width={width} depth={depth} cant={cant} />
+        </group>
         {/* Accumulating goo-splat decal — a transparent plane skimming the membrane top,
             painted by the Canvas2D splat texture on each landing. polygonOffset lifts it
             above the membrane to avoid z-fighting. */}

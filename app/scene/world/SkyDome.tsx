@@ -86,10 +86,13 @@ export function SkyDome() {
     // (there's no sun in the void). Parented to the camera-relative dome so it tracks the view.
     const sun = sunRef.current;
     if (sun) {
+      // Track the camera so the sun stays high in view as the blob climbs (it's at a fixed
+      // OFFSET from the camera, not a fixed world point — otherwise it sinks below the horizon
+      // once the camera ascends past its world Y and vanishes long before the intended fade).
+      sun.position.set(camera.position.x + 40, camera.position.y + 70, camera.position.z - 90);
       sun.lookAt(camera.position);
-      const fade = Math.max(0, 1 - height / 750); // gone by ~space
+      const fade = Math.max(0, 1 - height / 750); // gone by ~space (no sun in the void)
       sun.visible = fade > 0.02;
-      sun.scale.setScalar(1 + (1 - fade) * 0.0); // (steady size; fade carries the transition)
       for (const child of sun.children) {
         const mat = (child as THREE.Mesh).material as THREE.MeshBasicMaterial;
         mat.opacity = (child === sun.children[0] ? 0.9 : 0.35) * fade;

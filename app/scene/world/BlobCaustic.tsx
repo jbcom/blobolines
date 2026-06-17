@@ -84,7 +84,9 @@ export function BlobCaustic({ skin }: { skin: BlobSkin }) {
   });
 
   return (
-    <mesh ref={meshRef} rotation={[-Math.PI / 2, 0, 0]} material={material}>
+    // renderOrder 1: draw the additive caustic AFTER the alpha shadow so it reads as added
+    // light on top of the shadow, not darkened under it.
+    <mesh ref={meshRef} renderOrder={1} rotation={[-Math.PI / 2, 0, 0]} material={material}>
       <planeGeometry args={[2, 2]} />
     </mesh>
   );

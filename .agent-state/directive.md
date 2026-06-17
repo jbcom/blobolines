@@ -485,7 +485,16 @@ game — touch/drag is primary; keyboard is a minor desktop-only secondary, don'
       live per-frame value (chromatic-aberration offset) still uses the safe mutate-Vector2-prop
       pattern. Verified the game runs cleanly through the grade now.
 - [ ] Wet-shaded splat decals (normal/height + specular) instead of flat Canvas2D basic.
-- [ ] Distinct pad geometry/silhouette per type (ice translucent, super glowing frame, fragile cracked, booster chevrons, moving rails).
+- [x] Distinct pad silhouette per type: new PadTypeDecor renders a per-type cue on the membrane
+      — super a glowing wireframe FRAME (treasure), booster upward CHEVRONS (flings higher), ice
+      a frosty TRANSLUCENT slab (transmission), fragile radiating CRACK lines, wobbler an off-
+      kilter RING (unstable), canted a directional ARROW toward its tilt. Cheap line/flat geometry
+      built once per pad (disposed on unmount). Reads the pad KIND at a glance, not just by color.
+      Also folded the sun/caustic review: the sun sprite now tracks the camera offset (it was at
+      a fixed world Y=80 → sank below the horizon ~160m up, long before the 750m fade); caustic
+      gets renderOrder=1 so it adds light over the shadow, not under it. (Noted: per-type
+      MeshPhysicalMaterial clearcoat+sheen may need shader pre-warm if mobile hitches appear —
+      bounded by the render window for now.)
 - [ ] Biome environment geometry per stratum (parallax hills/islands/satellites), altitude-windowed (BiomeGeometry).
 - [ ] Expressive eyes: lit glossy sclera + tracking glint, lid/eyebrow shaping per expression, pupil dart toward velocity.
 - [ ] Quality-tier system (src/render/quality.ts): scale raymarch steps, pool sizes, DOF/god-rays/bloom by device/FPS — gate the heavy effects above.
