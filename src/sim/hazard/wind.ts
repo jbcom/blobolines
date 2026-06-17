@@ -21,3 +21,24 @@ export function windAt(height: number, time: number): readonly [number, number] 
   const dir = time * 0.18; // slow rotation of the wind heading
   return [Math.cos(dir) * gust, Math.sin(dir) * gust];
 }
+
+// ── Downdraft hazard (2nd hazard) ────────────────────────────────────────────────
+/** Band where periodic downdrafts pull the blob down — the "space" approach (upper
+ *  stratosphere into space), a distinct vertical hazard from the lateral wind gust. */
+export const DOWNDRAFT_START = 950; // the space band
+const DOWNDRAFT_RAMP = 300;
+const DOWNDRAFT_ACCEL = 12; // peak extra downward pull (m/s²)
+
+/**
+ * Downward acceleration (≥0, applied as -Y) from periodic downdrafts in the space band — a
+ * pulsing extra gravity that threatens to drag the blob back down, so the player can't dawdle
+ * up high. Zero below DOWNDRAFT_START; ramps in; PULSES (sin² so it's mostly calm with strong
+ * surges, not a constant heavy-gravity tax). Pure + deterministic. Capped so a clean bounce
+ * always still out-climbs it.
+ */
+export function downdraftAt(height: number, time: number): number {
+  if (height <= DOWNDRAFT_START) return 0;
+  const ramp = Math.min(1, (height - DOWNDRAFT_START) / DOWNDRAFT_RAMP);
+  const pulse = Math.sin(time * 0.9) ** 2; // 0..1, mostly low with periodic surges
+  return ramp * pulse * DOWNDRAFT_ACCEL;
+}

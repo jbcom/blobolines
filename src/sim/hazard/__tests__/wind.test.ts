@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { WIND_START, windAt } from "../wind";
+import { DOWNDRAFT_START, downdraftAt, WIND_START, windAt } from "../wind";
 
 const mag = (v: readonly [number, number]) => Math.hypot(v[0], v[1]);
 
@@ -37,5 +37,38 @@ describe("windAt", () => {
     const b = windAt(900, 10);
     // Different headings at different times.
     expect(a).not.toEqual(b);
+  });
+});
+
+describe("downdraftAt", () => {
+  it("is zero below the space band", () => {
+    for (const h of [0, WIND_START, DOWNDRAFT_START - 1, DOWNDRAFT_START]) {
+      expect(downdraftAt(h, 3)).toBe(0);
+    }
+  });
+
+  it("is non-negative (only ever pulls DOWN) and bounded", () => {
+    let peak = 0;
+    for (let h = DOWNDRAFT_START; h < DOWNDRAFT_START + 600; h += 25) {
+      for (let t = 0; t < 40; t += 0.5) {
+        const d = downdraftAt(h, t);
+        expect(d).toBeGreaterThanOrEqual(0);
+        peak = Math.max(peak, d);
+      }
+    }
+    expect(peak).toBeLessThanOrEqual(12.001);
+  });
+
+  it("pulses — mostly calm with periodic surges (not a constant tax)", () => {
+    const samples: number[] = [];
+    for (let t = 0; t < 14; t += 0.25) samples.push(downdraftAt(DOWNDRAFT_START + 400, t));
+    const max = Math.max(...samples);
+    const min = Math.min(...samples);
+    expect(max).toBeGreaterThan(0);
+    expect(min).toBeLessThan(max * 0.2); // dips near-calm between surges
+  });
+
+  it("is deterministic", () => {
+    expect(downdraftAt(1300, 7.7)).toBe(downdraftAt(1300, 7.7));
   });
 });

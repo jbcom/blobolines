@@ -18,7 +18,7 @@ import { spawnBlob } from "@/factories";
 import { ImpactStyle, impact as impact_, vibrate } from "@/platform";
 import { blobTraitsFromSnapshot, classifyExpression } from "@/sim/blob";
 import { MAX_COMBO } from "@/sim/combo";
-import { windAt } from "@/sim/hazard";
+import { downdraftAt, windAt } from "@/sim/hazard";
 import { launchVelocity } from "@/sim/launch";
 import { BLOB, DEATH_FALL_DISTANCE, MAX_IMPACT_SPEED, WORLD_BOUND_XZ } from "@/sim/physics";
 import {
@@ -193,8 +193,14 @@ export function PlayerBlob() {
       // sideways (altitude-gated, 0 below WIND_START), so the player must steer against the
       // drift. Added to the air-steer accel and integrated the same way.
       const [wx, wz] = windAt(p.y, state.clock.elapsedTime);
-      if (sx !== 0 || sz !== 0 || wx !== 0 || wz !== 0) {
-        body.setLinvel({ x: v.x + (sx + wx) * dt, y: v.y, z: v.z + (sz + wz) * dt }, true);
+      // DOWNDRAFT hazard: in the space band, pulsing downdrafts add extra downward pull, so the
+      // player can't dawdle up high — counterable by a clean bounce, punishing if you stall.
+      const down = downdraftAt(p.y, state.clock.elapsedTime);
+      if (sx !== 0 || sz !== 0 || wx !== 0 || wz !== 0 || down !== 0) {
+        body.setLinvel(
+          { x: v.x + (sx + wx) * dt, y: v.y - down * dt, z: v.z + (sz + wz) * dt },
+          true,
+        );
       }
     }
 
