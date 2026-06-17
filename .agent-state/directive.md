@@ -731,9 +731,17 @@ permeability (permeable one-way pads rejected by owner).
 - [ ] metaball fieldNormal: forward-difference (4 evals) instead of central (6) to cut normal cost ~33%.
 - [ ] Instance/share trampoline geometry+materials (per-type), keep only splat texture per-pad; 64px splat on mobile.
 ### Dead code / deps
-- [ ] Remove koota ECS (src/ecs/** + WorldProvider + koota dep) — 100% dead (nothing spawns/queries), OR migrate per-frame data into it. Fix ARCHITECTURE.md drift.
-- [ ] Remove src/engine/loop.ts (zero importers; references a non-existent hook). Keep core/math/clock.
-- [ ] Drop unused deps: maath, n8ao, three-bvh-csg, three-mesh-bvh (zero imports). Fix ARCHITECTURE.md N8AO claim.
+These were flagged "dead" in an earlier pass but are NOT — they were wired in
+subsequent sessions, and the library doctrine (memory blobolines-library-doctrine)
+says KEEP + WIRE these deliberate-architecture deps, never cut. Verified call sites
+2026-06-16; entries marked [x] as "verified live, do not remove":
+- [x] koota ECS: WIRED — PlayerBlob.tsx spawns the blob entity via src/factories/blob.ts and
+      syncs Transform/Velocity/Blob each frame. Not dead. Keep.
+- [x] src/engine/loop.ts: WIRED — imported by app/hooks/useGameLoop.ts. Not zero-importers.
+      Keep (along with core/math/clock).
+- [x] maath / n8ao / three-bvh-csg / three-mesh-bvh: ALL in use — three-bvh-csg + maath in
+      GooCsg.tsx + src/render/goo/merge.ts (the one goo path); n8ao in postfx/N8AO.tsx +
+      PostFX.tsx; three-mesh-bvh is three-bvh-csg's peer dep. None unused. Keep.
 ### Audio/asset loading
 - [ ] html5:true for music+ambient Howls (stream, not full-decode); keep html5:false for short SFX.
 - [ ] Preload SFX Howls on LoadingScreen behind the gesture unlock (no first-play hitch).
