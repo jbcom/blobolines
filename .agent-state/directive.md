@@ -456,7 +456,11 @@ game — touch/drag is primary; keyboard is a minor desktop-only secondary, don'
       bright + scales out over 0.3s (the model hides) before the group vanishes — a satisfying
       grab flash. Browser fixture renders a power-up + aura in WebGL.
 - [ ] Per-biome particle ambience (petals ground, ice/wind stratosphere, nebula dust space) — extend BiomeProps.
-- [ ] Per-biome color grade + bloom driven by biomeSkyAt (warm ground, cold high-contrast space) in PostFX.
+- [x] Per-biome color grade + bloom in PostFX: bloom intensity (0.28→0.78), saturation
+      (0.08→0.20) and contrast (0.06→0.20) now ramp with the blob's altitude (ground→space over
+      ~700m), driven imperatively off the diagnostics bridge onto the effect refs — warm + soft
+      at the ground, brighter-glow + cooler + crisper/moodier up in space. Verified the scene
+      renders cleanly through the ref-driven effects.
 - [ ] Depth-of-field focused on the blob (quality-gated).
 - [ ] God rays + sun sprite in the sky bands (the shader paints shafts but there's no light source).
 - [ ] Wet/jelly trampoline membrane material (fresnel sheen + impact ripple) matching the goo.
