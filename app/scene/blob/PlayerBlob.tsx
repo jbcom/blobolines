@@ -18,6 +18,7 @@ import { spawnBlob } from "@/factories";
 import { ImpactStyle, impact as impact_, vibrate } from "@/platform";
 import { blobTraitsFromSnapshot, classifyExpression } from "@/sim/blob";
 import { MAX_COMBO } from "@/sim/combo";
+import { windAt } from "@/sim/hazard";
 import { launchVelocity } from "@/sim/launch";
 import { BLOB, DEATH_FALL_DISTANCE, MAX_IMPACT_SPEED, WORLD_BOUND_XZ } from "@/sim/physics";
 import {
@@ -111,7 +112,7 @@ export function PlayerBlob() {
     dangerBeat.current = 0;
   }, [resetDroplets]);
 
-  useFrame((_, dt) => {
+  useFrame((state, dt) => {
     const body = bodyRef.current;
     if (!body) return;
     const p = body.translation();
@@ -188,8 +189,12 @@ export function PlayerBlob() {
     } else if (airborne) {
       // Mid-air steering: nudge lateral velocity on the X/Z plane (PoC air control).
       const [sx, sz] = getAirSteer();
-      if (sx !== 0 || sz !== 0) {
-        body.setLinvel({ x: v.x + sx * dt, y: v.y, z: v.z + sz * dt }, true);
+      // WIND-GUST hazard: high in the stratosphere a gusty crosswind pushes the airborne blob
+      // sideways (altitude-gated, 0 below WIND_START), so the player must steer against the
+      // drift. Added to the air-steer accel and integrated the same way.
+      const [wx, wz] = windAt(p.y, state.clock.elapsedTime);
+      if (sx !== 0 || sz !== 0 || wx !== 0 || wz !== 0) {
+        body.setLinvel({ x: v.x + (sx + wx) * dt, y: v.y, z: v.z + (sz + wz) * dt }, true);
       }
     }
 

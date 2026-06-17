@@ -678,6 +678,11 @@ permeability (permeable one-way pads rejected by owner).
       intentional — the value is the lateral launch, not vertical pop. (Use case satisfied; not
       a separate mechanic.)
 - [ ] Hazards: add at least 2 (e.g. crumbling gap, spike pad, wind gust, drifting obstacle) gated by biome/height.
+      (1/2 DONE — WIND GUST: src/sim/hazard/wind.ts (pure, tested) — an altitude-gated gusty
+      crosswind (0 below 600m, ramps over 200m to ~9 m/s², heading rotates) pushes the airborne
+      blob sideways so the player steers against the drift; capped under the 15 m/s² steer budget
+      so it's always counterable. Applied in PlayerBlob's airborne branch alongside air-steer.
+      NEXT: a 2nd hazard — a SPIKE pad type that kills on contact, gated to high altitude.)
 - [ ] More powerups beyond magnet/thruster: shield/second-life, slow-mo, score-doubler, multi-bounce; allow stacking or distinct refresh.
 - [ ] Comeback/revive mechanic on death (watch-style or one-shot shield) for run length.
 - [x] Difficulty curve beyond pad-shrink: vertical SPACING now widens with altitude (+0→3m
