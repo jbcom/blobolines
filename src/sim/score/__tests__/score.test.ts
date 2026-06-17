@@ -1,6 +1,21 @@
 import { describe, expect, it } from "vitest";
 import { score as cfg } from "@/config";
-import { comboStyleBonus, computeScore } from "../score";
+import { comboStyleBonus, computeScore, geometricSum } from "../score";
+
+describe("geometricSum", () => {
+  it("sums base·growth^i for i in [0,n) via the closed form", () => {
+    // 2·1.5^0 + 2·1.5^1 + 2·1.5^2 = 2 + 3 + 4.5 = 9.5
+    expect(geometricSum(2, 1.5, 3)).toBeCloseTo(9.5, 6);
+  });
+  it("handles growth === 1 (degenerate linear sum, no divide-by-zero)", () => {
+    expect(geometricSum(2, 1, 4)).toBe(8); // 2·4, not NaN
+    expect(Number.isNaN(geometricSum(2, 1, 4))).toBe(false);
+  });
+  it("is 0 at n <= 0", () => {
+    expect(geometricSum(5, 2, 0)).toBe(0);
+    expect(geometricSum(5, 2, -3)).toBe(0);
+  });
+});
 
 describe("computeScore", () => {
   it("is zero for a no-op run", () => {

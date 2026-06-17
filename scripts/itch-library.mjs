@@ -33,7 +33,17 @@ if (!KEY) {
 const all = [];
 for (let page = 1; page < 40; page++) {
   const res = await fetch(`https://itch.io/api/1/${KEY}/my-owned-keys?page=${page}`);
-  const data = await res.json();
+  if (!res.ok) {
+    console.error(`itch API page ${page} failed: HTTP ${res.status} ${res.statusText}`);
+    process.exit(1);
+  }
+  let data;
+  try {
+    data = await res.json();
+  } catch (e) {
+    console.error(`itch API page ${page}: non-JSON response (${e.message})`);
+    process.exit(1);
+  }
   const keys = Array.isArray(data.owned_keys) ? data.owned_keys : [];
   if (keys.length === 0) break;
   for (const k of keys) {

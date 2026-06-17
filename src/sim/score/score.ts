@@ -19,6 +19,17 @@ export interface ScoreInputs {
 }
 
 /**
+ * Sum of the geometric series base·growth^i for i in [0, n). Pure + total: at growth === 1 the
+ * closed form base·(growth^n − 1)/(growth − 1) divides by zero, so fall back to the degenerate
+ * linear sum base·n. Exported so the growth===1 edge is unit-testable independent of config.
+ */
+export function geometricSum(base: number, growth: number, n: number): number {
+  if (n <= 0) return 0;
+  if (growth === 1) return base * n;
+  return (base * (growth ** n - 1)) / (growth - 1);
+}
+
+/**
  * Style bonus for the run's best combo streak. Geometric so a long streak is worth
  * disproportionately more than a short one (the payoff for keeping a clean chain alive):
  * sum of base·growth^i for i in [0, maxCombo). maxCombo 0 → 0.
@@ -29,9 +40,7 @@ export function comboStyleBonus(maxCombo: number): number {
   // Self-defending: clamp to the gameplay combo cap so a stray uncapped caller (test/replay)
   // can't make growth^n explode. The combo state already caps at MAX_COMBO in sim/combo.
   const n = Math.min(Math.floor(maxCombo), MAX_COMBO);
-  // Closed-form geometric series: base·(growth^n − 1)/(growth − 1).
-  const g = comboStyleGrowth;
-  return Math.round((comboStyleBase * (g ** n - 1)) / (g - 1));
+  return Math.round(geometricSum(comboStyleBase, comboStyleGrowth, n));
 }
 
 /** Total run score (integer). height·heightPoints + crystals·crystalPoints + combo style. */

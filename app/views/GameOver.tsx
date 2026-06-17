@@ -122,7 +122,10 @@ export function GameOver() {
   // new record they equal this run's value. A record on EITHER axis (height OR composite
   // score) earns the trophy card — a crystal/combo-rich short run can set a score record
   // without a height record, and vice versa.
-  const heightRecord = height >= best && height > 0;
+  // recordDelta is metres over the PREVIOUS best (0 on a tie or a non-record), so it — not
+  // `height >= best` — is the true height-record signal: `best` already includes this run, so
+  // `>=` would falsely flag a tied run as a record (and play the chime).
+  const heightRecord = recordDelta > 0;
   const scoreRecord = scoreDelta > 0;
   const isRecord = heightRecord || scoreRecord;
   // Delta vs the all-time best: on a record show how far over the *previous* best we went;

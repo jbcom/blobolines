@@ -252,7 +252,12 @@ export function PlayerBlob() {
     // past AUTO_LAUNCH_DELAY fling it gently straight up so the run never stalls (the PoC's
     // anti-soft-lock). Reset the timer the moment it's airborne or being aimed. Uses real time so
     // a slow-mo buff doesn't stretch the patience window.
-    if (airborne || getAim()) {
+    // Re-read the LIVE vertical velocity here, not the stale top-of-frame `airborne`: a launch /
+    // rebound / thruster / mid-air-bounce earlier this frame may have just set a big vy, and the
+    // auto-launch must NOT overwrite that with its gentle kick. (`airborne` was snapshotted before
+    // those impulse branches ran.)
+    const liveVy = body.linvel().y;
+    if (Math.abs(liveVy) > 0.5 || getAim()) {
       idle.current = 0;
     } else {
       idle.current += realDt;

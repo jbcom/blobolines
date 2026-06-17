@@ -63,7 +63,20 @@ const ALLOW_LIST = new Set([
   "Ultimate Ambient Sound Effects Pack",
 ]);
 
-const library = JSON.parse(readFileSync(LIBRARY, "utf8"));
+// Load the owned-keys cache with a clear recovery message — a missing/corrupt cache means the
+// user hasn't run itch-library.mjs yet (or it failed), which is a friendlier failure than a raw
+// ENOENT / SyntaxError stack.
+let library;
+try {
+  library = JSON.parse(readFileSync(LIBRARY, "utf8"));
+  if (!Array.isArray(library)) throw new Error("cache is not an array");
+} catch (e) {
+  console.error(
+    `Could not read the library cache at ${LIBRARY} (${e.message}).\n` +
+      `Run \`node scripts/itch-library.mjs\` first to build it.`,
+  );
+  process.exit(1);
+}
 const packs = library.filter((p) => ALLOW_LIST.has(p.title));
 const missing = [...ALLOW_LIST].filter((t) => !packs.some((p) => p.title === t));
 if (missing.length > 0) {
@@ -107,9 +120,13 @@ for (const pack of packs) {
     const isArchive = ARCHIVE_RE.test(upload.filename);
     if (!isArchive && !DRY) mkdirSync(looseDir, { recursive: true });
     // basename() strips any path the API could smuggle (zip-slip bounded: raw-assets is
-    // gitignored + sources are own purchases over https).
+    // gitignored + sources are own purchases over https). Prefix the ARCHIVE filename with the
+    // pack slug so two packs shipping an identically-named upload (e.g. "pack.zip") don't
+    // overwrite each other in ARCHIVES (and so the extraction slug below stays per-pack unique).
     const safeName = basename(upload.filename);
-    const dest = isArchive ? join(ARCHIVES, safeName) : join(looseDir, safeName);
+    const dest = isArchive
+      ? join(ARCHIVES, `${slugify(pack.title)}__${safeName}`)
+      : join(looseDir, safeName);
 
     // Idempotency skip: try to read the existing file ONCE (no exists/stat pre-check, so there's
     // no TOCTOU window) — if it's already the right size + md5, skip the re-download. A missing

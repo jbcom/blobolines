@@ -63,9 +63,9 @@ export function GooCsg({ skin, blobRadius, getDroplets }: GooCsgProps) {
 
   // Backbuffer-refraction is HIGH-tier only — the marquee jelly look where the blob bends what's
   // behind it. We render the scene (with the goo hidden) into a half-res FBO each frame and feed
-  // it to the goo shader's uBackbuffer; mid/low keep uRefraction=0 so the pass is skipped. The
-  // FBO is allocated unconditionally (hooks stay top-level) but only RENDERED when `refracts`.
-  const refracts = getQuality().refraction;
+  // it to the goo shader's uBackbuffer; mid/low keep uRefraction=0 so the pass is skipped. The FBO
+  // is allocated unconditionally (hooks stay top-level) but only RENDERED when the LIVE tier (read
+  // each frame in the loop) has refraction on, so a runtime tier downgrade stops the pass at once.
   const fbo = useFBO(
     Math.max(2, Math.floor(size.width / 2)),
     Math.max(2, Math.floor(size.height / 2)),
@@ -148,20 +148,14 @@ export function GooCsg({ skin, blobRadius, getDroplets }: GooCsgProps) {
     (material.uniforms.uRim.value as Color).set(palette.goo.rim);
   }, [material, skin]);
 
-  // Wire the static refraction uniforms once: the backbuffer texture + strength (0 off-HIGH) +
-  // the resolution Vector2 object. The resolution VALUE is refreshed each frame from the live FBO
-  // size (the per-frame pass below), because drei's useFBO keeps the SAME target identity across
-  // window resizes — it resizes in place — so an effect keyed on `fbo` would never re-run and
-  // uResolution would go stale, breaking the gl_FragCoord→UV math after a resize.
+  // Bind the backbuffer texture + the resolution Vector2 object once. uRefraction itself is driven
+  // LIVE per-frame in the loop (so a tier change takes effect immediately), and the resolution
+  // VALUE is refreshed there too — drei's useFBO keeps the SAME target identity across window
+  // resizes (resizes in place), so an effect keyed on `fbo` would never re-run for a resize.
   useEffect(() => {
-    if (refracts) {
-      material.uniforms.uBackbuffer.value = fbo.texture;
-      material.uniforms.uRefraction.value = gooCfg.refractionStrength ?? 0.06;
-      material.uniforms.uResolution.value = resolution;
-    } else {
-      material.uniforms.uRefraction.value = 0;
-    }
-  }, [material, refracts, fbo, resolution]);
+    material.uniforms.uBackbuffer.value = fbo.texture;
+    material.uniforms.uResolution.value = resolution;
+  }, [material, fbo, resolution]);
 
   useFrame((state, dt) => {
     const group = groupRef.current;
@@ -171,7 +165,12 @@ export function GooCsg({ skin, blobRadius, getDroplets }: GooCsgProps) {
     // BACKBUFFER pass (HIGH only): render the scene with the goo group hidden into the FBO, so the
     // shader can sample "what's behind the blob" and refract it. Hide → render-to-FBO → restore,
     // all before the main frame draws the goo with the fresh texture. Cheap-ish at half-res.
-    if (refracts) {
+    // Read the tier LIVE each frame (not the mount-time `refracts`) so a manual Settings downgrade
+    // (HIGH→Low) or a future FPS-driven downgrade stops the expensive pass immediately, and keep
+    // the shader's uRefraction in lockstep so it doesn't sample a stale/empty FBO.
+    const refractNow = getQuality().refraction;
+    material.uniforms.uRefraction.value = refractNow ? (gooCfg.refractionStrength ?? 0.06) : 0;
+    if (refractNow) {
       // Refresh uResolution from the LIVE fbo size every frame — useFBO resizes the same target in
       // place on a window resize, so this is the only place that reliably tracks the new size.
       resolution.set(fbo.width, fbo.height);
@@ -214,6 +213,10 @@ export function GooCsg({ skin, blobRadius, getDroplets }: GooCsgProps) {
     const merges = selectMerges([bx, by, bz], blobRadius, positions, maxMerges);
 
     // Chain ADDITION over the merging droplets, ping-ponging targets so nothing allocates.
+    // Capture the geometry the mesh is CURRENTLY showing: unionInto skips disposing it mid-chain
+    // (it's still on screen), so once we swap in the new result below we must dispose this old one
+    // ourselves or it leaks one BufferGeometry per frame (it loses its last reference).
+    const prevDisplayed = result.geometry;
     let acc: Brush = blobBrush;
     let useping = true;
     // A Brush used as an evaluate TARGET comes back with boundsTree=null but its cached geometry
@@ -276,6 +279,17 @@ export function GooCsg({ skin, blobRadius, getDroplets }: GooCsgProps) {
 
     // Hand the merged geometry to the rendered mesh (shared buffer — no copy).
     if (result.geometry !== acc.geometry) result.geometry = acc.geometry;
+    // Dispose the geometry the mesh WAS showing now that it's been replaced — unless it's somehow
+    // still live (the new result, or a ping/pong target reused for next frame). Without this the
+    // previous frame's result leaks (unionInto deliberately skipped it while it was on screen).
+    if (
+      prevDisplayed &&
+      prevDisplayed !== result.geometry &&
+      prevDisplayed !== csg.ping.geometry &&
+      prevDisplayed !== csg.pong.geometry
+    ) {
+      prevDisplayed.dispose();
+    }
 
     // ── Wet wobble + squash/stretch (same juice model as the hero blob) ──
     const imp = Math.min(1, Math.max(0, (1 - diag.squash) / 0.3));

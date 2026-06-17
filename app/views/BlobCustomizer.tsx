@@ -50,8 +50,11 @@ export function BlobCustomizer({
     let next: number;
     if (e.key === "ArrowRight") next = (from + 1) % n;
     else if (e.key === "ArrowLeft") next = (from - 1 + n) % n;
-    else if (e.key === "ArrowDown") next = Math.min(from + GRID_COLS, n - 1);
-    else if (e.key === "ArrowUp") next = Math.max(from - GRID_COLS, 0);
+    // Up/Down move a whole row, but ONLY if a tile exists directly above/below — at a grid edge
+    // stay put rather than clamping to n-1/0 (which would jump COLUMNS, e.g. bottom-left →
+    // bottom-right). `from + GRID_COLS < n` = a full row below exists; `from - GRID_COLS >= 0` above.
+    else if (e.key === "ArrowDown") next = from + GRID_COLS < n ? from + GRID_COLS : from;
+    else if (e.key === "ArrowUp") next = from - GRID_COLS >= 0 ? from - GRID_COLS : from;
     else return; // not an arrow key — next is only assigned in the arrow branches above
     e.preventDefault();
     setFocusIdx(next);
