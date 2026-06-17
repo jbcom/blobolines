@@ -9,8 +9,11 @@ import type { PowerUpType } from "@/core/types";
  * CHARGE COUNT (not a timer) — a stack of free mid-air bounces spent one per airborne tap.
  */
 
-/** Power-ups with a timed duration (shield is excluded — it's a one-shot flag). */
-type TimedPowerUp = "magnet" | "thruster" | "slowmo" | "doubler";
+/** The timed power-ups (shield + multi-bounce are excluded — they're a one-shot flag and a
+ *  charge stack, not timers). The single source of truth for the timer set: the `remaining`
+ *  record, the tick loop, and the reset all derive from this list. */
+const TIMED_POWERUPS = ["magnet", "thruster", "slowmo", "doubler"] as const;
+type TimedPowerUp = (typeof TIMED_POWERUPS)[number];
 
 const remaining: Record<TimedPowerUp, number> = {
   magnet: 0,
@@ -102,7 +105,7 @@ const NONE_EXPIRED: readonly PowerUpType[] = [];
  *  case) so the per-frame call doesn't churn the GC. */
 export function tickPowerups(dt: number): readonly PowerUpType[] {
   let expired: PowerUpType[] | null = null;
-  for (const type of ["magnet", "thruster", "slowmo", "doubler"] as const) {
+  for (const type of TIMED_POWERUPS) {
     if (remaining[type] > 0) {
       remaining[type] = Math.max(0, remaining[type] - dt);
       if (remaining[type] === 0) {
@@ -129,10 +132,7 @@ export function powerupRemaining(type: PowerUpType): number {
 }
 
 export function resetPowerups(): void {
-  remaining.magnet = 0;
-  remaining.thruster = 0;
-  remaining.slowmo = 0;
-  remaining.doubler = 0;
+  for (const type of TIMED_POWERUPS) remaining[type] = 0;
   shielded = false;
   bounceCharges = 0;
 }

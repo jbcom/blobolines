@@ -8,7 +8,7 @@
  *
  * Usage: node scripts/itch-library.mjs
  */
-import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -16,9 +16,17 @@ const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const CACHE_DIR = join(ROOT, ".itch-cache");
 const CACHE = join(CACHE_DIR, "library.json");
 
-const KEY = readFileSync(join(ROOT, ".env"), "utf8").match(/ITCH_API_KEY=(\S+)/)?.[1];
+// Env first, then the gitignored .env (guarded so a missing .env gives the friendly message
+// below, not an uncaught ENOENT — matches fetch-itch-assets.mjs).
+function readApiKey() {
+  if (process.env.ITCH_API_KEY) return process.env.ITCH_API_KEY;
+  const envPath = join(ROOT, ".env");
+  if (!existsSync(envPath)) return undefined;
+  return readFileSync(envPath, "utf8").match(/ITCH_API_KEY=(\S+)/)?.[1];
+}
+const KEY = readApiKey();
 if (!KEY) {
-  console.error("ITCH_API_KEY missing from .env");
+  console.error("ITCH_API_KEY missing — set the env var or add it to .env");
   process.exit(1);
 }
 

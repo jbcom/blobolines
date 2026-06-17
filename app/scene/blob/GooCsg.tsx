@@ -148,13 +148,15 @@ export function GooCsg({ skin, blobRadius, getDroplets }: GooCsgProps) {
     (material.uniforms.uRim.value as Color).set(palette.goo.rim);
   }, [material, skin]);
 
-  // Wire the refraction uniforms once: the backbuffer texture + strength (0 off-HIGH) + the FBO
-  // resolution for the gl_FragCoord→UV math. Only on HIGH; mid/low leave uRefraction at 0.
+  // Wire the static refraction uniforms once: the backbuffer texture + strength (0 off-HIGH) +
+  // the resolution Vector2 object. The resolution VALUE is refreshed each frame from the live FBO
+  // size (the per-frame pass below), because drei's useFBO keeps the SAME target identity across
+  // window resizes — it resizes in place — so an effect keyed on `fbo` would never re-run and
+  // uResolution would go stale, breaking the gl_FragCoord→UV math after a resize.
   useEffect(() => {
     if (refracts) {
       material.uniforms.uBackbuffer.value = fbo.texture;
       material.uniforms.uRefraction.value = gooCfg.refractionStrength ?? 0.06;
-      resolution.set(fbo.width, fbo.height);
       material.uniforms.uResolution.value = resolution;
     } else {
       material.uniforms.uRefraction.value = 0;
@@ -170,12 +172,21 @@ export function GooCsg({ skin, blobRadius, getDroplets }: GooCsgProps) {
     // shader can sample "what's behind the blob" and refract it. Hide → render-to-FBO → restore,
     // all before the main frame draws the goo with the fresh texture. Cheap-ish at half-res.
     if (refracts) {
+      // Refresh uResolution from the LIVE fbo size every frame — useFBO resizes the same target in
+      // place on a window resize, so this is the only place that reliably tracks the new size.
+      resolution.set(fbo.width, fbo.height);
       const wasVisible = group.visible;
       group.visible = false;
       const prevTarget = gl.getRenderTarget();
+      // Self-contained clear: EffectComposer manages gl.autoClear and may leave it false, which
+      // would ghost/accumulate into the backbuffer FBO. Force a clear for this pass, then restore.
+      const prevAutoClear = gl.autoClear;
+      gl.autoClear = true;
       gl.setRenderTarget(fbo);
+      gl.clear();
       gl.render(scene, camera);
       gl.setRenderTarget(prevTarget);
+      gl.autoClear = prevAutoClear;
       group.visible = wasVisible;
     }
 
