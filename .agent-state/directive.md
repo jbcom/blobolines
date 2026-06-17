@@ -724,8 +724,10 @@ ahead overall, but these concrete affordances regressed:
       scoped) listens WASD/arrows and writes the existing pure keyboardSteer() accel into the
       air-steer bridge — but only while airborne; clears on keyup/blur/unmount. Browser tests
       cover steer-while-airborne, clear-on-release, and inert-while-resting.
-- [ ] FOV warp on launch: a brief camera FOV punch on a big launch (PoC 65→up to 83° by power,
-      lerps back) for a "hyperspace" kick — distinct from the existing dolly-back + shake.
+- [x] FOV warp on launch: DONE. CameraRig detects a sharp upward-velocity jump (slingshot
+      release / super pad / thrust) and punches the FOV from 60° up to +16° scaled by the launch
+      size, easing back over ~0.35s — the "hyperspace" kick, on top of the existing dolly-back +
+      shake. Resets to base in the menu. Pure trigger/ease/map helpers unit-tested (5 tests).
 - [x] Wire walls/misses to break combo… RESOLVED as a no-op by design. Premise was stale: NO
       doc actually claims a wall/miss breaks the combo (checked GAME-DESIGN/STANDARDS — they only
       say a clean LANDING builds it). The combo only advances on a landing, so a miss already
