@@ -43,7 +43,7 @@ function setDiag(position: [number, number, number], groundY: number) {
 
 afterEach(() => {
   cleanup();
-  useWorldStore.getState().reset(1);
+  useWorldStore.getState().reset(1, "ready");
   setDiag([0, 0, 0], 0);
 });
 
@@ -56,10 +56,37 @@ test("nextPadGuidance points to the first pad above the landed progression floor
   expect(guidance?.headingDeg).toBeGreaterThan(0);
 });
 
+test("nextPadGuidance selects the lowest valid pad even if the array is unordered", () => {
+  const guidance = nextPadGuidance([0, 1.46, 0], 1.46, [laterPad, starter, nextRightForward]);
+  expect(guidance?.target).toBe(nextRightForward);
+});
+
 test("nextPadGuidance holds the same intended pad while the blob arcs above it", () => {
   const guidance = nextPadGuidance([1, 14, -1], 1.46, [starter, nextRightForward, laterPad]);
   expect(guidance?.target).toBe(nextRightForward);
   expect(guidance?.dy).toBeLessThan(0);
+});
+
+test("NextPadRadar does not render tiny negative vertical gaps as -0m", async () => {
+  const nearlyLevel: TrampolineSpec = {
+    ...nextRightForward,
+    id: 9,
+    position: [4, 1.2, -3],
+  };
+  useWorldStore.setState({ trampolines: [starter, nearlyLevel] });
+  setDiag([0, 1.46, 0], 0);
+
+  const screen = await render(<NextPadRadar />);
+  const radar = screen.getByTestId("next-pad-radar");
+
+  await vi.waitFor(
+    () => {
+      expect(radar.element().style.opacity).toBe("1");
+      expect(radar.element().textContent).toContain("+0m");
+      expect(radar.element().textContent).not.toContain("-0m");
+    },
+    { timeout: 2000, interval: 40 },
+  );
 });
 
 test("NextPadRadar renders live direction, vertical gap, and horizontal distance", async () => {

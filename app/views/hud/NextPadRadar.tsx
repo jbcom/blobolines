@@ -34,7 +34,15 @@ export function nextPadGuidance(
   groundY: number,
   pads: readonly TrampolineSpec[],
 ): NextPadGuidance | null {
-  const target = pads.find((pad) => pad.position[1] > groundY + TARGET_ABOVE_GROUND);
+  let target: TrampolineSpec | null = null;
+  let minY = Number.POSITIVE_INFINITY;
+  for (const pad of pads) {
+    const y = pad.position[1];
+    if (y > groundY + TARGET_ABOVE_GROUND && y < minY) {
+      target = pad;
+      minY = y;
+    }
+  }
   if (!target) return null;
 
   const dx = target.position[0] - blobPosition[0];
@@ -57,6 +65,7 @@ export function nextPadGuidance(
 
 function meters(n: number): string {
   const rounded = Math.round(Math.abs(n));
+  if (rounded === 0) return "+0m";
   return `${n >= 0 ? "+" : "-"}${rounded}m`;
 }
 
@@ -74,7 +83,9 @@ export function NextPadRadar() {
 
   useEffect(() => {
     let raf = 0;
+    let active = true;
     const tick = () => {
+      if (!active) return;
       const diag = getBlobDiagnostics();
       const guidance = nextPadGuidance(
         diag.position,
@@ -108,10 +119,13 @@ export function NextPadRadar() {
           horizontalRef.current.textContent = `${Math.round(guidance.horizontal)}m`;
       }
 
-      raf = requestAnimationFrame(tick);
+      if (active) raf = requestAnimationFrame(tick);
     };
     raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
+    return () => {
+      active = false;
+      cancelAnimationFrame(raf);
+    };
   }, []);
 
   return (
