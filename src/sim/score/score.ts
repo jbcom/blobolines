@@ -16,6 +16,8 @@ export interface ScoreInputs {
   crystals: number;
   /** Highest clean-bounce combo reached this run. */
   maxCombo: number;
+  /** Sum of per-bounce route-accuracy bonuses. */
+  stylePoints?: number;
 }
 
 /**
@@ -43,10 +45,23 @@ export function comboStyleBonus(maxCombo: number): number {
   return Math.round(geometricSum(comboStyleBase, comboStyleGrowth, n));
 }
 
+/** Curved bonus for landing near the certified golden-path point on the target trampoline. */
+export function goldenPathLandingQuality(miss: number, halfFootprint: number): number {
+  if (halfFootprint <= 0) return 0;
+  return Math.max(0, 1 - Math.max(0, miss) / halfFootprint);
+}
+
+/** Curved bonus for landing near the certified golden-path point on the target trampoline. */
+export function goldenPathLandingBonus(miss: number, halfFootprint: number): number {
+  const closeness = goldenPathLandingQuality(miss, halfFootprint);
+  return Math.round(scoreCfg.goldenPathPerfectPoints * closeness ** 2);
+}
+
 /** Total run score (integer). height·heightPoints + crystals·crystalPoints + combo style. */
-export function computeScore({ height, crystals, maxCombo }: ScoreInputs): number {
+export function computeScore({ height, crystals, maxCombo, stylePoints = 0 }: ScoreInputs): number {
   const { heightPoints, crystalPoints } = scoreCfg;
   const h = Math.max(0, Math.floor(height)) * heightPoints;
   const c = Math.max(0, Math.floor(crystals)) * crystalPoints;
-  return h + c + comboStyleBonus(maxCombo);
+  const style = Math.max(0, Math.floor(stylePoints));
+  return h + c + comboStyleBonus(maxCombo) + style;
 }

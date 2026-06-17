@@ -9,6 +9,7 @@ import { achievementById } from "@/sim/achievements";
 import { dailyKey, runHash } from "@/sim/daily";
 import { comboMultiplier } from "@/sim/launch";
 import { SKIN_COST, useGameStore, useWorldStore } from "@/state";
+import { ROUTE_PROFILES } from "@/world";
 
 /**
  * Game-over screen — shows the run's altitude + crystals against the all-time best, and
@@ -32,6 +33,7 @@ export function GameOver() {
   const resetWorld = useWorldStore((s) => s.reset);
   const dailyRun = useGameStore((s) => s.dailyRun);
   const seed = useWorldStore((s) => s.seed);
+  const difficulty = useWorldStore((s) => s.difficulty);
   const unlockAchievements = useGameStore((s) => s.unlockAchievements);
 
   // Evaluate achievements ONCE on game-over (the run is final here): persist newly-unlocked +
@@ -54,7 +56,13 @@ export function GameOver() {
   // Daily run → a shareable verification hash binding this result to today's seed (so a
   // leaderboard can spot a score that doesn't match its seed). Only shown for a daily run.
   const dailyTag = dailyRun
-    ? `Daily ${dailyKey(new Date())} · ${runHash({ seed, height, crystals, maxCombo })}`
+    ? `Daily ${dailyKey(new Date())} · ${ROUTE_PROFILES[difficulty].label} · ${runHash({
+        seed,
+        height,
+        crystals,
+        maxCombo,
+        difficulty,
+      })}`
     : null;
   const replayRef = useRef<HTMLButtonElement>(null);
 

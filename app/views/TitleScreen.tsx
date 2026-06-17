@@ -1,11 +1,13 @@
-import { buttonVariants } from "@app/components/ui";
-import { CalendarDays, HelpCircle, Palette, Play, Settings } from "lucide-react";
+import { Button, buttonVariants, Dialog } from "@app/components/ui";
+import { CalendarDays, Gauge, HelpCircle, Palette, Play, Settings } from "lucide-react";
 import { motion, useReducedMotion } from "motion/react";
 import { lazy, Suspense, useEffect, useState } from "react";
 import { initAudio, startMenuMusic, startMusic } from "@/audio";
+import type { WorldDifficulty } from "@/core/types";
 import { cn } from "@/lib/utils";
 import { dailySeed } from "@/sim/daily";
 import { useGameStore, useWorldStore } from "@/state";
+import { ROUTE_DIFFICULTIES, ROUTE_PROFILES } from "@/world";
 
 // The three menu modals are lazy-loaded — none is needed for the first paint (the menu CTA), so
 // their code (+ the customizer's 3D preview, the manual's content) is split into its own chunk
@@ -18,6 +20,14 @@ const SettingsModal = lazy(() =>
   import("./SettingsModal").then((m) => ({ default: m.SettingsModal })),
 );
 
+const DIFFICULTY_TONE: Record<WorldDifficulty, string> = {
+  ready: "Readable slider and canted routes with generous landing lips.",
+  medium: "More canted chains and compressed arcs without precision flat stacks.",
+  hard: "Occasional flat precision arcs with tighter route margins.",
+  blobmare: "Fast pattern changes, cant chains, and thin landing windows.",
+  ultraBlobmare: "Tool-assisted-feeling routes with very tight proof margins.",
+};
+
 /**
  * Title / main menu. The blob identity, the one-line pitch, and the launch CTA into
  * the height-chase. Bottom-anchored so the 3D blob preview reads above it.
@@ -27,11 +37,14 @@ export function TitleScreen() {
   const resetRun = useGameStore((s) => s.resetRun);
   const setDailyRun = useGameStore((s) => s.setDailyRun);
   const resetWorld = useWorldStore((s) => s.reset);
+  const difficulty = useWorldStore((s) => s.difficulty);
   const best = useGameStore((s) => s.progress.bestHeight);
   const reduced = useReducedMotion();
   const [customizing, setCustomizing] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [manualOpen, setManualOpen] = useState(false);
+  const [newGameOpen, setNewGameOpen] = useState(false);
+  const [pendingDaily, setPendingDaily] = useState(false);
 
   // Open the customizer on arrival if the game-over card requested it, then clear the flag.
   const customizerIntent = useGameStore((s) => s.customizerIntent);
@@ -52,7 +65,7 @@ export function TitleScreen() {
 
   /** Start a run. `daily` seeds the world from today's date so everyone climbs the same tower
    *  (and the game-over card shows a shareable hash); otherwise the world reseeds randomly. */
-  const start = (daily: boolean) => {
+  const start = (daily: boolean, routeDifficulty: WorldDifficulty) => {
     // This click is the user gesture that unlocks the AudioContext; start ambient music
     // once it's ready.
     void initAudio().then(startMusic);
@@ -60,11 +73,16 @@ export function TitleScreen() {
     setDailyRun(daily);
     // The Date is read HERE (UI layer) and passed into the pure dailySeed — sim never calls
     // new Date(). undefined seed = random reseed for a normal run.
-    resetWorld(daily ? dailySeed(new Date()) : undefined);
+    resetWorld(daily ? dailySeed(new Date()) : undefined, routeDifficulty);
     setPhase("playing");
+    setNewGameOpen(false);
   };
-  const play = () => start(false);
-  const playDaily = () => start(true);
+  const chooseRun = (daily: boolean) => {
+    setPendingDaily(daily);
+    setNewGameOpen(true);
+  };
+  const play = () => chooseRun(false);
+  const playDaily = () => chooseRun(true);
 
   return (
     <motion.div
@@ -159,6 +177,52 @@ export function TitleScreen() {
         {settingsOpen && <SettingsModal open={settingsOpen} onOpenChange={setSettingsOpen} />}
         {manualOpen && <ManualModal open={manualOpen} onOpenChange={setManualOpen} />}
       </Suspense>
+
+      <Dialog
+        open={newGameOpen}
+        onOpenChange={setNewGameOpen}
+        ariaLabel={pendingDaily ? "Daily challenge difficulty" : "New game difficulty"}
+        testId="new-game-difficulty"
+      >
+        <div className="flex items-start gap-3">
+          <div
+            className="flex size-10 shrink-0 items-center justify-center rounded-lg border border-border bg-surface text-tramp-gold"
+            aria-hidden
+          >
+            <Gauge className="size-5" />
+          </div>
+          <div>
+            <h2 className="font-display text-xl font-bold text-cream">
+              {pendingDaily ? "Daily difficulty" : "New game"}
+            </h2>
+            <p className="mt-1 font-ui text-xs text-fg-subtle">
+              Pick the route pattern for this climb.
+            </p>
+          </div>
+        </div>
+
+        <div className="mt-5 flex flex-col gap-2">
+          {ROUTE_DIFFICULTIES.map((id) => {
+            const active = id === difficulty;
+            return (
+              <Button
+                key={id}
+                variant={active ? "warm" : "surface"}
+                className="h-auto w-full justify-start gap-3 whitespace-normal px-4 py-3 text-left"
+                onClick={() => start(pendingDaily, id)}
+              >
+                <Play className="size-4 shrink-0 fill-current" aria-hidden />
+                <span className="flex min-w-0 flex-col">
+                  <span className="font-display text-sm font-bold">{ROUTE_PROFILES[id].label}</span>
+                  <span className="font-ui text-xs font-medium opacity-80">
+                    {DIFFICULTY_TONE[id]}
+                  </span>
+                </span>
+              </Button>
+            );
+          })}
+        </div>
+      </Dialog>
     </motion.div>
   );
 }

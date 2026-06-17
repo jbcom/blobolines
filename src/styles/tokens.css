@@ -12,7 +12,7 @@
   --blob-slime: #7ed957; /* green slime blob */
   --blob-ghost: #f4f6fb; /* white ghost blob */
 
-  --tramp-blue: #2f7fd1;
+  --tramp-blue: #ff6f61;
   --tramp-gold: #f2c14e;
   --tramp-orange: #f08a3c;
   --tramp-green: #6cc04a;
@@ -21,8 +21,8 @@
 
   /* ---- Atmosphere: painterly sky/background ---- */
   --sky-top: #ffe3c4; /* warm peach high light */
-  --sky-mid: #6fc8f0; /* bright sky blue */
-  --sky-deep: #5a4fb0; /* rich indigo base */
+  --sky-mid: #9edfc8; /* soft mint backdrop, lower saturation than gameplay */
+  --sky-deep: #7b6bc2; /* warm lavender base */
   --cream: #f3efd6; /* warm light shafts */
   --cream-soft: #f6f0c2;
 

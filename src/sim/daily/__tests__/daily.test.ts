@@ -33,6 +33,7 @@ describe("daily challenge", () => {
     expect(runHash({ ...base, height: 200 })).not.toBe(h);
     expect(runHash({ ...base, crystals: 8 })).not.toBe(h);
     expect(runHash({ ...base, maxCombo: 6 })).not.toBe(h);
+    expect(runHash({ ...base, difficulty: "blobmare" })).not.toBe(h);
   });
 
   it("runHash is a compact base36 string", () => {

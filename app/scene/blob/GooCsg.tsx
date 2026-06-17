@@ -17,7 +17,7 @@ import { mergeVertices } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 import { ADDITION, Brush, Evaluator } from "three-bvh-csg";
 import { biomeSkyAt, blob as blobCfg, goo as gooCfg } from "@/config";
 import type { BlobSkin } from "@/core/types";
-import { bridgeFor, selectMerges } from "@/render/goo";
+import { bodyLobes, bridgeFor, selectMerges } from "@/render/goo";
 import { GooMaterial } from "@/render/materials";
 import { getQuality } from "@/render/qualityBridge";
 import type { Droplet } from "@/render/vfx";
@@ -106,6 +106,7 @@ export function GooCsg({ skin, blobRadius, getDroplets }: GooCsgProps) {
     const tmpIco = new IcosahedronGeometry(1, dropletDetail);
     const dropletGeo = mergeVertices(tmpIco);
     tmpIco.dispose();
+    const bodyLobeBrushes = Array.from({ length: 3 }, () => new Brush(dropletGeo));
     const dropletBrushes = Array.from({ length: maxMerges }, () => new Brush(dropletGeo));
     // Bridge NECKS: a unit cylinder (radius 1, height 1, centered on origin) per merge slot,
     // scaled/oriented each frame into a stretched teardrop strand between blob + droplet. Few
@@ -121,6 +122,7 @@ export function GooCsg({ skin, blobRadius, getDroplets }: GooCsgProps) {
       evaluator,
       blobBrush,
       dropletGeo,
+      bodyLobeBrushes,
       dropletBrushes,
       bridgeGeo,
       bridgeBrushes,
@@ -191,6 +193,11 @@ export function GooCsg({ skin, blobRadius, getDroplets }: GooCsgProps) {
 
     const diag = getBlobDiagnostics();
     const [bx, by, bz] = diag.position;
+    const [vx, vy, vz] = diag.velocity;
+    const settled = diag.airborne ? 0 : 1 - Math.min(diag.speed / blobCfg.puddle.settleSpeed, 1);
+    const aim = getAim();
+    const idleSeconds = diag.idleSeconds ?? 0;
+    const excitement = diag.excitement ?? 0;
 
     // Biome-reactive goo lighting: tint the blob toward the current sky's key color and ramp
     // the tint strength with altitude (subtle low → moody high), so the goo reads as embedded
@@ -204,7 +211,8 @@ export function GooCsg({ skin, blobRadius, getDroplets }: GooCsgProps) {
     // ── Build the merged goo mesh (blob ∪ nearby droplets) in the blob's LOCAL frame ──
     // The group is positioned at the blob, so brushes live at blob-relative offsets and
     // the union result is local — cheaper + keeps the deform/scale on the group simple.
-    const { evaluator, blobBrush, dropletBrushes, bridgeBrushes, ping, pong } = csg;
+    const { evaluator, blobBrush, bodyLobeBrushes, dropletBrushes, bridgeBrushes, ping, pong } =
+      csg;
     blobBrush.position.set(0, 0, 0);
     blobBrush.updateMatrixWorld();
 
@@ -236,6 +244,26 @@ export function GooCsg({ skin, blobRadius, getDroplets }: GooCsgProps) {
       useping = !useping;
       return out;
     };
+
+    // Intrinsic body lobes: always-fused irregular mass so the player reads a living blob, not a
+    // perfect ball, even before splash droplets exist. These are real CSG unions.
+    const lobes = bodyLobes({
+      time: state.clock.elapsedTime,
+      settled,
+      velocity: [vx, vy, vz],
+      radius: blobRadius,
+      aimCharge: aim?.charge ?? 0,
+      idleSeconds,
+      excitement,
+    });
+    for (let i = 0; i < lobes.length; i++) {
+      const lobe = lobes[i];
+      const brush = bodyLobeBrushes[i];
+      brush.position.set(lobe.position[0], lobe.position[1], lobe.position[2]);
+      brush.scale.set(lobe.scale[0], lobe.scale[1], lobe.scale[2]);
+      brush.updateMatrixWorld();
+      acc = unionInto(acc, brush);
+    }
 
     // Bound the extra union work the strands add: only the nearest few droplets get a neck
     // (they're nearest-first), so a busy splash doesn't double the per-frame CSG cost. Scales
@@ -302,8 +330,6 @@ export function GooCsg({ skin, blobRadius, getDroplets }: GooCsgProps) {
     // is at rest — the impact spike rides on top of it.
     material.uniforms.uWobble.value = Math.min(1.4, Math.max(IDLE_WOBBLE, wobble.current));
 
-    const [vx, vy, vz] = diag.velocity;
-
     // Impact direction = where the goo is moving (the ripple travels FROM the contact, i.e.
     // along the motion at the moment of impact). Falls back to straight-down while resting.
     const vMag = Math.hypot(vx, vy, vz);
@@ -324,8 +350,6 @@ export function GooCsg({ skin, blobRadius, getDroplets }: GooCsgProps) {
 
     // Puddle at rest: settle into a wide flat happy puddle when grounded + slow, with a slow
     // breathe so Blobby is never a perfectly static ball even standing still.
-    const settled = diag.airborne ? 0 : 1 - Math.min(diag.speed / blobCfg.puddle.settleSpeed, 1);
-
     // WET SAG eases in as Blobby settles (a resting glob hangs/bulges under its weight); the
     // ASYMMETRIC lobe is always a little present (never a clean sphere) and grows when settled.
     damp(modes.current, "sag", settled, 0.18, dt);
@@ -335,15 +359,19 @@ export function GooCsg({ skin, blobRadius, getDroplets }: GooCsgProps) {
 
     if (settled > 0.01) {
       const [px, py, pz] = blobCfg.puddle.scale;
-      const breathe = Math.sin(state.clock.elapsedTime * 1.8) * 0.04 * settled;
+      const impatience = Math.min(1, Math.max(0, (idleSeconds - 2.2) / 3.2));
+      const breathe =
+        Math.sin(state.clock.elapsedTime * (1.8 + impatience * 1.2)) *
+        (0.06 + excitement * 0.08) *
+        settled;
+      const perky = Math.max(excitement, impatience * 0.45);
       target = {
-        x: target.x + (px - target.x) * settled + breathe,
-        y: target.y + (py - target.y) * settled - breathe,
-        z: target.z + (pz - target.z) * settled + breathe,
+        x: target.x + (px - target.x) * settled + breathe - perky * 0.08,
+        y: target.y + (py + perky * 0.22 - target.y) * settled - breathe * 0.35,
+        z: target.z + (pz - target.z) * settled + breathe - perky * 0.08,
       };
     }
     // Charging the slingshot: the resting puddle gathers up toward the pull.
-    const aim = getAim();
     if (aim && !diag.airborne) {
       const g = Math.min(aim.charge, 1);
       target = {

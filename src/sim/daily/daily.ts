@@ -1,4 +1,5 @@
 import { normalizeSeed } from "@/core/math";
+import type { WorldDifficulty } from "@/core/types";
 
 /**
  * Daily-challenge seed + run verification (pure). A "daily" run seeds the world from the
@@ -33,6 +34,7 @@ export interface RunResult {
   height: number;
   crystals: number;
   maxCombo: number;
+  difficulty?: WorldDifficulty;
 }
 
 /**
@@ -47,6 +49,7 @@ export function runHash(result: RunResult): string {
     Math.max(0, Math.floor(result.height)),
     Math.max(0, Math.floor(result.crystals)),
     Math.max(0, Math.floor(result.maxCombo)),
+    result.difficulty ?? "ready",
   ].join(":");
   return normalizeSeed(`run:${canonical}`).toString(36);
 }

@@ -24,6 +24,8 @@ export interface RunStats {
   recordDelta: number;
   /** Composite score for this run (height + crystals + combo style). Set at run end. */
   score: number;
+  /** Per-bounce points from landing near certified golden-path targets. */
+  stylePoints: number;
   /** Points this run beat the PREVIOUS best SCORE by (0 if not a score record). */
   scoreDelta: number;
 }
@@ -74,8 +76,8 @@ export const DEFAULT_PROGRESS: PlayerProgress = {
   bestHeight: 0,
   bestScore: 0,
   crystals: 0,
-  skin: "blue",
-  unlockedSkins: ["blue"],
+  skin: "slime",
+  unlockedSkins: ["slime"],
   tutorialSeen: false,
   unlockedAchievements: [],
 };
@@ -87,6 +89,7 @@ const EMPTY_RUN: RunStats = {
   maxCombo: 0,
   recordDelta: 0,
   score: 0,
+  stylePoints: 0,
   scoreDelta: 0,
 };
 
@@ -142,6 +145,7 @@ export const useGameStore = create<GameState>((set) => ({
         height: h,
         crystals: s.run.crystals,
         maxCombo: s.run.maxCombo,
+        stylePoints: s.run.stylePoints,
       });
       const scoreDelta = Math.max(0, runScore - s.progress.bestScore);
       return {

@@ -13,6 +13,7 @@ beforeEach(() => {
       maxCombo: 5,
       recordDelta: 0,
       score: 1200,
+      stylePoints: 0,
       scoreDelta: 0,
     },
     progress: {
@@ -46,8 +47,7 @@ test("shows the run recap: score headline, altitude, max combo, crystals run + l
     .toBeInTheDocument();
   // Share button present.
   await expect.element(screen.getByRole("button", { name: /share/i })).toBeInTheDocument();
-  // Crystals → next-skin progress + customize jump (42 lifetime, slime costs 15 → unlocked
-  // already in DEFAULT? No: default unlockedSkins is ["blue"], so slime (15) is next).
+  // Crystals → next-skin progress + customize jump (default slime is unlocked; blue is next).
   await expect.element(screen.getByText(/Customize/)).toBeInTheDocument();
 });
 
@@ -101,6 +101,7 @@ test("celebrates a height record instead of a short-by delta", async () => {
       maxCombo: 2,
       recordDelta: 16,
       score: 1600,
+      stylePoints: 0,
       scoreDelta: 0,
     },
     progress: { ...useGameStore.getState().progress, bestHeight: 150, bestScore: 9000 },
@@ -121,6 +122,7 @@ test("celebrates a SCORE record even without a height record", async () => {
       maxCombo: 7,
       recordDelta: 0,
       score: 7200,
+      stylePoints: 0,
       scoreDelta: 450,
     },
     progress: { ...useGameStore.getState().progress, bestHeight: 134, bestScore: 7200 },

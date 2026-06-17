@@ -13,7 +13,7 @@ export const palette = {
     ghost: "#f4f6fb",
   },
   tramp: {
-    blue: "#2f7fd1",
+    blue: "#ff6f61",
     gold: "#f2c14e",
     orange: "#f08a3c",
     green: "#6cc04a",
@@ -21,11 +21,11 @@ export const palette = {
     ice: "#7fe3ef",
   },
   sky: {
-    // Cheerful, saturated daytime gradient (was a flat desaturated blue-grey that read
-    // monochrome): warm peach high up → bright sky-blue → richer indigo at the base.
+    // Cheerful, soft daytime gradient: warm peach high up → pale aqua → muted lavender.
+    // Gameplay objects sit in stronger green/teal/orange lanes so foreground reads clearly.
     top: "#ffe3c4",
-    mid: "#6fc8f0",
-    deep: "#5a4fb0",
+    mid: "#9edfc8",
+    deep: "#7b6bc2",
   },
   cream: "#f3efd6",
   goo: {

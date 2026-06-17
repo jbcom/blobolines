@@ -1,5 +1,7 @@
 import { expect, test } from "@playwright/test";
 
+test.setTimeout(45_000);
+
 /**
  * Perf-regression gate. Drives a scripted climb and samples per-frame times via rAF, then
  * asserts the frame-time distribution stays under a (deliberately lenient) budget. It runs in

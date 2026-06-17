@@ -8,6 +8,7 @@ export {
 } from "./flashBridge";
 export {
   consumeImpact,
+  consumeLanding,
   consumeLaunch,
   consumeLaunchBursts,
   consumeMidAirBounce,
@@ -16,10 +17,12 @@ export {
   type GroundRingKind,
   getAim,
   getAirSteer,
+  type LandingEvent,
   type LaunchBurstEvent,
   type LaunchRequest,
   type ReboundRequest,
   reportImpact,
+  reportLanding,
   reportLaunchBurst,
   reportRebound,
   reportSplat,
@@ -48,6 +51,11 @@ export {
   tickPowerups,
   timeScale,
 } from "./powerupBridge";
+export {
+  getRouteProofTarget,
+  type RouteProofTarget,
+  setRouteProofTarget,
+} from "./routeProofBridge";
 export {
   DEFAULT_PROGRESS,
   DEFAULT_SETTINGS,

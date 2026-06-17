@@ -11,6 +11,13 @@ describe("worldStore.reset seeding", () => {
     expect(useWorldStore.getState().seed).toBe(42);
   });
 
+  it("uses the selected difficulty when resetting a tower", () => {
+    useWorldStore.getState().reset(42, "blobmare");
+    expect(useWorldStore.getState().difficulty).toBe("blobmare");
+    useWorldStore.getState().reset(43);
+    expect(useWorldStore.getState().difficulty).toBe("blobmare");
+  });
+
   it("advances the seed deterministically when none is given (no performance.now)", () => {
     useWorldStore.getState().reset(1);
     useWorldStore.getState().reset(); // derive from prev seed
@@ -23,10 +30,11 @@ describe("worldStore.reset seeding", () => {
 
   it("starts a fresh run with a visible successor pad from the starter", () => {
     for (let seed = 1; seed <= 10; seed++) {
-      useWorldStore.getState().reset(seed);
+      useWorldStore.getState().reset(seed, "ready");
       const [starter, next] = useWorldStore.getState().trampolines;
       expect(starter.position).toEqual([0, 0, 0]);
       expect(next).toBeDefined();
+      expect(next.type).toBe("moving");
       const dy = next.position[1] - starter.position[1];
       const lateral = lateralGap(starter.position, next.position);
       expect(dy).toBeLessThanOrEqual(9.35);
@@ -37,7 +45,7 @@ describe("worldStore.reset seeding", () => {
 });
 
 describe("worldStore.ensureHeight", () => {
-  beforeEach(() => useWorldStore.getState().reset(1));
+  beforeEach(() => useWorldStore.getState().reset(1, "ready"));
 
   it("extends the tower and advances highestY", () => {
     const before = useWorldStore.getState().highestY;

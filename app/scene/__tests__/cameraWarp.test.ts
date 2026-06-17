@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   BASE_FOV,
   cameraLookTarget,
+  cameraRouteDirection,
   decayWarp,
   FOV_WARP,
   fovForWarp,
@@ -55,20 +56,34 @@ describe("camera pad lookahead", () => {
     depth: 8.4,
     type: "standard" as const,
   };
+  const followPad = {
+    id: 17,
+    position: [-2, 17, 3] as const,
+    width: 8.4,
+    depth: 8.4,
+    type: "standard" as const,
+  };
 
-  it("biases the resting camera toward the next pad", () => {
-    const target = cameraLookTarget([0, 1.46, 0], 0, [nextPad]);
+  it("biases the resting camera toward the next two pads", () => {
+    const target = cameraLookTarget([0, 1.46, 0], 1.46, 0, [nextPad, followPad]);
     expect(target[0]).toBeGreaterThan(0);
-    expect(target[1]).toBeGreaterThan(1.46 + 1.5);
+    expect(target[1]).toBeGreaterThan(8);
     expect(target[2]).toBeLessThan(0);
   });
 
   it("returns to blob-follow framing when the blob is moving fast", () => {
-    expect(cameraLookTarget([1, 12, 3], 12, [nextPad])).toEqual([1, 13.5, 3]);
+    expect(cameraLookTarget([1, 12, 3], 1.46, 12, [nextPad, followPad])).toEqual([1, 13.5, 3]);
   });
 
   it("ignores pads too high to be the immediate target", () => {
     const highPad = { ...nextPad, id: 50, position: [4, 50, -2] as const };
-    expect(cameraLookTarget([0, 1.46, 0], 0, [highPad])).toEqual([0, 2.96, 0]);
+    expect(cameraLookTarget([0, 1.46, 0], 1.46, 0, [highPad])).toEqual([0, 2.96, 0]);
+  });
+
+  it("orients the camera opposite the next-route direction", () => {
+    const [dx, dz] = cameraRouteDirection([0, 1.46, 0], 1.46, [nextPad, followPad]);
+    expect(dx).toBeGreaterThan(0);
+    expect(dz).toBeLessThan(0);
+    expect(Math.hypot(dx, dz)).toBeCloseTo(1, 5);
   });
 });

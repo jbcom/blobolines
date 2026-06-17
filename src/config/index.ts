@@ -104,6 +104,8 @@ export const score = scoreCfg as {
   heightPoints: number;
   /** Points per crystal collected. */
   crystalPoints: number;
+  /** Per-bounce maximum bonus for landing on the certified golden-path point. */
+  goldenPathPerfectPoints: number;
   /** Base points for the first combo tier of the run's best streak. */
   comboStyleBase: number;
   /** Geometric growth per combo tier, so a long clean streak is worth disproportionately

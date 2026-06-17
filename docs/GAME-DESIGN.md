@@ -1,6 +1,6 @@
 ---
 title: Game Design
-updated: 2026-06-16
+updated: 2026-06-17
 status: current
 domain: product
 ---
@@ -21,31 +21,71 @@ trickier types, longer falls.
 3. In the air, **drag** to steer in 3D (left/right = world X, forward/back = world Z).
 4. Land on a higher trampoline — it **auto-bounces** you (springy), and a clean landing
    builds your **combo** multiplier, which boosts launch power.
-5. Climb. The **altimeter** tracks your height; your **best height** persists.
+5. Climb. The **altimeter** tracks your height; the **next-pad radar** points toward the
+   next intended trampoline in 3D space; your **best height** persists.
 6. Fall too far below the highest pad you reached → **game over** → replay.
 
 The whole game serves making that climb feel amazing: juicy goo, squash-stretch,
 expressive eyes, splats.
 
+## Spatial awareness
+
+The tower is a 3D climb, so the camera, HUD, and generator share a strict spatial contract:
+the immediate trampoline and the next trampoline after it must be visible from the launch
+state, and consecutive pads may never collapse into a directly-overhead column. The HUD gives
+players a compact **next-pad radar** while a run is active. It uses the last landed pad as the
+progression floor and points toward the next generated trampoline above it, showing:
+
+- lateral direction (`forward`, `back`, `left`, `right`, or a diagonal)
+- vertical gap in metres, including negative values when the blob has arced above the target
+- horizontal distance in metres
+
+This keeps the player oriented without flattening the 3D space into an auto-aim lane: the
+blob still has to be steered onto the actual trampoline.
+
+Every consecutive trampoline pair also has a stored **golden path proof** on the source pad:
+a calculated passive parabola with launch normal, source mode (`flat`, `moving`, `canted`, or
+`wobbler`), flight time, apex, landing point, absolute lip clearance, landing precision
+percentile, compressed-arc score, and world-space samples. Generation is difficulty-profiled:
+approachable modes avoid flat-to-flat precision routing and teach with flat-to-slider,
+slider-to-canted, canted-to-flat, and wobbler recovery patterns. Harder modes deliberately
+allow flatter precision arcs, canted-to-canted chains, tighter lip margins, and compressed
+parabolas. The dev harness can render these proof samples as a solid red parabola and capture
+a timed PNG/JSON sequence for inspection.
+
 ## Trampoline types
 
 | Type | Color (token) | Behavior |
 |------|---------------|----------|
-| standard | `tramp.blue` | Reliable bounce (rebound ×1.0) |
+| standard | `tramp.blue` (warm coral) | Reliable bounce (rebound ×1.12) |
 | booster | `tramp.orange` | Big rebound (×1.8) |
-| moving | `tramp.gold` | Glides sideways — timing matters |
+| moving | `tramp.gold` | Glides along a generated route axis — timing matters |
 | fragile | `tramp.green` | Disintegrates shortly after impact |
+| super | `tramp.violet` | Guaranteed mega-launch reward |
+| ice | `tramp.ice` | Big rebound, slippery, breaks clean combo |
+| wobbler | `tramp.violet` | Tips toward off-center hits |
+| canted | `tramp.orange` | Certified tilted bounce toward the next pad |
 
-Low pads (below y≈25) are always `standard` so the start is forgiving; pads shrink with
-altitude (difficulty curve).
+The default Ready opener is `standard → moving → canted → standard → wobbler → standard`, so
+the player immediately sees readable route mechanics instead of a tool-assisted flat-to-flat
+stack. Pads still shrink with altitude (difficulty curve), while each difficulty profile sets
+its own lip-clearance, landing-precision, cant-angle, and compressed-arc rules.
+
+Visually, trampolines are not platform slabs: each pad renders as a round raised frame with
+radial laces and a suspended jelly membrane. Impacts depress and tilt only the membrane, so
+the bounce surface reads as elastic trampoline material rather than a moving block. The low
+biome uses warm peach/mint/lavender skies and coral/gold/green foreground objects for clear
+foreground/background separation without returning to the old neon-cyberpunk look.
 
 ## Blob expression (the eyes)
 
-Procedural eyes (white sclera + bezel + black pupil + glint + tear) react to motion:
+Procedural eyes (white sclera + bezel + black pupil + glint + tear) and the mouth react to
+motion and launch charge:
 
 | State | Trigger |
 |-------|---------|
 | idle / blink | resting / periodic |
+| charge anticipation | slingshot held; eyes widen/dart, mouth opens |
 | squint | hard impact (landing) |
 | wide | big launch / fast ascent |
 | tear | falling far / near death |

@@ -3,7 +3,7 @@ import { useEffect, useRef } from "react";
 import type { Group, Object3D } from "three";
 import type { EyeExpression } from "@/core/types";
 import { eyeShape } from "@/sim/blob";
-import { getBlobDiagnostics } from "@/state";
+import { getAim, getBlobDiagnostics } from "@/state";
 import { palette } from "@/styles/tokens";
 import { BlobMouth } from "./BlobMouth";
 
@@ -21,8 +21,8 @@ interface BlobEyesProps {
   live?: boolean;
 }
 
-const EYE_OFFSET_X = 0.3;
-const EYE_OFFSET_Y = 0.08;
+const EYE_OFFSET_X = 0.34;
+const EYE_OFFSET_Y = 0.11;
 
 function Eye({ side }: { side: 1 | -1 }) {
   // Eyes draw on TOP of the opaque goo (depthTest off + high renderOrder) so the
@@ -31,22 +31,22 @@ function Eye({ side }: { side: 1 | -1 }) {
     <group position={[side * EYE_OFFSET_X, EYE_OFFSET_Y, 0]} renderOrder={10}>
       {/* dark bezel ring behind the sclera (lid — squashes on blink/squint) */}
       <mesh position={[0, 0, 0.005]} name={`lid-${side}`} renderOrder={10}>
-        <sphereGeometry args={[0.2, 24, 24]} />
+        <sphereGeometry args={[0.22, 24, 24]} />
         <meshBasicMaterial color={palette.eye.bezel} depthTest={false} />
       </mesh>
       {/* white sclera, pushed forward onto the face (lid) */}
       <mesh position={[0, 0, 0.04]} name={`lid-${side}b`} renderOrder={11}>
-        <sphereGeometry args={[0.18, 24, 24]} />
+        <sphereGeometry args={[0.195, 24, 24]} />
         <meshBasicMaterial color={palette.eye.sclera} depthTest={false} />
       </mesh>
       {/* big black pupil */}
-      <mesh position={[0, 0, 0.18]} name={`pupil-${side}`} renderOrder={12}>
-        <sphereGeometry args={[0.09, 20, 20]} />
+      <mesh position={[0, 0, 0.19]} name={`pupil-${side}`} renderOrder={12}>
+        <sphereGeometry args={[0.105, 20, 20]} />
         <meshBasicMaterial color={palette.eye.pupil} depthTest={false} />
       </mesh>
       {/* glint */}
-      <mesh position={[0.03, 0.04, 0.25]} renderOrder={13}>
-        <sphereGeometry args={[0.025, 8, 8]} />
+      <mesh position={[0.04, 0.055, 0.27]} renderOrder={13}>
+        <sphereGeometry args={[0.03, 8, 8]} />
         <meshBasicMaterial color={palette.eye.glint} depthTest={false} />
       </mesh>
       {/* tear droplet — revealed by the animator when tearing */}
@@ -94,8 +94,16 @@ export function BlobEyes({ expression, radius, live = false }: BlobEyesProps) {
     const cycle = timer.current % 3.5;
     const blink = cycle < 0.14 ? Math.sin((cycle / 0.14) * Math.PI) : 0;
 
-    const expr = live ? getBlobDiagnostics().expression : expression;
+    const diag = live ? getBlobDiagnostics() : null;
+    const aim = live ? getAim() : null;
+    const expr = diag?.expression ?? expression;
     const shape = eyeShape(expr, blink);
+    const aimCharge = aim?.charge ?? 0;
+    const impatience = Math.min(1, Math.max(0, ((diag?.idleSeconds ?? 0) - 2.2) / 3.2));
+    const excitement = diag?.excitement ?? 0;
+    shape.openY += aimCharge * 0.22 + impatience * 0.12 + excitement * 0.18;
+    shape.scale += aimCharge * 0.14 + impatience * 0.06 + excitement * 0.12;
+    shape.pupil += aimCharge * 0.18 + excitement * 0.14;
     // Keep the parent group UNIFORM so pupils/tears stay round; the vertical eye
     // opening (blink/squint/wide) is applied only to the lid meshes (sclera + bezel).
     g.scale.setScalar(shape.scale * radius);
@@ -105,12 +113,15 @@ export function BlobEyes({ expression, radius, live = false }: BlobEyesProps) {
     // hero (no live diag) keeps centered pupils. Clamped to stay within the sclera.
     let dartX = 0;
     let dartY = 0;
-    if (live) {
-      const [vx, vy] = getBlobDiagnostics().velocity;
+    if (aim) {
+      dartX = aim.dir[0] * 0.07;
+      dartY = (aim.dir[1] - 0.65) * 0.08;
+    } else if (diag) {
+      const [vx, vy] = diag.velocity;
       const mag = Math.hypot(vx, vy);
       if (mag > 1) {
-        dartX = (vx / mag) * 0.05;
-        dartY = (vy / mag) * 0.05;
+        dartX = (vx / mag) * 0.06;
+        dartY = (vy / mag) * 0.06;
       }
     }
 
@@ -121,7 +132,7 @@ export function BlobEyes({ expression, radius, live = false }: BlobEyesProps) {
     for (const pupil of pupils) {
       pupil.scale.setScalar(shape.pupil);
       // Dart from the pupil's base local position (0,0,0.18 inside its parent eye group).
-      pupil.position.set(dartX, dartY, 0.18);
+      pupil.position.set(dartX, dartY, 0.19);
     }
     for (const tear of tears) tear.visible = tearing;
   });

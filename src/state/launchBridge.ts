@@ -6,6 +6,8 @@
  * through the React tree while keeping UI and physics decoupled.
  */
 
+import { setRouteProofTarget } from "./routeProofBridge";
+
 export interface LaunchRequest {
   dir: readonly [number, number, number];
   charge: number;
@@ -127,6 +129,26 @@ export function consumeImpact(): number {
   return s;
 }
 
+export interface LandingEvent {
+  padId: number;
+  speed: number;
+  position: readonly [number, number, number];
+  relX: number;
+  relZ: number;
+}
+
+let landing: LandingEvent | null = null;
+
+export function reportLanding(event: LandingEvent): void {
+  if (!landing || event.speed > landing.speed) landing = event;
+}
+
+export function consumeLanding(): LandingEvent | null {
+  const event = landing;
+  landing = null;
+  return event;
+}
+
 /** A pending trampoline rebound: the rebound speed to bounce the blob at, the pad type
  *  (for combo/scoring), and the pad's surface NORMAL — the launch direction. A flat pad's
  *  normal is straight up [0,1,0]; a canted pad's normal tilts, redirecting the bounce
@@ -165,5 +187,7 @@ export function resetBridges(): void {
   launchBurstQueue = [];
   steer = [0, 0];
   landingImpact = 0;
+  landing = null;
   midAirBounce = false;
+  setRouteProofTarget(null);
 }

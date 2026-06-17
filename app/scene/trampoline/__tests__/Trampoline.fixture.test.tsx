@@ -12,7 +12,7 @@ test("Trampoline renders the pad with its splat-decal surface", async () => {
   const screen = await render(
     <FixtureStage testId="tramp-fixture" cameraDistance={10}>
       <Physics paused gravity={[0, -22, 0]}>
-        <Trampoline position={[0, 0, 0]} width={6} depth={6} type="standard" />
+        <Trampoline id={0} position={[0, 0, 0]} width={6} depth={6} type="standard" />
       </Physics>
     </FixtureStage>,
   );
@@ -37,7 +37,7 @@ test("canted Trampoline renders its tilted pad", async () => {
   const screen = await render(
     <FixtureStage testId="canted-fixture" cameraDistance={10}>
       <Physics paused gravity={[0, -22, 0]}>
-        <Trampoline position={[0, 0, 0]} width={6} depth={6} type="canted" cant={[1, 0]} />
+        <Trampoline id={0} position={[0, 0, 0]} width={6} depth={6} type="canted" cant={[1, 0]} />
       </Physics>
     </FixtureStage>,
   );
