@@ -63,6 +63,11 @@ export function GooCsg({ skin, blobRadius, getDroplets }: GooCsgProps) {
 
   const material = useMemo(() => new GooMaterial() as unknown as ShaderMaterial, []);
 
+  // Blob geometry density scales with the quality tier (low devices get a coarser sphere) — the
+  // config value is the high-tier ceiling; getQuality() caps it. In the csg dep array so a
+  // quality change (e.g. an FPS-triggered downgrade) rebuilds the CSG brush at the new density.
+  const segs = Math.min(blobSegments, getQuality().blobSegments);
+
   // The CSG machinery: one evaluator (pooled buffers), a unit-ish blob brush + a pool of
   // droplet brushes reused across frames, and two ping-pong targets for the union chain.
   const csg = useMemo(() => {
@@ -72,9 +77,6 @@ export function GooCsg({ skin, blobRadius, getDroplets }: GooCsgProps) {
     evaluator.attributes = ["position", "normal"];
     evaluator.useGroups = false;
 
-    // Blob geometry density scales with the quality tier (low devices get a coarser sphere) —
-    // the config value is the high-tier ceiling; getQuality() caps it for the device.
-    const segs = Math.min(blobSegments, getQuality().blobSegments);
     const blobBrush = new Brush(new SphereGeometry(blobRadius, segs, segs));
     // Droplet brushes are low-poly icospheres (cheap, round enough once unioned + wet-lit).
     // IcosahedronGeometry is non-indexed; three-bvh-csg's BVH needs an index, so weld it.
@@ -87,7 +89,7 @@ export function GooCsg({ skin, blobRadius, getDroplets }: GooCsgProps) {
     const ping = new Brush();
     const pong = new Brush();
     return { evaluator, blobBrush, dropletGeo, dropletBrushes, ping, pong };
-  }, [blobRadius]);
+  }, [blobRadius, segs]);
 
   // Release GL programs + CSG geometry on unmount (respawn/skin-swap/HMR remounts this).
   useEffect(() => {
