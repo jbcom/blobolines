@@ -2,7 +2,8 @@ import { useFrame, useThree } from "@react-three/fiber";
 import { useRef } from "react";
 import type { PerspectiveCamera } from "three";
 import { damp } from "@/core/math";
-import { getBlobDiagnostics } from "@/state";
+import type { TrampolineSpec, Vec3 } from "@/core/types";
+import { getBlobDiagnostics, useWorldStore } from "@/state";
 
 /** Resting field of view; a launch punches it wider then it eases back (the "hyperspace" kick). */
 export const BASE_FOV = 60;
@@ -14,6 +15,8 @@ export const LAUNCH_JUMP_MIN = 8;
 export const LAUNCH_JUMP_FULL = 28;
 /** Time constant (s) for the warp easing back to base. */
 const WARP_TAU = 0.35;
+const PAD_LOOKAHEAD_MAX_SPEED = 8;
+const PAD_LOOKAHEAD_MAX_GAP = 32;
 
 /** New warp amount [0,1] after a launch jump: spike on a big positive vy jump, capped at 1.
  *  Pure so the FOV-punch trigger curve is unit-tested. */
@@ -32,6 +35,35 @@ export function decayWarp(warp: number, dt: number): number {
 /** Field of view for a given warp amount. Pure. */
 export function fovForWarp(warp: number): number {
   return BASE_FOV + warp * FOV_WARP;
+}
+
+function defaultLookTarget(blobPosition: Vec3): Vec3 {
+  return [blobPosition[0], blobPosition[1] + 1.5, blobPosition[2]];
+}
+
+export function cameraLookTarget(
+  blobPosition: Vec3,
+  speed: number,
+  pads: readonly TrampolineSpec[],
+): Vec3 {
+  const base = defaultLookTarget(blobPosition);
+  const slowFactor = Math.max(0, 1 - speed / PAD_LOOKAHEAD_MAX_SPEED);
+  if (slowFactor <= 0) return base;
+
+  const nextPad = pads.find(
+    (pad) =>
+      pad.position[1] > blobPosition[1] + 2 &&
+      pad.position[1] < blobPosition[1] + PAD_LOOKAHEAD_MAX_GAP,
+  );
+  if (!nextPad) return base;
+
+  const lateralBlend = 0.38 * slowFactor;
+  const verticalBlend = 0.62 * slowFactor;
+  return [
+    base[0] + (nextPad.position[0] - base[0]) * lateralBlend,
+    base[1] + (nextPad.position[1] - base[1]) * verticalBlend,
+    base[2] + (nextPad.position[2] - base[2]) * lateralBlend,
+  ];
 }
 
 /**
@@ -94,8 +126,14 @@ export function CameraRig({ active }: { active: boolean }) {
       camera.position.x += Math.sin(t.current * 90) * s;
       camera.position.y += Math.cos(t.current * 83) * s;
 
-      // Look at the blob, biased a little upward (toward where it's headed).
-      camera.lookAt(bx, by + 1.5, bz);
+      // Look at the blob in flight, but while resting/slowly aiming bias upward and sideways
+      // toward the next generated pad so the opening target is readable before launch.
+      const [lookX, lookY, lookZ] = cameraLookTarget(
+        diag.position,
+        speed,
+        useWorldStore.getState().trampolines,
+      );
+      camera.lookAt(lookX, lookY, lookZ);
     } else {
       // Menu: clear the launch warp + FOV back to base (so re-entering a run starts unwarped),
       // and reset the launch tracker so the first in-run launch is detected fresh.

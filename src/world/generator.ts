@@ -30,6 +30,30 @@ export interface GeneratedChunk {
 /** Below this altitude the start stays forgiving: pads are pulled into a flat-bounce reach
  *  rather than canted, so the first launches are gentle and don't demand the canted mechanic. */
 const FORGIVING_Y = 25;
+/** Opening-guide band: the first few pads must read as a visible staircase from the starter,
+ *  not as a near-overhead column that only works in the reachability proof. */
+const STARTER_GUIDE_Y = 36;
+const STARTER_MAX_STEP_Y = 9.25;
+const STARTER_MIN_LATERAL = 3.6;
+const STARTER_MAX_LATERAL = 4.8;
+const STARTER_MIN_FOOTPRINT = 8.4;
+
+function clamp(n: number, min: number, max: number): number {
+  return Math.min(max, Math.max(min, n));
+}
+
+function starterGuidePosition(prev: TrampolineSpec, target: Vec3, fallbackAngle: number): Vec3 {
+  if (prev.position[1] >= STARTER_GUIDE_Y) return target;
+
+  const [px, , pz] = prev.position;
+  const dx = target[0] - px;
+  const dz = target[2] - pz;
+  const gap = Math.hypot(dx, dz);
+  const dirX = gap > 0.001 ? dx / gap : Math.cos(fallbackAngle);
+  const dirZ = gap > 0.001 ? dz / gap : Math.sin(fallbackAngle);
+  const guidedGap = clamp(gap, STARTER_MIN_LATERAL, STARTER_MAX_LATERAL);
+  return [px + dirX * guidedGap, target[1], pz + dirZ * guidedGap];
+}
 
 /**
  * Make `pad` reachable from `prev`, mutating `prev` (cant) and/or returning a pad pulled
@@ -110,7 +134,11 @@ export function generateUpTo(
     // the flat-launch clearance at CLIMB_SPEED (vy²/2g ≈ 20.4m) so the reachability guarantee
     // holds — the climb-proof sweep verifies the widened steps still chain.
     const spacingBoost = Math.min(1, y / 600) * 3;
-    const stepY = 7.5 + spacingBoost + rng.next() * 6.8;
+    const rawStepY = 7.5 + spacingBoost + rng.next() * 6.8;
+    const stepY =
+      prev && prev.position[1] < STARTER_GUIDE_Y
+        ? Math.min(rawStepY, STARTER_MAX_STEP_Y)
+        : rawStepY;
     y += stepY;
 
     // Spiral placement: angle advances with height, radius gently oscillates.
@@ -138,6 +166,12 @@ export function generateUpTo(
     // Forgiving start is always standard; above it the type mix is altitude-weighted (safe
     // low, full toolkit mid, richer bonus/skill types high) — pickPadType owns that curve.
     let type: TrampType = y < FORGIVING_Y ? "standard" : pickPadType(rng, y);
+
+    if (prev && prev.position[1] < STARTER_GUIDE_Y) {
+      [x, y, z] = starterGuidePosition(prev, [x, y, z], angle);
+      width = Math.max(width, STARTER_MIN_FOOTPRINT);
+      depth = Math.max(depth, STARTER_MIN_FOOTPRINT);
+    }
 
     // GOLDEN-PATH REACHABILITY: GUARANTEE the previous pad can launch the blob to this one.
     // `reaches()` is the shipped-tuning predicate (launch speed, gravity, canted tilt, steer

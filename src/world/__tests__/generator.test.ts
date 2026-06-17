@@ -3,6 +3,10 @@ import { createRng } from "@/core/math";
 import { generateUpTo, starterPad } from "../generator";
 import { reaches } from "../reachable";
 
+function lateralGap(a: readonly [number, number, number], b: readonly [number, number, number]) {
+  return Math.hypot(b[0] - a[0], b[2] - a[2]);
+}
+
 describe("world generator", () => {
   it("is deterministic for the same seed", () => {
     const a = generateUpTo(createRng("seed-x"), 0, 200);
@@ -108,6 +112,39 @@ describe("world generator", () => {
     expect(s.position).toEqual([0, 0, 0]);
     expect(s.type).toBe("standard");
     expect(s.width).toBeGreaterThan(7);
+  });
+
+  it("opens every run with visible stepping pads instead of an overhead column", () => {
+    for (let seed = 0; seed < 40; seed++) {
+      const start = starterPad();
+      const { trampolines } = generateUpTo(createRng(`starter-guide-${seed}`), 0, 80, start);
+      const pads = [start, ...trampolines];
+      for (let i = 1; i <= 3; i++) {
+        const previous = pads[i - 1];
+        const current = pads[i];
+        expect(current, `seed ${seed}: missing opening pad #${i}`).toBeDefined();
+        if (!current) continue;
+
+        const dy = current.position[1] - previous.position[1];
+        const lateral = lateralGap(previous.position, current.position);
+        expect(dy, `seed ${seed}: opening pad #${i} is too high to read`).toBeLessThanOrEqual(9.35);
+        expect(
+          lateral,
+          `seed ${seed}: opening pad #${i} collapsed into a near-overhead stack`,
+        ).toBeGreaterThanOrEqual(3.55);
+        expect(
+          lateral,
+          `seed ${seed}: opening pad #${i} is too far off the starter line`,
+        ).toBeLessThanOrEqual(4.85);
+        expect(
+          Math.min(current.width, current.depth),
+          `seed ${seed}: opening pad #${i} should be forgivingly large`,
+        ).toBeGreaterThanOrEqual(8.4);
+        expect(reaches(previous, current), `seed ${seed}: opening pad #${i} is stranded`).toBe(
+          true,
+        );
+      }
+    }
   });
 
   // Golden-path navigability — STRUCTURAL property: every canted pad's cant is a unit vector
