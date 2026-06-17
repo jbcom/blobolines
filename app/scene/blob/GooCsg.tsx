@@ -253,6 +253,7 @@ export function GooCsg({ skin, blobRadius, getDroplets }: GooCsgProps) {
       velocity: [vx, vy, vz],
       radius: blobRadius,
       aimCharge: aim?.charge ?? 0,
+      aimDirection: aim?.dir ?? null,
       idleSeconds,
       excitement,
     });

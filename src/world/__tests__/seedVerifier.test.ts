@@ -16,6 +16,7 @@ describe("seed route verifier", () => {
     expect(report.pairCount).toBeGreaterThan(80);
     expect(report.requiredProofVariants).toBe(3);
     expect(report.minProofVariants).toBe(3);
+    expect(report.maxProofVariants).toBe(3);
     expect(report.minLateralGap).toBeGreaterThanOrEqual(3.4);
     expect(report.minLipClearance).toBeGreaterThanOrEqual(0);
     expect(report.sourceModes.moving).toBeGreaterThan(0);
@@ -33,6 +34,7 @@ describe("seed route verifier", () => {
     expect(b.padCount).toBe(a.padCount);
     expect(b.requiredProofVariants).toBe(1);
     expect(b.minProofVariants).toBe(1);
+    expect(b.maxProofVariants).toBe(1);
     expect(b.minLipClearance).toBe(a.minLipClearance);
     expect(b.sourceModes).toEqual(a.sourceModes);
     expect(b.failures).toEqual([]);
@@ -49,6 +51,7 @@ describe("seed route verifier", () => {
     expect(report.difficultyLabel).toBe("One Wrong Move");
     expect(report.requiredProofVariants).toBe(1);
     expect(report.minProofVariants).toBe(1);
+    expect(report.maxProofVariants).toBe(1);
     expect(report.minLandingPrecision).toBeGreaterThanOrEqual(0);
   });
 

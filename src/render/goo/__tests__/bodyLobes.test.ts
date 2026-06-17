@@ -42,6 +42,33 @@ describe("bodyLobes", () => {
     expect(charged[2].position[1]).toBeGreaterThan(calm[2].position[1]);
   });
 
+  it("uses charged aim direction instead of idle wander for the leading bead", () => {
+    const uncharged = bodyLobes({
+      time: 0,
+      settled: 1,
+      velocity: [0, 0, 0],
+      radius: 0.85,
+      aimCharge: 0,
+      aimDirection: [-1, 0.8, 0],
+      idleSeconds: 0,
+      excitement: 0,
+    });
+    const aimed = bodyLobes({
+      time: 0,
+      settled: 1,
+      velocity: [0, 0, 0],
+      radius: 0.85,
+      aimCharge: 1,
+      aimDirection: [-1, 0.8, 0],
+      idleSeconds: 0,
+      excitement: 0,
+    });
+
+    expect(uncharged[2].position[0]).toBeGreaterThan(0);
+    expect(aimed[2].position[0]).toBeLessThan(-1.05);
+    expect(aimed[2].position[1]).toBeGreaterThan(uncharged[2].position[1] + 0.2);
+  });
+
   it("perks up after an exciting bounce", () => {
     const calm = bodyLobes({
       time: 0.5,

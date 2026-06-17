@@ -53,15 +53,17 @@ impact circle, then captures a timed PNG/JSON sequence for inspection.
 
 Generation is difficulty-profiled but not fixed-patterned. Candidate pad types are weighted by
 difficulty, then the hidden parabola verifier decides what is legal: the source pad may remain
-flat or become moving, canted, or wobbly only if the resulting passive arc proves a descending
-impact inside the successor footprint. Easy requires three accepted launch-speed variants per
-step and larger minimum footprints; Medium requires two; Hard, Blobmare, Ultra Blobmare, and
-One Wrong Move require one route with increasingly small lip, precision, footprint, and
-compression margins. Flat-to-flat, flat-to-slider, slider-to-canted, canted-to-canted, wobbler
-recovery, and compressed parabolas are all valid when the verifier proves the route under the
-selected profile. The long-run goal is Tetris-like cadence: every seed is theoretically
-endless and eventually reaches one-path precision, but Easy should give a kid a long runway
-before that ramp while Ultra Blobmare reaches it much sooner.
+flat or become moving, canted, or wobbly only if the resulting arc proves a readable descending
+impact inside the successor footprint. Flat sources are verified against the real slingshot
+launch curve rather than a fake straight-up bounce. The variant count is an exact difficulty
+target, not only a lower bound: Easy stores exactly three accepted launch variants per step,
+Medium exactly two, and Hard, Blobmare, Ultra Blobmare, and One Wrong Move exactly one, with
+increasingly small lip, precision, footprint, and compression margins. Flat-to-flat,
+flat-to-slider, slider-to-canted, canted-to-canted, wobbler recovery, and compressed parabolas
+are all valid when the verifier proves the route under the selected profile. The long-run goal
+is Tetris-like cadence: every seed is theoretically endless and eventually reaches one-path
+precision, but Easy should give a kid a long runway before that ramp while Ultra Blobmare
+reaches it much sooner.
 
 During a live run, the proof stays hidden. Easy mode means larger footprints, more accepted
 trajectory variants, wider lips, and slower cadence; it does **not** mean the game draws the
@@ -72,6 +74,8 @@ golden solution. Player-facing guidance comes from:
 - a live aim preview while charging: Easy/Medium/Hard show a dotted launch arc plus a pulsing
   endpoint reticle at the descending height crossing, Blobmare keeps only the dotted arc, and
   Ultra Blobmare / One Wrong Move hide the parabola overlay entirely
+- Blobby himself: while charging, his eyes, mouth, and goo body bead toward the selected launch
+  direction, so expert modes still get character-readable intent without a drawn route
 - a short route-quality toast after each certified landing (`Perfect route`, `Great route`,
   `Clean route`, or `Edge catch`) with the style-point bonus earned by proximity to that point
 
@@ -93,8 +97,10 @@ seed and generator, but they are not mounted as normal player HUD.
 
 The Easy opener is seeded and proof-gated rather than fixed, but the opening guide forces
 readable stepping pads, forgiving footprints, visible lateral separation, and early route
-mechanics so the player is not asked to solve a tool-assisted flat-to-flat stack. Pads still
-shrink with altitude (difficulty curve), while each difficulty profile sets its own
+mechanics so the player is not asked to solve a tool-assisted flat-to-flat stack. Its first
+lane uses wider human-launchable offsets rather than near-overhead edge catches, so different
+seed phrases immediately produce visibly different opening routes. Pads still shrink with
+altitude (difficulty curve), while each difficulty profile sets its own
 lip-clearance, landing-precision, cant-angle, footprint scale, shape variety, proof-variant
 count, and compressed-arc rules.
 
@@ -114,6 +120,7 @@ motion and launch charge:
 |-------|---------|
 | idle / blink | resting / periodic |
 | charge anticipation | slingshot held; eyes widen/dart, mouth opens |
+| aim bead | charged slingshot; goo body forms a leading lobe toward the launch vector |
 | squint | hard impact (landing) |
 | wide | big launch / fast ascent |
 | tear | falling far / near death |

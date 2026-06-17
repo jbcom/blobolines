@@ -176,7 +176,7 @@ describe("world generator", () => {
         expect(
           lateral,
           `seed ${seed}: opening pad #${i} is too far off the starter line`,
-        ).toBeLessThanOrEqual(4.85);
+        ).toBeLessThanOrEqual(10.45);
         expect(
           Math.min(current.width, current.depth),
           `seed ${seed}: opening pad #${i} should be forgivingly large`,
@@ -186,6 +186,30 @@ describe("world generator", () => {
         );
       }
     }
+  });
+
+  it("opens ready seeds with visible position and type variety", () => {
+    const signatures = new Set<string>();
+    for (let seed = 0; seed < 24; seed++) {
+      const start = starterPad();
+      const { trampolines } = generateUpTo(createRng(`opening-variety-${seed}`), 0, 80, start);
+      const opening = trampolines.slice(0, 3);
+      expect(opening).toHaveLength(3);
+      signatures.add(
+        opening
+          .map((pad, i) => {
+            const prev = i === 0 ? start : opening[i - 1];
+            return [
+              pad.type,
+              Math.round(lateralGap(prev.position, pad.position) * 2) / 2,
+              Math.round((pad.position[1] - prev.position[1]) * 2) / 2,
+              Math.round(Math.max(pad.width, pad.depth) * 2) / 2,
+            ].join(":");
+          })
+          .join("|"),
+      );
+    }
+    expect(signatures.size).toBeGreaterThan(8);
   });
 
   it("never stacks any consecutive pads immediately overhead", () => {
@@ -209,21 +233,21 @@ describe("world generator", () => {
     }
   });
 
-  it("accepts flat-to-flat only through the same certified variant gate", () => {
+  it("accepts flat-source routes only through the exact certified variant gate", () => {
     const readyStart = starterPad();
     const readyPads = [
       readyStart,
       ...generateUpTo(createRng("flat-ready"), 0, 500, readyStart, "ready").trampolines,
     ];
-    let readyFlatPairs = 0;
+    let readyFlatSourcePairs = 0;
     for (let i = 1; i < readyPads.length; i++) {
       const source = readyPads[i - 1];
       const target = readyPads[i];
-      if (source.type === "standard" && target.type === "standard") readyFlatPairs++;
+      if (source.goldenPath?.sourceMode === "flat") readyFlatSourcePairs++;
       expect(source.goldenPath?.toPadId).toBe(target.id);
       expect(source.goldenPath?.variants?.length).toBe(routeProfile("ready").proofVariants);
     }
-    expect(readyFlatPairs).toBeGreaterThan(0);
+    expect(readyFlatSourcePairs).toBeGreaterThan(0);
 
     const hardStart = starterPad();
     const hardPads = [

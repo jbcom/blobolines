@@ -58,7 +58,7 @@ describe("worldStore.reset seeding", () => {
       const lateral = lateralGap(starter.position, next.position);
       expect(dy).toBeLessThanOrEqual(9.35);
       expect(lateral).toBeGreaterThanOrEqual(3.55);
-      expect(lateral).toBeLessThanOrEqual(4.85);
+      expect(lateral).toBeLessThanOrEqual(10.45);
     }
   });
 });

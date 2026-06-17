@@ -13,7 +13,7 @@ import type {
 import { GRAVITY } from "@/sim/physics";
 import { pickCrystalTier } from "./crystalTier";
 import { type RouteDifficultyProfile, routeCantAngle, routeProfile } from "./difficulty";
-import { CLIMB_SPEED, solveGoldenPath } from "./reachable";
+import { CLIMB_SPEED, solveFlatLaunchProofs, solveGoldenPath } from "./reachable";
 
 export interface PowerUpSpec {
   position: Vec3;
@@ -45,14 +45,14 @@ const MAX_GOLDEN_STEP_Y = 15.4;
 /** Consecutive pads must never collapse into an overhead column. This is the minimum
  *  horizontal read between the source and successor for the certified main path. */
 const MIN_SUCCESSOR_LATERAL = 3.45;
-const MAX_SUCCESSOR_LATERAL = 10.8;
+const MAX_SUCCESSOR_LATERAL = 16;
 /** Opening-guide band: the first few pads must read as a visible staircase from the starter,
  *  not as a near-overhead column that only works in the reachability proof. */
 const STARTER_GUIDE_Y = 36;
-const STARTER_MAX_STEP_Y = 9.25;
-const STARTER_MIN_LATERAL = 3.6;
-const STARTER_MAX_LATERAL = 4.8;
-const STARTER_MIN_FOOTPRINT = 8.4;
+const STARTER_MAX_STEP_Y = 8.6;
+const STARTER_MIN_LATERAL = 6.8;
+const STARTER_MAX_LATERAL = 10.4;
+const STARTER_MIN_FOOTPRINT = 8.8;
 const G = Math.abs(GRAVITY[1]);
 const MIN_CERTIFIED_SPEED = launchCfg.basePower;
 const MAX_CERTIFIED_SPEED =
@@ -165,9 +165,15 @@ function separatedSuccessorPosition(
   const maxGap =
     prev.position[1] < STARTER_GUIDE_Y
       ? STARTER_MAX_LATERAL
-      : Math.min(MAX_SUCCESSOR_LATERAL, 7 + prev.position[1] / 120);
+      : Math.min(MAX_SUCCESSOR_LATERAL, 9 + prev.position[1] / 100);
   const guidedGap = clamp(gap, MIN_SUCCESSOR_LATERAL, maxGap);
   return [px + dirX * guidedGap, target[1], pz + dirZ * guidedGap];
+}
+
+function legalMaxGap(prev: TrampolineSpec): number {
+  return prev.position[1] < STARTER_GUIDE_Y
+    ? STARTER_MAX_LATERAL
+    : Math.min(MAX_SUCCESSOR_LATERAL, 9 + prev.position[1] / 100);
 }
 
 function withPosition(pad: TrampolineSpec, position: Vec3): TrampolineSpec {
@@ -277,10 +283,37 @@ function proofAccepted(
 ): proof is GoldenPathProof {
   if (!proof) return false;
   return (
+    proof.apex[1] > proof.landing[1] + 0.2 &&
     proof.lipClearance >= profile.minLipClearance &&
     proof.lipClearanceRatio >= profile.minLipClearanceRatio &&
     proof.landingPrecision >= profile.minLandingPrecision
   );
+}
+
+function selectVariantProofs(
+  proofs: readonly GoldenPathProof[],
+  count: number,
+): GoldenPathProof[] | null {
+  if (proofs.length < count) return null;
+  const byPrecision = [...proofs].sort(
+    (a, b) => b.landingPrecision - a.landingPrecision || a.launchSpeed - b.launchSpeed,
+  );
+  const primary = byPrecision[0];
+  if (!primary) return null;
+  if (count <= 1) return [primary];
+
+  const sorted = [...proofs].sort((a, b) => a.launchSpeed - b.launchSpeed);
+  const anchors = [0, Math.floor((sorted.length - 1) * 0.5), sorted.length - 1];
+  const picked: GoldenPathProof[] = [primary];
+  const tryPick = (candidate: GoldenPathProof | undefined) => {
+    if (!candidate || picked.length >= count) return;
+    if (picked.some((p) => Math.abs(p.launchSpeed - candidate.launchSpeed) < 0.35)) return;
+    picked.push(candidate);
+  };
+
+  for (const anchor of anchors) tryPick(sorted[anchor]);
+  for (const proof of byPrecision) tryPick(proof);
+  return picked.length >= count ? picked.slice(0, count) : null;
 }
 
 function proofWithVariants(
@@ -288,6 +321,16 @@ function proofWithVariants(
   target: TrampolineSpec,
   profile: RouteDifficultyProfile,
 ): GoldenPathProof | null {
+  if (prev.type !== "canted" && prev.type !== "moving" && prev.type !== "wobbler") {
+    const accepted = solveFlatLaunchProofs(prev, target).filter((proof) =>
+      proofAccepted(proof, profile),
+    );
+    const selected = selectVariantProofs(accepted, profile.proofVariants);
+    if (!selected) return null;
+    const [primary, ...variants] = selected;
+    return { ...primary, variants: [primary, ...variants].map(proofToVariant) };
+  }
+
   const primary = solveGoldenPath(
     prev,
     target,
@@ -326,7 +369,7 @@ function widenForHumanMargin(
     target.position[2] - prev.position[2],
   );
   const predicted = predictedLandingGap(prev, target, profile);
-  const estimatedMiss = prev.type === "standard" ? lateral : Math.abs(predicted - lateral);
+  const estimatedMiss = Math.abs(predicted - lateral);
   const variantMargin =
     Math.max(0, profile.proofVariants - 1) *
     profile.proofVariantSpread *
@@ -361,7 +404,10 @@ function ensureReachable(
   const attachProof = (proof: GoldenPathProof) => {
     prev.goldenPath = proof;
   };
-  const sourceCandidates = weightedSourceMechanics(rng, prev.type, profile);
+  const sourceCandidates =
+    (prev.routeIndex ?? -1) === 0
+      ? (["standard"] as const)
+      : weightedSourceMechanics(rng, prev.type, profile);
 
   /** Make prev reach `p` using whichever source mechanic can prove the selected difficulty's
    *  variant count and impact-zone margins. */
@@ -422,10 +468,7 @@ function ensureReachable(
   const minK = gap > minLegalLateral ? minLegalLateral / gap : 1;
   let result = pad;
   if (sourceCandidates.some((type) => type !== "standard")) {
-    const maxGap =
-      prev.position[1] < STARTER_GUIDE_Y
-        ? STARTER_MAX_LATERAL
-        : Math.min(MAX_SUCCESSOR_LATERAL, 7 + prev.position[1] / 120);
+    const maxGap = legalMaxGap(prev);
     const projectedGap = clamp(predictedLandingGap(prev, pad, profile), minLegalLateral, maxGap);
     result = widenForHumanMargin(
       prev,
@@ -438,6 +481,32 @@ function ensureReachable(
       return result;
     }
   }
+
+  const maxLegalGap = legalMaxGap(prev);
+  const gapCandidates: number[] = [];
+  const addGap = (candidate: number) => {
+    const bounded = clamp(candidate, minLegalLateral, maxLegalGap);
+    if (gapCandidates.every((g) => Math.abs(g - bounded) > 0.05)) gapCandidates.push(bounded);
+  };
+  addGap(gap);
+  addGap(predictedLandingGap(prev, pad, profile));
+  for (let k = 0; k <= 1.0001; k += 0.08) {
+    addGap(minLegalLateral + (maxLegalGap - minLegalLateral) * k);
+  }
+  gapCandidates.sort((a, b) => Math.abs(a - gap) - Math.abs(b - gap));
+  for (const candidateGap of gapCandidates) {
+    result = widenForHumanMargin(
+      prev,
+      withPosition(pad, [px + dirX * candidateGap, pad.position[1], pz + dirZ * candidateGap]),
+      profile,
+    );
+    const proof = proveAt(result);
+    if (proof) {
+      attachProof(proof);
+      return result;
+    }
+  }
+
   const fractions = [1, 0.85, 0.7, 0.55, 0.4, 0.25, 0.1, minK]
     .map((k) => Math.max(minK, k))
     .filter((k, i, xs) => i === 0 || Math.abs(k - xs[i - 1]) > 0.001);
@@ -461,11 +530,12 @@ function ensureReachable(
   const fallbackMaxGap =
     prev.position[1] < STARTER_GUIDE_Y
       ? STARTER_MAX_LATERAL
-      : Math.min(MAX_SUCCESSOR_LATERAL, 7 + prev.position[1] / 120);
-  const fallbackGap =
-    prev.type === "standard"
-      ? minLegalLateral
-      : clamp(predictedLandingGap(prev, pad, profile), minLegalLateral, fallbackMaxGap);
+      : Math.min(MAX_SUCCESSOR_LATERAL, 9 + prev.position[1] / 100);
+  const fallbackGap = clamp(
+    predictedLandingGap(prev, pad, profile),
+    minLegalLateral,
+    fallbackMaxGap,
+  );
   result = withPosition(
     {
       ...pad,

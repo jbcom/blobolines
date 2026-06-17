@@ -91,8 +91,8 @@ export function cameraLookTarget(
   const target = routeFocus(upcomingRoutePads(groundY, pads));
   if (!target) return base;
 
-  const lateralBlend = 0.44 * slowFactor;
-  const verticalBlend = 0.72 * slowFactor;
+  const lateralBlend = 0.48 * slowFactor;
+  const verticalBlend = 0.58 * slowFactor;
   return [
     base[0] + (target.x - base[0]) * lateralBlend,
     base[1] + (target.y - base[1]) * verticalBlend,
@@ -270,8 +270,8 @@ export function CameraRig({ active }: { active: boolean }) {
       // and next two pads readable instead of staring upward through trampoline membranes.
       const pull = Math.min(speed / 26, 1);
       const rest = 1 - pull;
-      const camDist = 15 + rest * 7 + pull * 4;
-      const camHeight = 15 + rest * 5 + pull * 3;
+      const camDist = 13 + rest * 5 + pull * 4;
+      const camHeight = 12 + rest * 4 + pull * 4;
       const [routeX, routeZ] = cameraRouteDirection(diag.position, diag.groundY, pads);
       const [offX, offY, offZ] = cameraOrbitOffset([routeX, routeZ], camDist, camHeight, view);
 

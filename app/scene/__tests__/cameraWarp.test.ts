@@ -68,6 +68,7 @@ describe("camera pad lookahead", () => {
     const target = cameraLookTarget([0, 1.46, 0], 1.46, 0, [nextPad, followPad]);
     expect(target[0]).toBeGreaterThan(0);
     expect(target[1]).toBeGreaterThan(8);
+    expect(target[1]).toBeLessThan(9);
     expect(target[2]).toBeLessThan(0);
   });
 

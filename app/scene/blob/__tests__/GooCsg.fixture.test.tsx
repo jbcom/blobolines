@@ -3,10 +3,13 @@ import { afterEach, expect, test, vi } from "vitest";
 import { render } from "vitest-browser-react";
 import { setQualityPref } from "@/render/qualityBridge";
 import type { Droplet } from "@/render/vfx";
-import { setBlobDiagnostics } from "@/state";
+import { setAim, setBlobDiagnostics } from "@/state";
 import { GooCsg } from "../GooCsg";
 
-afterEach(() => setQualityPref("auto"));
+afterEach(() => {
+  setQualityPref("auto");
+  setAim(null);
+});
 
 // Visual fixture: the CSG goo body must paint real pixels in a WebGL context AND survive
 // the droplet-union chain without erroring (regression guard for the three-bvh-csg
@@ -167,6 +170,46 @@ test("GooCsg renders a settled, sagging+lobed goo puddle at rest", async () => {
     () => {
       const canvas = document
         .querySelector('[data-testid="goocsg-rest-fixture"]')
+        ?.querySelector("canvas");
+      if (!canvas) throw new Error("canvas not mounted");
+      expect(canvas.toDataURL("image/png").length).toBeGreaterThan(4000);
+    },
+    { timeout: 6000, interval: 60 },
+  );
+});
+
+// Charged aiming should visibly bead the CSG body toward the selected launch vector. This
+// guards the expert-mode cue where Ultra Blobmare hides the parabola overlay and Blobby's
+// goo/face must carry more of the direction read.
+test("GooCsg renders a charged aim-direction bead", async () => {
+  setBlobDiagnostics({
+    position: [0, 0, 0],
+    velocity: [0, 0, 0],
+    speed: 0,
+    airborne: false,
+    expression: "idle",
+    squash: 1,
+    maxHeight: 0,
+    groundY: 0,
+    idleSeconds: 0,
+    excitement: 0,
+  });
+  setAim({ dir: [-0.75, 0.66, 0], charge: 1 });
+
+  const screen = await render(
+    <FixtureStage testId="goocsg-aim-bead-fixture" cameraDistance={5}>
+      <ambientLight intensity={1} />
+      <GooCsg skin="blue" blobRadius={0.85} getDroplets={() => []} />
+    </FixtureStage>,
+  );
+
+  await expect.element(screen.getByTestId("goocsg-aim-bead-fixture")).toBeInTheDocument();
+  await new Promise((r) => setTimeout(r, 200));
+
+  await vi.waitFor(
+    () => {
+      const canvas = document
+        .querySelector('[data-testid="goocsg-aim-bead-fixture"]')
         ?.querySelector("canvas");
       if (!canvas) throw new Error("canvas not mounted");
       expect(canvas.toDataURL("image/png").length).toBeGreaterThan(4000);

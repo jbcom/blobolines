@@ -29,6 +29,7 @@ export interface SeedRouteVerification {
   pairCount: number;
   requiredProofVariants: number;
   minProofVariants: number;
+  maxProofVariants: number;
   minLateralGap: number;
   minLipClearance: number;
   minLandingPrecision: number;
@@ -125,6 +126,7 @@ export function verifySeedRoute({
   let minLipClearance = Number.POSITIVE_INFINITY;
   let minLandingPrecision = Number.POSITIVE_INFINITY;
   let minProofVariants = Number.POSITIVE_INFINITY;
+  let maxProofVariants = 0;
 
   for (let i = 0; i < pads.length - 1; i++) {
     const source = pads[i];
@@ -147,6 +149,7 @@ export function verifySeedRoute({
     sourceModes[proof.sourceMode]++;
     const variants = proof.variants ?? [];
     minProofVariants = Math.min(minProofVariants, variants.length);
+    maxProofVariants = Math.max(maxProofVariants, variants.length);
     minLipClearance = Math.min(minLipClearance, proof.lipClearance);
     minLandingPrecision = Math.min(minLandingPrecision, proof.landingPrecision);
 
@@ -252,6 +255,7 @@ export function verifySeedRoute({
     pairCount: Math.max(0, pads.length - 1),
     requiredProofVariants: profile.proofVariants,
     minProofVariants: Number.isFinite(minProofVariants) ? minProofVariants : 0,
+    maxProofVariants,
     minLateralGap: Number.isFinite(minLateralGap) ? minLateralGap : 0,
     minLipClearance: Number.isFinite(minLipClearance) ? minLipClearance : 0,
     minLandingPrecision: Number.isFinite(minLandingPrecision) ? minLandingPrecision : 0,

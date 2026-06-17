@@ -24,7 +24,7 @@ Render regressions that only a real GPU context catches:
 - `app/scene/world/__tests__/SkyDome.fixture.test.tsx` — sky shader paints pixels
 - `app/scene/blob/__tests__/BlobActor.fixture.test.tsx` — gooey blob + eyes render
 - `app/scene/blob/__tests__/GooCsg.fixture.test.tsx` — merged CSG goo body renders and
-  survives rest/deform/refraction paths
+  survives rest/deform/refraction paths, including the charged aim-direction bead
 - `app/scene/world/__tests__/GoldenRoutePreview.fixture.test.tsx` — solid red route-proof
   parabola renders from stored golden-path samples for the dev harness
 - `app/views/hud/__tests__/LaunchInput.browser.test.tsx` — launch surface, keyboard
@@ -49,8 +49,8 @@ end to end.
 
 `e2e/route-proof.spec.ts` is the **"is the dev-only route visibly proven?" gate**:
 it drives the real DEV route-proof sequence, waits for the eight timed JSON+PNG captures,
-asserts Easy generated three proof variants per pair, proves every landing is inside the
-target trampoline footprint, and pixel-checks each PNG for the solid red parabola/impact
+asserts Easy generated exactly three proof variants per pair, proves every landing is inside
+the target trampoline footprint, and pixel-checks each PNG for the solid red parabola/impact
 overlay. This keeps the visual proof harness honest without showing that answer key during
 normal play.
 
@@ -65,8 +65,10 @@ The harness also has **route proof sequence**: it steps through the first consec
 trampoline pairs, enables the solid red golden-path parabola for each pair, and writes
 `artifacts/route-proof-XX-*.png` plus matching JSON. Those JSON files include the source
 pad, target pad, source mode, launch normal, samples, flight time, apex, landing, lip
-clearance, landing precision, compressed-arc score, difficulty, proof variant count, and the
-visible seed phrase needed to replay the tower.
+clearance, landing precision, compressed-arc score, difficulty, exact proof variant count,
+and the visible seed phrase needed to replay the tower. The CLI seed verifier reports the same
+upper/lower contract as `min-max/required`, for example `3-3/3` on Easy and `1-1/1` on One
+Wrong Move.
 
 ## Coverage gates
 
