@@ -256,14 +256,21 @@ export function Trampoline({ position, width, depth, type, cant, onImpact }: Tra
           <PadTypeDecor type={type} width={width} depth={depth} cant={cant} />
         </group>
         {/* Accumulating goo-splat decal — a transparent plane skimming the membrane top,
-            painted by the Canvas2D splat texture on each landing. polygonOffset lifts it
-            above the membrane to avoid z-fighting. */}
+            painted by the Canvas2D splat texture on each landing. WET-shaded (standard material,
+            low roughness + a little metalness) so the goo smear catches the scene light like the
+            wet membrane it sits on, instead of reading flat/unlit. The splat texture's alpha is
+            the mask; clearcoat keeps a wet sheen. polygonOffset lifts it above the membrane to
+            avoid z-fighting. */}
         <mesh position={[0, THICKNESS / 2 + 0.02 + 0.1, 0]} rotation={[-Math.PI / 2, 0, 0]}>
           <planeGeometry args={[width * 0.92, depth * 0.92]} />
-          <meshBasicMaterial
+          <meshPhysicalMaterial
             map={splat.texture}
             transparent
             depthWrite={false}
+            roughness={0.25}
+            metalness={0.1}
+            clearcoat={0.8}
+            clearcoatRoughness={0.15}
             polygonOffset
             polygonOffsetFactor={-1}
           />
