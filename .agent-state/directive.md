@@ -413,7 +413,11 @@ game — touch/drag is primary; keyboard is a minor desktop-only secondary, don'
       recolor-by-kind on event. Browser fixture covers both kinds. (Also folded the review fix:
       BlobActor's idle sag/lobe is now guarded `if (!live)` so it can't clobber GooCsg's
       physics-driven sag.)
-- [ ] Speed lines / motion streaks above a velocity threshold (PostFX/overlay).
+- [x] Speed lines: SpeedLines DOM overlay — radial white motion streaks (repeating-conic
+      gradient masked to a vignette ring, clear center) that fade in above a velocity threshold
+      (14→34 m/s) and out at rest, opacity smoothed in a rAF loop reading blob speed off the
+      diagnostics bridge (no React re-render). Fully off under prefers-reduced-motion. Browser
+      fixture asserts ramp-in at speed + fade-out at rest.
 - [ ] Continuous tapered trail ribbon behind the airborne blob (igniting toward flame at high combo), replacing sparse trail dots.
 - [x] Crystal sparkle glint + collect burst: each gem now TWINKLES (per-instance brightness
       pulse, phase-offset by id, with a sharp sin^8 sparkle spike) baked into its instance color;

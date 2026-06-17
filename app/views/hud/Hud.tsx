@@ -6,6 +6,7 @@ import { MilestoneBanner } from "./MilestoneBanner";
 import { Onboarding } from "./Onboarding";
 import { PowerUpBadges } from "./PowerUpBadges";
 import { ScreenFlash } from "./ScreenFlash";
+import { SpeedLines } from "./SpeedLines";
 
 /**
  * In-game HUD layout. Top row: altimeter (left), combo (center), crystals (right),
@@ -21,6 +22,8 @@ export function Hud() {
       <MilestoneBanner />
       {/* full-screen flash layer: gold combo / blue launch / red near-death */}
       <ScreenFlash />
+      {/* radial motion streaks that fade in at high blob speed */}
+      <SpeedLines />
       {/* first-run drag-to-launch coachmark (until the first launch) */}
       <Onboarding />
       {/* Readouts are ANCHORED to the safe-area corners, NOT stretched across the row. On a
