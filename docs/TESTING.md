@@ -16,7 +16,8 @@ parabola proofs, launch/combo/collect math, ECS traits, design tokens. Fast, no 
 Determinism is explicitly tested (same seed → same sequence; fixed-timestep reproducibility).
 Lives next to the code in `__tests__/`. `app/scene/blob/__tests__/TrajectoryPreview.test.ts`
 also locks the difficulty-gated aim-assist ladder: endpoint reticles below Blobmare,
-arc-only Blobmare, no parabola on Ultra Blobmare and up.
+arc-only Blobmare, no parabola on Ultra Blobmare and up, and the active-tier progression rule
+that prevents an Easy-starting run from keeping Easy aim hints after it graduates.
 
 ## Browser fixtures — `pnpm test:browser` (Vitest browser mode, real Chromium + WebGL)
 
@@ -31,6 +32,8 @@ Render regressions that only a real GPU context catches:
   steering, and air-steer reticle behavior
 - `app/views/hud/__tests__/NextPadRadar.browser.test.tsx` — next-target direction,
   vertical gap, distance, and hidden state when no target exists
+- `app/views/hud/__tests__/DifficultyMeter.browser.test.tsx` — active difficulty tier,
+  metres to the next transition, and final-cadence state
 - `app/views/hud/__tests__/RouteLandingToast.browser.test.tsx` — route-quality toast shows
   the landing grade/style bonus and clears itself
 - `app/scene/__tests__/physics.fixture.test.tsx` — **Rapier physics regression**: a body
@@ -65,11 +68,12 @@ The harness also has **route proof sequence**: it steps through the first consec
 trampoline pairs, enables the solid red golden-path parabola for each pair, and writes
 `artifacts/route-proof-XX-*.png` plus matching JSON. Those JSON files include the source
 pad, target pad, source mode, launch normal, samples, flight time, apex, landing, lip
-clearance, landing precision, compressed-arc score, starting difficulty, exact active proof
-variant count, and the visible seed phrase needed to replay the tower. The CLI seed verifier
-reports the same upper/lower contract as `actual-min-actual-max/required-min-required-max`;
-for example a short Easy opening can report `3-3/3-3`, while a longer Easy-starting route
-that has progressed into Medium can report `2-3/2-3`.
+clearance, landing precision, compressed-arc score, starting difficulty, active difficulty,
+next transition, exact active proof variant count, and the visible seed phrase needed to
+replay the tower. The CLI seed verifier reports the same upper/lower contract as
+`actual-min-actual-max/required-min-required-max`; for example a short Easy opening can
+report `3-3/3-3`, while a longer Easy-starting route that has progressed into Medium can
+report `2-3/2-3`.
 
 ## Coverage gates
 

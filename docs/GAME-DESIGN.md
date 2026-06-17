@@ -99,15 +99,19 @@ seed and generator, but they are not mounted as normal player HUD.
 
 The selected difficulty is the starting cadence, not a permanent lock. As altitude increases,
 the effective route profile advances through the later modes; the HUD flashes labels like
-`MEDIUM!!!` and `HARD!!!` when that transition happens. The Easy opener is seeded and
-proof-gated rather than fixed, but the opening guide forces readable same-side stepping pads,
-forgiving footprints, visible lateral separation, compact vertical spacing, and early canted/
-wobbler route mechanics so the player is not asked to solve a tool-assisted flat-to-flat
-stack. Sliders are withheld during the Easy profile and unlock once the effective route
-difficulty has progressed beyond Easy. Pads still shrink with altitude (difficulty curve),
-while each effective difficulty profile sets its own lip-clearance, landing-precision,
-cant-angle, footprint scale, shape variety, proof-variant count, turn-angle budget, and
-compressed-arc rules.
+`MEDIUM!!!` and `HARD!!!` when that transition happens and keeps a compact active-tier meter
+under the altimeter so the player can read the current cadence and distance to the next
+transition. Guidance follows the same active tier: reticles remain only through Hard,
+Blobmare keeps the arc without the landing reticle, and Ultra Blobmare / One Wrong Move hide
+the parabola entirely even if the player started the run on Easy. The Easy opener is seeded
+and proof-gated rather than fixed, but the opening guide forces readable same-side stepping
+pads, forgiving footprints, visible lateral separation, compact vertical spacing, and early
+canted/wobbler route mechanics so the player is not asked to solve a tool-assisted
+flat-to-flat stack. Sliders are withheld during the Easy profile and unlock once the
+effective route difficulty has progressed beyond Easy. Pads still shrink with altitude
+(difficulty curve), while each effective difficulty profile sets its own lip-clearance,
+landing-precision, cant-angle, footprint scale, shape variety, proof-variant count,
+turn-angle budget, and compressed-arc rules.
 
 Visually, trampolines are not platform slabs: each pad renders as a round raised frame with
 radial laces and a suspended jelly membrane. Impacts depress and tilt only the membrane, so

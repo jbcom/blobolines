@@ -2,6 +2,7 @@ import { Altimeter } from "./Altimeter";
 import { ComboBadge } from "./ComboBadge";
 import { CrystalCounter } from "./CrystalCounter";
 import { DifficultyBanner } from "./DifficultyBanner";
+import { DifficultyMeter } from "./DifficultyMeter";
 import { LaunchInput } from "./LaunchInput";
 import { MilestoneBanner } from "./MilestoneBanner";
 import { NextPadRadar } from "./NextPadRadar";
@@ -50,6 +51,7 @@ export function Hud() {
           }}
         >
           <Altimeter />
+          <DifficultyMeter />
         </div>
         {/* top-center: combo + power-ups. Capped to the center ~40vw so a wide high-tier "ON
             FIRE" badge (which also scales by --ui-scale) can't grow into the corner readouts on

@@ -3,26 +3,15 @@ import { useEffect, useRef, useState } from "react";
 import { duckMusic, playMilestone } from "@/audio";
 import type { WorldDifficulty } from "@/core/types";
 import {
-  effectiveRouteDifficulty,
+  difficultyRank,
   flash,
+  routeDifficultyProgress,
   routeProfile,
   useGameStore,
   useWorldStore,
 } from "@/state";
 
-const DIFFICULTY_ORDER: readonly WorldDifficulty[] = [
-  "ready",
-  "medium",
-  "hard",
-  "blobmare",
-  "ultraBlobmare",
-  "oneWrongMove",
-];
 const BANNER_MS = 1800;
-
-function difficultyRank(difficulty: WorldDifficulty): number {
-  return DIFFICULTY_ORDER.indexOf(difficulty);
-}
 
 function shoutLabel(difficulty: WorldDifficulty): string {
   return `${routeProfile(difficulty).label.toUpperCase()}!!!`;
@@ -32,7 +21,7 @@ export function DifficultyBanner() {
   const phase = useGameStore((s) => s.phase);
   const height = useGameStore((s) => Math.max(0, s.run.height));
   const startingDifficulty = useWorldStore((s) => s.difficulty);
-  const current = effectiveRouteDifficulty(startingDifficulty, height);
+  const current = routeDifficultyProgress(startingDifficulty, height).current;
   const last = useRef<WorldDifficulty>(current);
   const [shown, setShown] = useState<WorldDifficulty | null>(null);
 

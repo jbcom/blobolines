@@ -17,6 +17,24 @@ export interface RouteDifficultyProfile {
   typeWeights: Partial<Record<TrampType, number>>;
 }
 
+export interface RouteDifficultyProgress {
+  starting: WorldDifficulty;
+  current: WorldDifficulty;
+  next: WorldDifficulty | null;
+  /** 0-based active tier index in ROUTE_DIFFICULTIES. */
+  currentIndex: number;
+  /** Metres where the current tier began for this run's selected starting difficulty. */
+  tierStartMeters: number;
+  /** Metres where the next tier begins, or null when already at the final tier. */
+  nextAtMeters: number | null;
+  /** Metres climbed inside the current tier. */
+  metersIntoTier: number;
+  /** Metres until the next tier, or 0 when already at the final tier. */
+  metersToNext: number;
+  /** 0..1 progress through the current tier's altitude band. */
+  progress: number;
+}
+
 export const ROUTE_DIFFICULTIES: readonly WorldDifficulty[] = [
   "ready",
   "medium",
@@ -29,6 +47,10 @@ export const ROUTE_DIFFICULTIES: readonly WorldDifficulty[] = [
 const DIFFICULTY_ORDER = new Map<WorldDifficulty, number>(
   ROUTE_DIFFICULTIES.map((difficulty, index) => [difficulty, index]),
 );
+
+export function difficultyRank(difficulty: WorldDifficulty): number {
+  return DIFFICULTY_ORDER.get(difficulty) ?? 0;
+}
 
 const PROGRESSION_METERS: Record<WorldDifficulty, readonly number[]> = {
   ready: [0, 520, 1200, 2200, 3600, 5600],
@@ -204,11 +226,37 @@ export function effectiveRouteDifficulty(
   startingDifficulty: WorldDifficulty,
   heightMeters: number,
 ): WorldDifficulty {
-  const startIndex = DIFFICULTY_ORDER.get(startingDifficulty) ?? 0;
+  return routeDifficultyProgress(startingDifficulty, heightMeters).current;
+}
+
+export function routeDifficultyProgress(
+  startingDifficulty: WorldDifficulty,
+  heightMeters: number,
+): RouteDifficultyProgress {
+  const height = Math.max(0, heightMeters);
+  const startIndex = difficultyRank(startingDifficulty);
   const progression = PROGRESSION_METERS[startingDifficulty];
   let step = 0;
   for (let i = 0; i < progression.length; i++) {
-    if (heightMeters >= (progression[i] ?? 0)) step = i;
+    if (height >= (progression[i] ?? 0)) step = i;
   }
-  return ROUTE_DIFFICULTIES[Math.min(ROUTE_DIFFICULTIES.length - 1, startIndex + step)];
+  const currentIndex = Math.min(ROUTE_DIFFICULTIES.length - 1, startIndex + step);
+  const current = ROUTE_DIFFICULTIES[currentIndex] ?? "oneWrongMove";
+  const next = ROUTE_DIFFICULTIES[currentIndex + 1] ?? null;
+  const tierStartMeters = progression[step] ?? 0;
+  const nextAtMeters = next ? (progression[step + 1] ?? null) : null;
+  const metersIntoTier = Math.max(0, height - tierStartMeters);
+  const metersToNext = nextAtMeters === null ? 0 : Math.max(0, nextAtMeters - height);
+  const span = nextAtMeters === null ? 0 : Math.max(1, nextAtMeters - tierStartMeters);
+  return {
+    starting: startingDifficulty,
+    current,
+    next,
+    currentIndex,
+    tierStartMeters,
+    nextAtMeters,
+    metersIntoTier,
+    metersToNext,
+    progress: nextAtMeters === null ? 1 : Math.max(0, Math.min(1, metersIntoTier / span)),
+  };
 }

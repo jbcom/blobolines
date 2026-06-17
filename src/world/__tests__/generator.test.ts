@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { createRng } from "@/core/math";
-import { effectiveRouteDifficulty, routeProfile } from "../difficulty";
+import { effectiveRouteDifficulty, routeDifficultyProgress, routeProfile } from "../difficulty";
 import { generateUpTo, starterPad } from "../generator";
 import { reaches } from "../reachable";
 
@@ -95,6 +95,26 @@ describe("world generator", () => {
     expect(effectiveRouteDifficulty("ready", 1300)).toBe("hard");
     expect(effectiveRouteDifficulty("ultraBlobmare", 0)).toBe("ultraBlobmare");
     expect(effectiveRouteDifficulty("ultraBlobmare", 1900)).toBe("oneWrongMove");
+  });
+
+  it("reports normalized progress toward the next effective difficulty", () => {
+    const opening = routeDifficultyProgress("ready", 260);
+    expect(opening.current).toBe("ready");
+    expect(opening.next).toBe("medium");
+    expect(opening.nextAtMeters).toBe(520);
+    expect(opening.metersToNext).toBe(260);
+    expect(opening.progress).toBeCloseTo(0.5);
+
+    const graduated = routeDifficultyProgress("ready", 1220);
+    expect(graduated.current).toBe("hard");
+    expect(graduated.next).toBe("blobmare");
+    expect(graduated.tierStartMeters).toBe(1200);
+    expect(graduated.metersIntoTier).toBe(20);
+
+    const maxed = routeDifficultyProgress("oneWrongMove", 9999);
+    expect(maxed.current).toBe("oneWrongMove");
+    expect(maxed.next).toBeNull();
+    expect(maxed.progress).toBe(1);
   });
 
   it("shrinks pads with altitude (difficulty curve)", () => {
