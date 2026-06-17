@@ -519,7 +519,13 @@ game — touch/drag is primary; keyboard is a minor desktop-only secondary, don'
       gets renderOrder=1 so it adds light over the shadow, not under it. (Noted: per-type
       MeshPhysicalMaterial clearcoat+sheen may need shader pre-warm if mobile hitches appear —
       bounded by the render window for now.)
-- [ ] Biome environment geometry per stratum (parallax hills/islands/satellites), altitude-windowed (BiomeGeometry).
+- [x] Biome environment geometry per stratum (BiomeGeometry): three far-back parallax silhouette
+      layers — rolling hills along the ground horizon, drifting floating islands in the mid sky,
+      tumbling satellites/debris in space — each one InstancedMesh placed deep in -Z, wrapped into
+      a tall column around the blob, altitude-windowed (triangular fade per band) so only the
+      relevant stratum shows. Deterministic/seeded, decorative (no physics/per-pad cost), tinted
+      from the palette. Mounted in GameScene (playing-only) behind the SkyDome + BiomeProps decor.
+      Browser fixture renders all three bands (ground/mid/space) in WebGL.
 - [x] Expressive eyes: pupils now DART toward the blob's travel direction (live velocity), so
       the eyes track where it's heading — a strong life cue (clamped within the sclera; menu hero
       stays centered). The eyes already had a glossy sclera + glint highlight and per-expression

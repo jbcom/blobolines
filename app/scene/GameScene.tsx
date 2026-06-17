@@ -14,6 +14,7 @@ import { CameraRig } from "./CameraRig";
 import { PostFX } from "./postfx";
 import { TrampolineField } from "./trampoline";
 import {
+  BiomeGeometry,
   BiomeProps,
   BlobCaustic,
   BlobFollowLight,
@@ -61,6 +62,7 @@ export function GameScene() {
 
       {/* Crystals + power-ups are not physics bodies and have no async deps — render
           outside the Physics Suspense boundary so they can never unmount the blob/pads. */}
+      {playing && <BiomeGeometry />}
       {playing && <BiomeProps />}
       {playing && <BlobFollowLight />}
       {playing && <BlobShadow />}
