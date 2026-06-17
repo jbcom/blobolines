@@ -45,8 +45,12 @@ export interface PlayerProgress {
 /** User-tunable settings. */
 export interface GameSettings {
   masterVolume: number;
-  /** SFX channel volume [0,1], independent of music. */
+  /** SFX bus volume [0,1], independent of music/ambient. */
   sfxVolume: number;
+  /** Music bus volume [0,1]. */
+  musicVolume: number;
+  /** Ambient bed bus volume [0,1]. */
+  ambientVolume: number;
   musicEnabled: boolean;
   slingshotSensitivity: number;
   haptics: boolean;

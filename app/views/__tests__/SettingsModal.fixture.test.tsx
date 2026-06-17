@@ -11,7 +11,8 @@ test("SettingsModal renders open with its controls", async () => {
   // Heading role disambiguates from the Radix sr-only Title/Description (also "Settings").
   await expect.element(screen.getByRole("heading", { name: "Settings" })).toBeVisible();
   await expect.element(screen.getByText("Master volume")).toBeVisible();
-  await expect.element(screen.getByText("Music")).toBeVisible();
+  // exact: disambiguate the "Music" toggle label from the "Music volume" slider row.
+  await expect.element(screen.getByText("Music", { exact: true })).toBeVisible();
 });
 
 // a11y: the Radix Slider/Switch controls must carry programmatic accessible names
@@ -21,6 +22,9 @@ test("SettingsModal controls have accessible names", async () => {
   await expect.element(screen.getByTestId("settings")).toBeVisible();
   await expect.element(screen.getByRole("slider", { name: "Master volume" })).toBeInTheDocument();
   await expect.element(screen.getByRole("slider", { name: "SFX volume" })).toBeInTheDocument();
+  // The three independent mix buses each get a slider.
+  await expect.element(screen.getByRole("slider", { name: "Music volume" })).toBeInTheDocument();
+  await expect.element(screen.getByRole("slider", { name: "Ambience volume" })).toBeInTheDocument();
   await expect
     .element(screen.getByRole("slider", { name: "Slingshot sensitivity" }))
     .toBeInTheDocument();

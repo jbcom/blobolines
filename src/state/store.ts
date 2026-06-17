@@ -53,6 +53,8 @@ export interface GameState {
 export const DEFAULT_SETTINGS: GameSettings = {
   masterVolume: 0.8,
   sfxVolume: 0.9,
+  musicVolume: 0.8,
+  ambientVolume: 0.7,
   musicEnabled: true,
   slingshotSensitivity: 1,
   haptics: true,

@@ -1,6 +1,12 @@
 import { Button, Dialog, Slider, Switch } from "@app/components/ui";
 import { useEffect, useState } from "react";
-import { setMasterVolume, setMusicEnabled, setSfxVolume } from "@/audio";
+import {
+  setAmbientVolume,
+  setMasterVolume,
+  setMusicEnabled,
+  setMusicVolume,
+  setSfxVolume,
+} from "@/audio";
 import { ImpactStyle, impact } from "@/platform";
 import { useGameStore } from "@/state";
 
@@ -62,6 +68,34 @@ export function SettingsModal({
             onValueChange={([v]) => {
               update({ sfxVolume: v });
               setSfxVolume(v);
+            }}
+          />
+        </Row>
+
+        <Row label="Music volume" value={`${Math.round(settings.musicVolume * 100)}%`}>
+          <Slider
+            aria-label="Music volume"
+            min={0}
+            max={1}
+            step={0.05}
+            value={[settings.musicVolume]}
+            onValueChange={([v]) => {
+              update({ musicVolume: v });
+              setMusicVolume(v);
+            }}
+          />
+        </Row>
+
+        <Row label="Ambience volume" value={`${Math.round(settings.ambientVolume * 100)}%`}>
+          <Slider
+            aria-label="Ambience volume"
+            min={0}
+            max={1}
+            step={0.05}
+            value={[settings.ambientVolume]}
+            onValueChange={([v]) => {
+              update({ ambientVolume: v });
+              setAmbientVolume(v);
             }}
           />
         </Row>
