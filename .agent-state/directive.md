@@ -524,7 +524,13 @@ game — touch/drag is primary; keyboard is a minor desktop-only secondary, don'
       bloom by tier (effects built as a filtered array so the composer never gets a false child);
       GooCsg caps blob segments by tier. This is the GATE the heavy effects (goo refraction, DOF,
       god rays) hook into — they land behind it next.
-- [ ] Selective (emissive-channel) bloom instead of global luminance threshold — only goo hotspots/flame/crystals/powerups glow.
+- [x] Selective (emissive) bloom: raised the bloom luminanceThreshold to 1.0 so ONLY HDR (>1)
+      pixels bloom — the emissive/toneMapped-off elements (crystal twinkle spikes, flame-tinted
+      goo at high combo, additive powerup auras + launch/landing rings) — not merely bright
+      diffuse surfaces like the lit sky. An emissive-selective glow WITHOUT the fragile
+      SelectiveBloom Selection wiring (which fought the EffectComposer reconciler — the same
+      class of crash the ref-on-effect approach caused). Verified: scene not washed out, glow
+      confined to the bright elements.
 - [x] Perpetual idle jiggle: a small constant uWobble floor (GooCsg IDLE_WOBBLE=0.12, BlobActor
       0.1) so the goo surface is ALWAYS subtly alive/shimmering, never perfectly still even at
       rest — the impact spike + resting breathe ride on top of it. Both menu hero + in-game blob.

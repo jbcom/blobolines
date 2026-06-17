@@ -63,12 +63,16 @@ export function PostFX({ playing }: { playing: boolean }) {
     // grounds the goo where it meets pads and where droplets fuse into the body.
     quality.ao ? <N8AO key="ao" /> : null,
     // Bloom strength scales by tier (low devices get a softer, cheaper bloom) + lifts with the
-    // altitude grade band (warm+soft ground → brighter+cooler+crisper space).
+    // altitude grade band (warm+soft ground → brighter+cooler+crisper space). Threshold raised
+    // to 1.0 so ONLY the HDR (>1) pixels bloom — i.e. the emissive/toneMapped-off elements
+    // (crystal twinkle spikes, flame-tinted goo, additive powerup auras + rings) — not merely
+    // bright diffuse surfaces like the lit sky. An emissive-channel-selective glow without the
+    // fragile SelectiveBloom Selection wiring (which fought the EffectComposer reconciler).
     <Bloom
       key="bloom"
-      intensity={(0.28 + grade * 0.5) * quality.bloom}
-      luminanceThreshold={0.85}
-      luminanceSmoothing={0.3}
+      intensity={(0.4 + grade * 0.5) * quality.bloom}
+      luminanceThreshold={1.0}
+      luminanceSmoothing={0.2}
       mipmapBlur
     />,
     <HueSaturation key="hue" saturation={0.08 + grade * 0.12} />,
