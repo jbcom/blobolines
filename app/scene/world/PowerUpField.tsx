@@ -6,6 +6,7 @@ import type { PowerUpType } from "@/core/types";
 import { activatePowerup, getBlobDiagnostics, useWorldStore } from "@/state";
 import { palette } from "@/styles/tokens";
 import { PowerUpModel } from "./PowerUpModel";
+import { PrimitivePowerup } from "./PrimitivePowerup";
 
 /**
  * PowerUpField — renders the generated power-ups (magnet = blue torus, thruster = orange
@@ -18,6 +19,7 @@ const AURA_COLOR: Record<PowerUpType, string> = {
   magnet: palette.tramp.blue,
   thruster: palette.tramp.orange,
   shield: palette.tramp.ice,
+  slowmo: palette.tramp.violet,
 };
 const FLASH_LIFE = 0.3; // seconds the collect flash plays
 
@@ -138,50 +140,5 @@ export function PowerUpField() {
         </group>
       ))}
     </group>
-  );
-}
-
-/** Primitive fallback (cone/torus) shown until the GLB model loads. */
-function PrimitivePowerup({ type }: { type: PowerUpType }) {
-  if (type === "magnet") {
-    return (
-      <mesh>
-        <torusGeometry args={[0.45, 0.16, 10, 24]} />
-        <meshStandardMaterial
-          color={palette.tramp.blue}
-          emissive={palette.tramp.blue}
-          emissiveIntensity={0.7}
-          roughness={0.2}
-        />
-      </mesh>
-    );
-  }
-  if (type === "shield") {
-    // A glowing protective orb (icy/cyan) — the one-shot second-life pickup.
-    return (
-      <mesh>
-        <icosahedronGeometry args={[0.45, 1]} />
-        <meshStandardMaterial
-          color={palette.tramp.ice}
-          emissive={palette.tramp.ice}
-          emissiveIntensity={0.6}
-          roughness={0.15}
-          metalness={0.3}
-          transparent
-          opacity={0.85}
-        />
-      </mesh>
-    );
-  }
-  return (
-    <mesh rotation={[Math.PI, 0, 0]}>
-      <coneGeometry args={[0.4, 0.9, 16]} />
-      <meshStandardMaterial
-        color={palette.tramp.orange}
-        emissive={palette.tramp.orange}
-        emissiveIntensity={0.7}
-        roughness={0.2}
-      />
-    </mesh>
   );
 }

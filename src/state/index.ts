@@ -37,7 +37,9 @@ export {
   POWERUP_DURATION,
   powerupRemaining,
   resetPowerups,
+  SLOWMO_SCALE,
   tickPowerups,
+  timeScale,
 } from "./powerupBridge";
 export {
   DEFAULT_PROGRESS,

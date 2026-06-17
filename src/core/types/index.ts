@@ -16,9 +16,12 @@ export type Vec3 = readonly [x: number, y: number, z: number];
 /** The blob's expressive eye state, driven by velocity + impact. */
 export type EyeExpression = "idle" | "blink" | "squint" | "wide" | "tear";
 
-/** Power-up kinds. magnet (pull crystals), thruster (skyward boost), shield (one-shot
- *  second-life — absorbs a fatal fall instead of dying). */
-export type PowerUpType = "magnet" | "thruster" | "shield";
+/** Every power-up kind — the single source of truth. magnet (pull crystals), thruster
+ *  (skyward boost), shield (one-shot second-life — absorbs a fatal fall), slowmo (bullet-
+ *  time — slows the sim to stretch the mid-air reaction window). PowerUpType derives from it
+ *  so the type and the runtime list can never drift apart. */
+export const POWERUP_TYPES = ["magnet", "thruster", "shield", "slowmo"] as const;
+export type PowerUpType = (typeof POWERUP_TYPES)[number];
 
 /** Crystal rarity tiers. Higher tiers are worth more crystals (and so more score), rarer,
  *  larger, and brighter — the reward for ranging off the safe line + climbing higher. */
@@ -86,5 +89,4 @@ export interface TrampolineSpec {
 }
 
 export const GAME_PHASES = ["menu", "playing", "gameover"] as const;
-export const POWERUP_TYPES = ["magnet", "thruster"] as const;
 export const EYE_EXPRESSIONS = ["idle", "blink", "squint", "wide", "tear"] as const;

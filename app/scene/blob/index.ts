@@ -4,6 +4,7 @@ export { BlobMouth } from "./BlobMouth";
 export { BlobTrail } from "./BlobTrail";
 export { FreeDroplets } from "./FreeDroplets";
 export { GooCsg } from "./GooCsg";
+export { PhysicsStepDriver } from "./PhysicsStepDriver";
 export { PlayerBlob } from "./PlayerBlob";
 export { SplatChunks } from "./SplatChunks";
 export { TrajectoryPreview } from "./TrajectoryPreview";

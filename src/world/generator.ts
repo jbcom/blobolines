@@ -178,10 +178,12 @@ export function generateUpTo(
 
     // ~12% of pads (above the forgiving start) float a power-up.
     if (y > 30 && rng.next() > 0.88) {
-      // Shield is the rarest (a prized one-shot second life) — ~1 in 5 power-ups; the rest
-      // split magnet/thruster.
+      // Spawn weighting: shield is the rarest (a prized one-shot second life) and slow-mo
+      // uncommon (bullet-time is strong), with the workhorse magnet/thruster splitting the
+      // rest. ~0.18 shield, ~0.18 slow-mo, ~0.32 magnet, ~0.32 thruster.
       const roll = rng.next();
-      const type: PowerUpType = roll < 0.2 ? "shield" : roll < 0.6 ? "magnet" : "thruster";
+      const type: PowerUpType =
+        roll < 0.18 ? "shield" : roll < 0.36 ? "slowmo" : roll < 0.68 ? "magnet" : "thruster";
       powerups.push({
         position: [
           x + (rng.next() - 0.5) * 1.5,

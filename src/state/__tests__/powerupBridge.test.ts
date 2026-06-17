@@ -7,7 +7,9 @@ import {
   POWERUP_DURATION,
   powerupRemaining,
   resetPowerups,
+  SLOWMO_SCALE,
   tickPowerups,
+  timeScale,
 } from "../powerupBridge";
 
 beforeEach(() => resetPowerups());
@@ -65,5 +67,30 @@ describe("powerupBridge", () => {
     activatePowerup("shield");
     resetPowerups();
     expect(hasShield()).toBe(false);
+  });
+
+  it("slow-mo is a normal timed buff (activates, ticks down, expires once)", () => {
+    expect(isPowerupActive("slowmo")).toBe(false);
+    activatePowerup("slowmo");
+    expect(isPowerupActive("slowmo")).toBe(true);
+    expect(powerupRemaining("slowmo")).toBe(POWERUP_DURATION.slowmo);
+    expect(tickPowerups(POWERUP_DURATION.slowmo - 0.1)).toEqual([]);
+    expect(tickPowerups(0.2)).toEqual(["slowmo"]);
+    expect(isPowerupActive("slowmo")).toBe(false);
+  });
+
+  it("timeScale dilates to SLOWMO_SCALE only while slow-mo is active", () => {
+    expect(timeScale()).toBe(1); // normal speed at rest
+    activatePowerup("slowmo");
+    expect(timeScale()).toBe(SLOWMO_SCALE); // bullet-time while held
+    tickPowerups(POWERUP_DURATION.slowmo); // run it out
+    expect(timeScale()).toBe(1); // back to normal speed
+  });
+
+  it("resetPowerups clears slow-mo (timeScale returns to 1)", () => {
+    activatePowerup("slowmo");
+    resetPowerups();
+    expect(timeScale()).toBe(1);
+    expect(isPowerupActive("slowmo")).toBe(false);
   });
 });

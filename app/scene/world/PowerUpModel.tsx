@@ -3,6 +3,7 @@ import { useMemo } from "react";
 import type { Material, Mesh, MeshStandardMaterial } from "three";
 import type { PowerUpType } from "@/core/types";
 import { palette } from "@/styles/tokens";
+import { PrimitivePowerup } from "./PrimitivePowerup";
 
 /**
  * GLB powerup models (3DLowPoly): a Space-Kit rocket for the hyper-thrust and a
@@ -38,26 +39,9 @@ const url = (file: string) => `${import.meta.env.BASE_URL}assets/models/${file}`
 
 export function PowerUpModel({ type }: { type: PowerUpType }) {
   // Dispatch (no hook above this) so the GLB component's useGLTF is never called conditionally.
-  // Shield (and any future model-less type) has no GLB → render a simple glowing orb.
-  return hasModel(type) ? <GlbModel type={type} /> : <ShieldOrb />;
-}
-
-/** A model-less power-up rendered as a glowing icy orb (the shield's second-life pickup). */
-function ShieldOrb() {
-  return (
-    <mesh>
-      <icosahedronGeometry args={[0.45, 1]} />
-      <meshStandardMaterial
-        color={palette.tramp.ice}
-        emissive={palette.tramp.ice}
-        emissiveIntensity={0.6}
-        roughness={0.15}
-        metalness={0.3}
-        transparent
-        opacity={0.85}
-      />
-    </mesh>
-  );
+  // Model-less types (shield, slow-mo) render their shared primitive — same look as the
+  // Suspense fallback, so there's no orb/gem duplication to drift.
+  return hasModel(type) ? <GlbModel type={type} /> : <PrimitivePowerup type={type} />;
 }
 
 /** A GLB-backed power-up (magnet/thruster) — useGLTF is called unconditionally here. */

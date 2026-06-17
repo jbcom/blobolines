@@ -45,3 +45,41 @@ test("PowerUpField renders a power-up with its attract aura", async () => {
     { timeout: 6000, interval: 60 },
   );
 });
+
+// Slow-mo is a model-less power-up: it renders its shared primitive (the violet "time
+// crystal" octahedron) directly — no GLB, no Suspense swap — so the field must paint pixels
+// for it the same as for the GLB-backed magnet/thruster.
+test("PowerUpField renders the model-less slow-mo gem", async () => {
+  useWorldStore.setState({ powerups: [{ position: [0, 0, 0], type: "slowmo" }] });
+  setBlobDiagnostics({
+    position: [3, 0, 0],
+    velocity: [0, 0, 0],
+    speed: 0,
+    airborne: true,
+    expression: "idle",
+    squash: 1,
+    maxHeight: 0,
+    groundY: 0,
+  });
+
+  const screen = await render(
+    <FixtureStage testId="slowmo-fixture" cameraDistance={5}>
+      <ambientLight intensity={1} />
+      <PowerUpField />
+    </FixtureStage>,
+  );
+
+  await expect.element(screen.getByTestId("slowmo-fixture")).toBeInTheDocument();
+  await new Promise((r) => setTimeout(r, 150));
+
+  await vi.waitFor(
+    () => {
+      const canvas = document
+        .querySelector('[data-testid="slowmo-fixture"]')
+        ?.querySelector("canvas");
+      if (!canvas) throw new Error("canvas not mounted");
+      expect(canvas.toDataURL("image/png").length).toBeGreaterThan(4000);
+    },
+    { timeout: 6000, interval: 60 },
+  );
+});

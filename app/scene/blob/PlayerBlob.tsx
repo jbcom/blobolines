@@ -37,6 +37,7 @@ import {
   resetPowerups,
   setBlobDiagnostics,
   tickPowerups,
+  timeScale,
   useGameStore,
   useWorldStore,
 } from "@/state";
@@ -119,8 +120,11 @@ export function PlayerBlob() {
     if (!body) return;
     // Clamp the frame delta: a tab-refocus / GC pause can spike rawDt to 1–2s, which would turn
     // the per-frame accel integrations (air-steer, wind, downdraft — all `v + a*dt`) into a huge
-    // one-frame velocity kick. Cap at 0.1s so a stall never launches the blob.
-    const dt = Math.min(rawDt, 0.1);
+    // one-frame velocity kick. Cap at 0.1s so a stall never launches the blob. `realDt` drives
+    // wall-clock-paced things (power-up timers, the danger heartbeat); `dt` is sim-scaled by the
+    // slow-mo time dilation so the gameplay force integrations slow in lockstep with the world.
+    const realDt = Math.min(rawDt, 0.1);
+    const dt = realDt * timeScale();
     const p = body.translation();
     const v = body.linvel();
     const airborne = Math.abs(v.y) > 0.5;
@@ -128,7 +132,7 @@ export function PlayerBlob() {
     // Power-up timers tick down; the hyper-thrust holds a strong upward velocity while
     // active (smashing the blob skyward), overriding gravity for its duration. A power-down
     // cue fires when one expires.
-    if (tickPowerups(dt).length > 0) playPowerdown();
+    if (tickPowerups(realDt).length > 0) playPowerdown();
     if (isPowerupActive("thruster")) {
       body.wakeUp();
       body.setLinvel({ x: v.x, y: 34, z: v.z }, true);
@@ -316,7 +320,7 @@ export function PlayerBlob() {
       const danger = (fallDepth - DEATH_FALL_DISTANCE * 0.5) / (DEATH_FALL_DISTANCE * 0.5);
       flash("red", danger);
       // Heartbeat: interval 0.45s → 0.12s as danger ramps 0→1; fire a short buzz each beat.
-      dangerBeat.current -= dt;
+      dangerBeat.current -= realDt;
       if (dangerBeat.current <= 0) {
         dangerBeat.current = 0.45 - danger * 0.33;
         // Respect the haptics setting (matches the landing-impact gate above).
