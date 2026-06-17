@@ -49,10 +49,10 @@ end to end.
 
 `e2e/route-proof.spec.ts` is the **"is the dev-only route visibly proven?" gate**:
 it drives the real DEV route-proof sequence, waits for the eight timed JSON+PNG captures,
-asserts Easy generated exactly three proof variants per pair, proves every landing is inside
-the target trampoline footprint, and pixel-checks each PNG for the solid red parabola/impact
-overlay. This keeps the visual proof harness honest without showing that answer key during
-normal play.
+asserts the opening Easy proof sequence generated exactly three proof variants per pair,
+proves every landing is inside the target trampoline footprint, and pixel-checks each PNG for
+the solid red parabola/impact overlay. This keeps the visual proof harness honest without
+showing that answer key during normal play.
 
 ## Dev harness (manual + tooling)
 
@@ -65,10 +65,11 @@ The harness also has **route proof sequence**: it steps through the first consec
 trampoline pairs, enables the solid red golden-path parabola for each pair, and writes
 `artifacts/route-proof-XX-*.png` plus matching JSON. Those JSON files include the source
 pad, target pad, source mode, launch normal, samples, flight time, apex, landing, lip
-clearance, landing precision, compressed-arc score, difficulty, exact proof variant count,
-and the visible seed phrase needed to replay the tower. The CLI seed verifier reports the same
-upper/lower contract as `min-max/required`, for example `3-3/3` on Easy and `1-1/1` on One
-Wrong Move.
+clearance, landing precision, compressed-arc score, starting difficulty, exact active proof
+variant count, and the visible seed phrase needed to replay the tower. The CLI seed verifier
+reports the same upper/lower contract as `actual-min-actual-max/required-min-required-max`;
+for example a short Easy opening can report `3-3/3-3`, while a longer Easy-starting route
+that has progressed into Medium can report `2-3/2-3`.
 
 ## Coverage gates
 

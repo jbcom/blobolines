@@ -1,6 +1,7 @@
 export { Altimeter } from "./Altimeter";
 export { ComboBadge } from "./ComboBadge";
 export { CrystalCounter } from "./CrystalCounter";
+export { DifficultyBanner } from "./DifficultyBanner";
 export { Hud } from "./Hud";
 export { MilestoneBanner } from "./MilestoneBanner";
 export { type NextPadGuidance, NextPadRadar, nextPadGuidance } from "./NextPadRadar";

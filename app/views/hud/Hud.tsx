@@ -1,6 +1,7 @@
 import { Altimeter } from "./Altimeter";
 import { ComboBadge } from "./ComboBadge";
 import { CrystalCounter } from "./CrystalCounter";
+import { DifficultyBanner } from "./DifficultyBanner";
 import { LaunchInput } from "./LaunchInput";
 import { MilestoneBanner } from "./MilestoneBanner";
 import { NextPadRadar } from "./NextPadRadar";
@@ -22,6 +23,8 @@ export function Hud() {
       <LaunchInput />
       {/* transient 100m-milestone celebration, centered over the canvas */}
       <MilestoneBanner />
+      {/* effective route difficulty bump: MEDIUM!!! HARD!!! etc. */}
+      <DifficultyBanner />
       {/* full-screen flash layer: gold combo / blue launch / red near-death */}
       <ScreenFlash />
       {/* route landing quality callout, fed by the certified golden-path scorer */}

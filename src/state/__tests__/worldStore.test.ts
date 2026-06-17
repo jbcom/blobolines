@@ -56,7 +56,7 @@ describe("worldStore.reset seeding", () => {
       expect(starter.goldenPath?.variants?.length).toBe(routeProfile("ready").proofVariants);
       const dy = next.position[1] - starter.position[1];
       const lateral = lateralGap(starter.position, next.position);
-      expect(dy).toBeLessThanOrEqual(9.35);
+      expect(dy).toBeLessThanOrEqual(7.2);
       expect(lateral).toBeGreaterThanOrEqual(3.55);
       expect(lateral).toBeLessThanOrEqual(10.45);
     }

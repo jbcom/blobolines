@@ -26,6 +26,19 @@ export const ROUTE_DIFFICULTIES: readonly WorldDifficulty[] = [
   "oneWrongMove",
 ];
 
+const DIFFICULTY_ORDER = new Map<WorldDifficulty, number>(
+  ROUTE_DIFFICULTIES.map((difficulty, index) => [difficulty, index]),
+);
+
+const PROGRESSION_METERS: Record<WorldDifficulty, readonly number[]> = {
+  ready: [0, 520, 1200, 2200, 3600, 5600],
+  medium: [0, 680, 1650, 3100, 5200],
+  hard: [0, 900, 2300, 4300],
+  blobmare: [0, 1300, 3400],
+  ultraBlobmare: [0, 1800],
+  oneWrongMove: [0],
+};
+
 export const ROUTE_PROFILES: Record<WorldDifficulty, RouteDifficultyProfile> = {
   ready: {
     difficulty: "ready",
@@ -42,7 +55,7 @@ export const ROUTE_PROFILES: Record<WorldDifficulty, RouteDifficultyProfile> = {
     minFootprint: 7.2,
     shapeVariety: 0.12,
     typeWeights: {
-      standard: 1.15,
+      standard: 0.55,
       moving: 2,
       canted: 2.15,
       wobbler: 1.5,
@@ -185,4 +198,17 @@ export function routeProfile(difficulty: WorldDifficulty): RouteDifficultyProfil
 
 export function routeCantAngle(profile: RouteDifficultyProfile, routeIndex: number): number {
   return profile.cantAnglesRad[routeIndex % profile.cantAnglesRad.length] ?? 0.42;
+}
+
+export function effectiveRouteDifficulty(
+  startingDifficulty: WorldDifficulty,
+  heightMeters: number,
+): WorldDifficulty {
+  const startIndex = DIFFICULTY_ORDER.get(startingDifficulty) ?? 0;
+  const progression = PROGRESSION_METERS[startingDifficulty];
+  let step = 0;
+  for (let i = 0; i < progression.length; i++) {
+    if (heightMeters >= (progression[i] ?? 0)) step = i;
+  }
+  return ROUTE_DIFFICULTIES[Math.min(ROUTE_DIFFICULTIES.length - 1, startIndex + step)];
 }

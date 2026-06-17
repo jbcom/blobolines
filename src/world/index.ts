@@ -1,5 +1,6 @@
 export { CRYSTAL_SCALE, CRYSTAL_VALUE, pickCrystalTier } from "./crystalTier";
 export {
+  effectiveRouteDifficulty,
   ROUTE_DIFFICULTIES,
   ROUTE_PROFILES,
   type RouteDifficultyProfile,
