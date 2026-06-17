@@ -13,7 +13,7 @@ import {
 import { PowerUpField } from "../PowerUpField";
 
 afterEach(() => {
-  useWorldStore.setState({ powerups: [], seed: 1 });
+  useWorldStore.setState({ powerups: [], seed: 1, seedPhrase: "seed-1", runId: 0 });
   resetPowerups();
 });
 
@@ -195,13 +195,18 @@ test("PowerUpField collects a power-up the blob is sitting on", async () => {
   });
 });
 
-// REGRESSION (reviewer-found): a tower EXTENSION replaces the powerups array with the SAME seed
+// REGRESSION (reviewer-found): a tower EXTENSION replaces the powerups array in the SAME run
 // every ~10m. A collected power-up must NOT be re-collected when that happens — the collect cue
 // fires exactly once even if the blob keeps sitting on it across an extension. (Earlier the
 // reset effect was keyed on `powerups`, so an extension wiped the taken-guard and re-fired the
-// buff; now it's keyed on `seed` + a durable collected set.)
+// buff; now it's keyed on `runId` + a durable collected set.)
 test("a collected power-up is not re-collected when the tower extends (same seed)", async () => {
-  useWorldStore.setState({ seed: 42, powerups: [{ position: [0, 0, 0], type: "magnet" }] });
+  useWorldStore.setState({
+    seed: 42,
+    seedPhrase: "seed-16",
+    runId: 100,
+    powerups: [{ position: [0, 0, 0], type: "magnet" }],
+  });
   setBlobDiagnostics({
     position: [0, 0, 0], // sitting on the power-up
     velocity: [0, 0, 0],
@@ -237,4 +242,44 @@ test("a collected power-up is not re-collected when the tower extends (same seed
   // at the burned-down value (never jump back to full), proving no re-collection / duplicate buff.
   await new Promise((r) => setTimeout(r, 300));
   expect(powerupRemaining("magnet")).toBe(afterCollect);
+});
+
+test("same-seed replay clears collected power-ups on a new run id", async () => {
+  useWorldStore.setState({
+    seed: 42,
+    seedPhrase: "seed-16",
+    runId: 200,
+    powerups: [{ position: [0, 0, 0], type: "magnet" }],
+  });
+  setBlobDiagnostics({
+    position: [0, 0, 0],
+    velocity: [0, 0, 0],
+    speed: 0,
+    airborne: true,
+    expression: "idle",
+    squash: 1,
+    maxHeight: 0,
+    groundY: 0,
+  });
+
+  await render(
+    <FixtureStage testId="same-seed-replay-fixture" cameraDistance={5}>
+      <ambientLight intensity={1} />
+      <PowerUpField />
+    </FixtureStage>,
+  );
+
+  await vi.waitFor(() => expect(isPowerupActive("magnet")).toBe(true), { timeout: 6000 });
+  tickPowerups(2);
+  expect(powerupRemaining("magnet")).toBeLessThan(POWERUP_DURATION.magnet);
+  resetPowerups();
+
+  useWorldStore.setState({
+    seed: 42,
+    seedPhrase: "seed-16",
+    runId: 201,
+    powerups: [{ position: [0, 0, 0], type: "magnet" }],
+  });
+
+  await vi.waitFor(() => expect(isPowerupActive("magnet")).toBe(true), { timeout: 6000 });
 });

@@ -9,6 +9,7 @@ describe("worldStore.reset seeding", () => {
   it("uses an explicit seed when given (reproducible / daily run)", () => {
     useWorldStore.getState().reset(42);
     expect(useWorldStore.getState().seed).toBe(42);
+    expect(useWorldStore.getState().seedPhrase).toBe("seed-16");
   });
 
   it("uses the selected difficulty when resetting a tower", () => {
@@ -18,14 +19,29 @@ describe("worldStore.reset seeding", () => {
     expect(useWorldStore.getState().difficulty).toBe("blobmare");
   });
 
-  it("advances the seed deterministically when none is given (no performance.now)", () => {
+  it("replays an explicit phrase seed", () => {
+    useWorldStore.getState().reset("bouncy-bright-blob", "ready");
+    const first = useWorldStore.getState();
+    const firstPads = first.trampolines.map((pad) => pad.position);
+    useWorldStore.getState().reset("bouncy-bright-blob", "ready");
+    expect(useWorldStore.getState().seedPhrase).toBe("bouncy-bright-blob");
+    expect(useWorldStore.getState().seed).toBe(first.seed);
+    expect(useWorldStore.getState().trampolines.map((pad) => pad.position)).toEqual(firstPads);
+  });
+
+  it("creates a fresh visible phrase when none is given", () => {
     useWorldStore.getState().reset(1);
     useWorldStore.getState().reset(); // derive from prev seed
-    const a = useWorldStore.getState().seed;
-    useWorldStore.getState().reset(1);
-    useWorldStore.getState().reset(); // same prior → same next
-    expect(useWorldStore.getState().seed).toBe(a);
-    expect(a).not.toBe(1);
+    const phrase = useWorldStore.getState().seedPhrase;
+    expect(phrase).toMatch(/^[a-z]+-[a-z]+-[a-z]+$/);
+    expect(phrase).not.toBe("seed-1");
+  });
+
+  it("increments run id even when replaying the same seed", () => {
+    useWorldStore.getState().reset("bouncy-bright-blob");
+    const runId = useWorldStore.getState().runId;
+    useWorldStore.getState().reset("bouncy-bright-blob");
+    expect(useWorldStore.getState().runId).toBe(runId + 1);
   });
 
   it("starts a fresh run with a visible successor pad from the starter", () => {

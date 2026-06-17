@@ -38,7 +38,13 @@ export type CrystalTier = "common" | "rare" | "radiant";
 
 /** Route-generation difficulty. Higher difficulties allow more precision flat arcs; lower
  *  difficulties bias the tower toward readable trampoline mechanics. */
-export type WorldDifficulty = "ready" | "medium" | "hard" | "blobmare" | "ultraBlobmare";
+export type WorldDifficulty =
+  | "ready"
+  | "medium"
+  | "hard"
+  | "blobmare"
+  | "ultraBlobmare"
+  | "oneWrongMove";
 
 /** A generated collectible crystal: where it floats + its rarity tier. */
 export interface CrystalSpec {

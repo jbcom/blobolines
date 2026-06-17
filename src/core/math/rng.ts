@@ -1,13 +1,17 @@
+import seedrandom from "seedrandom";
+
 /**
- * Deterministic RNG facade. The whole sim seeds from this — never `Math.random()`
- * (gates.json bans it in src/sim) so a given seed always replays identically.
+ * Deterministic RNG facade. The whole sim seeds from this, so all procedural gameplay and
+ * replay verification share one implementation instead of a local hash + PRNG mix.
  *
- * cyrb128 mixes a string seed, then XOR-folds its four lanes into a single 32-bit
- * seed for the mulberry32 stream (mulberry32 takes one u32 of state). This is a seed
- * normalizer, not a full 128-bit generator — folding trades a small collision risk for
- * simplicity; swap in xoshiro128** if a 128-bit state is ever needed.
- * Pattern adapted from arcade-cabinet (infinite-headaches/src/random/seedrandom.ts).
+ * Seeding is deliberately two-layered:
+ * 1. A player-visible seed phrase, usually adjective-adjective-noun, is canonicalized.
+ * 2. seedrandom.xor4096 derives the numeric id and all stream values from that phrase.
+ *
+ * Normal new games generate a fresh phrase; replay/dev/daily paths pass an explicit phrase.
  */
+
+export type SeedInput = number | string;
 
 export interface Rng {
   /** Float in [0, 1). */
@@ -20,52 +24,186 @@ export interface Rng {
   bool(p?: number): boolean;
   /** Random element of a non-empty array. */
   pick<T>(items: readonly T[]): T;
-  /** ±1 sign. */
+  /** +/-1 sign. */
   sign(): 1 | -1;
   /** Reset the stream back to the original seed. */
   reset(): void;
-  /** The numeric seed in use. */
+  /** The numeric seed id in use. */
   readonly seed: number;
+  /** The canonical phrase/input that produced this stream. */
+  readonly phrase: string;
 }
 
-/** cyrb128 — mixes a string and XOR-folds the four lanes into one u32 seed. */
-function cyrb128(str: string): number {
-  let h1 = 1779033703;
-  let h2 = 3144134277;
-  let h3 = 1013904242;
-  let h4 = 2773480762;
-  for (let i = 0; i < str.length; i++) {
-    const k = str.charCodeAt(i);
-    h1 = h2 ^ Math.imul(h1 ^ k, 597399067);
-    h2 = h3 ^ Math.imul(h2 ^ k, 2869860233);
-    h3 = h4 ^ Math.imul(h3 ^ k, 951274213);
-    h4 = h1 ^ Math.imul(h4 ^ k, 2716044179);
-  }
-  h1 = Math.imul(h3 ^ (h1 >>> 18), 597399067);
-  h2 = Math.imul(h4 ^ (h2 >>> 22), 2869860233);
-  h3 = Math.imul(h1 ^ (h3 >>> 17), 951274213);
-  h4 = Math.imul(h2 ^ (h4 >>> 19), 2716044179);
-  return (h1 ^ h2 ^ h3 ^ h4) >>> 0;
+const RNG_NS = "blobolines:rng";
+const SEED_ID_NS = "blobolines:seed-id";
+const PHRASE_NS = "blobolines:seed-phrase";
+const NUMERIC_SEED = /^seed-([0-9a-z]+)$/;
+
+const FIRST_ADJECTIVES = [
+  "bouncy",
+  "bubbly",
+  "candy",
+  "cheery",
+  "cosmic",
+  "dizzy",
+  "electric",
+  "floaty",
+  "glimmer",
+  "gooey",
+  "happy",
+  "jelly",
+  "lucky",
+  "melty",
+  "merry",
+  "neon",
+  "peppy",
+  "plucky",
+  "poppy",
+  "springy",
+  "sunny",
+  "tangy",
+  "twisty",
+  "zippy",
+] as const;
+
+const SECOND_ADJECTIVES = [
+  "amber",
+  "bright",
+  "charmed",
+  "coral",
+  "daring",
+  "dreamy",
+  "fizzy",
+  "golden",
+  "juicy",
+  "kind",
+  "lively",
+  "loopy",
+  "minty",
+  "nimble",
+  "plush",
+  "prismatic",
+  "radiant",
+  "rosy",
+  "silky",
+  "snappy",
+  "sparkly",
+  "squishy",
+  "tasty",
+  "wiggly",
+] as const;
+
+const NOUNS = [
+  "bean",
+  "blob",
+  "bounce",
+  "bubble",
+  "button",
+  "comet",
+  "dollop",
+  "drop",
+  "flubber",
+  "gumdrop",
+  "jelly",
+  "jumper",
+  "marble",
+  "mote",
+  "noodle",
+  "orbit",
+  "pebble",
+  "pogo",
+  "puddle",
+  "rocket",
+  "skipper",
+  "splash",
+  "spring",
+  "star",
+  "tumble",
+  "whirl",
+  "wobble",
+  "zest",
+] as const;
+
+/** Convert free-form seed text into the canonical replay phrase. */
+export function canonicalSeedPhrase(seed: string): string {
+  return (
+    seed
+      .trim()
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "")
+      .replace(/-{2,}/g, "-") || "seed-empty"
+  );
 }
 
-/** Normalize any seed (number or string) to an unsigned 32-bit integer. */
-export function normalizeSeed(seed: number | string): number {
+/** Numeric seeds keep exact legacy semantics while still having a replayable phrase form. */
+export function numericSeedPhrase(seed: number): string {
+  return `seed-${(seed >>> 0).toString(36)}`;
+}
+
+function seedPhrase(seed: SeedInput): string {
+  return typeof seed === "number" ? numericSeedPhrase(seed) : canonicalSeedPhrase(seed);
+}
+
+function numericFromPhrase(phrase: string): number | null {
+  const match = NUMERIC_SEED.exec(phrase);
+  if (!match) return null;
+  return Number.parseInt(match[1], 36) >>> 0;
+}
+
+/** Normalize any seed input to an unsigned 32-bit id. */
+export function normalizeSeed(seed: SeedInput): number {
   if (typeof seed === "number") return seed >>> 0;
-  return cyrb128(seed);
+  const phrase = canonicalSeedPhrase(seed);
+  const numeric = numericFromPhrase(phrase);
+  if (numeric !== null) return numeric;
+  return seedrandom.xor4096(`${SEED_ID_NS}:${phrase}`).int32() >>> 0;
 }
 
-/** Create a deterministic RNG from a numeric or string seed. */
-export function createRng(seed: number | string): Rng {
-  const base = normalizeSeed(seed);
-  let state = base;
+function prngInt(prng: seedrandom.PRNG, maxExclusive: number): number {
+  return Math.floor(prng() * maxExclusive);
+}
 
-  const next = (): number => {
-    state = (state + 0x6d2b79f5) | 0;
-    let t = state;
-    t = Math.imul(t ^ (t >>> 15), t | 1);
-    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
+function pickShuffled<T>(items: readonly T[], prng: seedrandom.PRNG): T {
+  const bag = [...items];
+  for (let i = bag.length - 1; i > 0; i--) {
+    const j = prngInt(prng, i + 1);
+    [bag[i], bag[j]] = [bag[j] as T, bag[i] as T];
+  }
+  return bag[0] as T;
+}
+
+/**
+ * Fresh adjective-adjective-noun phrase for a new run. With an explicit entropy value this is
+ * deterministic (tests/tools); without one seedrandom autoseeds so menu New Game gets variety.
+ */
+export function createSeedPhrase(entropy?: SeedInput): string {
+  const selector =
+    entropy === undefined
+      ? seedrandom.xor4096(undefined, { entropy: true })
+      : seedrandom.xor4096(`${PHRASE_NS}:select:${seedPhrase(entropy)}`);
+  const shuffleSeed = [selector.int32() >>> 0, selector.int32() >>> 0, selector.int32() >>> 0].join(
+    ":",
+  );
+  const shuffle = seedrandom.xor4096(`${PHRASE_NS}:shuffle:${shuffleSeed}`);
+
+  const first = pickShuffled(FIRST_ADJECTIVES, shuffle);
+  let second = pickShuffled(SECOND_ADJECTIVES, shuffle);
+  if (second === first) {
+    second = SECOND_ADJECTIVES.find((word) => word !== first) ?? second;
+  }
+  const noun = pickShuffled(NOUNS, shuffle);
+  return `${first}-${second}-${noun}`;
+}
+
+/** Create a deterministic RNG from a numeric seed or phrase. */
+export function createRng(seed: SeedInput): Rng {
+  const phrase = seedPhrase(seed);
+  const base = normalizeSeed(phrase);
+  const createStream = () => seedrandom.xor4096(`${RNG_NS}:${phrase}`);
+  let stream = createStream();
+
+  const next = (): number => stream();
 
   return {
     next,
@@ -84,8 +222,9 @@ export function createRng(seed: number | string): Rng {
     },
     sign: () => (next() < 0.5 ? -1 : 1),
     reset: () => {
-      state = base;
+      stream = createStream();
     },
     seed: base,
+    phrase,
   };
 }

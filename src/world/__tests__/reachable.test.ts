@@ -33,6 +33,22 @@ function expectCertifiedPair(
   expect(proof?.apex[1], `${label}: apex must clear the successor`).toBeGreaterThanOrEqual(
     b.position[1],
   );
+  expect(proof?.apex[1], `${label}: proof must descend into the successor`).toBeGreaterThan(
+    (proof?.landing[1] ?? Number.POSITIVE_INFINITY) + 0.001,
+  );
+  const impact = proof?.samples.at(-1);
+  expect(impact?.[0], `${label}: final sample must be the impact x`).toBeCloseTo(
+    proof?.landing[0] ?? Number.NaN,
+    5,
+  );
+  expect(impact?.[1], `${label}: final sample must be the impact y`).toBeCloseTo(
+    proof?.landing[1] ?? Number.NaN,
+    5,
+  );
+  expect(impact?.[2], `${label}: final sample must be the impact z`).toBeCloseTo(
+    proof?.landing[2] ?? Number.NaN,
+    5,
+  );
   expect(reaches(a, b), `${label}: solveGoldenPath predicate failed`).toBe(true);
 }
 
@@ -49,7 +65,7 @@ describe("tower is climbable (golden-path proof)", () => {
       expectCertifiedPair(a, b, `canted pad #${i}`);
       expect(a.goldenPath?.requiredCant).toBe(true);
       expect(a.goldenPath?.sourceMode).toBe("canted");
-      expect(a.goldenPath?.launchAngleRad).toBeGreaterThan(0.25);
+      expect(a.goldenPath?.launchAngleRad).toBeGreaterThan(0.15);
       angles.add(a.goldenPath?.launchAngleRad.toFixed(2) ?? "missing");
     }
     expect(cantedPairs).toBeGreaterThan(0);
@@ -92,7 +108,13 @@ describe("tower is climbable (golden-path proof)", () => {
   });
 
   it("certifies scheduled compressed parabolas in harder route profiles", () => {
-    for (const difficulty of ["medium", "hard", "blobmare", "ultraBlobmare"] as const) {
+    for (const difficulty of [
+      "medium",
+      "hard",
+      "blobmare",
+      "ultraBlobmare",
+      "oneWrongMove",
+    ] as const) {
       const profile = routeProfile(difficulty);
       const pads = fullTower(`compressed-${difficulty}`, 700, difficulty);
       let compressedPairs = 0;

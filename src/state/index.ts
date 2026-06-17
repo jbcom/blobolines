@@ -1,4 +1,10 @@
-export { nextRouteStep, type RouteStep, TARGET_ABOVE_GROUND } from "@/world";
+export {
+  nextRouteStep,
+  type RouteDifficultyProfile,
+  type RouteStep,
+  routeProfile,
+  TARGET_ABOVE_GROUND,
+} from "@/world";
 export { type BlobDiagnostics, getBlobDiagnostics, setBlobDiagnostics } from "./diagnostics";
 export {
   consumeFlash,

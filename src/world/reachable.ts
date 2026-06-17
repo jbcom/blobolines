@@ -1,4 +1,4 @@
-import { trampoline as trampCfg } from "@/config";
+import { launch as launchCfg, trampoline as trampCfg } from "@/config";
 import type { GoldenPathProof, TrampolineSpec, Vec3 } from "@/core/types";
 import { GRAVITY } from "@/sim/physics";
 
@@ -16,6 +16,8 @@ import { GRAVITY } from "@/sim/physics";
 /** Surface normal of a pad: its `cant` tilted, else straight up. Mirrors cantNormal but
  *  kept local + dependency-free so this stays a pure world-gen helper. */
 type SourceMode = GoldenPathProof["sourceMode"];
+const MOVING_ROUTE_LATERAL = 0.22;
+const WOBBLER_ROUTE_LATERAL = 0.24;
 
 function unitToward(a: TrampolineSpec, b: TrampolineSpec): readonly [number, number] {
   const dx = b.position[0] - a.position[0];
@@ -51,13 +53,16 @@ function sourceNormal(
 
   if (mode === "moving") {
     const [mx, mz] = unit2(pad.moveAxis ?? unitToward(pad, target));
-    const lateral = Math.min(0.5, (trampCfg.movingAmplitude * trampCfg.movingSpeed) / 12);
+    const lateral = Math.min(
+      MOVING_ROUTE_LATERAL,
+      (trampCfg.movingAmplitude * trampCfg.movingSpeed) / 12,
+    );
     return [lateral * mx, Math.sqrt(Math.max(0.01, 1 - lateral * lateral)), lateral * mz];
   }
 
   if (mode === "wobbler") {
     const [wx, wz] = unitToward(pad, target);
-    const lateral = Math.sin(trampCfg.wobblerMaxTiltRad);
+    const lateral = Math.min(WOBBLER_ROUTE_LATERAL, Math.sin(trampCfg.wobblerMaxTiltRad));
     return [lateral * wx, Math.sqrt(Math.max(0.01, 1 - lateral * lateral)), lateral * wz];
   }
 
@@ -68,14 +73,86 @@ function sourceNormal(
   return [(s * cx) / m, Math.cos(tilt), (s * cz) / m];
 }
 
+function clamp(n: number, min: number, max: number): number {
+  return Math.min(max, Math.max(min, n));
+}
+
+const MIN_CERTIFIED_SPEED = launchCfg.basePower;
+const MAX_CERTIFIED_SPEED =
+  (launchCfg.basePower + launchCfg.powerPerCharge) * launchCfg.perfectRelease.bonus;
+const APEX_MARGIN = 1.4;
+
+function heightClearanceSpeed(dy: number, normalY: number, g: number): number {
+  const minVertical = Math.sqrt(Math.max(0, 2 * g * Math.max(0, dy + APEX_MARGIN)));
+  return clamp(minVertical / Math.max(0.05, normalY), MIN_CERTIFIED_SPEED, MAX_CERTIFIED_SPEED);
+}
+
+function centeredImpactSpeed(
+  a: TrampolineSpec,
+  b: TrampolineSpec,
+  normal: Vec3,
+  dy: number,
+  g: number,
+): number | null {
+  const lateral = Math.hypot(normal[0], normal[2]);
+  if (lateral < 1e-5) return null;
+
+  const ux = normal[0] / lateral;
+  const uz = normal[2] / lateral;
+  const gapX = b.position[0] - a.position[0];
+  const gapZ = b.position[2] - a.position[2];
+  const along = gapX * ux + gapZ * uz;
+  if (along <= 0) return null;
+
+  const cross = Math.hypot(gapX - ux * along, gapZ - uz * along);
+  const halfFoot = Math.max(b.width, b.depth) * 0.5;
+  if (cross > halfFoot) return null;
+
+  const minSpeed = clamp(
+    Math.sqrt(Math.max(0, 2 * g * Math.max(0, dy))) / Math.max(0.05, normal[1]) + 0.01,
+    MIN_CERTIFIED_SPEED,
+    MAX_CERTIFIED_SPEED,
+  );
+  const landingAlong = (launchSpeed: number) => {
+    const vy = normal[1] * launchSpeed;
+    const disc = vy * vy - 2 * g * dy;
+    if (disc < 0) return Number.POSITIVE_INFINITY;
+    const flightTime = Math.max(0, (vy + Math.sqrt(disc)) / g);
+    return lateral * launchSpeed * flightTime;
+  };
+
+  if (landingAlong(minSpeed) > along || landingAlong(MAX_CERTIFIED_SPEED) < along) return null;
+
+  let lo = minSpeed;
+  let hi = MAX_CERTIFIED_SPEED;
+  for (let i = 0; i < 32; i++) {
+    const mid = (lo + hi) * 0.5;
+    if (landingAlong(mid) > along) hi = mid;
+    else lo = mid;
+  }
+  const speed = (lo + hi) * 0.5;
+  if (speed < MIN_CERTIFIED_SPEED || speed > MAX_CERTIFIED_SPEED) return null;
+  return speed;
+}
+
+function uniqueSpeeds(speeds: readonly (number | null | undefined)[]): number[] {
+  const result: number[] = [];
+  for (const speed of speeds) {
+    if (speed === null || speed === undefined || !Number.isFinite(speed)) continue;
+    const clamped = clamp(speed, MIN_CERTIFIED_SPEED, MAX_CERTIFIED_SPEED);
+    if (result.every((s) => Math.abs(s - clamped) > 0.01)) result.push(clamped);
+  }
+  return result;
+}
+
 /**
  * Can a launch off `a` reach `b`? `speed` is the rebound launch speed, `g` gravity magnitude,
  * `tiltRad` the canted tilt, `airSteerAccel` the lateral acceleration the player can apply
  * mid-air. This remains available for balance experiments, but the shipped golden path uses
  * solveGoldenPath() instead so the certified route can be drawn as a true parabola.
  *
- * Returns true if the ballistic arc clears B's height AND, by the time it reaches that
- * height, the launch's lateral reach PLUS the air-steer budget covers the lateral gap to B
+ * Returns true if the ballistic arc clears B's height AND, by the time it descends back to
+ * that height, the launch's lateral reach PLUS the air-steer budget covers the lateral gap to B
  * (minus B's half-footprint, since landing anywhere on B counts).
  */
 export function canReach(
@@ -91,12 +168,10 @@ export function canReach(
   const dy = b.position[1] - a.position[1];
   // Peak height reached: vy²/2g. Must clear the vertical gap to B.
   if (vy * vy < 2 * g * dy) return false;
-  // Time to FIRST reach B's height: the smaller root of dy = vy·t − ½g·t². When B is above A
-  // (dy>0, the climbing case) that's the ascending crossing. When B is at or below A (dy≤0)
-  // the small root is non-positive — the blob is already at/over B's height at launch — so
-  // clamp to t=0 (no time to drift laterally; only an essentially-overhead B is reachable).
+  // Time to IMPACT B's height: the larger root of dy = vy·t − ½g·t². The smaller root is the
+  // rising pass through the target height; using it "proves" routes that never actually land.
   const disc = vy * vy - 2 * g * dy;
-  const t = Math.max(0, (vy - Math.sqrt(Math.max(0, disc))) / g);
+  const t = Math.max(0, (vy + Math.sqrt(Math.max(0, disc))) / g);
   // Horizontal reach from the launch normal in that time...
   const reachX = n[0] * speed * t;
   const reachZ = n[2] * speed * t;
@@ -124,70 +199,81 @@ const PAD_SURFACE_Y = 0.72;
 
 /**
  * Construct the actual passive golden-path parabola from `a` to `b`, or null if the launch
- * does not land inside B's footprint. Unlike canReach(..., airSteer), this is a visible,
+ * does not descend into B's footprint. Unlike canReach(..., airSteer), this is a visible,
  * screenshotable route: the generated samples are the route the dev harness draws in red.
  */
 export function solveGoldenPath(
   a: TrampolineSpec,
   b: TrampolineSpec,
-  speed = CLIMB_SPEED,
+  speed?: number,
   g = G,
   tiltRad = TILT,
   requiredCant = a.type === "canted",
   sourceMode = inferredMode(a),
 ): GoldenPathProof | null {
   const n = sourceNormal(a, b, tiltRad, sourceMode);
-  const velocity: Vec3 = [n[0] * speed, n[1] * speed, n[2] * speed];
   const origin: Vec3 = [a.position[0], a.position[1] + PAD_SURFACE_Y, a.position[2]];
   const targetY = b.position[1] + PAD_SURFACE_Y;
   const dy = targetY - origin[1];
+  const candidates =
+    speed === undefined
+      ? uniqueSpeeds([
+          centeredImpactSpeed(a, b, n, dy, g),
+          heightClearanceSpeed(dy, n[1], g),
+          CLIMB_SPEED,
+        ])
+      : [speed];
+  for (const launchSpeed of candidates) {
+    const velocity: Vec3 = [n[0] * launchSpeed, n[1] * launchSpeed, n[2] * launchSpeed];
 
-  if (velocity[1] * velocity[1] < 2 * g * dy) return null;
-  const disc = velocity[1] * velocity[1] - 2 * g * dy;
-  const flightTime = Math.max(0, (velocity[1] - Math.sqrt(Math.max(0, disc))) / g);
-  const landing = trajectoryPoint(origin, velocity, g, flightTime);
-  const miss = Math.hypot(landing[0] - b.position[0], landing[2] - b.position[2]);
-  const halfFoot = Math.max(b.width, b.depth) * 0.5;
-  const clearance = halfFoot - miss;
-  if (clearance < 0) return null;
+    if (velocity[1] * velocity[1] < 2 * g * dy) continue;
+    const disc = velocity[1] * velocity[1] - 2 * g * dy;
+    const flightTime = Math.max(0, (velocity[1] + Math.sqrt(Math.max(0, disc))) / g);
+    const landing = trajectoryPoint(origin, velocity, g, flightTime);
+    const miss = Math.hypot(landing[0] - b.position[0], landing[2] - b.position[2]);
+    const halfFoot = Math.max(b.width, b.depth) * 0.5;
+    const clearance = halfFoot - miss;
+    if (clearance < 0) continue;
 
-  const apexTime = Math.max(0, Math.min(flightTime, velocity[1] / g));
-  const apex = trajectoryPoint(origin, velocity, g, apexTime);
-  const lipClearanceRatio = halfFoot > 0 ? clearance / halfFoot : 0;
-  const landingPrecision = halfFoot > 0 ? clamp01(1 - miss / halfFoot) : 1;
-  const apexClearance = Math.max(0, apex[1] - targetY);
-  const peakBudget = Math.max(1, (velocity[1] * velocity[1]) / (2 * g));
-  const arcCompression = clamp01(1 - apexClearance / peakBudget);
-  const launchAngleRad = Math.acos(Math.min(1, Math.max(-1, n[1])));
-  const samples: Vec3[] = [];
-  for (let i = 0; i <= SAMPLE_COUNT; i++) {
-    const t = flightTime * (i / SAMPLE_COUNT);
-    samples.push(trajectoryPoint(origin, velocity, g, t));
+    const apexTime = Math.max(0, Math.min(flightTime, velocity[1] / g));
+    const apex = trajectoryPoint(origin, velocity, g, apexTime);
+    const lipClearanceRatio = halfFoot > 0 ? clearance / halfFoot : 0;
+    const landingPrecision = halfFoot > 0 ? clamp01(1 - miss / halfFoot) : 1;
+    const apexClearance = Math.max(0, apex[1] - targetY);
+    const peakBudget = Math.max(1, (velocity[1] * velocity[1]) / (2 * g));
+    const arcCompression = clamp01(1 - apexClearance / peakBudget);
+    const launchAngleRad = Math.acos(Math.min(1, Math.max(-1, n[1])));
+    const samples: Vec3[] = [];
+    for (let i = 0; i <= SAMPLE_COUNT; i++) {
+      const t = flightTime * (i / SAMPLE_COUNT);
+      samples.push(trajectoryPoint(origin, velocity, g, t));
+    }
+    return {
+      toPadId: b.id,
+      launchNormal: n,
+      launchSpeed,
+      flightTime,
+      apex,
+      landing,
+      clearance,
+      samples,
+      requiredCant,
+      sourceMode,
+      launchAngleRad,
+      landingPrecision,
+      lipClearance: clearance,
+      lipClearanceRatio,
+      arcCompression,
+    };
   }
-  return {
-    toPadId: b.id,
-    launchNormal: n,
-    launchSpeed: speed,
-    flightTime,
-    apex,
-    landing,
-    clearance,
-    samples,
-    requiredCant,
-    sourceMode,
-    launchAngleRad,
-    landingPrecision,
-    lipClearance: clearance,
-    lipClearanceRatio,
-    arcCompression,
-  };
+  return null;
 }
 
 /**
  * Climb-tuning constants — the single source of truth the world generator and the climb proof
  * (reachable.test.ts) both use, so the placement rule and the playability check can never
- * drift apart. A sustained clean climb keeps the blob launching at ~CLIMB_SPEED; canted pads
- * use the configured tilt; the golden route itself is a visible passive parabola.
+ * drift apart. A proof may solve a lower per-pair launch speed to land on the descending side
+ * of the parabola; CLIMB_SPEED is retained as the upper tuning reference/fallback candidate.
  */
 export const CLIMB_SPEED = 30;
 const G = Math.abs(GRAVITY[1]);

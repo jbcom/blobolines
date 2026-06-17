@@ -6,6 +6,7 @@ import {
   getRouteProofTarget,
   type LaunchRequest,
   requestLaunch,
+  routeProfile,
   setAim,
   setRouteProofTarget,
   useGameStore,
@@ -59,6 +60,9 @@ export function DevHarness() {
       bestHeight: g.progress.bestHeight,
       trampolineCount: w.trampolines.length,
       highestGeneratedY: w.highestY,
+      seedPhrase: w.seedPhrase,
+      routeDifficulty: w.difficulty,
+      proofVariants: routeProfile(w.difficulty).proofVariants,
       routeProof: getRouteProofTarget(),
       blob: getBlobDiagnostics(),
     };

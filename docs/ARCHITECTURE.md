@@ -32,7 +32,7 @@ public surface; modules stay small and single-responsibility — no monolithic s
 
 | Package | Barrel | Responsibility |
 |---------|--------|----------------|
-| `src/core/math` | ✓ | `createRng` (cyrb128→mulberry32), clock facade, vec/lerp/spring helpers |
+| `src/core/math` | ✓ | `createRng` (seedrandom-backed), seed phrases, clock facade, vec/lerp/spring helpers |
 | `src/core/types` | ✓ | shared domain types (ids, enums, golden-path proof data) |
 | `src/config` | ✓ | all tunables as per-domain JSON + typed barrel (physics/blob/launch/trampoline/collect/goo/world/biomes/audio) |
 | `src/sim/physics` | ✓ | Rapier config, collision categories, spring/depress math (pure where possible) |
@@ -85,7 +85,7 @@ input (gesture/keyboard) → intents → src/state
 
 ## Determinism & testing
 
-- Same seed → same world & sim. `createRng(seed)` + clock facade make sim replayable.
+- Same seed phrase → same world & sim. `createRng(seed)` + clock facade make sim replayable.
 - Unit tests (happy-dom): sim/engine/factories/world/launch math.
 - Browser fixture tests (Chromium + WebGL): scene components render + screenshot.
 - Audio tests: before-init no-op contract (Howler).

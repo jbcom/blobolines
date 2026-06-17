@@ -1,5 +1,13 @@
 export { type Clock, type ClockOptions, createClock } from "./clock";
-export { createRng, normalizeSeed, type Rng } from "./rng";
+export {
+  canonicalSeedPhrase,
+  createRng,
+  createSeedPhrase,
+  normalizeSeed,
+  numericSeedPhrase,
+  type Rng,
+  type SeedInput,
+} from "./rng";
 export {
   clamp,
   damp,

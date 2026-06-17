@@ -58,7 +58,8 @@ The harness also has **route proof sequence**: it steps through the first consec
 trampoline pairs, enables the solid red golden-path parabola for each pair, and writes
 `artifacts/route-proof-XX-*.png` plus matching JSON. Those JSON files include the source
 pad, target pad, source mode, launch normal, samples, flight time, apex, landing, lip
-clearance, landing precision, and compressed-arc score.
+clearance, landing precision, compressed-arc score, difficulty, proof variant count, and the
+visible seed phrase needed to replay the tower.
 
 ## Coverage gates
 

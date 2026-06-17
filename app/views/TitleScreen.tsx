@@ -1,11 +1,12 @@
 import { Button, buttonVariants, Dialog } from "@app/components/ui";
-import { CalendarDays, Gauge, HelpCircle, Palette, Play, Settings } from "lucide-react";
+import { CalendarDays, Gauge, HelpCircle, Palette, Play, Settings, Shuffle } from "lucide-react";
 import { motion, useReducedMotion } from "motion/react";
 import { lazy, Suspense, useEffect, useState } from "react";
 import { initAudio, startMenuMusic, startMusic } from "@/audio";
+import { createSeedPhrase } from "@/core/math";
 import type { WorldDifficulty } from "@/core/types";
 import { cn } from "@/lib/utils";
-import { dailySeed } from "@/sim/daily";
+import { dailySeedPhrase } from "@/sim/daily";
 import { useGameStore, useWorldStore } from "@/state";
 import { ROUTE_DIFFICULTIES, ROUTE_PROFILES } from "@/world";
 
@@ -21,11 +22,12 @@ const SettingsModal = lazy(() =>
 );
 
 const DIFFICULTY_TONE: Record<WorldDifficulty, string> = {
-  ready: "Readable slider and canted routes with generous landing lips.",
+  ready: "Easy routes with generous landing lips and forgiving proof variance.",
   medium: "More canted chains and compressed arcs without precision flat stacks.",
   hard: "Occasional flat precision arcs with tighter route margins.",
   blobmare: "Fast pattern changes, cant chains, and thin landing windows.",
   ultraBlobmare: "Tool-assisted-feeling routes with very tight proof margins.",
+  oneWrongMove: "Starts at one-path precision and stays there.",
 };
 
 /**
@@ -45,6 +47,7 @@ export function TitleScreen() {
   const [manualOpen, setManualOpen] = useState(false);
   const [newGameOpen, setNewGameOpen] = useState(false);
   const [pendingDaily, setPendingDaily] = useState(false);
+  const [pendingSeedPhrase, setPendingSeedPhrase] = useState("");
 
   // Open the customizer on arrival if the game-over card requested it, then clear the flag.
   const customizerIntent = useGameStore((s) => s.customizerIntent);
@@ -71,14 +74,15 @@ export function TitleScreen() {
     void initAudio().then(startMusic);
     resetRun();
     setDailyRun(daily);
-    // The Date is read HERE (UI layer) and passed into the pure dailySeed — sim never calls
-    // new Date(). undefined seed = random reseed for a normal run.
-    resetWorld(daily ? dailySeed(new Date()) : undefined, routeDifficulty);
+    const seedPhrase =
+      pendingSeedPhrase || (daily ? dailySeedPhrase(new Date()) : createSeedPhrase());
+    resetWorld(seedPhrase, routeDifficulty);
     setPhase("playing");
     setNewGameOpen(false);
   };
   const chooseRun = (daily: boolean) => {
     setPendingDaily(daily);
+    setPendingSeedPhrase(daily ? dailySeedPhrase(new Date()) : createSeedPhrase());
     setNewGameOpen(true);
   };
   const play = () => chooseRun(false);
@@ -201,7 +205,28 @@ export function TitleScreen() {
           </div>
         </div>
 
-        <div className="mt-5 flex flex-col gap-2">
+        <div className="mt-4 flex items-center gap-2 rounded-lg border border-border bg-bg/30 p-2">
+          <div className="min-w-0 flex-1">
+            <div className="font-ui text-[10px] font-bold text-fg-subtle uppercase tracking-wide">
+              Seed
+            </div>
+            <div className="truncate font-display text-base font-bold text-cream tabular-nums">
+              {pendingSeedPhrase}
+            </div>
+          </div>
+          {!pendingDaily && (
+            <Button
+              variant="surface"
+              size="icon"
+              aria-label="Shuffle seed"
+              onClick={() => setPendingSeedPhrase(createSeedPhrase())}
+            >
+              <Shuffle className="size-4" aria-hidden />
+            </Button>
+          )}
+        </div>
+
+        <div className="mt-5 grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
           {ROUTE_DIFFICULTIES.map((id) => {
             const active = id === difficulty;
             return (

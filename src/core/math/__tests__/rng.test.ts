@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { createRng, normalizeSeed } from "../rng";
+import {
+  canonicalSeedPhrase,
+  createRng,
+  createSeedPhrase,
+  normalizeSeed,
+  numericSeedPhrase,
+} from "../rng";
 
 describe("createRng", () => {
   it("is deterministic for the same seed", () => {
@@ -16,7 +22,7 @@ describe("createRng", () => {
     expect(a.next()).not.toBe(b.next());
   });
 
-  it("accepts string seeds via cyrb128", () => {
+  it("accepts string seed phrases via seedrandom", () => {
     const a = createRng("blobolines");
     const b = createRng("blobolines");
     expect(a.next()).toBe(b.next());
@@ -79,7 +85,26 @@ describe("createRng", () => {
 
   it("normalizeSeed yields an unsigned 32-bit int", () => {
     expect(normalizeSeed(-1)).toBe(0xffffffff);
+    expect(normalizeSeed(numericSeedPhrase(42))).toBe(42);
     expect(normalizeSeed("x")).toBeGreaterThanOrEqual(0);
     expect(normalizeSeed("x")).toBeLessThanOrEqual(0xffffffff);
+  });
+
+  it("canonicalizes free-form seed text", () => {
+    expect(canonicalSeedPhrase("  Bouncy Bright Blob!! ")).toBe("bouncy-bright-blob");
+    expect(canonicalSeedPhrase("")).toBe("seed-empty");
+  });
+
+  it("creates deterministic adjective-adjective-noun phrases from explicit entropy", () => {
+    const a = createSeedPhrase("menu-open-1");
+    const b = createSeedPhrase("menu-open-1");
+    expect(a).toBe(b);
+    expect(a).toMatch(/^[a-z]+-[a-z]+-[a-z]+$/);
+    expect(createSeedPhrase("menu-open-2")).not.toBe(a);
+  });
+
+  it("exposes the canonical phrase on streams", () => {
+    const r = createRng("Bouncy Bright Blob");
+    expect(r.phrase).toBe("bouncy-bright-blob");
   });
 });
