@@ -1,21 +1,33 @@
 import { useKeyboardSteer } from "@app/hooks";
-import { useDrag } from "@use-gesture/react";
 import { AnimatePresence, motion, useMotionValue, useReducedMotion, useSpring } from "motion/react";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { computeAim, computeAirSteer } from "@/input";
 import { isPerfectRelease } from "@/sim/launch";
 import {
   bounceChargesLeft,
   getBlobDiagnostics,
+  getViewControls,
+  isBlobScreenTarget,
   requestLaunch,
   requestMidAirBounce,
+  rotateView,
   setAim,
   setAirSteer,
+  setBlobScreenTarget,
+  setViewZoom,
   useGameStore,
+  zoomView,
 } from "@/state";
 
+type GestureMode = "game" | "view" | "pinch";
+
+interface PointerInfo {
+  x: number;
+  y: number;
+}
+
 /**
- * Full-screen input surface (PLAYING only). Dual-mode, matching the PoC:
+ * Full-screen input surface (PLAYING only). Dual-mode:
  *  - blob resting on a pad → drag back to aim + charge the slingshot, release to launch.
  *  - blob airborne → drag to steer mid-air (X/Z), released → steering stops.
  * Pointer-events on so it captures drags above the canvas; the canvas renders beneath.
@@ -28,6 +40,17 @@ export function LaunchInput() {
   const [charge, setCharge] = useState(0);
   const [airReticleActive, setAirReticleActive] = useState(false);
   const airReticleActiveRef = useRef(false);
+  const pointers = useRef(new Map<number, PointerInfo>());
+  const gesture = useRef({
+    mode: "view" as GestureMode,
+    startX: 0,
+    startY: 0,
+    lastX: 0,
+    lastY: 0,
+    moved: false,
+    pinchDistance: 1,
+    pinchZoom: 1,
+  });
   const reticleOriginX = useMotionValue(0);
   const reticleOriginY = useMotionValue(0);
   const reticleOffsetX = useMotionValue(-14);
@@ -43,6 +66,10 @@ export function LaunchInput() {
   // Honor prefers-reduced-motion: drop the infinite pulse loops to a single static cue.
   const reduced = useReducedMotion();
   const repeat = reduced ? 0 : Number.POSITIVE_INFINITY;
+
+  useEffect(() => {
+    setBlobScreenTarget({ x: Number.NaN, y: Number.NaN, radius: 76 });
+  }, []);
 
   const showAirReticle = (originX: number, originY: number, offsetX: number, offsetY: number) => {
     reticleOriginX.set(originX);
@@ -62,7 +89,19 @@ export function LaunchInput() {
     }
   };
 
-  const bind = useDrag(({ movement: [mx, my], down, last, tap, initial: [ix, iy] }) => {
+  const activePointer = () => pointers.current.values().next().value as PointerInfo | undefined;
+
+  const pointerDistance = () => {
+    const [a, b] = [...pointers.current.values()];
+    if (!a || !b) return 1;
+    return Math.max(1, Math.hypot(a.x - b.x, a.y - b.y));
+  };
+
+  const updateGameGesture = (x: number, y: number, down: boolean, last: boolean) => {
+    const mx = x - gesture.current.startX;
+    const my = y - gesture.current.startY;
+    if (Math.hypot(mx, my) > 4) gesture.current.moved = true;
+    const tap = !gesture.current.moved;
     const airborne = getBlobDiagnostics().airborne;
 
     if (airborne) {
@@ -84,7 +123,7 @@ export function LaunchInput() {
         const dist = Math.hypot(mx, my);
         const maxOffset = 42;
         const k = dist > maxOffset ? maxOffset / dist : 1;
-        showAirReticle(ix, iy, mx * k, my * k);
+        showAirReticle(gesture.current.startX, gesture.current.startY, mx * k, my * k);
       } else {
         setAirSteer(0, 0);
         hideAirReticle();
@@ -102,7 +141,120 @@ export function LaunchInput() {
     if (last && aim.strength > 0.12) {
       requestLaunch({ dir: aim.dir, charge: aim.strength });
     }
-  });
+  };
+
+  const onPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.currentTarget.setPointerCapture(e.pointerId);
+    pointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    if (pointers.current.size >= 2) {
+      gesture.current.mode = "pinch";
+      gesture.current.pinchDistance = pointerDistance();
+      gesture.current.pinchZoom = getViewControls().zoom;
+      setAim(null);
+      setAirSteer(0, 0);
+      hideAirReticle();
+      return;
+    }
+
+    const mode: GestureMode = isBlobScreenTarget(e.clientX, e.clientY) ? "game" : "view";
+    gesture.current = {
+      mode,
+      startX: e.clientX,
+      startY: e.clientY,
+      lastX: e.clientX,
+      lastY: e.clientY,
+      moved: false,
+      pinchDistance: 1,
+      pinchZoom: getViewControls().zoom,
+    };
+    if (mode === "game") updateGameGesture(e.clientX, e.clientY, true, false);
+  };
+
+  const onPointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    const pointer = pointers.current.get(e.pointerId);
+    if (!pointer) return;
+    e.preventDefault();
+    pointer.x = e.clientX;
+    pointer.y = e.clientY;
+
+    if (gesture.current.mode === "pinch" && pointers.current.size >= 2) {
+      setViewZoom((pointerDistance() / gesture.current.pinchDistance) * gesture.current.pinchZoom);
+      return;
+    }
+
+    if (gesture.current.mode === "view") {
+      const dx = e.clientX - gesture.current.lastX;
+      const dy = e.clientY - gesture.current.lastY;
+      gesture.current.lastX = e.clientX;
+      gesture.current.lastY = e.clientY;
+      if (Math.hypot(e.clientX - gesture.current.startX, e.clientY - gesture.current.startY) > 4) {
+        gesture.current.moved = true;
+      }
+      rotateView(dx, dy);
+      setAim(null);
+      setAirSteer(0, 0);
+      hideAirReticle();
+      return;
+    }
+
+    updateGameGesture(e.clientX, e.clientY, true, false);
+  };
+
+  const onPointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
+    const pointer = pointers.current.get(e.pointerId);
+    if (!pointer) return;
+    e.preventDefault();
+    if (gesture.current.mode === "game") {
+      updateGameGesture(e.clientX, e.clientY, false, true);
+    }
+    pointers.current.delete(e.pointerId);
+    if (pointers.current.size === 1) {
+      const remaining = activePointer();
+      if (remaining) {
+        gesture.current = {
+          mode: "view",
+          startX: remaining.x,
+          startY: remaining.y,
+          lastX: remaining.x,
+          lastY: remaining.y,
+          moved: false,
+          pinchDistance: 1,
+          pinchZoom: getViewControls().zoom,
+        };
+      }
+    }
+  };
+
+  const onPointerCancel = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!pointers.current.has(e.pointerId)) return;
+    e.preventDefault();
+    pointers.current.delete(e.pointerId);
+    if (pointers.current.size === 1) {
+      const remaining = activePointer();
+      if (remaining) {
+        gesture.current = {
+          mode: "view",
+          startX: remaining.x,
+          startY: remaining.y,
+          lastX: remaining.x,
+          lastY: remaining.y,
+          moved: false,
+          pinchDistance: 1,
+          pinchZoom: getViewControls().zoom,
+        };
+      }
+    }
+    setAim(null);
+    setAirSteer(0, 0);
+    setCharge(0);
+    hideAirReticle();
+  };
+
+  const onWheel = (e: React.WheelEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    zoomView(-e.deltaY);
+  };
 
   // "Perfect" = the live charge sits in the perfect-release sweet spot — releasing here earns
   // the power bonus, so the bar + flourish flip to a gold "PERFECT!" cue to invite the timing.
@@ -110,9 +262,13 @@ export function LaunchInput() {
 
   return (
     <div
-      {...bind()}
+      onPointerDown={onPointerDown}
+      onPointerMove={onPointerMove}
+      onPointerUp={onPointerUp}
+      onPointerCancel={onPointerCancel}
+      onWheel={onWheel}
       role="application"
-      aria-label="Launch area — drag back to aim and release to fling the blob; drag while airborne to steer"
+      aria-label="Launch area — drag back to aim on the blob and release to fling; drag off the blob to rotate the view; pinch or wheel to zoom"
       className="pointer-events-auto absolute inset-0 touch-none"
     >
       {/* Edge glow that ignites as the charge nears max — the screen itself tenses up. */}

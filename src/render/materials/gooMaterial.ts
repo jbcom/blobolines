@@ -34,8 +34,8 @@ export const GooMaterial = shaderMaterial(
     uLobe: 0,
     uLobeDir: new THREE.Vector3(1, 0, 0),
     uImpactDir: new THREE.Vector3(0, -1, 0),
-    // Biome-reactive lighting: the goo picks up the current sky's key color (warm at ground,
-    // cool/moody in space) and a darkening factor as it climbs into thinner/darker biomes.
+    // Biome-reactive lighting: the goo picks up the current warm sky key color and a
+    // darkening factor as it climbs into thinner/darker biomes.
     uEnvTint: new THREE.Color(palette.sky.top),
     uEnvLight: 0,
     // Backbuffer refraction (HIGH tier only): the scene rendered behind the blob, sampled with a
@@ -150,14 +150,14 @@ export const GooMaterial = shaderMaterial(
 
       vec3 base   = uColor * (0.55 + 0.35 * wrap);
       vec3 lit    = base + uColor * diffuse * 0.5;
-      // Biome-reactive: bend the lit body color toward the biome key color (warm at ground,
-      // cool/moody high up) on the LIT side, so the blob feels embedded in its environment.
+      // Biome-reactive: bend the lit body color toward the biome key color on the LIT side,
+      // so the blob feels embedded in its environment.
       lit = mix(lit, lit * (0.6 + 0.8 * uEnvTint), uEnvLight * (0.4 + 0.6 * wrap));
       // Beer-Lambert-ish thickness, applied LAST so it doesn't compound with the biome tint:
       // looking straight INTO the body (low fresnel) means more goo to look through, so the
       // center reads a touch deeper/darker than the thin grazing edge — volumetric "depth in
       // the jelly". A flat darken (not a *uColor re-multiply, which squared the hue and muddied
-      // non-blue skins) keeps it palette-independent; (1-fresnel) proxies path length.
+      // non-starter skins) keeps it palette-independent; (1-fresnel) proxies path length.
       float thickness = 1.0 - fresnel;
       lit *= 1.0 - 0.22 * thickness;
       // Tint the specular by a touch of the goo color so the hotspot stays "wet goo", not a

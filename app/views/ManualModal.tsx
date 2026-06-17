@@ -20,7 +20,7 @@ const ENTRIES = [
     title: "Hyper-thrust",
     body: "Grab the orange cone to rocket straight up through the tower.",
   },
-  { icon: Magnet, title: "Magnet", body: "Grab the blue ring to pull nearby crystals toward you." },
+  { icon: Magnet, title: "Magnet", body: "Grab the warm ring to pull nearby crystals toward you." },
 ];
 
 export function ManualModal({

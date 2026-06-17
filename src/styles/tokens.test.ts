@@ -25,6 +25,7 @@ describe("design tokens", () => {
       ...Object.values(palette.tramp),
       ...Object.values(palette.sky),
       palette.cream,
+      palette.sun,
     ];
     for (const c of all) {
       expect(c).toMatch(/^#[0-9a-f]{6}$/i);

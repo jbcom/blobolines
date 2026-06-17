@@ -10,7 +10,7 @@ beforeEach(() => {
 afterEach(() => cleanup());
 
 test("a locked, unaffordable tile shows how many more crystals are needed", async () => {
-  // blue costs 15; with 10 the player needs 5 more.
+  // Berry costs 15; with 10 the player needs 5 more.
   useGameStore.setState((s) => ({ progress: { ...s.progress, crystals: 10 } }));
   const screen = await render(<BlobCustomizer open onOpenChange={() => {}} />);
   await expect.element(screen.getByText("need 5 more")).toBeInTheDocument();

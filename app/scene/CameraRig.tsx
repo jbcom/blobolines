@@ -1,9 +1,16 @@
 import { useFrame, useThree } from "@react-three/fiber";
 import { useRef } from "react";
-import type { PerspectiveCamera } from "three";
+import { type PerspectiveCamera, Vector3 } from "three";
 import { damp } from "@/core/math";
 import type { TrampolineSpec, Vec3 } from "@/core/types";
-import { getBlobDiagnostics, getRouteProofTarget, useWorldStore } from "@/state";
+import {
+  getBlobDiagnostics,
+  getRouteProofTarget,
+  getViewControls,
+  setBlobScreenTarget,
+  useWorldStore,
+  type ViewControls,
+} from "@/state";
 
 /** Resting field of view; a launch punches it wider then it eases back (the "hyperspace" kick). */
 export const BASE_FOV = 60;
@@ -18,6 +25,10 @@ const WARP_TAU = 0.35;
 const PAD_LOOKAHEAD_MAX_SPEED = 8;
 const PAD_LOOKAHEAD_MAX_GAP = 42;
 const PAD_LOOKAHEAD_MIN_GAP = 0.5;
+const MIN_ORBIT_ANGLE = 0.42;
+const MAX_ORBIT_ANGLE = 1.42;
+const BLOB_SCREEN_MIN_RADIUS = 46;
+const BLOB_SCREEN_MAX_RADIUS = 104;
 
 /** New warp amount [0,1] after a launch jump: spike on a big positive vy jump, capped at 1.
  *  Pure so the FOV-punch trigger curve is unit-tested. */
@@ -40,6 +51,10 @@ export function fovForWarp(warp: number): number {
 
 function defaultLookTarget(blobPosition: Vec3): Vec3 {
   return [blobPosition[0], blobPosition[1] + 1.5, blobPosition[2]];
+}
+
+function clamp(n: number, min: number, max: number): number {
+  return Math.min(max, Math.max(min, n));
 }
 
 function upcomingRoutePads(groundY: number, pads: readonly TrampolineSpec[]): TrampolineSpec[] {
@@ -99,6 +114,25 @@ export function cameraRouteDirection(
   return [dx / h, dz / h];
 }
 
+export function cameraOrbitOffset(
+  routeDirection: readonly [number, number],
+  distance: number,
+  height: number,
+  view: ViewControls,
+): Vec3 {
+  const baseAngle = Math.atan2(height, distance);
+  const orbitAngle = clamp(baseAngle + view.pitch, MIN_ORBIT_ANGLE, MAX_ORBIT_ANGLE);
+  const radius = Math.hypot(distance, height) * view.zoom;
+  const horizontal = Math.cos(orbitAngle) * radius;
+  const vertical = Math.sin(orbitAngle) * radius;
+  const yawSin = Math.sin(view.yaw);
+  const yawCos = Math.cos(view.yaw);
+  const [rx, rz] = routeDirection;
+  const dirX = rx * yawCos - rz * yawSin;
+  const dirZ = rx * yawSin + rz * yawCos;
+  return [-dirX * horizontal, vertical, -dirZ * horizontal] as const;
+}
+
 function proofFocus(
   target: ReturnType<typeof getRouteProofTarget>,
   pads: readonly TrampolineSpec[],
@@ -130,6 +164,7 @@ function proofFocus(
  */
 export function CameraRig({ active }: { active: boolean }) {
   const camera = useThree((s) => s.camera);
+  const screenPoint = useRef(new Vector3());
   const t = useRef(0);
   /** Decaying camera-shake amplitude, spiked on a hard landing. */
   const shake = useRef(0);
@@ -140,7 +175,7 @@ export function CameraRig({ active }: { active: boolean }) {
   /** Current FOV-warp amount [0,1], spiked on launch, eased back to 0 each frame. */
   const warp = useRef(0);
 
-  useFrame((_, dt) => {
+  useFrame((state, dt) => {
     t.current += dt;
     const cam = camera as PerspectiveCamera;
     if (active) {
@@ -148,6 +183,7 @@ export function CameraRig({ active }: { active: boolean }) {
       const [bx, , bz] = diag.position;
       const speed = diag.speed;
       const pads = useWorldStore.getState().trampolines;
+      const view = getViewControls();
 
       // Detect a fresh impact (squash drops) → kick the shake.
       const impact = 1 - diag.squash; // 0..~0.3
@@ -172,11 +208,27 @@ export function CameraRig({ active }: { active: boolean }) {
       if (activeProof) {
         const [lookX, lookY, lookZ] = activeProof.look;
         const [routeX, routeZ] = activeProof.direction;
+        const [offX, offY, offZ] = cameraOrbitOffset([routeX, routeZ], 19, 20, view);
         const k = damp(dt, 0.18);
-        camera.position.x += (lookX - routeX * 19 - camera.position.x) * k;
-        camera.position.y += (lookY + 20 - camera.position.y) * k;
-        camera.position.z += (lookZ - routeZ * 19 - camera.position.z) * k;
+        camera.position.x += (lookX + offX - camera.position.x) * k;
+        camera.position.y += (lookY + offY - camera.position.y) * k;
+        camera.position.z += (lookZ + offZ - camera.position.z) * k;
         camera.lookAt(lookX, lookY, lookZ);
+        camera.updateMatrixWorld();
+        const { width, height, top, left } = state.size;
+        screenPoint.current.set(diag.position[0], diag.position[1], diag.position[2]).project(cam);
+        const screenX = left + ((screenPoint.current.x + 1) * width) / 2;
+        const screenY = top + ((1 - screenPoint.current.y) * height) / 2;
+        const distance = camera.position.distanceTo(screenPoint.current.set(...diag.position));
+        setBlobScreenTarget({
+          x: screenX,
+          y: screenY,
+          radius: clamp(
+            1150 / Math.max(8, distance),
+            BLOB_SCREEN_MIN_RADIUS,
+            BLOB_SCREEN_MAX_RADIUS,
+          ),
+        });
         return;
       }
 
@@ -190,11 +242,12 @@ export function CameraRig({ active }: { active: boolean }) {
       const camDist = 15 + rest * 7 + pull * 4;
       const camHeight = 15 + rest * 5 + pull * 3;
       const [routeX, routeZ] = cameraRouteDirection(diag.position, diag.groundY, pads);
+      const [offX, offY, offZ] = cameraOrbitOffset([routeX, routeZ], camDist, camHeight, view);
 
       const k = damp(dt, 0.16);
-      camera.position.x += (bx - routeX * camDist - camera.position.x) * k;
-      camera.position.y += (lookY + camHeight - camera.position.y) * k;
-      camera.position.z += (bz - routeZ * camDist - camera.position.z) * k;
+      camera.position.x += (bx + offX - camera.position.x) * k;
+      camera.position.y += (lookY + offY - camera.position.y) * k;
+      camera.position.z += (bz + offZ - camera.position.z) * k;
 
       // Impact shake (decays in ~0.12s) — small, juicy, never disorienting.
       const s = shake.current * 0.5;
@@ -204,6 +257,17 @@ export function CameraRig({ active }: { active: boolean }) {
       // Look at the blob in flight, but while resting/slowly aiming bias across the certified
       // route window so the immediate and next trampolines are both in-frame before launch.
       camera.lookAt(lookX, lookY, lookZ);
+      camera.updateMatrixWorld();
+      const { width, height, top, left } = state.size;
+      screenPoint.current.set(diag.position[0], diag.position[1], diag.position[2]).project(cam);
+      const screenX = left + ((screenPoint.current.x + 1) * width) / 2;
+      const screenY = top + ((1 - screenPoint.current.y) * height) / 2;
+      const distance = camera.position.distanceTo(screenPoint.current.set(...diag.position));
+      setBlobScreenTarget({
+        x: screenX,
+        y: screenY,
+        radius: clamp(1150 / Math.max(8, distance), BLOB_SCREEN_MIN_RADIUS, BLOB_SCREEN_MAX_RADIUS),
+      });
     } else {
       // Menu: clear the launch warp + FOV back to base (so re-entering a run starts unwarped),
       // and reset the launch tracker so the first in-run launch is detected fresh.
@@ -221,8 +285,8 @@ export function CameraRig({ active }: { active: boolean }) {
       const RADIUS = 9;
       camera.position.x = Math.sin(a) * RADIUS;
       camera.position.z = Math.cos(a) * RADIUS;
-      camera.position.y = 1.5 + Math.sin(t.current * 0.4) * 0.5;
-      camera.lookAt(0, 0, 0);
+      camera.position.y = 2.7 + Math.sin(t.current * 0.4) * 0.45;
+      camera.lookAt(0, 1.75, 0);
     }
   });
 

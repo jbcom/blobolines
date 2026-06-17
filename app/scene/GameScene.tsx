@@ -58,7 +58,9 @@ export function GameScene() {
             <SplatChunks skin={skin} />
           </Physics>
         ) : (
-          <BlobActor skin={skin} expression="idle" />
+          <group position={[0, 2.55, 0]} scale={1.22}>
+            <BlobActor skin={skin} expression="idle" />
+          </group>
         )}
       </Suspense>
 

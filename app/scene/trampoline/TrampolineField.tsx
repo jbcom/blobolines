@@ -53,6 +53,7 @@ export function TrampolineField({ onImpact }: TrampolineFieldProps) {
         <Trampoline
           key={t.id}
           id={t.id}
+          routeIndex={t.routeIndex}
           position={t.position}
           width={t.width}
           depth={t.depth}

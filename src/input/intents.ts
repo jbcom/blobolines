@@ -1,6 +1,6 @@
 /**
  * Input intent model — pure, framework-agnostic math that turns raw drag/keyboard
- * input into game intents. Two control modes from the PoC:
+ * input into game intents. Two control modes:
  *   - SLINGSHOT (blob locked on a trampoline): drag back to aim + charge, release to
  *     launch. Drag vector → aim direction + [0,1] strength.
  *   - AIR-STEER (blob airborne): drag anywhere → a 3D steering force on the X/Z plane.

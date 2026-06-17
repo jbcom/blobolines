@@ -7,33 +7,35 @@
 
 export const palette = {
   blob: {
-    ink: "#14110f",
-    blue: "#2e8bf0",
-    slime: "#7ed957",
-    ghost: "#f4f6fb",
+    ink: "#5a2418",
+    blue: "#ff7a3d",
+    slime: "#ff4f7b",
+    ghost: "#ffd95a",
   },
   tramp: {
     blue: "#ff6f61",
     gold: "#f2c14e",
     orange: "#f08a3c",
-    green: "#6cc04a",
-    violet: "#9d6cf0",
-    ice: "#7fe3ef",
+    green: "#f7a72e",
+    violet: "#ff5ab3",
+    ice: "#ffe7a3",
   },
   sky: {
-    // Cheerful, soft daytime gradient: warm peach high up → pale aqua → muted lavender.
-    // Gameplay objects sit in stronger green/teal/orange lanes so foreground reads clearly.
-    top: "#ffe3c4",
-    mid: "#9edfc8",
-    deep: "#7b6bc2",
+    // Cheerful daylight: blue enough to separate the playfield from mango/berry foregrounds,
+    // warmed by honey sun + peach fog so it never reads sterile.
+    top: "#eefaff",
+    mid: "#8fd7ff",
+    deep: "#42a8f5",
+    haze: "#d7efff",
   },
   cream: "#f3efd6",
+  sun: "#ffd36b",
   goo: {
-    splash: "#2e8bf0",
-    rim: "#bfe3ff",
+    splash: "#ff7a3d",
+    rim: "#ffe3a6",
     wet: "#ffffff",
     /** Combo "flame" glow — ignites the goo rim warm as the bounce streak builds. */
-    flame: "#ff8a3c",
+    flame: "#ffb238",
   },
   /** Procedural-eye colors (sclera/bezel/pupil/glint/tear) — functional, kept here so
    *  the brand gate has one source of truth. */
@@ -42,7 +44,7 @@ export const palette = {
     bezel: "#14110f",
     pupil: "#0a0a0c",
     glint: "#ffffff",
-    tear: "#bfe3ff",
+    tear: "#ffd0a6",
   },
   /** Danger red — near-death screen-edge pulse / warning feedback. */
   danger: "#ff3b4e",

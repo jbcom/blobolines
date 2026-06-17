@@ -5,10 +5,10 @@ describe("toTransparent", () => {
   it("keeps the rgb of a #rrggbb color and forces alpha 0 (not black)", () => {
     // The dark-ring bug: the old code used the CSS keyword "transparent" as the
     // outer gradient stop, which is rgba(0,0,0,0). Canvas lerps rgb across stops,
-    // so edge texels went dark-blue -> black. The transparent stop MUST carry the
+    // so edge texels went dark color -> black. The transparent stop MUST carry the
     // blob's own rgb so the fade stays the blob color all the way to a=0.
-    expect(toTransparent("#2e8bf0")).toBe("rgba(46,139,240,0)");
-    expect(toTransparent("#2e8bf0")).not.toBe("rgba(0,0,0,0)");
+    expect(toTransparent("#ff7a3d")).toBe("rgba(255,122,61,0)");
+    expect(toTransparent("#ff7a3d")).not.toBe("rgba(0,0,0,0)");
   });
 
   it("supports #rgb shorthand", () => {
@@ -16,12 +16,12 @@ describe("toTransparent", () => {
   });
 
   it("supports #rrggbbaa by dropping the alpha to 0", () => {
-    expect(toTransparent("#2e8bf080")).toBe("rgba(46,139,240,0)");
+    expect(toTransparent("#ff7a3d80")).toBe("rgba(255,122,61,0)");
   });
 
   it("supports rgb()/rgba() inputs", () => {
-    expect(toTransparent("rgb(46, 139, 240)")).toBe("rgba(46,139,240,0)");
-    expect(toTransparent("rgba(46, 139, 240, 0.5)")).toBe("rgba(46,139,240,0)");
+    expect(toTransparent("rgb(255, 122, 61)")).toBe("rgba(255,122,61,0)");
+    expect(toTransparent("rgba(255, 122, 61, 0.5)")).toBe("rgba(255,122,61,0)");
   });
 });
 

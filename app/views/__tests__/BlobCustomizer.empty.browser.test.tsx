@@ -8,7 +8,7 @@ beforeEach(() => {
     progress: {
       ...useGameStore.getState().progress,
       crystals: 0,
-      unlockedSkins: ["slime"],
+      unlockedSkins: ["blue"],
     },
   });
 });

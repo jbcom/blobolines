@@ -7,8 +7,8 @@ import { palette } from "@/styles/tokens";
 /**
  * A point light that FOLLOWS the blob, tinted to its skin (and toward the combo-flame
  * hue as the streak heats up), pulsing brighter on impact. It throws the blob's color
- * onto nearby pads + goo — the PoC's signature "the blob lights the world" energy, in
- * the gooey daytime palette. Driven off the diagnostics bridge (no per-frame re-render).
+ * onto nearby pads + goo so Blobby feels present in the gooey daytime palette. Driven off
+ * the diagnostics bridge (no per-frame re-render).
  */
 export function BlobFollowLight() {
   const lightRef = useRef<PointLight>(null);

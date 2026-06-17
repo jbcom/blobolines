@@ -14,10 +14,10 @@ const GRID_COLS = 2;
  * apply immediately (the goo body reads `progress.skin`). Reachable from the title.
  */
 const SKINS: { id: BlobSkin; name: string }[] = [
-  { id: "blue", name: "Bloop" },
-  { id: "slime", name: "Slime" },
-  { id: "ghost", name: "Ghost" },
-  { id: "ink", name: "Ink" },
+  { id: "blue", name: "Mango" },
+  { id: "slime", name: "Berry" },
+  { id: "ghost", name: "Honey" },
+  { id: "ink", name: "Cocoa" },
 ];
 
 export function BlobCustomizer({

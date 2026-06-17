@@ -9,3 +9,9 @@ export { type GeneratedChunk, generateUpTo, type PowerUpSpec, starterPad } from 
 export { padTypeWeights, pickPadType } from "./padType";
 export { CLIMB_SPEED, canReach, reaches } from "./reachable";
 export { nextRouteStep, type RouteStep, TARGET_ABOVE_GROUND } from "./routeStep";
+export {
+  type SeedRouteFailure,
+  type SeedRouteVerification,
+  type SeedRouteVerificationOptions,
+  verifySeedRoute,
+} from "./seedVerifier";

@@ -22,7 +22,9 @@ test("Daily Challenge starts a daily run (dailyRun true)", async () => {
   await expect
     .element(screen.getByRole("dialog", { name: /Daily challenge difficulty/ }))
     .toBeInTheDocument();
-  await expect.element(screen.getByText(/blobolines-daily-/)).toBeInTheDocument();
+  expect((document.getElementById("new-game-seed") as HTMLInputElement).value).toMatch(
+    /^blobolines-daily-/,
+  );
   await screen.getByRole("button", { name: /Medium/ }).click();
   expect(useGameStore.getState().phase).toBe("playing");
   expect(useGameStore.getState().dailyRun).toBe(true);

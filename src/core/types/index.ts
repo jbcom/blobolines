@@ -55,6 +55,19 @@ export interface CrystalSpec {
 /** Certified launch route from one trampoline to its successor. The world generator attaches
  *  this to the SOURCE pad after proving the shipped launch tuning produces a visible
  *  ballistic arc that lands inside the successor footprint. */
+export interface GoldenPathVariant {
+  launchSpeed: number;
+  flightTime: number;
+  apex: Vec3;
+  landing: Vec3;
+  clearance: number;
+  samples: Vec3[];
+  landingPrecision: number;
+  lipClearance: number;
+  lipClearanceRatio: number;
+  arcCompression: number;
+}
+
 export interface GoldenPathProof {
   /** Successor pad id this proof lands on. */
   toPadId: number;
@@ -86,6 +99,9 @@ export interface GoldenPathProof {
   lipClearanceRatio: number;
   /** 0..1, higher means a tighter, lower-apex compressed arc. */
   arcCompression: number;
+  /** Accepted launch-speed variants that still hit the successor impact zone. Includes the
+   *  primary golden path as item 0. Easy stores three, Medium two, harder modes one. */
+  variants?: GoldenPathVariant[];
 }
 
 /** Persistent player progress. */

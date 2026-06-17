@@ -30,8 +30,8 @@ const tmpColor = new Color();
 const UP = new Vector3(0, 1, 0);
 const MAX_CRYSTALS = worldCfg.maxCrystals;
 const POP_LIFE = 0.22; // seconds the collect-burst pop plays before the gem vanishes
-// Per-tier gem color: common reads as the slime-green pickup, rare as a violet jewel, radiant
-// as a hot gold prize — so rarity is legible at a glance (and matches the bigger tier scale).
+// Per-tier gem color: common reads as berry, rare as a bright jewel, radiant as a hot gold
+// prize — so rarity is legible at a glance (and matches the bigger tier scale).
 const TIER_COLOR: Record<CrystalTier, Color> = {
   common: new Color(hex(palette.blob.slime)),
   rare: new Color(hex(palette.tramp.violet)),

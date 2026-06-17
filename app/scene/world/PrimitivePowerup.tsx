@@ -43,7 +43,7 @@ const SHAPE: Record<PowerUpType, PrimitiveSpec> = {
     rotation: [Math.PI, 0, 0],
   },
   shield: {
-    // A glowing protective orb (icy/cyan) — the one-shot second-life pickup.
+    // A glowing protective honey orb — the one-shot second-life pickup.
     geometry: <icosahedronGeometry args={[0.45, 1]} />,
     color: palette.tramp.ice,
     emissiveIntensity: 0.6,
@@ -71,7 +71,7 @@ const SHAPE: Record<PowerUpType, PrimitiveSpec> = {
     metalness: 0.5,
   },
   multibounce: {
-    // A green springy tetrahedron — the multi-bounce charges (green reads as bouncy slime).
+    // A marigold springy tetrahedron — the multi-bounce charges.
     geometry: <tetrahedronGeometry args={[0.55, 0]} />,
     color: palette.tramp.green,
     emissiveIntensity: 0.7,

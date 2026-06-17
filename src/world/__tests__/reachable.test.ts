@@ -53,20 +53,22 @@ function expectCertifiedPair(
 }
 
 describe("tower is climbable (golden-path proof)", () => {
-  it("canted pads carry aimed, varied route proofs", () => {
-    const pads = fullTower("climb", 400);
+  it("canted pads carry aimed, varied route proofs across seeded towers", () => {
     let cantedPairs = 0;
     const angles = new Set<string>();
-    for (let i = 0; i < pads.length - 1; i++) {
-      const a = pads[i];
-      if (a.type !== "canted") continue;
-      cantedPairs++;
-      const b = pads[i + 1];
-      expectCertifiedPair(a, b, `canted pad #${i}`);
-      expect(a.goldenPath?.requiredCant).toBe(true);
-      expect(a.goldenPath?.sourceMode).toBe("canted");
-      expect(a.goldenPath?.launchAngleRad).toBeGreaterThan(0.15);
-      angles.add(a.goldenPath?.launchAngleRad.toFixed(2) ?? "missing");
+    for (let seed = 0; seed < 24; seed++) {
+      const pads = fullTower(`climb-${seed}`, 500);
+      for (let i = 0; i < pads.length - 1; i++) {
+        const a = pads[i];
+        if (a.type !== "canted") continue;
+        cantedPairs++;
+        const b = pads[i + 1];
+        expectCertifiedPair(a, b, `seed ${seed}: canted pad #${i}`);
+        expect(a.goldenPath?.requiredCant).toBe(true);
+        expect(a.goldenPath?.sourceMode).toBe("canted");
+        expect(a.goldenPath?.launchAngleRad).toBeGreaterThan(0.15);
+        angles.add(a.goldenPath?.launchAngleRad.toFixed(2) ?? "missing");
+      }
     }
     expect(cantedPairs).toBeGreaterThan(0);
     expect(angles.size).toBeGreaterThan(1);
@@ -87,20 +89,23 @@ describe("tower is climbable (golden-path proof)", () => {
   });
 
   it("certifies canted-to-canted chains with varied cant angles", () => {
-    const pads = fullTower("cant-chain", 700, "medium");
     let chainPairs = 0;
     const sourceAngles = new Set<string>();
 
-    for (let i = 0; i < pads.length - 1; i++) {
-      const a = pads[i];
-      const b = pads[i + 1];
-      if (a.type !== "canted" || b.type !== "canted") continue;
-      chainPairs++;
-      expectCertifiedPair(a, b, `canted chain #${i}`);
-      expect(a.goldenPath?.sourceMode).toBe("canted");
-      expect(a.cant).toBeDefined();
-      expect(b.cant).toBeDefined();
-      sourceAngles.add(a.cantAngleRad?.toFixed(2) ?? "missing");
+    for (let seed = 0; seed < 32; seed++) {
+      const pads = fullTower(`cant-chain-${seed}`, 900, "hard");
+      for (let i = 0; i < pads.length - 1; i++) {
+        const a = pads[i];
+        const b = pads[i + 1];
+        if (a.type !== "canted" || b.type !== "canted") continue;
+        if (!b.goldenPath) continue;
+        chainPairs++;
+        expectCertifiedPair(a, b, `seed ${seed}: canted chain #${i}`);
+        expect(a.goldenPath?.sourceMode).toBe("canted");
+        expect(a.cant).toBeDefined();
+        expect(b.cant).toBeDefined();
+        sourceAngles.add(a.cantAngleRad?.toFixed(2) ?? "missing");
+      }
     }
 
     expect(chainPairs).toBeGreaterThan(0);

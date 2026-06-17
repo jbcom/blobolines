@@ -3,7 +3,7 @@ import { CalendarDays, Gauge, HelpCircle, Palette, Play, Settings, Shuffle } fro
 import { motion, useReducedMotion } from "motion/react";
 import { lazy, Suspense, useEffect, useState } from "react";
 import { initAudio, startMenuMusic, startMusic } from "@/audio";
-import { createSeedPhrase } from "@/core/math";
+import { canonicalSeedPhrase, createSeedPhrase } from "@/core/math";
 import type { WorldDifficulty } from "@/core/types";
 import { cn } from "@/lib/utils";
 import { dailySeedPhrase } from "@/sim/daily";
@@ -25,7 +25,7 @@ const DIFFICULTY_TONE: Record<WorldDifficulty, string> = {
   ready: "Easy routes with generous landing lips and forgiving proof variance.",
   medium: "More canted chains and compressed arcs without precision flat stacks.",
   hard: "Occasional flat precision arcs with tighter route margins.",
-  blobmare: "Fast pattern changes, cant chains, and thin landing windows.",
+  blobmare: "Sharper mechanics, cant chains, and thin landing windows.",
   ultraBlobmare: "Tool-assisted-feeling routes with very tight proof margins.",
   oneWrongMove: "Starts at one-path precision and stays there.",
 };
@@ -75,8 +75,10 @@ export function TitleScreen() {
     resetRun();
     setDailyRun(daily);
     const seedPhrase =
-      pendingSeedPhrase || (daily ? dailySeedPhrase(new Date()) : createSeedPhrase());
+      (pendingSeedPhrase.trim() ? canonicalSeedPhrase(pendingSeedPhrase) : "") ||
+      (daily ? dailySeedPhrase(new Date()) : createSeedPhrase());
     resetWorld(seedPhrase, routeDifficulty);
+    setPendingSeedPhrase(seedPhrase);
     setPhase("playing");
     setNewGameOpen(false);
   };
@@ -200,7 +202,7 @@ export function TitleScreen() {
               {pendingDaily ? "Daily difficulty" : "New game"}
             </h2>
             <p className="mt-1 font-ui text-xs text-fg-subtle">
-              Pick the route pattern for this climb.
+              Pick the route-proof leniency for this climb.
             </p>
           </div>
         </div>
@@ -210,9 +212,20 @@ export function TitleScreen() {
             <div className="font-ui text-[10px] font-bold text-fg-subtle uppercase tracking-wide">
               Seed
             </div>
-            <div className="truncate font-display text-base font-bold text-cream tabular-nums">
-              {pendingSeedPhrase}
-            </div>
+            <label htmlFor="new-game-seed" className="sr-only">
+              Seed phrase
+            </label>
+            <input
+              id="new-game-seed"
+              value={pendingSeedPhrase}
+              readOnly={pendingDaily}
+              spellCheck={false}
+              autoCapitalize="none"
+              autoCorrect="off"
+              onChange={(event) => setPendingSeedPhrase(event.currentTarget.value)}
+              onBlur={() => setPendingSeedPhrase((value) => canonicalSeedPhrase(value))}
+              className="h-7 w-full min-w-0 border-none bg-transparent p-0 font-display text-base font-bold text-cream tabular-nums outline-none placeholder:text-fg-subtle"
+            />
           </div>
           {!pendingDaily && (
             <Button

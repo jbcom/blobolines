@@ -149,7 +149,7 @@ export function BiomeGeometry() {
 
   return (
     <>
-      {/* Hills — wide low cones in a warm earthy green, far back along the ground horizon. */}
+      {/* Hills — wide low cones in warm marigold, far back along the ground horizon. */}
       <instancedMesh ref={hillRef} args={[undefined, undefined, HILL_COUNT]} frustumCulled={false}>
         <coneGeometry args={[0.5, 1, 7]} />
         <meshStandardMaterial
@@ -160,7 +160,7 @@ export function BiomeGeometry() {
           depthWrite={false}
         />
       </instancedMesh>
-      {/* Floating islands — flattened slime-green discs drifting in the mid sky. */}
+      {/* Floating islands — flattened berry discs drifting in the mid sky. */}
       <instancedMesh
         ref={islandRef}
         args={[undefined, undefined, ISLAND_COUNT]}

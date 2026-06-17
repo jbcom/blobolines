@@ -31,21 +31,24 @@ describe("world generator", () => {
     for (let i = 1; i < ys.length; i++) expect(ys[i]).toBeGreaterThan(ys[i - 1]);
   });
 
-  it("opens ready mode with readable mechanics instead of flat-to-flat precision", () => {
+  it("opens ready mode with seeded certified mechanics", () => {
     const start = starterPad();
     const chunk = generateUpTo(createRng(1), 0, 80, start, "ready");
     const pads = [start, ...chunk.trampolines];
-    expect(pads.slice(0, 6).map((p) => p.type)).toEqual([
-      "standard",
-      "moving",
-      "canted",
-      "standard",
-      "wobbler",
-      "standard",
-    ]);
-    expect(pads[1].moveAxis).toBeDefined();
-    expect(pads[2].cant).toBeDefined();
-    expect(pads[2].cantAngleRad).toBeGreaterThan(0.15);
+    const openingTypes = pads.slice(1, 6).map((p) => p.type);
+    const openingSourceModes = pads
+      .slice(0, 8)
+      .map((p) => p.goldenPath?.sourceMode)
+      .filter(Boolean);
+    const mechanics = new Set(
+      openingTypes.filter((type) => ["moving", "canted", "wobbler"].includes(type)),
+    );
+    expect(mechanics.size).toBeGreaterThanOrEqual(2);
+    expect(new Set(openingSourceModes).size).toBeGreaterThanOrEqual(2);
+    for (let i = 0; i < 5; i++) {
+      expect(pads[i].goldenPath?.variants?.length).toBe(routeProfile("ready").proofVariants);
+      expect(pads[i].goldenPath?.toPadId).toBe(pads[i + 1].id);
+    }
   });
 
   it("scales proof leniency and footprint knobs by route difficulty", () => {
@@ -206,28 +209,30 @@ describe("world generator", () => {
     }
   });
 
-  it("reserves flat-to-flat routes for harder difficulty profiles", () => {
+  it("accepts flat-to-flat only through the same certified variant gate", () => {
+    const readyStart = starterPad();
     const readyPads = [
-      starterPad(),
-      ...generateUpTo(createRng("flat-ready"), 0, 500, starterPad(), "ready").trampolines,
+      readyStart,
+      ...generateUpTo(createRng("flat-ready"), 0, 500, readyStart, "ready").trampolines,
     ];
+    let readyFlatPairs = 0;
     for (let i = 1; i < readyPads.length; i++) {
-      expect(
-        readyPads[i - 1].type === "standard" && readyPads[i].type === "standard",
-        `ready pair ${i - 1}->${i} should not be flat-to-flat`,
-      ).toBe(false);
+      const source = readyPads[i - 1];
+      const target = readyPads[i];
+      if (source.type === "standard" && target.type === "standard") readyFlatPairs++;
+      expect(source.goldenPath?.toPadId).toBe(target.id);
+      expect(source.goldenPath?.variants?.length).toBe(routeProfile("ready").proofVariants);
     }
+    expect(readyFlatPairs).toBeGreaterThan(0);
 
     const hardStart = starterPad();
     const hardPads = [
       hardStart,
       ...generateUpTo(createRng("flat-hard"), 0, 500, hardStart, "hard").trampolines,
     ];
-    expect(
-      hardPads.some(
-        (pad, i) => i > 0 && hardPads[i - 1].type === "standard" && pad.type === "standard",
-      ),
-    ).toBe(true);
+    for (let i = 1; i < hardPads.length; i++) {
+      expect(hardPads[i - 1].goldenPath?.variants?.length).toBe(routeProfile("hard").proofVariants);
+    }
   });
 
   // Golden-path navigability — STRUCTURAL property: every canted pad's cant is a unit vector
@@ -235,25 +240,33 @@ describe("world generator", () => {
   // *sufficiency* of canting (that the launch actually reaches) is proven separately by the
   // climb proof in reachable.test.ts; here we just assert the placement is well-formed.
   it("cants pads toward their successor (unit vector, correct direction)", () => {
-    const { trampolines } = generateUpTo(createRng("climb"), 0, 400, starterPad(), "medium");
     let cantedCount = 0;
     const angles = new Set<string>();
-    for (let i = 0; i < trampolines.length - 1; i++) {
-      const a = trampolines[i];
-      const b = trampolines[i + 1];
-      if (a.type !== "canted") continue;
-      expect(a.cant).toBeDefined();
-      expect(a.cantAngleRad).toBeGreaterThan(0.17);
-      angles.add(a.cantAngleRad?.toFixed(2) ?? "missing");
-      const [cx, cz] = a.cant ?? [0, 0];
-      const dx = b.position[0] - a.position[0];
-      const dz = b.position[2] - a.position[2];
-      // Cant points toward the successor (positive dot with the offset) + is a unit vec.
-      expect(cx * dx + cz * dz).toBeGreaterThan(0);
-      expect(Math.hypot(cx, cz)).toBeCloseTo(1, 5);
-      cantedCount++;
+    for (let seed = 0; seed < 8; seed++) {
+      const { trampolines } = generateUpTo(
+        createRng(`climb-${seed}`),
+        0,
+        700,
+        starterPad(),
+        "medium",
+      );
+      for (let i = 0; i < trampolines.length - 1; i++) {
+        const a = trampolines[i];
+        const b = trampolines[i + 1];
+        if (a.type !== "canted") continue;
+        expect(a.cant).toBeDefined();
+        expect(a.cantAngleRad).toBeGreaterThan(0.17);
+        angles.add(a.cantAngleRad?.toFixed(2) ?? "missing");
+        const [cx, cz] = a.cant ?? [0, 0];
+        const dx = b.position[0] - a.position[0];
+        const dz = b.position[2] - a.position[2];
+        // Cant points toward the successor (positive dot with the offset) + is a unit vec.
+        expect(cx * dx + cz * dz).toBeGreaterThan(0);
+        expect(Math.hypot(cx, cz)).toBeCloseTo(1, 5);
+        cantedCount++;
+      }
     }
-    // A spiral-placed tower should produce several canted pads.
+    // Seeded towers should produce several canted pads with varied angles.
     expect(cantedCount).toBeGreaterThan(0);
     expect(angles.size).toBeGreaterThan(1);
   });
