@@ -93,6 +93,19 @@ export function isAudioInitialized(): boolean {
   return Howler.ctx ? Howler.ctx.state === "running" : false;
 }
 
+/**
+ * Pre-construct every SFX Howl so it's fetched + decoded BEFORE the first play — without this
+ * the first bounce/launch/chime decodes its sample on demand, causing an audible hitch on the
+ * opening launch (worst on mobile). howlFor caches, so a later playSfx reuses these. Safe to
+ * call before the AudioContext unlocks: Howl construction just loads/decodes; nothing plays.
+ * Idempotent (cached). Call behind the LoadingScreen so the decode overlaps the splash.
+ */
+export function preloadSfx(): void {
+  for (const path of Object.values(audioCfg.sfx) as string[]) {
+    howlFor(path, false, vol.sfx); // construct + cache (loads + decodes)
+  }
+}
+
 function playSfx(id: SfxId, opts?: { rate?: number; volume?: number }): void {
   const path = (audioCfg.sfx as Record<string, string>)[id];
   if (!path) return;

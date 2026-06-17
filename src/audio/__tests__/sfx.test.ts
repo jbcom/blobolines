@@ -14,6 +14,7 @@ import {
   playRecord,
   playSplat,
   playThump,
+  preloadSfx,
   setAmbientVolume,
   setMusicAltitude,
   setMusicEnabled,
@@ -71,6 +72,21 @@ describe("audio before init", () => {
   it("setMusicAltitude is a safe no-op before music starts", () => {
     expect(() => setMusicAltitude(0)).not.toThrow();
     expect(() => setMusicAltitude(900)).not.toThrow();
+  });
+
+  it("preloadSfx constructs every SFX Howl (no-throw, idempotent, none playing)", () => {
+    expect(() => preloadSfx()).not.toThrow();
+    const after = (Howler as unknown as { _howls: Array<{ _loop: boolean; playing(): boolean }> })
+      ._howls;
+    const sfx = after.filter((h) => !h._loop);
+    // All the one-shot SFX are now constructed (cached) — preload built the full set.
+    expect(sfx.length).toBeGreaterThanOrEqual(8);
+    // Preloading must not start playback (it only loads/decodes).
+    expect(sfx.every((h) => !h.playing())).toBe(true);
+    // Idempotent — a second call doesn't throw or duplicate beyond the cache.
+    const count = after.length;
+    preloadSfx();
+    expect(after.length).toBe(count);
   });
 
   it("setSfxVolume clamps + never throws, and SFX still play at any level", () => {

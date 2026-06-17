@@ -18,6 +18,7 @@ export {
   playRecord,
   playSplat,
   playThump,
+  preloadSfx,
   setAmbientVolume,
   setMasterVolume,
   setMusicAltitude,

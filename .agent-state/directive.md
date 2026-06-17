@@ -608,7 +608,10 @@ game — touch/drag is primary; keyboard is a minor desktop-only secondary, don'
       0.5→0.32, louder with strength) as a body-felt sub-bass thud under the bright bounce on
       landing, gated <0.25 silent so light taps don't thud — mirrors the Light/Medium/Heavy
       haptic split. Fired alongside the landing splash in PlayerBlob. Test covers the range.
-- [ ] Preload critical cues at startMusic to avoid first-play decode hitch (mobile).
+- [x] Preload critical cues to avoid first-play decode hitch (mobile). Done better than "at
+      startMusic" (which is already the play moment, too late): a new preloadSfx() constructs +
+      decodes every SFX Howl, called from the LoadingScreen mount so the decode overlaps the
+      splash. (See also the SFX-on-LoadingScreen item below — same change covers both.)
 
 ## M15 — game-design depth + CONFIRMED BUGS (from mechanics inventory, 2026-06-16)
 ### Bugs (do first — real correctness)
@@ -801,7 +804,11 @@ says KEEP + WIRE these deliberate-architecture deps, never cut. Verified call si
       SFX. howlFor gained an `html5` param (default false); startBed passes true so the looping
       beds stream while one-shot SFX stay on low-latency Web Audio. Unit test asserts the split
       via Howler's global registry (beds._html5 true, sfx._html5 false).
-- [ ] Preload SFX Howls on LoadingScreen behind the gesture unlock (no first-play hitch).
+- [x] Preload SFX Howls on LoadingScreen (no first-play hitch). preloadSfx() runs in the
+      LoadingScreen mount effect — Howl construction loads + decodes the samples behind the
+      splash; nothing plays until the AudioContext unlocks on the first PLAY gesture. Unit test
+      asserts all SFX are constructed, none playing, idempotent; the LoadingScreen browser test
+      smoke-covers the side-effect.
 - [ ] Re-encode theme.mp3 smaller (~96kbps mono / shorter loop) and/or lazy-load post-interaction.
 ### Bundle/build
 - [ ] Lazy-load heavy modals (Manual/BlobCustomizer/Settings) + defer Rapier Physics chunk to first PLAY; address the large three chunk vs masking with chunkSizeWarningLimit.
