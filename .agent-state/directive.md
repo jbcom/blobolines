@@ -467,7 +467,12 @@ game — touch/drag is primary; keyboard is a minor desktop-only secondary, don'
       at the ground, brighter-glow + cooler + crisper/moodier up in space. Verified the scene
       renders cleanly through the ref-driven effects.
 - [ ] Depth-of-field focused on the blob (quality-gated).
-- [ ] God rays + sun sprite in the sky bands (the shader paints shafts but there's no light source).
+- [x] Sun sprite in the sky bands: SkyDome now renders a billboarded sun (bright cream core +
+      soft additive sky-top halo) high toward the warm-shaft origin the dome already paints, so
+      the light shafts have a visible source. It billboards to the camera and FADES OUT as the
+      blob climbs into space (no sun in the void). Chose a cheap sprite over a postprocessing
+      GodRays pass — the dome shader already paints the shafts, so the sprite completes the look
+      within the mobile render budget. Verified no errors; in-game upward camera frames it.
 - [x] Wet/jelly trampoline membrane: the bounce surface is now MeshPhysicalMaterial with a full
       clearcoat (roughness 0.08) + sheen tinted to the pad's type color + low base roughness, so
       it reads as wet jelly matching the goo blob (was a drier standard material). The existing
