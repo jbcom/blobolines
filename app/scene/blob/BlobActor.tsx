@@ -77,9 +77,10 @@ export function BlobActor({
     g.scale.z += (s.z - g.scale.z) * k;
 
     // Surface-tension wobble: a fresh impact pumps the envelope up (toward the impact
-    // amount), then it decays so the goo skin ripples and settles like a water balloon.
+    // amount), then it decays so the goo skin ripples and settles like a water balloon. A small
+    // constant floor keeps the hero subtly alive (never a perfectly still surface) at rest.
     wobble.current = Math.max(wobble.current * Math.exp(-dt / 0.5), imp);
-    material.uniforms.uWobble.value = wobble.current;
+    material.uniforms.uWobble.value = Math.max(0.1, wobble.current);
 
     // Idle gooeyness so the hero blob is never a CLEAN sphere even at rest (the "less ball"
     // feedback) — but SUBTLE: the eyes are separate meshes that don't follow vertex-level

@@ -41,6 +41,8 @@ interface GooCsgProps {
 }
 
 const { maxMerges, blobSegments, dropletDetail } = gooCfg.csg;
+/** Constant surface-wobble floor so the goo is never perfectly still — always subtly alive. */
+const IDLE_WOBBLE = 0.12;
 
 export function GooCsg({ skin, blobRadius, getDroplets }: GooCsgProps) {
   const groupRef = useRef<Group>(null);
@@ -167,7 +169,10 @@ export function GooCsg({ skin, blobRadius, getDroplets }: GooCsgProps) {
     // hard landing sends a big travelling ripple across the goo that settles like a water
     // balloon (decays each frame). Overshoot factor makes it read fluid, not stiff.
     wobble.current = Math.max(wobble.current * Math.exp(-dt / blobCfg.wobbleDecayTau), imp * 1.6);
-    material.uniforms.uWobble.value = Math.min(1.4, wobble.current);
+    // Perpetual idle jiggle: a small constant wobble floor so the goo surface is ALWAYS subtly
+    // alive (breathing/shimmering), never a perfectly still surface even when the body itself
+    // is at rest — the impact spike rides on top of it.
+    material.uniforms.uWobble.value = Math.min(1.4, Math.max(IDLE_WOBBLE, wobble.current));
 
     const [vx, vy, vz] = diag.velocity;
 

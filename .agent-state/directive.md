@@ -499,7 +499,9 @@ game — touch/drag is primary; keyboard is a minor desktop-only secondary, don'
 - [ ] Expressive eyes: lit glossy sclera + tracking glint, lid/eyebrow shaping per expression, pupil dart toward velocity.
 - [ ] Quality-tier system (src/render/quality.ts): scale raymarch steps, pool sizes, DOF/god-rays/bloom by device/FPS — gate the heavy effects above.
 - [ ] Selective (emissive-channel) bloom instead of global luminance threshold — only goo hotspots/flame/crystals/powerups glow.
-- [ ] Low-amplitude perpetual idle jiggle (breathing) on the goo so it's always alive at rest.
+- [x] Perpetual idle jiggle: a small constant uWobble floor (GooCsg IDLE_WOBBLE=0.12, BlobActor
+      0.1) so the goo surface is ALWAYS subtly alive/shimmering, never perfectly still even at
+      rest — the impact spike + resting breathe ride on top of it. Both menu hero + in-game blob.
 
 ## M14 — audio depth (from audio audit, 2026-06-16)
 - [x] Distinct bounce VOICE for ALL pad types: src/audio/padVoice.ts (pure) gives each type a
@@ -521,7 +523,9 @@ game — touch/drag is primary; keyboard is a minor desktop-only secondary, don'
       1.25×) fires ONCE the frame a clean streak first hits the cap — the "ON FIRE" milestone.
       (The directive's 5/10/25 assumed a higher cap; MAX_COMBO is 8, so the fanfare marks the
       max-tier on-fire moment — the one milestone that exists.) Test covers it.
-- [ ] New personal-best stinger on gameover when maxY>best.
+- [x] Personal-best stinger on gameover — ALREADY DONE (M12 line above): GameOver fires
+      playRecord() exactly once when the run is a record (isRecord, i.e. height/score beat best),
+      gated by a ref so re-renders don't replay it.
 - [ ] Real game-over death sting (downer + gooey explosion) instead of reusing the splat.
 - [ ] Powerup activate/expire cues distinct from pickup (thruster laser-charge loop, magnet buff, expire power-down).
 - [ ] Crystal pickup variation + multi-gather sparkle run (rate per gem); magnet "sweep" loop while active.
