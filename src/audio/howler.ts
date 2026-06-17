@@ -129,6 +129,11 @@ export function playChime(): void {
 export function playPowerup(): void {
   playSfx("powerup");
 }
+/** Power-down cue when a power-up expires — the pickup sample pitched + leveled DOWN so it
+ *  reads as the buff fading, distinct from the bright pickup. */
+export function playPowerdown(): void {
+  playSfx("powerup", { rate: 0.6, volume: 0.55 });
+}
 /** Combo-milestone fanfare: a short celebratory stinger when a clean streak hits the "on
  *  fire" tier (combo cap), pitched up a bit from the altitude milestone so it reads as a
  *  distinct "streak!" cue. Fired once per streak by the caller. */

@@ -7,6 +7,7 @@ import {
   playComboFanfare,
   playLaunch,
   playMilestone,
+  playPowerdown,
   playPowerup,
   playRecord,
   playSplat,
@@ -49,6 +50,7 @@ describe("audio before init", () => {
     expect(() => playComboFanfare()).not.toThrow();
     expect(() => playChime()).not.toThrow();
     expect(() => playPowerup()).not.toThrow();
+    expect(() => playPowerdown()).not.toThrow();
     expect(() => playSplat()).not.toThrow();
     // Arcade-identity celebration stingers.
     expect(() => playMilestone()).not.toThrow();

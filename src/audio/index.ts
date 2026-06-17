@@ -12,6 +12,7 @@ export {
   playComboFanfare,
   playLaunch,
   playMilestone,
+  playPowerdown,
   playPowerup,
   playRecord,
   playSplat,

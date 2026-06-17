@@ -532,7 +532,12 @@ game — touch/drag is primary; keyboard is a minor desktop-only secondary, don'
       playRecord() exactly once when the run is a record (isRecord, i.e. height/score beat best),
       gated by a ref so re-renders don't replay it.
 - [ ] Real game-over death sting (downer + gooey explosion) instead of reusing the splat.
-- [ ] Powerup activate/expire cues distinct from pickup (thruster laser-charge loop, magnet buff, expire power-down).
+- [x] Powerup expire cue: tickPowerups now returns the powerups that EXPIRED this tick (crossed
+      to 0), and PlayerBlob fires playPowerdown (the pickup sample pitched + leveled DOWN) once
+      when a buff ends — distinct from the bright pickup cue. New powerupBridge unit test covers
+      activate/countdown/expire-once/multi-expire/reset. (A per-type activate loop + magnet sweep
+      loop would need new looped samples — left for an audio-sourcing pass; the power-down is the
+      high-value distinct cue.)
 - [ ] Crystal pickup variation + multi-gather sparkle run (rate per gem); magnet "sweep" loop while active.
 - [ ] Near-miss whoosh when passing a pad close at speed without landing.
 - [ ] Three music tracks swapped by phase+altitude (menu / in-game / high-space) with crossfade.

@@ -3,7 +3,14 @@ import { BallCollider, type RapierRigidBody, RigidBody } from "@react-three/rapi
 import type { Entity } from "koota";
 import { useWorld } from "koota/react";
 import { useEffect, useRef } from "react";
-import { playComboBlip, playComboFanfare, playLaunch, playSplat, setMusicAltitude } from "@/audio";
+import {
+  playComboBlip,
+  playComboFanfare,
+  playLaunch,
+  playPowerdown,
+  playSplat,
+  setMusicAltitude,
+} from "@/audio";
 import { Blob, Transform, Velocity } from "@/ecs";
 import { spawnBlob } from "@/factories";
 import { ImpactStyle, impact as impact_, vibrate } from "@/platform";
@@ -104,8 +111,9 @@ export function PlayerBlob() {
     const airborne = Math.abs(v.y) > 0.5;
 
     // Power-up timers tick down; the hyper-thrust holds a strong upward velocity while
-    // active (smashing the blob skyward), overriding gravity for its duration.
-    tickPowerups(dt);
+    // active (smashing the blob skyward), overriding gravity for its duration. A power-down
+    // cue fires when one expires.
+    if (tickPowerups(dt).length > 0) playPowerdown();
     if (isPowerupActive("thruster")) {
       body.wakeUp();
       body.setLinvel({ x: v.x, y: 34, z: v.z }, true);
