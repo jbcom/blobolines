@@ -100,6 +100,7 @@ export function LaunchInput() {
       <AnimatePresence>
         {airReticle.active && (
           <motion.div
+            key="air-steer-reticle"
             aria-hidden
             data-testid="air-steer-reticle"
             initial={{ opacity: 0, scale: 0.8 }}
