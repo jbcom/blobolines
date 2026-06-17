@@ -1,7 +1,7 @@
 import { useKeyboardSteer } from "@app/hooks";
 import { useDrag } from "@use-gesture/react";
-import { AnimatePresence, motion, useReducedMotion } from "motion/react";
-import { useState } from "react";
+import { AnimatePresence, motion, useMotionValue, useReducedMotion, useSpring } from "motion/react";
+import { useRef, useState } from "react";
 import { computeAim, computeAirSteer } from "@/input";
 import { isPerfectRelease } from "@/sim/launch";
 import {
@@ -26,16 +26,41 @@ export function LaunchInput() {
   // touch/mouse drag below. Mounted here so all input lives in one PLAYING-scoped place.
   useKeyboardSteer();
   const [charge, setCharge] = useState(0);
-  const [airReticle, setAirReticle] = useState({
-    active: false,
-    originX: 0,
-    originY: 0,
-    offsetX: 0,
-    offsetY: 0,
+  const [airReticleActive, setAirReticleActive] = useState(false);
+  const airReticleActiveRef = useRef(false);
+  const reticleOriginX = useMotionValue(0);
+  const reticleOriginY = useMotionValue(0);
+  const reticleOffsetX = useMotionValue(-14);
+  const reticleOffsetY = useMotionValue(-14);
+  const reticleDotX = useSpring(reticleOffsetX, {
+    stiffness: 520,
+    damping: 34,
+  });
+  const reticleDotY = useSpring(reticleOffsetY, {
+    stiffness: 520,
+    damping: 34,
   });
   // Honor prefers-reduced-motion: drop the infinite pulse loops to a single static cue.
   const reduced = useReducedMotion();
   const repeat = reduced ? 0 : Number.POSITIVE_INFINITY;
+
+  const showAirReticle = (originX: number, originY: number, offsetX: number, offsetY: number) => {
+    reticleOriginX.set(originX);
+    reticleOriginY.set(originY);
+    reticleOffsetX.set(offsetX - 14);
+    reticleOffsetY.set(offsetY - 14);
+    if (!airReticleActiveRef.current) {
+      airReticleActiveRef.current = true;
+      setAirReticleActive(true);
+    }
+  };
+
+  const hideAirReticle = () => {
+    if (airReticleActiveRef.current) {
+      airReticleActiveRef.current = false;
+      setAirReticleActive(false);
+    }
+  };
 
   const bind = useDrag(({ movement: [mx, my], down, last, tap, initial: [ix, iy] }) => {
     const airborne = getBlobDiagnostics().airborne;
@@ -49,7 +74,7 @@ export function LaunchInput() {
         requestMidAirBounce();
         setAirSteer(0, 0);
         setCharge(0);
-        setAirReticle((r) => ({ ...r, active: false }));
+        hideAirReticle();
         return;
       }
       // Mid-air 3D steering: drag → continuous lateral force; release → stop.
@@ -59,22 +84,16 @@ export function LaunchInput() {
         const dist = Math.hypot(mx, my);
         const maxOffset = 42;
         const k = dist > maxOffset ? maxOffset / dist : 1;
-        setAirReticle({
-          active: true,
-          originX: ix,
-          originY: iy,
-          offsetX: mx * k,
-          offsetY: my * k,
-        });
+        showAirReticle(ix, iy, mx * k, my * k);
       } else {
         setAirSteer(0, 0);
-        setAirReticle((r) => ({ ...r, active: false }));
+        hideAirReticle();
       }
       setCharge(0);
       return;
     }
 
-    setAirReticle((r) => (r.active ? { ...r, active: false } : r));
+    hideAirReticle();
     // Slingshot on a pad: charge while dragging, launch on release.
     const aim = computeAim(mx, my, { maxDragDist: 140, sensitivity });
     setCharge(down ? aim.strength : 0);
@@ -98,7 +117,7 @@ export function LaunchInput() {
     >
       {/* Edge glow that ignites as the charge nears max — the screen itself tenses up. */}
       <AnimatePresence>
-        {airReticle.active && (
+        {airReticleActive && (
           <motion.div
             key="air-steer-reticle"
             aria-hidden
@@ -109,19 +128,18 @@ export function LaunchInput() {
             transition={{ duration: 0.12 }}
             className="pointer-events-none absolute size-24 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-accent/70 bg-bg/15 shadow-[var(--glow-blue)] backdrop-blur-[2px]"
             style={{
-              left: airReticle.originX,
-              top: airReticle.originY,
+              left: reticleOriginX,
+              top: reticleOriginY,
             }}
           >
             <span className="absolute top-1/2 left-2 right-2 h-px -translate-y-1/2 bg-accent/35" />
             <span className="absolute top-2 bottom-2 left-1/2 w-px -translate-x-1/2 bg-accent/35" />
             <motion.span
               className="absolute top-1/2 left-1/2 size-7 rounded-full border-2 border-cream/90 bg-accent/70 shadow-[var(--glow-blue)]"
-              animate={{
-                x: airReticle.offsetX - 14,
-                y: airReticle.offsetY - 14,
+              style={{
+                x: reticleDotX,
+                y: reticleDotY,
               }}
-              transition={{ type: "spring", stiffness: 520, damping: 34 }}
             />
           </motion.div>
         )}

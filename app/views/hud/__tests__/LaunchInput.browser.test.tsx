@@ -1,11 +1,20 @@
 import { afterEach, expect, test } from "vitest";
 import { cleanup, render } from "vitest-browser-react";
-import { getAirSteer, setAirSteer, setBlobDiagnostics } from "@/state";
+import {
+  activatePowerup,
+  consumeMidAirBounce,
+  getAirSteer,
+  resetBridges,
+  resetPowerups,
+  setAirSteer,
+  setBlobDiagnostics,
+} from "@/state";
 import { LaunchInput } from "../LaunchInput";
 
 afterEach(() => {
   cleanup();
-  setAirSteer(0, 0);
+  resetBridges();
+  resetPowerups();
   setBlobDiagnostics({
     position: [0, 0, 0],
     velocity: [0, 0, 0],
@@ -110,4 +119,40 @@ test("airborne drag shows the 3D steer reticle and writes X/Z steering", async (
   );
   await expect.element(screen.getByTestId("air-steer-reticle").query()).not.toBeInTheDocument();
   expect(getAirSteer()).toEqual([0, 0]);
+});
+
+test("airborne tap with a multi-bounce charge hides the reticle and requests the bounce", async () => {
+  const screen = await render(<LaunchInput />);
+  setAirborne(true);
+  activatePowerup("multibounce");
+  const surface = document.querySelector('[role="application"]') as HTMLElement;
+  expect(surface).toBeTruthy();
+
+  surface.dispatchEvent(
+    new PointerEvent("pointerdown", {
+      bubbles: true,
+      pointerId: 1,
+      pointerType: "touch",
+      clientX: 300,
+      clientY: 300,
+      buttons: 1,
+    }),
+  );
+
+  await expect.element(screen.getByTestId("air-steer-reticle")).toBeInTheDocument();
+  setAirSteer(12, -9);
+
+  surface.dispatchEvent(
+    new PointerEvent("pointerup", {
+      bubbles: true,
+      pointerId: 1,
+      pointerType: "touch",
+      clientX: 300,
+      clientY: 300,
+    }),
+  );
+
+  await expect.element(screen.getByTestId("air-steer-reticle").query()).not.toBeInTheDocument();
+  expect(getAirSteer()).toEqual([0, 0]);
+  expect(consumeMidAirBounce()).toBe(true);
 });
