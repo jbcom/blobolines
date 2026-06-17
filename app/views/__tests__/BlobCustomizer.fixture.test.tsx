@@ -13,6 +13,6 @@ test("BlobCustomizer renders open with the skin grid visible", async () => {
   await expect.element(panel).toBeVisible();
   // The four skins + the heading are present.
   await expect.element(screen.getByText("Goo Customizer")).toBeVisible();
-  await expect.element(screen.getByText("Bloop")).toBeVisible();
-  await expect.element(screen.getByText("Slime")).toBeVisible();
+  await expect.element(screen.getByText("Mango")).toBeVisible();
+  await expect.element(screen.getByText("Berry")).toBeVisible();
 });

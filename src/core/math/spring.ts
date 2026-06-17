@@ -40,8 +40,8 @@ export interface SpringConfig {
 }
 
 /**
- * Critically-style damped spring step (the `-k·x - c·v` model from the PoC
- * trampolines), integrated semi-implicitly for stability.
+ * Critically-style damped spring step (the `-k·x - c·v` model used by trampoline
+ * membranes), integrated semi-implicitly for stability.
  */
 export function stepSpring(
   state: SpringState,

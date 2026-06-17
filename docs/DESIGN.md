@@ -1,6 +1,6 @@
 ---
 title: Design Language
-updated: 2026-06-16
+updated: 2026-06-17
 status: current
 domain: creative
 ---
@@ -10,7 +10,7 @@ domain: creative
 The visual identity is grounded in the hero cover art
 (`public/assets/images/hero-cover.png`): squishy gel blobs with big expressive eyes,
 round springy colored trampolines, a dreamy painterly cloud-and-ruins sky. Soft, juicy,
-gooey — **not** neon-cyberpunk (the PoC's look was deliberately dropped).
+gooey — **not** neon-cyberpunk (the early prototype's look was deliberately dropped).
 
 ## Tokens
 
@@ -21,12 +21,18 @@ The single source of truth is `src/styles/tokens.css` (CSS vars) mirrored by
 
 ### Palette
 
-- **Blobs (skins):** ink `#14110f`, blue `#2e8bf0`, slime `#7ed957`, ghost `#f4f6fb`
-- **Trampolines:** blue `#2f7fd1`, gold `#f2c14e`, orange `#f08a3c`, green `#6cc04a`
-- **Sky/atmosphere:** top `#cfe0e8`, mid `#8fb3c4`, deep `#4f7488`; cream light `#f3efd6`
-- **Goo:** splash `#2e8bf0`, fresnel rim `#bfe3ff`, wet sheen `#ffffff`
-- **Eyes:** sclera `#f8fbff`, bezel `#14110f`, pupil `#0a0a0c`, glint `#ffffff`, tear `#bfe3ff`
-- **UI surface:** dark glassy blue-teal; cream text; warm/blue/slime accents + danger
+- **Blobs (skins):** Mango `#ff7a3d` (starter), Berry `#ff4f7b`, Honey `#ffd95a`, Cocoa `#5a2418`
+- **Trampolines:** coral `#ff6f61`, gold `#f2c14e`, orange `#f08a3c`, marigold `#f7a72e`, berry `#ff5ab3`, honey `#ffe7a3`
+- **Sky/atmosphere:** cloud light `#eefaff`, cheerful blue `#8fd7ff`, daylight depth `#42a8f5`; honey sun `#ffd36b`; cream light `#f3efd6`
+- **Goo:** mango splash `#ff7a3d`, warm fresnel rim `#ffe3a6`, wet sheen `#ffffff`, combo flame `#ffb238`
+- **Eyes:** sclera `#f8fbff`, bezel `#14110f`, pupil `#0a0a0c`, glint `#ffffff`, warm tear `#ffd0a6`
+- **UI surface:** dark cocoa glass; cream text; mango/berry/gold accents + danger
+
+Some CSS variable names retain historical ids such as `--blob-blue` and `--tramp-blue`
+for Tailwind class compatibility, but those tokens now carry warm foreground values. The
+sky is intentionally bright blue daylight for foreground/background separation, warmed by
+honey sun and peach fog. Do not introduce cool base colors for the starter blob or core
+play objects.
 
 ### Type
 

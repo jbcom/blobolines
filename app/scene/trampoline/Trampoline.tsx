@@ -20,7 +20,13 @@ import {
   stepTramp,
   type TrampState,
 } from "@/sim/trampoline";
-import { reportImpact, reportLanding, reportRebound, useGameStore } from "@/state";
+import {
+  getRouteProofTarget,
+  reportImpact,
+  reportLanding,
+  reportRebound,
+  useGameStore,
+} from "@/state";
 import { mixHex, palette, trampColor } from "@/styles/tokens";
 import { PadTypeDecor } from "./PadTypeDecor";
 
@@ -33,6 +39,7 @@ import { PadTypeDecor } from "./PadTypeDecor";
 
 interface TrampolineProps {
   id: number;
+  routeIndex?: number;
   position: readonly [number, number, number];
   width: number;
   depth: number;
@@ -101,6 +108,7 @@ function MembraneCords({ width, depth, color }: { width: number; depth: number; 
 
 export function Trampoline({
   id,
+  routeIndex,
   position,
   width,
   depth,
@@ -151,7 +159,7 @@ export function Trampoline({
     const sc = createSplatCanvas(getQuality().splatResolution);
     const texture = new CanvasTexture(sc.canvas);
     // The canvas holds sRGB colors (palette hexes); without this the goo decal renders in
-    // linear space — the blue gets crushed to dark muddy rings (worse under ACES tonemapping).
+    // linear space and the mango goo crushes to muddy rings (worse under ACES tonemapping).
     texture.colorSpace = SRGBColorSpace;
     return { ...sc, texture };
   }, []);
@@ -186,15 +194,30 @@ export function Trampoline({
     // Moving pads glide side to side on a kinematic body (collider moves with them) and
     // track their slide velocity so a bounce imparts that lateral momentum (timing skill).
     if (type === "moving" && rbRef.current) {
-      movePhase.current += step * movingSpeed;
-      const offset = Math.sin(movePhase.current) * movingAmplitude;
-      const x = position[0] + sliderAxis[0] * offset;
-      const z = position[2] + sliderAxis[1] * offset;
-      rbRef.current.setNextKinematicTranslation({ x, y: position[1], z });
-      // d/dt of offset: cos(phase)·amp·speed → instantaneous lateral slide speed (m/s).
-      const slideSpeed = Math.cos(movePhase.current) * movingAmplitude * movingSpeed;
-      slideVx.current = sliderAxis[0] * slideSpeed;
-      slideVz.current = sliderAxis[1] * slideSpeed;
+      const proofTarget = getRouteProofTarget();
+      const frozenForProof =
+        proofTarget &&
+        routeIndex !== undefined &&
+        (routeIndex === proofTarget.pairIndex || routeIndex === proofTarget.pairIndex + 1);
+      if (frozenForProof) {
+        rbRef.current.setNextKinematicTranslation({
+          x: position[0],
+          y: position[1],
+          z: position[2],
+        });
+        slideVx.current = 0;
+        slideVz.current = 0;
+      } else {
+        movePhase.current += step * movingSpeed;
+        const offset = Math.sin(movePhase.current) * movingAmplitude;
+        const x = position[0] + sliderAxis[0] * offset;
+        const z = position[2] + sliderAxis[1] * offset;
+        rbRef.current.setNextKinematicTranslation({ x, y: position[1], z });
+        // d/dt of offset: cos(phase)·amp·speed → instantaneous lateral slide speed (m/s).
+        const slideSpeed = Math.cos(movePhase.current) * movingAmplitude * movingSpeed;
+        slideVx.current = sliderAxis[0] * slideSpeed;
+        slideVz.current = sliderAxis[1] * slideSpeed;
+      }
     }
 
     // Fragile pads shrink + fade then vanish ~0.8s after impact.
@@ -207,8 +230,8 @@ export function Trampoline({
   });
 
   // Pads recolor with ALTITUDE to match the biome backdrop: their type hue is pulled
-  // toward the biome's mid color the higher they are, so high-up pads cool/darken into
-  // space alongside the sky. Computed once from the pad's fixed world Y.
+  // toward the biome's mid color the higher they are, so high-up pads shift with the
+  // painterly sky instead of floating as unrelated slabs. Computed once from fixed world Y.
   const tinted = useMemo(() => mixHex(color, biomeSkyAt(position[1]).mid, 0.35), [color, position]);
   const emissive = useMemo(() => tinted, [tinted]);
   // Membrane = mostly bright cream but pulled ~45% toward the (height-tinted) pad color so

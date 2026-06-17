@@ -26,7 +26,7 @@ export function BlobMouth({ expression, radius, live = false }: BlobMouthProps) 
   const cornerL = useRef<Mesh>(null);
   const cornerR = useRef<Mesh>(null);
 
-  useFrame(() => {
+  useFrame((state) => {
     const g = groupRef.current;
     if (!g) return;
     const diag = live ? getBlobDiagnostics() : null;
@@ -35,10 +35,17 @@ export function BlobMouth({ expression, radius, live = false }: BlobMouthProps) 
     const charge = aim?.charge ?? 0;
     const impatience = Math.min(1, Math.max(0, ((diag?.idleSeconds ?? 0) - 2.2) / 3.2));
     const excitement = diag?.excitement ?? 0;
+    const heroIdle = live ? 0 : Math.max(0, Math.sin(state.clock.elapsedTime * 1.5 + 0.4)) * 0.22;
     const m = mouthShape(expr);
-    const open = Math.min(1, m.open + charge * 0.48 + impatience * 0.18 + excitement * 0.25);
-    const width = m.width + charge * 0.2 + impatience * 0.12 + excitement * 0.16;
-    const curve = Math.max(-1, Math.min(1, m.curve + charge * 0.25 + excitement * 0.32));
+    const open = Math.min(
+      1,
+      m.open + charge * 0.48 + impatience * 0.18 + excitement * 0.25 + heroIdle * 0.12,
+    );
+    const width = m.width + charge * 0.2 + impatience * 0.12 + excitement * 0.16 + heroIdle * 0.08;
+    const curve = Math.max(
+      -1,
+      Math.min(1, m.curve + charge * 0.25 + excitement * 0.32 + heroIdle * 0.2),
+    );
 
     // The lip ellipse: width = mouth width, height = openness (a flat smile when ~closed,
     // a tall "o" when open).

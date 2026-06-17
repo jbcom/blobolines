@@ -47,7 +47,7 @@ test("shows the run recap: score headline, altitude, max combo, crystals run + l
     .toBeInTheDocument();
   // Share button present.
   await expect.element(screen.getByRole("button", { name: /share/i })).toBeInTheDocument();
-  // Crystals → next-skin progress + customize jump (default slime is unlocked; blue is next).
+  // Crystals → next-skin progress + customize jump (default Mango is unlocked; Berry is next).
   await expect.element(screen.getByText(/Customize/)).toBeInTheDocument();
 });
 

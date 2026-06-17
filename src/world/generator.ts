@@ -1,8 +1,9 @@
-import { trampoline as trampCfg } from "@/config";
+import { launch as launchCfg, trampoline as trampCfg } from "@/config";
 import type { Rng } from "@/core/math";
 import type {
   CrystalSpec,
   GoldenPathProof,
+  GoldenPathVariant,
   PowerUpType,
   TrampolineSpec,
   TrampType,
@@ -11,12 +12,7 @@ import type {
 } from "@/core/types";
 import { GRAVITY } from "@/sim/physics";
 import { pickCrystalTier } from "./crystalTier";
-import {
-  type RouteDifficultyProfile,
-  routeCantAngle,
-  routePadType,
-  routeProfile,
-} from "./difficulty";
+import { type RouteDifficultyProfile, routeCantAngle, routeProfile } from "./difficulty";
 import { CLIMB_SPEED, solveGoldenPath } from "./reachable";
 
 export interface PowerUpSpec {
@@ -58,9 +54,88 @@ const STARTER_MIN_LATERAL = 3.6;
 const STARTER_MAX_LATERAL = 4.8;
 const STARTER_MIN_FOOTPRINT = 8.4;
 const G = Math.abs(GRAVITY[1]);
+const MIN_CERTIFIED_SPEED = launchCfg.basePower;
+const MAX_CERTIFIED_SPEED =
+  (launchCfg.basePower + launchCfg.powerPerCharge) * launchCfg.perfectRelease.bonus;
+const ROUTE_TYPES: readonly TrampType[] = [
+  "standard",
+  "moving",
+  "canted",
+  "wobbler",
+  "booster",
+  "ice",
+  "super",
+  "fragile",
+];
+const SOURCE_MECHANICS: readonly TrampType[] = ["standard", "moving", "canted", "wobbler"];
 
 function clamp(n: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, n));
+}
+
+function weightedPadType(rng: Rng, profile: RouteDifficultyProfile): TrampType {
+  const total = ROUTE_TYPES.reduce((sum, type) => sum + (profile.typeWeights[type] ?? 0), 0);
+  let pick = rng.next() * total;
+  for (const type of ROUTE_TYPES) {
+    pick -= profile.typeWeights[type] ?? 0;
+    if (pick <= 0) return type;
+  }
+  return "standard";
+}
+
+function proofToVariant(proof: GoldenPathProof): GoldenPathVariant {
+  return {
+    launchSpeed: proof.launchSpeed,
+    flightTime: proof.flightTime,
+    apex: proof.apex,
+    landing: proof.landing,
+    clearance: proof.clearance,
+    samples: proof.samples,
+    landingPrecision: proof.landingPrecision,
+    lipClearance: proof.lipClearance,
+    lipClearanceRatio: proof.lipClearanceRatio,
+    arcCompression: proof.arcCompression,
+  };
+}
+
+function variantMultipliers(profile: RouteDifficultyProfile): number[] {
+  if (profile.proofVariants <= 1) return [1];
+  const spread = profile.proofVariantSpread;
+  return [
+    1,
+    1 + spread,
+    1 + spread * 2,
+    1 - spread * 0.5,
+    1 + spread * 3,
+    1 - spread,
+    1 + spread * 4,
+  ];
+}
+
+function weightedSourceMechanics(
+  rng: Rng,
+  current: TrampType,
+  profile: RouteDifficultyProfile,
+): TrampType[] {
+  const remaining = [...SOURCE_MECHANICS];
+  const order: TrampType[] = [];
+  while (remaining.length > 0) {
+    const total = remaining.reduce((sum, type) => sum + (profile.typeWeights[type] ?? 0.1), 0);
+    let pick = rng.next() * total;
+    let pickedIndex = remaining.length - 1;
+    for (let i = 0; i < remaining.length; i++) {
+      pick -= profile.typeWeights[remaining[i]] ?? 0.1;
+      if (pick <= 0) {
+        pickedIndex = i;
+        break;
+      }
+    }
+    order.push(remaining.splice(pickedIndex, 1)[0] ?? "standard");
+  }
+  if (!SOURCE_MECHANICS.includes(current)) {
+    return ["standard", ...order.filter((type) => type !== "standard")];
+  }
+  return [current, ...order.filter((type) => type !== current)];
 }
 
 function starterGuidePosition(prev: TrampolineSpec, target: Vec3, fallbackAngle: number): Vec3 {
@@ -131,6 +206,18 @@ function aimSourceMechanic(
   }
 }
 
+function applySourceMechanic(
+  prev: TrampolineSpec,
+  type: TrampType,
+  target: TrampolineSpec,
+  profile: RouteDifficultyProfile,
+) {
+  if (type !== "standard" || SOURCE_MECHANICS.includes(prev.type)) {
+    prev.type = type;
+  }
+  aimSourceMechanic(prev, target, profile);
+}
+
 function sourceLateralForProof(
   prev: TrampolineSpec,
   profile: RouteDifficultyProfile,
@@ -185,43 +272,48 @@ function predictedLandingGap(
 }
 
 function proofAccepted(
-  prev: TrampolineSpec,
-  target: TrampolineSpec,
   proof: GoldenPathProof | null,
   profile: RouteDifficultyProfile,
 ): proof is GoldenPathProof {
   if (!proof) return false;
-  const flatToFlat = prev.type === "standard" && target.type === "standard";
-  if (flatToFlat && !profile.allowFlatToFlat) return false;
-  const minLip = flatToFlat ? profile.flatToFlatMinLipClearance : profile.minLipClearance;
-  const minPrecision = flatToFlat
-    ? profile.flatToFlatMinLandingPrecision
-    : profile.minLandingPrecision;
   return (
-    proof.lipClearance >= minLip &&
+    proof.lipClearance >= profile.minLipClearance &&
     proof.lipClearanceRatio >= profile.minLipClearanceRatio &&
-    proof.landingPrecision >= minPrecision
+    proof.landingPrecision >= profile.minLandingPrecision
   );
 }
 
-function minPrecisionForPair(
+function proofWithVariants(
   prev: TrampolineSpec,
   target: TrampolineSpec,
   profile: RouteDifficultyProfile,
-): number {
-  return prev.type === "standard" && target.type === "standard"
-    ? profile.flatToFlatMinLandingPrecision
-    : profile.minLandingPrecision;
-}
-
-function minLipForPair(
-  prev: TrampolineSpec,
-  target: TrampolineSpec,
-  profile: RouteDifficultyProfile,
-): number {
-  return prev.type === "standard" && target.type === "standard"
-    ? profile.flatToFlatMinLipClearance
-    : profile.minLipClearance;
+): GoldenPathProof | null {
+  const primary = solveGoldenPath(
+    prev,
+    target,
+    undefined,
+    undefined,
+    undefined,
+    prev.type === "canted",
+  );
+  if (!proofAccepted(primary, profile)) return null;
+  const variants = [proofToVariant(primary)];
+  for (const multiplier of variantMultipliers(profile).slice(1)) {
+    if (variants.length >= profile.proofVariants) break;
+    const launchSpeed = primary.launchSpeed * multiplier;
+    if (launchSpeed < MIN_CERTIFIED_SPEED || launchSpeed > MAX_CERTIFIED_SPEED) continue;
+    const variant = solveGoldenPath(
+      prev,
+      target,
+      launchSpeed,
+      undefined,
+      undefined,
+      prev.type === "canted",
+    );
+    if (!proofAccepted(variant, profile)) continue;
+    variants.push(proofToVariant(variant));
+  }
+  return variants.length >= profile.proofVariants ? { ...primary, variants } : null;
 }
 
 function widenForHumanMargin(
@@ -235,14 +327,16 @@ function widenForHumanMargin(
   );
   const predicted = predictedLandingGap(prev, target, profile);
   const estimatedMiss = prev.type === "standard" ? lateral : Math.abs(predicted - lateral);
-  const lip = minLipForPair(prev, target, profile);
-  const precision = Math.max(
-    profile.minLipClearanceRatio,
-    minPrecisionForPair(prev, target, profile),
-  );
+  const variantMargin =
+    Math.max(0, profile.proofVariants - 1) *
+    profile.proofVariantSpread *
+    Math.max(1, predicted, lateral);
+  const missBudget = estimatedMiss + variantMargin;
+  const lip = profile.minLipClearance;
+  const precision = Math.max(profile.minLipClearanceRatio, profile.minLandingPrecision);
   const safety = 1.08;
-  const halfForLip = (estimatedMiss + lip) * safety;
-  const halfForPercent = (estimatedMiss / Math.max(0.05, 1 - precision)) * safety;
+  const halfForLip = (missBudget + lip) * safety;
+  const halfForPercent = (missBudget / Math.max(0.05, 1 - precision)) * safety;
   const footprint = Math.max(profile.minFootprint, halfForLip * 2, halfForPercent * 2);
   return {
     ...target,
@@ -260,17 +354,49 @@ function ensureReachable(
   prev: TrampolineSpec,
   pad: TrampolineSpec,
   profile: RouteDifficultyProfile,
+  rng: Rng,
 ): TrampolineSpec {
   const [px, , pz] = prev.position;
   const attachProof = (proof: GoldenPathProof) => {
     prev.goldenPath = proof;
   };
-  /** Make prev reach `p` using its planned source mechanic. The proof must satisfy the
-   *  selected difficulty's human margin rules, not just the binary parabola predicate. */
+  const sourceCandidates = weightedSourceMechanics(rng, prev.type, profile);
+
+  /** Make prev reach `p` using whichever source mechanic can prove the selected difficulty's
+   *  variant count and impact-zone margins. */
   const proveAt = (p: TrampolineSpec): GoldenPathProof | null => {
-    aimSourceMechanic(prev, p, profile);
-    const proof = solveGoldenPath(prev, p, undefined, undefined, undefined, prev.type === "canted");
-    return proofAccepted(prev, p, proof, profile) ? proof : null;
+    const accepted: { sourceType: TrampType; proof: GoldenPathProof; weight: number }[] = [];
+    for (const sourceType of sourceCandidates) {
+      const trial = { ...prev };
+      applySourceMechanic(trial, sourceType, p, profile);
+      const proof = proofWithVariants(trial, p, profile);
+      if (!proof) continue;
+      let weight = profile.typeWeights[sourceType] ?? 1;
+      if (sourceType === prev.type) weight *= 1.25;
+      // Easy should expose the player to several readable mechanics early; moving pads often
+      // prove wide-margin arcs, so slightly downweight them in the visible opening when other
+      // proof-valid mechanics exist.
+      if (
+        profile.difficulty === "ready" &&
+        (prev.routeIndex ?? 0) < 12 &&
+        sourceType === "moving"
+      ) {
+        weight *= 0.55;
+      }
+      accepted.push({ sourceType, proof, weight });
+    }
+    if (accepted.length === 0) return null;
+    let pick = rng.next() * accepted.reduce((sum, candidate) => sum + candidate.weight, 0);
+    let chosen = accepted[accepted.length - 1] ?? accepted[0];
+    for (const candidate of accepted) {
+      pick -= candidate.weight;
+      if (pick <= 0) {
+        chosen = candidate;
+        break;
+      }
+    }
+    applySourceMechanic(prev, chosen.sourceType, p, profile);
+    return chosen.proof;
   };
 
   const initial = proveAt(pad);
@@ -287,18 +413,16 @@ function ensureReachable(
   const gap = Math.hypot(dx, dz);
   const dirX = gap > 0.001 ? dx / gap : 1;
   const dirZ = gap > 0.001 ? dz / gap : 0;
-  const minK = gap > MIN_SUCCESSOR_LATERAL ? MIN_SUCCESSOR_LATERAL / gap : 1;
+  const minLegalLateral =
+    prev.position[1] < STARTER_GUIDE_Y ? STARTER_MIN_LATERAL : MIN_SUCCESSOR_LATERAL;
+  const minK = gap > minLegalLateral ? minLegalLateral / gap : 1;
   let result = pad;
-  if (prev.type !== "standard") {
+  if (sourceCandidates.some((type) => type !== "standard")) {
     const maxGap =
       prev.position[1] < STARTER_GUIDE_Y
         ? STARTER_MAX_LATERAL
         : Math.min(MAX_SUCCESSOR_LATERAL, 7 + prev.position[1] / 120);
-    const projectedGap = clamp(
-      predictedLandingGap(prev, pad, profile),
-      MIN_SUCCESSOR_LATERAL,
-      maxGap,
-    );
+    const projectedGap = clamp(predictedLandingGap(prev, pad, profile), minLegalLateral, maxGap);
     result = widenForHumanMargin(
       prev,
       withPosition(pad, [px + dirX * projectedGap, pad.position[1], pz + dirZ * projectedGap]),
@@ -336,8 +460,8 @@ function ensureReachable(
       : Math.min(MAX_SUCCESSOR_LATERAL, 7 + prev.position[1] / 120);
   const fallbackGap =
     prev.type === "standard"
-      ? MIN_SUCCESSOR_LATERAL
-      : clamp(predictedLandingGap(prev, pad, profile), MIN_SUCCESSOR_LATERAL, fallbackMaxGap);
+      ? minLegalLateral
+      : clamp(predictedLandingGap(prev, pad, profile), minLegalLateral, fallbackMaxGap);
   result = withPosition(
     {
       ...pad,
@@ -363,7 +487,8 @@ function ensureReachable(
 
 /**
  * Generate trampolines (and crystals) from `fromY` up to at least `targetY`.
- * The first pads (low) are always `standard` so the start is forgiving.
+ * Candidate types are seeded and weighted; accepted routes are decided by certified
+ * parabola variants, not a fixed follow-pattern.
  */
 
 export function generateUpTo(
@@ -428,11 +553,10 @@ export function generateUpTo(
     width = Math.max(width, profile.minFootprint);
     depth = Math.max(depth, profile.minFootprint);
 
-    // The route profile owns the source/target rhythm. That is deliberate: a flat-to-flat
-    // sequence can be mathematically reachable but hard to READ in 3D, so approachable modes
-    // teach with moving/canted/wobbler mechanics and reserve precision flat arcs for harder
-    // modes.
-    let type: TrampType = routePadType(profile, routeIndex);
+    // Candidate type is weighted by difficulty, but never by a fixed follow-pattern. The
+    // parabola verifier below is the actual gate: if the source cannot prove the required
+    // number of impact-zone variants, the pair is reshaped or the source mechanic changes.
+    let type: TrampType = weightedPadType(rng, profile);
 
     if (prev) {
       [x, y, z] = separatedSuccessorPosition(prev, [x, y, z], angle);
@@ -445,16 +569,16 @@ export function generateUpTo(
     }
 
     // GOLDEN-PATH REACHABILITY: GUARANTEE the previous pad has a stored, screenshotable
-    // parabola to this one. The fixup is constructive (no silent fall-through):
-    //   1. If a flat prev already has a passive visible parabola → leave it alone.
-    //   2. Else, above the forgiving start, CANT prev toward this pad and prove that arc.
-    //   3. If it still cannot be proven, pull/lower/widen within legal readability limits.
-    //      The result must preserve lateral separation and attach `prev.goldenPath`.
+    // parabola to this one. The fixup is constructive (no silent fall-through): try weighted
+    // source mechanics, require the difficulty's proof-variant count, then reshape the target
+    // only within legal readability limits. The result must preserve lateral separation and
+    // attach `prev.goldenPath`.
     if (prev) {
       const fixed = ensureReachable(
         prev,
         { id: y, routeIndex, position: [x, y, z], width, depth, type },
         profile,
+        rng,
       );
       x = fixed.position[0];
       y = fixed.position[1];

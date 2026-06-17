@@ -14,7 +14,7 @@ You are a gooey gel blob. Bounce up an endless tower of springy trampolines and 
 splat colorfully when you land. The higher you climb the harder it gets — smaller pads,
 trickier types, longer falls.
 
-## Core loop (the spine — from the PoC, preserved)
+## Core loop
 
 1. The blob rests on a trampoline.
 2. **Drag back** to charge a slingshot launch (a power meter fills); **release** to fly.
@@ -51,15 +51,17 @@ is the impact point on the successor trampoline; an ascending height crossing is
 route proof. The dev harness renders these proof samples as a solid red parabola plus a red
 impact circle, then captures a timed PNG/JSON sequence for inspection.
 
-Generation is difficulty-profiled: approachable modes avoid flat-to-flat precision routing
-and teach with flat-to-slider, slider-to-canted, canted-to-flat, and wobbler recovery
-patterns. Harder modes deliberately allow flatter precision arcs, canted-to-canted chains,
-tighter lip margins, and compressed parabolas. Easy exposes three accepted proof variants per
-step and larger minimum footprints; Medium exposes two; Hard, Blobmare, and Ultra Blobmare
-expose one increasingly precise route; One Wrong Move starts in the one-path regime. The
-long-run goal is Tetris-like cadence: every seed is theoretically endless and eventually
-reaches one-path precision, but Easy should give a kid a long runway before that ramp while
-Ultra Blobmare reaches it much sooner.
+Generation is difficulty-profiled but not fixed-patterned. Candidate pad types are weighted by
+difficulty, then the hidden parabola verifier decides what is legal: the source pad may remain
+flat or become moving, canted, or wobbly only if the resulting passive arc proves a descending
+impact inside the successor footprint. Easy requires three accepted launch-speed variants per
+step and larger minimum footprints; Medium requires two; Hard, Blobmare, Ultra Blobmare, and
+One Wrong Move require one route with increasingly small lip, precision, footprint, and
+compression margins. Flat-to-flat, flat-to-slider, slider-to-canted, canted-to-canted, wobbler
+recovery, and compressed parabolas are all valid when the verifier proves the route under the
+selected profile. The long-run goal is Tetris-like cadence: every seed is theoretically
+endless and eventually reaches one-path precision, but Easy should give a kid a long runway
+before that ramp while Ultra Blobmare reaches it much sooner.
 
 During a live run, the same proof feeds two player-facing cues:
 
@@ -85,17 +87,19 @@ the trampoline slides through it.
 | wobbler | `tramp.violet` | Tips toward off-center hits |
 | canted | `tramp.orange` | Certified tilted bounce toward the next pad |
 
-The default Easy opener is `standard → moving → canted → standard → wobbler → standard`, so
-the player immediately sees readable route mechanics instead of a tool-assisted flat-to-flat
-stack. Pads still shrink with altitude (difficulty curve), while each difficulty profile sets
-its own lip-clearance, landing-precision, cant-angle, footprint scale, small-pad frequency,
-and compressed-arc rules.
+The Easy opener is seeded and proof-gated rather than fixed, but the opening guide forces
+readable stepping pads, forgiving footprints, visible lateral separation, and early route
+mechanics so the player is not asked to solve a tool-assisted flat-to-flat stack. Pads still
+shrink with altitude (difficulty curve), while each difficulty profile sets its own
+lip-clearance, landing-precision, cant-angle, footprint scale, shape variety, proof-variant
+count, and compressed-arc rules.
 
 Visually, trampolines are not platform slabs: each pad renders as a round raised frame with
 radial laces and a suspended jelly membrane. Impacts depress and tilt only the membrane, so
 the bounce surface reads as elastic trampoline material rather than a moving block. The low
-biome uses warm peach/mint/lavender skies and coral/gold/green foreground objects for clear
-foreground/background separation without returning to the old neon-cyberpunk look.
+biome uses cheerful blue daylight, honey sunlight, and peach fog behind mango, berry, gold,
+and cocoa foreground objects for clear foreground/background separation without returning to
+the old neon-cyberpunk look or collapsing into orange-on-orange.
 
 ## Blob expression (the eyes)
 

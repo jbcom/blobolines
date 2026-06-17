@@ -76,8 +76,8 @@ export const DEFAULT_PROGRESS: PlayerProgress = {
   bestHeight: 0,
   bestScore: 0,
   crystals: 0,
-  skin: "slime",
-  unlockedSkins: ["slime"],
+  skin: "blue",
+  unlockedSkins: ["blue"],
   tutorialSeen: false,
   unlockedAchievements: [],
 };

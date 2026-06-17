@@ -7,7 +7,11 @@ import { defineConfig, devices } from "@playwright/test";
  */
 export default defineConfig({
   testDir: "./e2e",
-  fullyParallel: true,
+  // These are GPU-backed WebGL gameplay checks against one Vite server and one capture
+  // middleware. Running multiple Chromium/SwiftShader contexts at once makes the dev harness
+  // click targets intermittently unstable, so keep the playable gate serial and deterministic.
+  fullyParallel: false,
+  workers: 1,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
   reporter: process.env.CI ? "github" : "list",

@@ -4,8 +4,8 @@ import type { TrampType } from "@/core/types";
 
 /**
  * Trampoline depression + tilt model (pure). On impact the pad pushes DOWN (depress)
- * and tilts toward the hit point, then springs back — the `-k·x - c·v` spring from the
- * PoC. Drives both the visual mesh and the launch boost. Type behaviors differ:
+ * and tilts toward the hit point, then springs back using the `-k·x - c·v` spring that
+ * drives the game feel. Drives both the visual mesh and the launch boost. Type behaviors differ:
  *   standard — reliable bounce
  *   booster  — extra rebound (1.8×)
  *   moving   — slides sideways (handled in the entity system, not here)

@@ -12,7 +12,7 @@ import { hex, palette } from "@/styles/tokens";
  * the player charges the slingshot. Reads the live aim from the bridge each frame, runs
  * the SAME launchVelocity the blob will use, and plots the gravity arc as instanced dots
  * (fading out along the path). Hidden when not aiming. This is the launch feedback the
- * PoC had and the rebuild was missing.
+ * player needs while charging a launch.
  */
 const DOTS = 26;
 /** World-distance between plotted dots — fixed spacing reads as an even aim line

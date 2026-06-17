@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it } from "vitest";
+import { routeProfile } from "@/world";
 import { useWorldStore } from "../worldStore";
 
 function lateralGap(a: readonly [number, number, number], b: readonly [number, number, number]) {
@@ -50,7 +51,9 @@ describe("worldStore.reset seeding", () => {
       const [starter, next] = useWorldStore.getState().trampolines;
       expect(starter.position).toEqual([0, 0, 0]);
       expect(next).toBeDefined();
-      expect(next.type).toBe("moving");
+      expect(["flat", "moving", "canted", "wobbler"]).toContain(starter.goldenPath?.sourceMode);
+      expect(starter.goldenPath?.toPadId).toBe(next.id);
+      expect(starter.goldenPath?.variants?.length).toBe(routeProfile("ready").proofVariants);
       const dy = next.position[1] - starter.position[1];
       const lateral = lateralGap(starter.position, next.position);
       expect(dy).toBeLessThanOrEqual(9.35);

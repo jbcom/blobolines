@@ -101,9 +101,10 @@ export function BlobEyes({ expression, radius, live = false }: BlobEyesProps) {
     const aimCharge = aim?.charge ?? 0;
     const impatience = Math.min(1, Math.max(0, ((diag?.idleSeconds ?? 0) - 2.2) / 3.2));
     const excitement = diag?.excitement ?? 0;
-    shape.openY += aimCharge * 0.22 + impatience * 0.12 + excitement * 0.18;
-    shape.scale += aimCharge * 0.14 + impatience * 0.06 + excitement * 0.12;
-    shape.pupil += aimCharge * 0.18 + excitement * 0.14;
+    const heroIdle = live ? 0 : Math.max(0, Math.sin(timer.current * 1.4)) * 0.18;
+    shape.openY += aimCharge * 0.22 + impatience * 0.12 + excitement * 0.18 + heroIdle * 0.12;
+    shape.scale += aimCharge * 0.14 + impatience * 0.06 + excitement * 0.12 + heroIdle * 0.08;
+    shape.pupil += aimCharge * 0.18 + excitement * 0.14 + heroIdle * 0.08;
     // Keep the parent group UNIFORM so pupils/tears stay round; the vertical eye
     // opening (blink/squint/wide) is applied only to the lid meshes (sclera + bezel).
     g.scale.setScalar(shape.scale * radius);
@@ -123,6 +124,9 @@ export function BlobEyes({ expression, radius, live = false }: BlobEyesProps) {
         dartX = (vx / mag) * 0.06;
         dartY = (vy / mag) * 0.06;
       }
+    } else {
+      dartX = Math.sin(timer.current * 0.9) * 0.025;
+      dartY = Math.sin(timer.current * 1.2 + 0.7) * 0.018;
     }
 
     const tearing = shape.tear > 0;

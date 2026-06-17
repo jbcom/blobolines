@@ -49,6 +49,7 @@ import {
   resetBridges,
   resetFlash,
   resetPowerups,
+  resetViewControls,
   setBlobDiagnostics,
   tickPowerups,
   timeScale,
@@ -132,6 +133,7 @@ export function PlayerBlob() {
     lastEnsureY.current = STARTER_BLOB_Y;
     dead.current = false;
     resetPowerups();
+    resetViewControls();
     resetDroplets();
     resetBridges(); // clear any launch/aim/rebound/splat left pending from the prior run
     resetFlash(); // no leftover combo/launch/death flash crossing into the new run
@@ -253,7 +255,7 @@ export function PlayerBlob() {
       });
       // PERFECT RELEASE: a launch charged into the sweet-spot window earns the power bonus (baked
       // into launchVelocity above) PLUS a gold flourish + a celebratory cue — the satisfying
-      // "nailed it" beat that rewards the timing skill. Otherwise a blue flash scales with charge.
+      // "nailed it" beat that rewards the timing skill. Otherwise a launch flash scales with charge.
       if (isPerfectRelease(req.charge)) {
         flash("gold", 1);
         playComboFanfare();
@@ -261,7 +263,7 @@ export function PlayerBlob() {
         flash("blue", req.charge);
       }
     } else if (airborne) {
-      // Mid-air steering: nudge lateral velocity on the X/Z plane (PoC air control).
+      // Mid-air steering: nudge lateral velocity on the X/Z plane.
       const [sx, sz] = getAirSteer();
       if (sx !== 0 || sz !== 0) playerControlStarted.current = true;
       // WIND-GUST hazard: high in the stratosphere a gusty crosswind pushes the airborne blob

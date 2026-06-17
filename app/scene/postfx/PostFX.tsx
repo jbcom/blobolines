@@ -28,8 +28,8 @@ const GRADE_STEPS = 6;
  * pulses with the blob's speed (juicy on big launches). Mobile-conscious: multisampling
  * off, modest bloom. Stack adapted from arcade-cabinet (midway-mayhem PostFX).
  *
- * Per-biome grade: bloom/saturation/contrast climb with altitude (warm+soft ground →
- * brighter-glow+cooler+crisper space). Stepped into GRADE_STEPS bands held in state so the
+ * Per-biome grade: bloom/saturation/contrast climb with altitude (soft ground →
+ * brighter glow and crisper high-altitude space). Stepped into GRADE_STEPS bands held in state so the
  * composer re-renders only on a band change — the ChromaticAberration offset is the only
  * per-frame value, driven by mutating its Vector2 prop in place (never as a re-render).
  */
@@ -63,7 +63,7 @@ export function PostFX({ playing }: { playing: boolean }) {
     // grounds the goo where it meets pads and where droplets fuse into the body.
     quality.ao ? <N8AO key="ao" /> : null,
     // Bloom strength scales by tier (low devices get a softer, cheaper bloom) + lifts with the
-    // altitude grade band (warm+soft ground → brighter+cooler+crisper space). Threshold raised
+    // altitude grade band (soft ground → brighter glow and crisper high-altitude space). Threshold raised
     // to 1.0 so ONLY the HDR (>1) pixels bloom — i.e. the emissive/toneMapped-off elements
     // (crystal twinkle spikes, flame-tinted goo, additive powerup auras + rings) — not merely
     // bright diffuse surfaces like the lit sky. An emissive-channel-selective glow without the

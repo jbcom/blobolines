@@ -1,48 +1,50 @@
 /*
  * Blobolines design tokens — the single source of truth for the visual language.
- * Grounded in public/assets/images/hero-cover.png: dusty blue-teal sky, warm cream
- * light, inky black goo, and candy-bright blob/trampoline accents. Soft & juicy,
+ * Warm candy-gel palette: bright blue daylight, honey sun, and mango/berry/honey goo.
+ * Soft & juicy,
  * NOT neon-cyberpunk. Consumed by Tailwind theme (@theme inline) and components.
  */
 
 :root {
   /* ---- Brand palette: candy blob/trampoline accents ---- */
-  --blob-ink: #14110f; /* the black ink-blob; near-black goo */
-  --blob-blue: #2e8bf0; /* happy blue blob */
-  --blob-slime: #7ed957; /* green slime blob */
-  --blob-ghost: #f4f6fb; /* white ghost blob */
+  --blob-ink: #5a2418; /* cocoa goo */
+  --blob-blue: #ff7a3d; /* warm base mango goo */
+  --blob-slime: #ff4f7b; /* berry glaze goo */
+  --blob-ghost: #ffd95a; /* honey glow goo */
 
   --tramp-blue: #ff6f61;
   --tramp-gold: #f2c14e;
   --tramp-orange: #f08a3c;
-  --tramp-green: #6cc04a;
-  --tramp-violet: #9d6cf0;
-  --tramp-ice: #7fe3ef;
+  --tramp-green: #f7a72e;
+  --tramp-violet: #ff5ab3;
+  --tramp-ice: #ffe7a3;
 
   /* ---- Atmosphere: painterly sky/background ---- */
-  --sky-top: #ffe3c4; /* warm peach high light */
-  --sky-mid: #9edfc8; /* soft mint backdrop, lower saturation than gameplay */
-  --sky-deep: #7b6bc2; /* warm lavender base */
+  --sky-top: #eefaff; /* bright cloud light */
+  --sky-mid: #8fd7ff; /* cheerful blue playfield backdrop */
+  --sky-deep: #42a8f5; /* saturated daylight depth */
+  --sky-haze: #d7efff; /* soft distant haze */
   --cream: #f3efd6; /* warm light shafts */
   --cream-soft: #f6f0c2;
+  --sun: #ffd36b; /* honey sunlight */
 
   /* ---- Goo / fluid feedback ---- */
-  --goo-splash: #2e8bf0;
-  --goo-rim: #bfe3ff; /* fresnel rim highlight */
+  --goo-splash: #ff7a3d;
+  --goo-rim: #ffe3a6; /* warm fresnel rim highlight */
   --goo-wet: #ffffff; /* specular sheen */
-  --goo-flame: #ff8a3c; /* combo streak glow */
+  --goo-flame: #ffb238; /* combo streak glow */
 
   /* ---- Semantic UI surface (dark, glassy, soft) ---- */
-  --bg: #0e1822;
-  --bg-elevated: #16242f;
-  --surface: rgba(22, 36, 47, 0.92);
-  --surface-glass: rgba(22, 36, 47, 0.66);
-  --border: rgba(143, 179, 196, 0.22);
-  --border-strong: rgba(143, 179, 196, 0.45);
+  --bg: #24120d;
+  --bg-elevated: #351b12;
+  --surface: rgba(53, 27, 18, 0.92);
+  --surface-glass: rgba(53, 27, 18, 0.66);
+  --border: rgba(255, 193, 122, 0.24);
+  --border-strong: rgba(255, 193, 122, 0.48);
 
   --fg: #f3efd6;
-  --fg-muted: #aebfc9;
-  --fg-subtle: #8095a3; /* ≥4.5:1 on surface for AA small-text (was #6f8593, 4.11) */
+  --fg-muted: #f3c89b;
+  --fg-subtle: #d89c74;
 
   --accent: var(--blob-blue);
   --accent-warm: var(--tramp-orange);
@@ -86,9 +88,9 @@
   --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.25);
   --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.32);
   --shadow-lg: 0 18px 48px rgba(0, 0, 0, 0.42);
-  --glow-blue: 0 0 24px rgba(46, 139, 240, 0.45);
+  --glow-blue: 0 0 24px rgba(255, 122, 61, 0.45);
   --glow-warm: 0 0 24px rgba(240, 138, 60, 0.45);
-  --glow-slime: 0 0 24px rgba(126, 217, 87, 0.45);
+  --glow-slime: 0 0 24px rgba(255, 79, 123, 0.45);
 
   /* ---- Motion: bouncy, springy ---- */
   --ease-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);

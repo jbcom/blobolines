@@ -29,7 +29,7 @@ export function consumeLaunch(): LaunchRequest | null {
 
 /** Live AIM preview while charging the slingshot (dir + charge), or null when not aiming.
  *  Read each frame by the in-scene trajectory preview so the player sees where they'll go
- *  BEFORE releasing — the targeting feedback the PoC had and this lacked. */
+ *  BEFORE releasing so targeting feedback is visible while charging. */
 let aim: LaunchRequest | null = null;
 
 export function setAim(req: LaunchRequest | null): void {

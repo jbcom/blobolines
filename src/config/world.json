@@ -3,8 +3,8 @@
   "maxRetainedTramps": 400,
   "maxCrystals": 512,
   "skinCost": {
-    "slime": 0,
-    "blue": 15,
+    "blue": 0,
+    "slime": 15,
     "ghost": 30,
     "ink": 50
   }

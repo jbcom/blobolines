@@ -81,4 +81,14 @@ export {
   SKIN_COST,
   useGameStore,
 } from "./store";
+export {
+  getViewControls,
+  isBlobScreenTarget,
+  resetViewControls,
+  rotateView,
+  setBlobScreenTarget,
+  setViewZoom,
+  type ViewControls,
+  zoomView,
+} from "./viewBridge";
 export { useWorldStore } from "./worldStore";
