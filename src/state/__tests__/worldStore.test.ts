@@ -1,6 +1,10 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { useWorldStore } from "../worldStore";
 
+function lateralGap(a: readonly [number, number, number], b: readonly [number, number, number]) {
+  return Math.hypot(b[0] - a[0], b[2] - a[2]);
+}
+
 describe("worldStore.reset seeding", () => {
   it("uses an explicit seed when given (reproducible / daily run)", () => {
     useWorldStore.getState().reset(42);
@@ -15,6 +19,20 @@ describe("worldStore.reset seeding", () => {
     useWorldStore.getState().reset(); // same prior → same next
     expect(useWorldStore.getState().seed).toBe(a);
     expect(a).not.toBe(1);
+  });
+
+  it("starts a fresh run with a visible successor pad from the starter", () => {
+    for (let seed = 1; seed <= 10; seed++) {
+      useWorldStore.getState().reset(seed);
+      const [starter, next] = useWorldStore.getState().trampolines;
+      expect(starter.position).toEqual([0, 0, 0]);
+      expect(next).toBeDefined();
+      const dy = next.position[1] - starter.position[1];
+      const lateral = lateralGap(starter.position, next.position);
+      expect(dy).toBeLessThanOrEqual(9.35);
+      expect(lateral).toBeGreaterThanOrEqual(3.55);
+      expect(lateral).toBeLessThanOrEqual(4.85);
+    }
   });
 });
 

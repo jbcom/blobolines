@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   BASE_FOV,
+  cameraLookTarget,
   decayWarp,
   FOV_WARP,
   fovForWarp,
@@ -43,5 +44,31 @@ describe("camera FOV warp", () => {
     expect(fovForWarp(0)).toBe(BASE_FOV);
     expect(fovForWarp(1)).toBe(BASE_FOV + FOV_WARP);
     expect(fovForWarp(0.5)).toBeCloseTo(BASE_FOV + FOV_WARP / 2, 5);
+  });
+});
+
+describe("camera pad lookahead", () => {
+  const nextPad = {
+    id: 8,
+    position: [4, 8, -2] as const,
+    width: 8.4,
+    depth: 8.4,
+    type: "standard" as const,
+  };
+
+  it("biases the resting camera toward the next pad", () => {
+    const target = cameraLookTarget([0, 1.46, 0], 0, [nextPad]);
+    expect(target[0]).toBeGreaterThan(0);
+    expect(target[1]).toBeGreaterThan(1.46 + 1.5);
+    expect(target[2]).toBeLessThan(0);
+  });
+
+  it("returns to blob-follow framing when the blob is moving fast", () => {
+    expect(cameraLookTarget([1, 12, 3], 12, [nextPad])).toEqual([1, 13.5, 3]);
+  });
+
+  it("ignores pads too high to be the immediate target", () => {
+    const highPad = { ...nextPad, id: 50, position: [4, 50, -2] as const };
+    expect(cameraLookTarget([0, 1.46, 0], 0, [highPad])).toEqual([0, 2.96, 0]);
   });
 });
