@@ -38,6 +38,12 @@ export const GooMaterial = shaderMaterial(
     // cool/moody in space) and a darkening factor as it climbs into thinner/darker biomes.
     uEnvTint: new THREE.Color(palette.sky.top),
     uEnvLight: 0,
+    // Backbuffer refraction (HIGH tier only): the scene rendered behind the blob, sampled with a
+    // normal×fresnel screen-UV offset so the jelly BENDS what's behind it. uRefraction = 0 keeps
+    // the pass inert (mid/low tiers never set the texture), so the shader is unchanged off-HIGH.
+    uBackbuffer: null,
+    uRefraction: 0,
+    uResolution: new THREE.Vector2(1, 1),
   },
   /* glsl */ `
     uniform float uTime;
@@ -114,6 +120,9 @@ export const GooMaterial = shaderMaterial(
     uniform float uWet;
     uniform vec3  uEnvTint;   // biome key color the goo picks up
     uniform float uEnvLight;  // [0,1] how strongly the biome tints the goo
+    uniform sampler2D uBackbuffer; // scene rendered behind the blob (HIGH tier)
+    uniform float uRefraction;     // 0 = off (mid/low); >0 = how strongly the blob bends the bg
+    uniform vec2  uResolution;     // drawing-buffer size, for the gl_FragCoord → screen-UV
 
     varying vec3 vNormalV;
     varying vec3 vViewDir;
@@ -159,6 +168,21 @@ export const GooMaterial = shaderMaterial(
       vec3 spec   = specular * mix(vec3(1.0), uColor, 0.25);
       vec3 rimCol = mix(uRim, max(uRim * uEnvTint * 1.6, uRim * 0.4), uEnvLight);
       vec3 finalC = lit + spec + fresnel * rimCol * 0.8;
+
+      // BACKBUFFER REFRACTION (HIGH tier; uRefraction=0 → skipped). Sample the scene rendered
+      // behind the blob at a screen-UV offset along the surface normal — the jelly bends what's
+      // behind it. The offset scales with the view-space normal's screen-plane tilt (N.xy) so a
+      // grazing face displaces more, and the refracted background shows through more at the THIN
+      // (high-fresnel) edges, blending back to the goo color through the thick centre.
+      if (uRefraction > 0.0) {
+        vec2 screenUV = gl_FragCoord.xy / uResolution;
+        vec2 off = N.xy * uRefraction * (0.35 + 0.65 * fresnel);
+        vec3 bg = texture2D(uBackbuffer, screenUV + off).rgb;
+        // See-through amount: more at the thin edge, tapered into the body so the centre stays
+        // goo. Tint the transmitted light by the goo color (light passing through coloured jelly).
+        float seeThrough = 0.55 * fresnel + 0.15;
+        finalC = mix(finalC, bg * mix(vec3(1.0), uColor, 0.45) + spec, seeThrough);
+      }
 
       gl_FragColor = vec4(finalC, 1.0);
     }

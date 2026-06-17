@@ -79,6 +79,8 @@ export const goo = gooCfg as {
     blobSegments: number;
     dropletDetail: number;
   };
+  /** HIGH-tier backbuffer-refraction strength (screen-UV offset scale; 0.06 ≈ a subtle bend). */
+  refractionStrength: number;
   splash: {
     countScale: number;
     maxCount: number;

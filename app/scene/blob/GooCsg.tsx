@@ -1,3 +1,4 @@
+import { useFBO } from "@react-three/drei";
 import { useFrame, useThree } from "@react-three/fiber";
 import { damp } from "maath/easing";
 import { useEffect, useMemo, useRef } from "react";
@@ -9,6 +10,7 @@ import {
   type Mesh,
   type ShaderMaterial,
   SphereGeometry,
+  Vector2,
   Vector3,
 } from "three";
 import { mergeVertices } from "three/examples/jsm/utils/BufferGeometryUtils.js";
@@ -55,6 +57,20 @@ export function GooCsg({ skin, blobRadius, getDroplets }: GooCsgProps) {
   const resultRef = useRef<Mesh>(null);
   const eyesRef = useRef<Group>(null);
   const camera = useThree((s) => s.camera);
+  const gl = useThree((s) => s.gl);
+  const scene = useThree((s) => s.scene);
+  const size = useThree((s) => s.size);
+
+  // Backbuffer-refraction is HIGH-tier only — the marquee jelly look where the blob bends what's
+  // behind it. We render the scene (with the goo hidden) into a half-res FBO each frame and feed
+  // it to the goo shader's uBackbuffer; mid/low keep uRefraction=0 so the pass is skipped. The
+  // FBO is allocated unconditionally (hooks stay top-level) but only RENDERED when `refracts`.
+  const refracts = getQuality().refraction;
+  const fbo = useFBO(
+    Math.max(2, Math.floor(size.width / 2)),
+    Math.max(2, Math.floor(size.height / 2)),
+  );
+  const resolution = useMemo(() => new Vector2(1, 1), []);
 
   /** Surface-tension wobble envelope [0,1] — spikes on impact, decays each frame. */
   const wobble = useRef(0);
@@ -132,10 +148,36 @@ export function GooCsg({ skin, blobRadius, getDroplets }: GooCsgProps) {
     (material.uniforms.uRim.value as Color).set(palette.goo.rim);
   }, [material, skin]);
 
+  // Wire the refraction uniforms once: the backbuffer texture + strength (0 off-HIGH) + the FBO
+  // resolution for the gl_FragCoord→UV math. Only on HIGH; mid/low leave uRefraction at 0.
+  useEffect(() => {
+    if (refracts) {
+      material.uniforms.uBackbuffer.value = fbo.texture;
+      material.uniforms.uRefraction.value = gooCfg.refractionStrength ?? 0.06;
+      resolution.set(fbo.width, fbo.height);
+      material.uniforms.uResolution.value = resolution;
+    } else {
+      material.uniforms.uRefraction.value = 0;
+    }
+  }, [material, refracts, fbo, resolution]);
+
   useFrame((state, dt) => {
     const group = groupRef.current;
     const result = resultRef.current;
     if (!group || !result) return;
+
+    // BACKBUFFER pass (HIGH only): render the scene with the goo group hidden into the FBO, so the
+    // shader can sample "what's behind the blob" and refract it. Hide → render-to-FBO → restore,
+    // all before the main frame draws the goo with the fresh texture. Cheap-ish at half-res.
+    if (refracts) {
+      const wasVisible = group.visible;
+      group.visible = false;
+      const prevTarget = gl.getRenderTarget();
+      gl.setRenderTarget(fbo);
+      gl.render(scene, camera);
+      gl.setRenderTarget(prevTarget);
+      group.visible = wasVisible;
+    }
 
     const diag = getBlobDiagnostics();
     const [bx, by, bz] = diag.position;

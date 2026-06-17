@@ -396,8 +396,13 @@ game — touch/drag is primary; keyboard is a minor desktop-only secondary, don'
       ramping 0.15→0.7 by ~1400m (warm at ground → cool/moody in space). Menu hero keeps
       uEnvLight=0 (no biome). Verified in-game (resting puddle renders with the tint, no errors);
       uniform unit test updated.
-- [ ] Goo refraction: sample backbuffer along normal×fresnel so the blob bends what's behind it
-      (marquee jelly upgrade). The quality gate now exists (quality.refraction is HIGH-only).
+- [x] Goo refraction: the blob now bends what's behind it (marquee jelly look), HIGH-tier only.
+      GooCsg renders the scene with the goo hidden into a half-res FBO each frame and feeds it to
+      GooMaterial as uBackbuffer; the shader samples it at a screen-UV offset along the surface
+      normal×fresnel (more see-through at the thin edges, goo-tinted through the centre), strength
+      from goo.refractionStrength. uRefraction=0 on mid/low so the pass + shader branch are inert
+      there (the FBO is allocated but never rendered). Browser fixture forces HIGH + renders the
+      refraction path; verified live in-game (desktop=HIGH), no GL/framebuffer errors.
       Real implementation needs an FBO: render the scene (minus the blob) to a WebGLRenderTarget
       each frame and feed it to GooMaterial as uScene, sampling along the screen-space normal —
       a heavy ~2× scene-draw, hence HIGH-only. This is a contained but intricate render-target +
@@ -737,12 +742,12 @@ permeability (permeable one-way pads rejected by owner).
       height gravity would fight determinism + the reachability model for marginal gain.
       Crystal/powerup spawn density is uniform-by-design (the tier/type weighting carries the
       progression); revisit only if playtest shows the high tower feels sparse.
-- [ ] Investigate (low-pri, may be automation-only): after a page reload the menu's hero canvas
-      sometimes shows near-black + Play needs a second click before the game starts. Seen
-      repeatedly under claude-in-chrome navigate+screenshot, never confirmed for a real user
-      (likely a transition frame captured by the synthetic click/screenshot). Repro in a real
-      browser session before treating as a bug; if real, check TitleScreen mount/fade + BlobActor
-      first-paint vs the menu-orbit camera.
+- [x] Investigate the "menu needs a second Play click" — RESOLVED as NOT a bug. Root cause:
+      the synthetic clicks were landing at the wrong Y (the bottom-anchored menu puts Play's
+      center at ~y479 in an 1440×699 viewport; the clicks were at y543, below the button, hitting
+      empty space). Querying the live button rect (getBoundingClientRect → y455 h48) and clicking
+      its true center starts the game first try. The "near-black menu" was just the dimmed
+      pre-interaction menu frame. No code change — a verification-harness coordinate fix.
 - [x] Daily-challenge seed plumbing + leaderboard-ready run hash. New pure src/sim/daily:
       dailyKey (UTC YYYY-MM-DD), dailySeed(date) → deterministic world seed (everyone climbs the
       same tower that day), runHash(result) → compact tamper-evident base36 hash binding a result
