@@ -3,11 +3,11 @@ import type { GoldenPathProof, TrampolineSpec, Vec3 } from "@/core/types";
 import { GRAVITY } from "@/sim/physics";
 
 /**
- * Pure reachability check for the golden-path guarantee: can a blob bounced off pad A
- * (launched along A's surface normal at `speed`) reach pad B? Ballistic model under gravity
- * g (>0 magnitude): from A's top, the launch reaches at least B's height with enough lateral
- * travel to land within B's footprint. A flat pad (up normal) only covers lateral distance
- * via residual drift, so a far B needs A canted — exactly what the generator guarantees.
+ * Pure reachability check for the golden-path guarantee: can a blob launch from pad A and
+ * reach pad B? Mechanic pads use their surface/route normal at `speed`; flat pads use the
+ * actual slingshot launch curve because charging a flat-pad launch also adds lateral speed.
+ * Ballistic model under gravity g (>0 magnitude): from A's top, the launch reaches at least
+ * B's height with enough lateral travel to land within B's footprint.
  *
  * Conservative: treats the blob as a point. The shipped golden path ignores air-steer so the
  * dev harness can draw the exact parabola it proves; air-steer remains extra player agency.
@@ -81,6 +81,8 @@ const MIN_CERTIFIED_SPEED = launchCfg.basePower;
 const MAX_CERTIFIED_SPEED =
   (launchCfg.basePower + launchCfg.powerPerCharge) * launchCfg.perfectRelease.bonus;
 const APEX_MARGIN = 1.4;
+const SLINGSHOT_Z_SCALE = 1.25;
+const MANUAL_CHARGE_STEP = 0.005;
 
 function heightClearanceSpeed(dy: number, normalY: number, g: number): number {
   const minVertical = Math.sqrt(Math.max(0, 2 * g * Math.max(0, dy + APEX_MARGIN)));
@@ -145,6 +147,28 @@ function uniqueSpeeds(speeds: readonly (number | null | undefined)[]): number[] 
   return result;
 }
 
+function launchSpeedForCharge(charge: number): number {
+  const perfect =
+    charge >= launchCfg.perfectRelease.min && charge <= launchCfg.perfectRelease.max
+      ? launchCfg.perfectRelease.bonus
+      : 1;
+  return (
+    (launchCfg.basePower + charge * launchCfg.powerPerCharge) *
+    trampCfg.reboundMultiplier.standard *
+    perfect
+  );
+}
+
+function slingshotDirectionToward(a: TrampolineSpec, b: TrampolineSpec, charge: number): Vec3 {
+  const [ux, uz] = unitToward(a, b);
+  const angle = Math.atan2(SLINGSHOT_Z_SCALE * ux, uz);
+  const x = Math.sin(angle) * charge;
+  const z = Math.cos(angle) * charge * SLINGSHOT_Z_SCALE;
+  const y = 0.35 + charge * 1.62;
+  const len = Math.hypot(x, y, z) || 1;
+  return [x / len, y / len, z / len];
+}
+
 /**
  * Can a launch off `a` reach `b`? `speed` is the rebound launch speed, `g` gravity magnitude,
  * `tiltRad` the canted tilt, `airSteerAccel` the lateral acceleration the player can apply
@@ -198,6 +222,92 @@ function trajectoryPoint(origin: Vec3, velocity: Vec3, g: number, t: number): Ve
 const SAMPLE_COUNT = 24;
 export const PAD_SURFACE_Y = 0.72;
 
+function proofFromVelocity(
+  a: TrampolineSpec,
+  b: TrampolineSpec,
+  launchNormal: Vec3,
+  launchSpeed: number,
+  g: number,
+  requiredCant: boolean,
+  sourceMode: SourceMode,
+  includeSamples = true,
+): GoldenPathProof | null {
+  const origin: Vec3 = [a.position[0], a.position[1] + PAD_SURFACE_Y, a.position[2]];
+  const targetY = b.position[1] + PAD_SURFACE_Y;
+  const dy = targetY - origin[1];
+  const velocity: Vec3 = [
+    launchNormal[0] * launchSpeed,
+    launchNormal[1] * launchSpeed,
+    launchNormal[2] * launchSpeed,
+  ];
+
+  if (velocity[1] * velocity[1] < 2 * g * dy) return null;
+  const disc = velocity[1] * velocity[1] - 2 * g * dy;
+  const flightTime = Math.max(0, (velocity[1] + Math.sqrt(Math.max(0, disc))) / g);
+  const landing = trajectoryPoint(origin, velocity, g, flightTime);
+  const miss = Math.hypot(landing[0] - b.position[0], landing[2] - b.position[2]);
+  const halfFoot = Math.max(b.width, b.depth) * 0.5;
+  const clearance = halfFoot - miss;
+  if (clearance < 0) return null;
+
+  const apexTime = Math.max(0, Math.min(flightTime, velocity[1] / g));
+  const apex = trajectoryPoint(origin, velocity, g, apexTime);
+  const lipClearanceRatio = halfFoot > 0 ? clearance / halfFoot : 0;
+  const landingPrecision = halfFoot > 0 ? clamp01(1 - miss / halfFoot) : 1;
+  const apexClearance = Math.max(0, apex[1] - targetY);
+  const peakBudget = Math.max(1, (velocity[1] * velocity[1]) / (2 * g));
+  const arcCompression = clamp01(1 - apexClearance / peakBudget);
+  const launchAngleRad = Math.acos(Math.min(1, Math.max(-1, launchNormal[1])));
+  const samples: Vec3[] = includeSamples
+    ? Array.from({ length: SAMPLE_COUNT + 1 }, (_, i) => {
+        const t = flightTime * (i / SAMPLE_COUNT);
+        return trajectoryPoint(origin, velocity, g, t);
+      })
+    : [];
+  return {
+    toPadId: b.id,
+    launchNormal,
+    launchSpeed,
+    flightTime,
+    apex,
+    landing,
+    clearance,
+    samples,
+    requiredCant,
+    sourceMode,
+    launchAngleRad,
+    landingPrecision,
+    lipClearance: clearance,
+    lipClearanceRatio,
+    arcCompression,
+  };
+}
+
+export function solveFlatLaunchProofs(
+  a: TrampolineSpec,
+  b: TrampolineSpec,
+  g = G,
+  includeSamples = true,
+): GoldenPathProof[] {
+  const proofs: GoldenPathProof[] = [];
+  for (let charge = MANUAL_CHARGE_STEP; charge <= 1 + 1e-9; charge += MANUAL_CHARGE_STEP) {
+    const launchNormal = slingshotDirectionToward(a, b, charge);
+    const launchSpeed = launchSpeedForCharge(charge);
+    const proof = proofFromVelocity(
+      a,
+      b,
+      launchNormal,
+      launchSpeed,
+      g,
+      false,
+      "flat",
+      includeSamples,
+    );
+    if (proof) proofs.push(proof);
+  }
+  return proofs;
+}
+
 /**
  * Construct the actual passive golden-path parabola from `a` to `b`, or null if the launch
  * does not descend into B's footprint. Unlike canReach(..., airSteer), this is a visible,
@@ -212,10 +322,22 @@ export function solveGoldenPath(
   requiredCant = a.type === "canted",
   sourceMode = inferredMode(a),
 ): GoldenPathProof | null {
+  if (sourceMode === "flat") {
+    if (a.type !== "standard") return null;
+    const proofs = solveFlatLaunchProofs(a, b, g);
+    if (speed !== undefined) {
+      return proofs.find((proof) => Math.abs(proof.launchSpeed - speed) < 0.001) ?? null;
+    }
+    return (
+      proofs
+        .sort((x, y) => y.landingPrecision - x.landingPrecision || x.launchSpeed - y.launchSpeed)
+        .at(0) ?? null
+    );
+  }
+
   const n = sourceNormal(a, b, tiltRad, sourceMode);
-  const origin: Vec3 = [a.position[0], a.position[1] + PAD_SURFACE_Y, a.position[2]];
   const targetY = b.position[1] + PAD_SURFACE_Y;
-  const dy = targetY - origin[1];
+  const dy = targetY - (a.position[1] + PAD_SURFACE_Y);
   const candidates =
     speed === undefined
       ? uniqueSpeeds([
@@ -225,47 +347,8 @@ export function solveGoldenPath(
         ])
       : [speed];
   for (const launchSpeed of candidates) {
-    const velocity: Vec3 = [n[0] * launchSpeed, n[1] * launchSpeed, n[2] * launchSpeed];
-
-    if (velocity[1] * velocity[1] < 2 * g * dy) continue;
-    const disc = velocity[1] * velocity[1] - 2 * g * dy;
-    const flightTime = Math.max(0, (velocity[1] + Math.sqrt(Math.max(0, disc))) / g);
-    const landing = trajectoryPoint(origin, velocity, g, flightTime);
-    const miss = Math.hypot(landing[0] - b.position[0], landing[2] - b.position[2]);
-    const halfFoot = Math.max(b.width, b.depth) * 0.5;
-    const clearance = halfFoot - miss;
-    if (clearance < 0) continue;
-
-    const apexTime = Math.max(0, Math.min(flightTime, velocity[1] / g));
-    const apex = trajectoryPoint(origin, velocity, g, apexTime);
-    const lipClearanceRatio = halfFoot > 0 ? clearance / halfFoot : 0;
-    const landingPrecision = halfFoot > 0 ? clamp01(1 - miss / halfFoot) : 1;
-    const apexClearance = Math.max(0, apex[1] - targetY);
-    const peakBudget = Math.max(1, (velocity[1] * velocity[1]) / (2 * g));
-    const arcCompression = clamp01(1 - apexClearance / peakBudget);
-    const launchAngleRad = Math.acos(Math.min(1, Math.max(-1, n[1])));
-    const samples: Vec3[] = [];
-    for (let i = 0; i <= SAMPLE_COUNT; i++) {
-      const t = flightTime * (i / SAMPLE_COUNT);
-      samples.push(trajectoryPoint(origin, velocity, g, t));
-    }
-    return {
-      toPadId: b.id,
-      launchNormal: n,
-      launchSpeed,
-      flightTime,
-      apex,
-      landing,
-      clearance,
-      samples,
-      requiredCant,
-      sourceMode,
-      launchAngleRad,
-      landingPrecision,
-      lipClearance: clearance,
-      lipClearanceRatio,
-      arcCompression,
-    };
+    const proof = proofFromVelocity(a, b, n, launchSpeed, g, requiredCant, sourceMode);
+    if (proof) return proof;
   }
   return null;
 }

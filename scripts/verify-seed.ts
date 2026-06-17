@@ -75,7 +75,7 @@ function printHuman(report: ReturnType<typeof verifySeedRoute>) {
       `highest=${report.highestY.toFixed(1)}m`,
       `pads=${report.padCount}`,
       `pairs=${report.pairCount}`,
-      `variants=${report.minProofVariants}/${report.requiredProofVariants}`,
+      `variants=${report.minProofVariants}-${report.maxProofVariants}/${report.minRequiredProofVariants}-${report.maxRequiredProofVariants}`,
       `min-gap=${report.minLateralGap.toFixed(2)}m`,
       `min-lip=${report.minLipClearance.toFixed(2)}m`,
       `min-precision=${report.minLandingPrecision.toFixed(2)}`,

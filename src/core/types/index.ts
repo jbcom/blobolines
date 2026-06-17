@@ -173,6 +173,9 @@ export interface TrampolineSpec {
   moveAxis?: readonly [number, number];
   /** Monotonic route order. The starter is 0; each successor increments by one. */
   routeIndex?: number;
+  /** Unit [x,z] direction from the previous route pad into this one. Stored so incremental
+   *  generation can keep route turns readable across chunk boundaries. */
+  incomingDir?: readonly [number, number];
   /** Certified route from this pad to its immediate successor. Omitted only for the highest
    *  generated tail pad until the next chunk attaches its successor. */
   goldenPath?: GoldenPathProof;

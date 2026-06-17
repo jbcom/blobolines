@@ -1,4 +1,5 @@
 export {
+  effectiveRouteDifficulty,
   nextRouteStep,
   type RouteDifficultyProfile,
   type RouteStep,

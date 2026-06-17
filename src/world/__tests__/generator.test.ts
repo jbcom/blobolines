@@ -1,11 +1,24 @@
 import { describe, expect, it } from "vitest";
 import { createRng } from "@/core/math";
-import { routeProfile } from "../difficulty";
+import { effectiveRouteDifficulty, routeProfile } from "../difficulty";
 import { generateUpTo, starterPad } from "../generator";
 import { reaches } from "../reachable";
 
 function lateralGap(a: readonly [number, number, number], b: readonly [number, number, number]) {
   return Math.hypot(b[0] - a[0], b[2] - a[2]);
+}
+
+function routeTurnRad(
+  a: readonly [number, number, number],
+  b: readonly [number, number, number],
+  c: readonly [number, number, number],
+) {
+  const ab = Math.atan2(b[2] - a[2], b[0] - a[0]);
+  const bc = Math.atan2(c[2] - b[2], c[0] - b[0]);
+  let d = bc - ab;
+  while (d > Math.PI) d -= Math.PI * 2;
+  while (d < -Math.PI) d += Math.PI * 2;
+  return Math.abs(d);
 }
 
 describe("world generator", () => {
@@ -74,6 +87,14 @@ describe("world generator", () => {
     expect(routeProfile("ready").shapeVariety).toBeLessThan(
       routeProfile("oneWrongMove").shapeVariety,
     );
+  });
+
+  it("progresses the selected starting difficulty by altitude", () => {
+    expect(effectiveRouteDifficulty("ready", 0)).toBe("ready");
+    expect(effectiveRouteDifficulty("ready", 700)).toBe("medium");
+    expect(effectiveRouteDifficulty("ready", 1300)).toBe("hard");
+    expect(effectiveRouteDifficulty("ultraBlobmare", 0)).toBe("ultraBlobmare");
+    expect(effectiveRouteDifficulty("ultraBlobmare", 1900)).toBe("oneWrongMove");
   });
 
   it("shrinks pads with altitude (difficulty curve)", () => {
@@ -168,7 +189,7 @@ describe("world generator", () => {
 
         const dy = current.position[1] - previous.position[1];
         const lateral = lateralGap(previous.position, current.position);
-        expect(dy, `seed ${seed}: opening pad #${i} is too high to read`).toBeLessThanOrEqual(9.35);
+        expect(dy, `seed ${seed}: opening pad #${i} is too high to read`).toBeLessThanOrEqual(7.2);
         expect(
           lateral,
           `seed ${seed}: opening pad #${i} collapsed into a near-overhead stack`,
@@ -176,7 +197,7 @@ describe("world generator", () => {
         expect(
           lateral,
           `seed ${seed}: opening pad #${i} is too far off the starter line`,
-        ).toBeLessThanOrEqual(4.85);
+        ).toBeLessThanOrEqual(10.45);
         expect(
           Math.min(current.width, current.depth),
           `seed ${seed}: opening pad #${i} should be forgivingly large`,
@@ -186,6 +207,51 @@ describe("world generator", () => {
         );
       }
     }
+  });
+
+  it("keeps the Easy opener on a readable side arc and unlocks sliders after Easy", () => {
+    for (let seed = 0; seed < 24; seed++) {
+      const start = starterPad();
+      const { trampolines } = generateUpTo(createRng(`route-angle-${seed}`), 0, 120, start);
+      const pads = [start, ...trampolines];
+      const opening = pads.slice(1, 6);
+      expect(opening.some((pad) => pad.type === "moving")).toBe(false);
+      for (let i = 2; i <= 5; i++) {
+        expect(
+          routeTurnRad(pads[i - 2].position, pads[i - 1].position, pads[i].position),
+          `seed ${seed}: opening turn #${i} is too sharp`,
+        ).toBeLessThanOrEqual(0.73);
+      }
+    }
+
+    const tall = [starterPad()];
+    tall.push(...generateUpTo(createRng("slider-unlocks-after-easy"), 0, 900, tall[0]).trampolines);
+    const firstMoving = tall.find((pad) => pad.type === "moving");
+    expect(firstMoving?.position[1]).toBeGreaterThanOrEqual(520);
+  });
+
+  it("opens ready seeds with visible position and type variety", () => {
+    const signatures = new Set<string>();
+    for (let seed = 0; seed < 24; seed++) {
+      const start = starterPad();
+      const { trampolines } = generateUpTo(createRng(`opening-variety-${seed}`), 0, 80, start);
+      const opening = trampolines.slice(0, 3);
+      expect(opening).toHaveLength(3);
+      signatures.add(
+        opening
+          .map((pad, i) => {
+            const prev = i === 0 ? start : opening[i - 1];
+            return [
+              pad.type,
+              Math.round(lateralGap(prev.position, pad.position) * 2) / 2,
+              Math.round((pad.position[1] - prev.position[1]) * 2) / 2,
+              Math.round(Math.max(pad.width, pad.depth) * 2) / 2,
+            ].join(":");
+          })
+          .join("|"),
+      );
+    }
+    expect(signatures.size).toBeGreaterThan(8);
   });
 
   it("never stacks any consecutive pads immediately overhead", () => {
@@ -209,21 +275,21 @@ describe("world generator", () => {
     }
   });
 
-  it("accepts flat-to-flat only through the same certified variant gate", () => {
+  it("accepts flat-source routes only through the exact certified variant gate", () => {
     const readyStart = starterPad();
     const readyPads = [
       readyStart,
       ...generateUpTo(createRng("flat-ready"), 0, 500, readyStart, "ready").trampolines,
     ];
-    let readyFlatPairs = 0;
+    let readyFlatSourcePairs = 0;
     for (let i = 1; i < readyPads.length; i++) {
       const source = readyPads[i - 1];
       const target = readyPads[i];
-      if (source.type === "standard" && target.type === "standard") readyFlatPairs++;
+      if (source.goldenPath?.sourceMode === "flat") readyFlatSourcePairs++;
       expect(source.goldenPath?.toPadId).toBe(target.id);
       expect(source.goldenPath?.variants?.length).toBe(routeProfile("ready").proofVariants);
     }
-    expect(readyFlatPairs).toBeGreaterThan(0);
+    expect(readyFlatSourcePairs).toBeGreaterThan(0);
 
     const hardStart = starterPad();
     const hardPads = [

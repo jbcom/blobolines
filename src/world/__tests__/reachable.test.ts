@@ -75,14 +75,17 @@ describe("tower is climbable (golden-path proof)", () => {
   });
 
   it("moving and wobbler pads also store playable proof arcs", () => {
-    const pads = fullTower("special-route", 300);
+    const pads = fullTower("special-route", 900);
     const sourceModes = new Set<string>();
     for (let i = 0; i < pads.length - 1; i++) {
       const a = pads[i];
       if (a.type !== "moving" && a.type !== "wobbler") continue;
       expectCertifiedPair(a, pads[i + 1], `${a.type} pad #${i}`);
       sourceModes.add(a.goldenPath?.sourceMode ?? "missing");
-      if (a.type === "moving") expect(a.moveAxis).toBeDefined();
+      if (a.type === "moving") {
+        expect(a.position[1]).toBeGreaterThanOrEqual(520);
+        expect(a.moveAxis).toBeDefined();
+      }
     }
     expect(sourceModes.has("moving")).toBe(true);
     expect(sourceModes.has("wobbler")).toBe(true);

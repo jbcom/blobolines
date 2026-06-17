@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   BASE_FOV,
+  cameraFollowOrbit,
   cameraLookTarget,
   cameraRouteDirection,
   decayWarp,
@@ -67,8 +68,19 @@ describe("camera pad lookahead", () => {
   it("biases the resting camera toward the next two pads", () => {
     const target = cameraLookTarget([0, 1.46, 0], 1.46, 0, [nextPad, followPad]);
     expect(target[0]).toBeGreaterThan(0);
-    expect(target[1]).toBeGreaterThan(8);
+    expect(target[1]).toBeGreaterThan(6);
+    expect(target[1]).toBeLessThan(7.4);
     expect(target[2]).toBeLessThan(0);
+  });
+
+  it("keeps the resting playfield camera close enough that the opener is not mostly sky", () => {
+    const resting = cameraFollowOrbit(0);
+    expect(resting.distance).toBeLessThan(15);
+    expect(resting.height).toBeLessThan(13);
+
+    const fast = cameraFollowOrbit(26);
+    expect(fast.distance).toBeGreaterThan(resting.distance);
+    expect(fast.height).toBeGreaterThan(resting.height);
   });
 
   it("returns to blob-follow framing when the blob is moving fast", () => {

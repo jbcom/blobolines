@@ -1,6 +1,6 @@
 import { createRng, type SeedInput } from "@/core/math";
 import type { GoldenPathProof, TrampolineSpec, WorldDifficulty } from "@/core/types";
-import { ROUTE_DIFFICULTIES, routeProfile } from "./difficulty";
+import { effectiveRouteDifficulty, ROUTE_DIFFICULTIES, routeProfile } from "./difficulty";
 import { generateUpTo, starterPad } from "./generator";
 import { solveGoldenPath } from "./reachable";
 
@@ -27,8 +27,11 @@ export interface SeedRouteVerification {
   highestY: number;
   padCount: number;
   pairCount: number;
+  minRequiredProofVariants: number;
+  maxRequiredProofVariants: number;
   requiredProofVariants: number;
   minProofVariants: number;
+  maxProofVariants: number;
   minLateralGap: number;
   minLipClearance: number;
   minLandingPrecision: number;
@@ -80,11 +83,12 @@ function variantLandingMiss(
   );
 }
 
-function expectedSourceMode(source: TrampolineSpec): GoldenPathProof["sourceMode"] {
+function expectedSourceMode(source: TrampolineSpec): GoldenPathProof["sourceMode"] | null {
+  if (source.type === "standard") return "flat";
   if (source.type === "canted") return "canted";
   if (source.type === "moving") return "moving";
   if (source.type === "wobbler") return "wobbler";
-  return "flat";
+  return null;
 }
 
 function addFailure(
@@ -110,7 +114,6 @@ export function verifySeedRoute({
   }
 
   const rng = createRng(seed);
-  const profile = routeProfile(difficulty);
   const start = starterPad();
   const chunk = generateUpTo(rng, 0, targetY, start, difficulty);
   const pads = [start, ...chunk.trampolines];
@@ -125,13 +128,19 @@ export function verifySeedRoute({
   let minLipClearance = Number.POSITIVE_INFINITY;
   let minLandingPrecision = Number.POSITIVE_INFINITY;
   let minProofVariants = Number.POSITIVE_INFINITY;
+  let maxProofVariants = 0;
+  let minRequiredProofVariants = Number.POSITIVE_INFINITY;
+  let maxRequiredProofVariants = 0;
 
   for (let i = 0; i < pads.length - 1; i++) {
     const source = pads[i];
     const target = pads[i + 1];
+    const activeProfile = routeProfile(effectiveRouteDifficulty(difficulty, source.position[1]));
     const proof = source.goldenPath;
     const gap = lateralGap(source, target);
     minLateralGap = Math.min(minLateralGap, gap);
+    minRequiredProofVariants = Math.min(minRequiredProofVariants, activeProfile.proofVariants);
+    maxRequiredProofVariants = Math.max(maxRequiredProofVariants, activeProfile.proofVariants);
 
     if (target.position[1] <= source.position[1]) {
       addFailure(failures, i, source, target, "target does not climb above source");
@@ -147,22 +156,26 @@ export function verifySeedRoute({
     sourceModes[proof.sourceMode]++;
     const variants = proof.variants ?? [];
     minProofVariants = Math.min(minProofVariants, variants.length);
+    maxProofVariants = Math.max(maxProofVariants, variants.length);
     minLipClearance = Math.min(minLipClearance, proof.lipClearance);
     minLandingPrecision = Math.min(minLandingPrecision, proof.landingPrecision);
 
     if (proof.toPadId !== target.id) {
       addFailure(failures, i, source, target, "proof points at the wrong successor");
     }
-    if (proof.sourceMode !== expectedSourceMode(source)) {
+    const expectedMode = expectedSourceMode(source);
+    if (!expectedMode) {
+      addFailure(failures, i, source, target, "unsupported pad type stored as proof source");
+    } else if (proof.sourceMode !== expectedMode) {
       addFailure(failures, i, source, target, "proof source mode does not match pad mechanic");
     }
-    if (variants.length !== profile.proofVariants) {
+    if (variants.length !== activeProfile.proofVariants) {
       addFailure(
         failures,
         i,
         source,
         target,
-        `proof variant count ${variants.length} does not match difficulty requirement ${profile.proofVariants}`,
+        `proof variant count ${variants.length} does not match difficulty requirement ${activeProfile.proofVariants}`,
       );
     }
     if (proof.samples.length < 12) {
@@ -250,8 +263,13 @@ export function verifySeedRoute({
     highestY: chunk.highestY,
     padCount: pads.length,
     pairCount: Math.max(0, pads.length - 1),
-    requiredProofVariants: profile.proofVariants,
+    minRequiredProofVariants: Number.isFinite(minRequiredProofVariants)
+      ? minRequiredProofVariants
+      : 0,
+    maxRequiredProofVariants,
+    requiredProofVariants: maxRequiredProofVariants,
     minProofVariants: Number.isFinite(minProofVariants) ? minProofVariants : 0,
+    maxProofVariants,
     minLateralGap: Number.isFinite(minLateralGap) ? minLateralGap : 0,
     minLipClearance: Number.isFinite(minLipClearance) ? minLipClearance : 0,
     minLandingPrecision: Number.isFinite(minLandingPrecision) ? minLandingPrecision : 0,

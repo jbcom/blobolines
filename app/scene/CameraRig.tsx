@@ -91,13 +91,22 @@ export function cameraLookTarget(
   const target = routeFocus(upcomingRoutePads(groundY, pads));
   if (!target) return base;
 
-  const lateralBlend = 0.44 * slowFactor;
-  const verticalBlend = 0.72 * slowFactor;
+  const lateralBlend = 0.48 * slowFactor;
+  const verticalBlend = 0.42 * slowFactor;
   return [
     base[0] + (target.x - base[0]) * lateralBlend,
     base[1] + (target.y - base[1]) * verticalBlend,
     base[2] + (target.z - base[2]) * lateralBlend,
   ];
+}
+
+export function cameraFollowOrbit(speed: number): { distance: number; height: number } {
+  const pull = Math.min(speed / 26, 1);
+  const rest = 1 - pull;
+  return {
+    distance: 11 + rest * 3 + pull * 5,
+    height: 9.3 + rest * 3.2 + pull * 4.8,
+  };
 }
 
 export function cameraRouteDirection(
@@ -261,6 +270,7 @@ export function CameraRig({ active }: { active: boolean }) {
       }
       proofPair.current = null;
 
+      const firstFrameInRun = !wasActive.current;
       const [lookX, lookY, lookZ] = cameraLookTarget(diag.position, diag.groundY, speed, pads);
       const look = smoothLookTarget([lookX, lookY, lookZ], 0.34);
       wasActive.current = true;
@@ -268,17 +278,18 @@ export function CameraRig({ active }: { active: boolean }) {
       // Top-down/isometric playing-field view: stage the camera ABOVE the route and a little
       // behind its lateral direction. Looking down into the field keeps the blob, current pad,
       // and next two pads readable instead of staring upward through trampoline membranes.
-      const pull = Math.min(speed / 26, 1);
-      const rest = 1 - pull;
-      const camDist = 15 + rest * 7 + pull * 4;
-      const camHeight = 15 + rest * 5 + pull * 3;
+      const { distance: camDist, height: camHeight } = cameraFollowOrbit(speed);
       const [routeX, routeZ] = cameraRouteDirection(diag.position, diag.groundY, pads);
       const [offX, offY, offZ] = cameraOrbitOffset([routeX, routeZ], camDist, camHeight, view);
 
       const k = damp(dt, 0.16);
-      camera.position.x += (bx + offX - camera.position.x) * k;
-      camera.position.y += (look.y + offY - camera.position.y) * k;
-      camera.position.z += (bz + offZ - camera.position.z) * k;
+      if (firstFrameInRun) {
+        camera.position.set(bx + offX, look.y + offY, bz + offZ);
+      } else {
+        camera.position.x += (bx + offX - camera.position.x) * k;
+        camera.position.y += (look.y + offY - camera.position.y) * k;
+        camera.position.z += (bz + offZ - camera.position.z) * k;
+      }
 
       // Impact shake (decays in ~0.12s) — small, juicy, never disorienting.
       const s = shake.current * 0.5;
