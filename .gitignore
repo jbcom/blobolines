@@ -56,6 +56,11 @@ pnpm-debug.log*
 .env.*
 !.env.example
 
+# itch.io asset pipeline — the owned-keys cache + raw downloads are hoarded locally and
+# gitignored; only curated keepers promoted to public/assets/ ship (scripts/fetch-itch-assets.mjs).
+.itch-cache/
+raw-assets/
+
 # Claude runtime cache (gates.json is tracked; state/ is re-derivable task-batch cache)
 .claude/state/
 

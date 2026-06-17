@@ -2,7 +2,7 @@ import { buttonVariants } from "@app/components/ui";
 import { CalendarDays, HelpCircle, Palette, Play, Settings } from "lucide-react";
 import { motion, useReducedMotion } from "motion/react";
 import { lazy, Suspense, useEffect, useState } from "react";
-import { initAudio, startMusic } from "@/audio";
+import { initAudio, startMenuMusic, startMusic } from "@/audio";
 import { cn } from "@/lib/utils";
 import { dailySeed } from "@/sim/daily";
 import { useGameStore, useWorldStore } from "@/state";
@@ -42,6 +42,13 @@ export function TitleScreen() {
       setCustomizerIntent(false);
     }
   }, [customizerIntent, setCustomizerIntent]);
+
+  // Crossfade to the calm MENU music whenever the title is showing. Safe no-op until the
+  // AudioContext is unlocked (first PLAY gesture), so on the very first menu it's silent and
+  // on every return-to-menu after a run it fades the menu loop back in.
+  useEffect(() => {
+    startMenuMusic();
+  }, []);
 
   /** Start a run. `daily` seeds the world from today's date so everyone climbs the same tower
    *  (and the game-over card shows a shareable hash); otherwise the world reseeds randomly. */

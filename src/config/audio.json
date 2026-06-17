@@ -1,21 +1,41 @@
 {
-  "volumes": { "music": 0.4, "ambient": 0.25, "sfx": 0.7, "themeFadeMs": 1400 },
+  "volumes": { "music": 0.4, "ambient": 0.25, "sfx": 0.7, "ui": 0.5, "themeFadeMs": 1400 },
   "sfx": {
     "bounce": "assets/audio/sfx/bounce.mp3",
     "bounce_soft": "assets/audio/sfx/bounce_soft.mp3",
     "bounce_ice": "assets/audio/sfx/bounce_ice.mp3",
     "launch": "assets/audio/sfx/launch.mp3",
     "splat": "assets/audio/sfx/splat.mp3",
+    "death": "assets/audio/sfx/death.mp3",
     "crystal": "assets/audio/sfx/crystal.mp3",
     "powerup": "assets/audio/sfx/powerup.mp3",
     "milestone": "assets/audio/sfx/milestone.mp3",
     "record": "assets/audio/sfx/record.mp3"
   },
-  "music": {
-    "play": "assets/audio/music/theme.mp3"
+  "ui": {
+    "hover": "assets/audio/ui/hover.mp3",
+    "click": "assets/audio/ui/click.mp3",
+    "confirm": "assets/audio/ui/confirm.mp3",
+    "cancel": "assets/audio/ui/cancel.mp3",
+    "popup": "assets/audio/ui/popup.mp3",
+    "coin": "assets/audio/ui/coin.mp3"
   },
+  "music": {
+    "menu": "assets/audio/music/menu.mp3",
+    "ingame": "assets/audio/music/ingame.mp3",
+    "highspace": "assets/audio/music/highspace.mp3"
+  },
+  "musicHighStart": 600,
   "ambient": {
-    "sky": "assets/audio/ambient/sky.mp3",
-    "space": "assets/audio/ambient/high.mp3"
-  }
+    "ground": "assets/audio/ambient/forest.mp3",
+    "sky": "assets/audio/ambient/wind.mp3",
+    "stratosphere": "assets/audio/ambient/strongwind.mp3",
+    "space": "assets/audio/ambient/space.mp3"
+  },
+  "ambientBands": [
+    { "name": "ground", "minHeight": 0 },
+    { "name": "sky", "minHeight": 200 },
+    { "name": "stratosphere", "minHeight": 600 },
+    { "name": "space", "minHeight": 950 }
+  ]
 }

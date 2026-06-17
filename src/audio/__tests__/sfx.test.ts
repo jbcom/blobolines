@@ -7,6 +7,7 @@ import {
   playChime,
   playComboBlip,
   playComboFanfare,
+  playDeath,
   playLaunch,
   playMilestone,
   playPowerdown,
@@ -14,12 +15,14 @@ import {
   playRecord,
   playSplat,
   playThump,
+  playUi,
   preloadSfx,
   setAmbientVolume,
   setMusicAltitude,
   setMusicEnabled,
   setMusicVolume,
   setSfxVolume,
+  startMenuMusic,
   startMusic,
   stopMusic,
 } from "../index";
@@ -63,6 +66,11 @@ describe("audio before init", () => {
     // Arcade-identity celebration stingers.
     expect(() => playMilestone()).not.toThrow();
     expect(() => playRecord()).not.toThrow();
+    // Death sting + UI interface cues are safe no-ops pre-init too.
+    expect(() => playDeath()).not.toThrow();
+    for (const id of ["hover", "click", "confirm", "cancel", "popup", "coin"] as const) {
+      expect(() => playUi(id)).not.toThrow();
+    }
   });
 
   it("rate-limits / repeats without error", () => {
@@ -150,6 +158,35 @@ describe("music + ambient lifecycle", () => {
     setMusicEnabled(false);
     expect(() => startMusic()).not.toThrow();
     setMusicEnabled(true);
+    stopMusic();
+  });
+
+  it("phase music: menu → in-game → high/space crossfades via the right track loops", () => {
+    const loopPaths = () => {
+      const hs = (Howler as unknown as { _howls: Array<{ _loop: boolean; _src: string[] }> })
+        ._howls;
+      return hs
+        .filter((h) => h._loop)
+        .flatMap((h) => h._src)
+        .join(" ");
+    };
+    startMenuMusic();
+    expect(loopPaths()).toContain("menu.mp3"); // menu loop is live
+    startMusic(); // PLAY → in-game track + ground ambient
+    setMusicAltitude(50);
+    expect(loopPaths()).toContain("ingame.mp3");
+    setMusicAltitude(1000); // past the high-start → tense track + space bed
+    const high = loopPaths();
+    expect(high).toContain("highspace.mp3");
+    expect(high).toContain("space.mp3"); // biome bed followed altitude
+    stopMusic();
+  });
+
+  it("ambient bed follows the biome bands (ground → space) without throwing", () => {
+    startMusic();
+    expect(() => {
+      for (const y of [0, 250, 700, 1200, 100]) setMusicAltitude(y);
+    }).not.toThrow();
     stopMusic();
   });
 

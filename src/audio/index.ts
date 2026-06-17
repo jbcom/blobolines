@@ -11,6 +11,7 @@ export {
   playChime,
   playComboBlip,
   playComboFanfare,
+  playDeath,
   playLaunch,
   playMilestone,
   playPowerdown,
@@ -18,6 +19,7 @@ export {
   playRecord,
   playSplat,
   playThump,
+  playUi,
   preloadSfx,
   setAmbientVolume,
   setMasterVolume,
@@ -25,6 +27,7 @@ export {
   setMusicEnabled,
   setMusicVolume,
   setSfxVolume,
+  startMenuMusic,
   startMusic,
   stopMusic,
 } from "./howler";

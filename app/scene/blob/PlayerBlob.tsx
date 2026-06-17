@@ -7,6 +7,7 @@ import {
   duckMusic,
   playComboBlip,
   playComboFanfare,
+  playDeath,
   playLaunch,
   playPowerdown,
   playPowerup,
@@ -427,7 +428,8 @@ export function PlayerBlob() {
         playPowerup(); // the shield-save cue
       } else {
         dead.current = true;
-        playSplat();
+        playSplat(); // the wet goo splat at the contact…
+        playDeath(); // …layered with the gooey-explosion death sting (downer + music duck)
         commitBestHeight(maxY.current);
         setPhase("gameover");
       }

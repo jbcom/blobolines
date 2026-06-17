@@ -580,7 +580,9 @@ game — touch/drag is primary; keyboard is a minor desktop-only secondary, don'
 - [x] Personal-best stinger on gameover — ALREADY DONE (M12 line above): GameOver fires
       playRecord() exactly once when the run is a record (isRecord, i.e. height/score beat best),
       gated by a ref so re-renders don't replay it.
-- [ ] Real game-over death sting (downer + gooey explosion) instead of reusing the splat.
+- [x] Real game-over death sting: playDeath() layers a pitched-down gooey-explosion sample
+      (from the owned Explosion SFX pack) over the wet splat + ducks the music, replacing the
+      bare splat reuse. Wired into PlayerBlob's death path.
 - [x] Powerup expire cue: tickPowerups now returns the powerups that EXPIRED this tick (crossed
       to 0), and PlayerBlob fires playPowerdown (the pickup sample pitched + leveled DOWN) once
       when a buff ends — distinct from the bright pickup cue. New powerupBridge unit test covers
@@ -596,9 +598,26 @@ game — touch/drag is primary; keyboard is a minor desktop-only secondary, don'
       pad tail for a pad whose top level the blob crossed THIS frame just OUTSIDE its footprint
       (lateral in [half+0.4, half+2.5]) — a "phew, almost" brush — and plays a soft whoosh once
       per pad (nearMissed set, cleared on run start). Cheap: descending-only, tail-only, debounced.
-- [ ] Three music tracks swapped by phase+altitude (menu / in-game / high-space) with crossfade.
-- [ ] Expand ambient beds per biome band (forest/wind/strong-wind/space/snow/magic) off biomeSkyAt.
-- [ ] UI sounds (hover/click/confirm/cancel/popup/coin) wired to the shadcn overlay.
+- [x] Three music tracks swapped by phase+altitude with crossfade: MENU (calm menu loop, on the
+      title), IN-GAME (Casual Upbeat "ArcadeBounce" — the bouncy arcade vibe), HIGH/SPACE (Retro
+      Combat chiptune past musicHighStart=600m). setMusicTrack() crossfades (fade-out old +
+      fade-in new); startMenuMusic on the title, startMusic (in-game) on PLAY, setMusicAltitude
+      drives the phase swap. Sourced from owned itch packs via the new pipeline (below).
+- [x] Expand ambient beds per biome band off altitude: ground=forest, sky=wind,
+      stratosphere=strong-wind, space=space (config ambientBands + ambient map). setMusicAltitude
+      crossfades the bed by band (ambientBandFor). From the owned Ultimate Ambient SFX pack.
+- [x] UI sounds wired to the shadcn overlay: the base Button plays a hover cue on pointer-enter
+      + a click cue on press (composed with the caller's handlers; `silent` opts out), so the
+      whole DOM overlay gets interface feedback for free. confirm/cancel/popup/coin cues are
+      available via playUi() for situational use. From the owned UI SFX pack (40 cues). Preloaded
+      with the SFX behind the LoadingScreen.
+- [x] itch.io asset pipeline (self-contained, no cross-repo references): scripts/itch-library.mjs
+      builds the owned-keys cache (.itch-cache/library.json, gitignored), scripts/fetch-itch-assets
+      .mjs downloads + extracts an allow-list of OWNED packs (https-only, basename-stripped) into
+      raw-assets/ (gitignored); curated keepers are re-encoded (96k mono ffmpeg) + promoted into
+      public/assets/audio/. ITCH_API_KEY in .env (gitignored). Allow-list chosen by the packs'
+      descriptive names for the arcade identity (Casual Upbeat / Calm Menu / Retro Combat music;
+      UI / Explosion / Ultimate Ambient SFX). See [[blobolines-audio-identity]].
 - [x] Music ducking (sidechain): duckMusic(ms) in howler — fast-dips the music to 25% then
       fades it back over ms, with an overlap-safe hold reset; no-op when music isn't playing/is
       muted. Wired to the two big in-game moments: the 100m milestone stinger and the on-fire

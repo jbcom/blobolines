@@ -24,6 +24,9 @@ const howls = new Map<string, Howl>();
 let music: Howl | null = null;
 let ambient: Howl | null = null;
 let ambientBand = "";
+/** Current music track key ("menu" | "ingame" | "highspace"), so an altitude/phase change only
+ *  crossfades when the target track actually differs. */
+let musicKey = "";
 let started = false;
 let muted = false;
 /** Independent mix-bus levels [0,1], each multiplied into its channel's play volume on top of
@@ -104,6 +107,9 @@ export function preloadSfx(): void {
   for (const path of Object.values(audioCfg.sfx) as string[]) {
     howlFor(path, false, vol.sfx); // construct + cache (loads + decodes)
   }
+  for (const path of Object.values(audioCfg.ui) as string[]) {
+    howlFor(path, false, vol.sfx); // UI cues too — no first-click hover/click hitch
+  }
 }
 
 function playSfx(id: SfxId, opts?: { rate?: number; volume?: number }): void {
@@ -172,6 +178,27 @@ export function playComboBlip(combo: number): void {
 export function playSplat(): void {
   playSfx("splat");
 }
+/** Game-over death sting: a gooey explosion blowout, with the music ducked so it punches. The
+ *  bespoke "downer" feel comes from pitching the explosion sample down a touch. */
+export function playDeath(): void {
+  playSfx("death", { rate: 0.85 });
+  duckMusic(900);
+}
+
+// ── UI interface sounds (shadcn overlay: hover/click/confirm/cancel/popup/coin) ──
+type UiId = keyof typeof audioCfg.ui;
+const uiVolume = vol.ui ?? 0.5;
+
+/** Play a UI interface cue (hover/click/confirm/cancel/popup/coin) at the UI bus level. Safe
+ *  no-op before the AudioContext unlocks, like every cue. */
+export function playUi(id: UiId): void {
+  const path = (audioCfg.ui as Record<string, string>)[id];
+  if (!path) return;
+  const h = howlFor(path, false, vol.sfx);
+  const playId = h.play();
+  if (playId == null) return;
+  h.volume(uiVolume * sfxVolume, playId);
+}
 /** Crystal pickup with pitched round-robin variation — a multi-gather run (magnet sweep,
  *  dense cluster) plays an ascending-ish spread with no two adjacent gems at the same pitch,
  *  so it reads as a hand-played sparkle run rather than one looped blip. */
@@ -203,24 +230,71 @@ export function playRecord(): void {
 }
 
 // ── Music + ambient ────────────────────────────────────────────────────────────
+const musicTracks = audioCfg.music as Record<string, string>;
+const ambientBeds = audioCfg.ambient as Record<string, string>;
+const ambientBands = audioCfg.ambientBands;
+/** Above this altitude the in-game music swaps to the tense "high/space" track. */
+const MUSIC_HIGH_START = audioCfg.musicHighStart;
+
+/** The ambient-bed band name for a height (highest band whose minHeight is met). */
+function ambientBandFor(height: number): string {
+  let band = ambientBands[0].name;
+  for (const b of ambientBands) {
+    if (height >= b.minHeight) band = b.name;
+  }
+  return band;
+}
+
+/** Crossfade the music to `key` (a track in audioCfg.music); no-op if already on it. The old
+ *  track fades out (scheduleStop) while the new one fades in (startBed). */
+function setMusicTrack(key: string): void {
+  if (key === musicKey) return;
+  const path = musicTracks[key];
+  if (!path) return;
+  if (music && musicTracks[musicKey]) scheduleStop(musicTracks[musicKey], music);
+  musicKey = key;
+  music = startBed(path, musicTarget());
+}
+
+/** Swap the ambient bed to the band for `height` (per-biome bed); no-op if unchanged. */
+function setAmbientBand(band: string): void {
+  if (band === ambientBand) return;
+  const path = ambientBeds[band];
+  if (!path) return;
+  if (ambient && ambientBeds[ambientBand]) scheduleStop(ambientBeds[ambientBand], ambient);
+  ambientBand = band;
+  ambient = startBed(path, ambientTarget());
+}
+
+/** Start the IN-GAME music + the ground ambient bed (called on the PLAY gesture). Crossfades
+ *  from any menu track already playing. setMusicAltitude then drives the phase/biome changes. */
 export function startMusic(): void {
-  if (started) return;
   started = true;
-  // startBed applies the current `muted` state and cancels any stale stop on that path —
-  // without it a quick restart plays at full volume / gets killed by a leftover fade timer.
-  music = startBed(audioCfg.music.play, musicTarget());
-  ambientBand = "sky";
-  ambient = startBed(audioCfg.ambient.sky, ambientTarget());
+  setMusicTrack("ingame");
+  setAmbientBand("ground");
+}
+
+/** Start the MENU music (the calm menu loop). Only takes effect once the AudioContext is
+ *  unlocked (after the first gesture) — safe no-op before that, like every cue. Returning to the
+ *  menu after a run crossfades from the in-game track back to this. */
+export function startMenuMusic(): void {
+  started = true;
+  setMusicTrack("menu");
+  // No ambient bed on the menu — just the music.
+  if (ambient && ambientBeds[ambientBand]) scheduleStop(ambientBeds[ambientBand], ambient);
+  ambient = null;
+  ambientBand = "";
 }
 
 export function stopMusic(): void {
   if (!started) return;
   started = false;
-  if (music) scheduleStop(audioCfg.music.play, music);
-  if (ambient) scheduleStop((audioCfg.ambient as Record<string, string>)[ambientBand], ambient);
+  if (music && musicTracks[musicKey]) scheduleStop(musicTracks[musicKey], music);
+  if (ambient && ambientBeds[ambientBand]) scheduleStop(ambientBeds[ambientBand], ambient);
   music = null;
   ambient = null;
   ambientBand = "";
+  musicKey = "";
 }
 
 /** Pending un-duck timer, so overlapping ducks don't restore early. */
@@ -246,16 +320,16 @@ export function duckMusic(ms = 700): void {
   }, 180);
 }
 
-/** Shift the ambient bed with altitude — swap to the airy "space" bed up high. */
+/** Drive the music PHASE + ambient BIOME from altitude (called as the blob climbs, throttled by
+ *  the caller). The in-game track swaps to the tense high/space track past MUSIC_HIGH_START; the
+ *  ambient bed follows the biome bands (ground→sky→stratosphere→space). Both crossfade. No-op on
+ *  the menu track (only the in-game phase climbs). */
 export function setMusicAltitude(height: number): void {
   if (!started) return;
-  const band = height > 650 ? "space" : "sky";
-  if (band === ambientBand) return;
-  const oldPath = (audioCfg.ambient as Record<string, string>)[ambientBand];
-  const path = (audioCfg.ambient as Record<string, string>)[band];
-  ambientBand = band;
-  if (ambient) scheduleStop(oldPath, ambient);
-  ambient = startBed(path, ambientTarget());
+  if (musicKey === "ingame" || musicKey === "highspace") {
+    setMusicTrack(height >= MUSIC_HIGH_START ? "highspace" : "ingame");
+  }
+  setAmbientBand(ambientBandFor(height));
 }
 
 // ── Settings ─────────────────────────────────────────────────────────────────
