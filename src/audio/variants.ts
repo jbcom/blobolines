@@ -1,9 +1,12 @@
+import { createRng } from "@/core/math";
+
 /**
  * Round-robin variant picker — for any cue that has several interchangeable variants (samples
  * or, today, pitch offsets) so a rapidly-repeated sound never plays the SAME variant twice in
  * a row (the mechanical-repetition that makes arcade audio grate). Each picker holds its last
  * index and returns a different one each call. `rand` is injectable for deterministic tests;
- * defaults to Math.random (audio is render-side, so non-determinism is fine here).
+ * it defaults to the seeded RNG facade (NOT Math.random — src/** uses createRng per the
+ * determinism policy; a fixed module seed is fine for cosmetic audio variety).
  */
 
 export interface VariantPicker {
@@ -11,9 +14,14 @@ export interface VariantPicker {
   next(): number;
 }
 
+/** Shared seeded stream for audio variant defaults (one stream so variety advances across cues
+ *  within a session; replays identically, which is imperceptible for pitch/sample jitter). */
+const variantRng = createRng("blobolines-audio-variants");
+const defaultRand = () => variantRng.next();
+
 export function createVariantPicker(
   count: number,
-  rand: () => number = Math.random,
+  rand: () => number = defaultRand,
 ): VariantPicker {
   let last = -1;
   return {
@@ -41,7 +49,7 @@ export function createVariantPicker(
  */
 export function createPitchVariation(
   steps: number[],
-  rand: () => number = Math.random,
+  rand: () => number = defaultRand,
 ): () => number {
   const picker = createVariantPicker(steps.length, rand);
   return () => steps[picker.next()];
