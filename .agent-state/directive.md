@@ -463,7 +463,17 @@ game — touch/drag is primary; keyboard is a minor desktop-only secondary, don'
       renders cleanly through the ref-driven effects.
 - [ ] Depth-of-field focused on the blob (quality-gated).
 - [ ] God rays + sun sprite in the sky bands (the shader paints shafts but there's no light source).
-- [ ] Wet/jelly trampoline membrane material (fresnel sheen + impact ripple) matching the goo.
+- [x] Wet/jelly trampoline membrane: the bounce surface is now MeshPhysicalMaterial with a full
+      clearcoat (roughness 0.08) + sheen tinted to the pad's type color + low base roughness, so
+      it reads as wet jelly matching the goo blob (was a drier standard material). The existing
+      spring depress/tilt IS the impact ripple. Verified in-game (pad renders glossy/wet).
+      ALSO fixed a CRITICAL crash I'd just shipped: the per-frame PostFX biome grade used `ref`
+      on the @react-three/postprocessing effect components, which crashed the whole Canvas on run
+      start ("Converting circular structure to JSON" in the postprocessing reconciler → tap-to-
+      retry error screen). Reworked to quantize altitude into GRADE_STEPS bands held in state so
+      the effects take their grade via PROPS (changing only on a band crossing) — no refs. The
+      live per-frame value (chromatic-aberration offset) still uses the safe mutate-Vector2-prop
+      pattern. Verified the game runs cleanly through the grade now.
 - [ ] Wet-shaded splat decals (normal/height + specular) instead of flat Canvas2D basic.
 - [ ] Distinct pad geometry/silhouette per type (ice translucent, super glowing frame, fragile cracked, booster chevrons, moving rails).
 - [ ] Biome environment geometry per stratum (parallax hills/islands/satellites), altitude-windowed (BiomeGeometry).

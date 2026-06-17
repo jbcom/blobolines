@@ -229,17 +229,23 @@ export function Trampoline({ position, width, depth, type, cant, onImpact }: Tra
             metalness={0.1}
           />
         </mesh>
-        {/* glossy membrane (the bounce surface) — tinted toward the pad TYPE color (was
-            always cream, which made every pad read the same and the world colorless), with
-            a punchy emissive so each type glows its own hue. */}
+        {/* WET/JELLY membrane (the bounce surface) — tinted toward the pad TYPE color with a
+            punchy emissive so each type glows its own hue. Physical material with a clearcoat +
+            sheen gives it a wet, jelly-like fresnel sheen that matches the goo blob (was a
+            plainer standard material that read dry/plastic). */}
         <mesh ref={membraneRef} position={[0, THICKNESS / 2 + 0.02, 0]}>
           <boxGeometry args={[width * 0.92, 0.18, depth * 0.92]} />
-          <meshStandardMaterial
+          <meshPhysicalMaterial
             color={membraneColor}
             emissive={emissive}
             emissiveIntensity={0.5}
-            roughness={0.2}
-            metalness={0.15}
+            roughness={0.12}
+            metalness={0.1}
+            clearcoat={1}
+            clearcoatRoughness={0.08}
+            sheen={0.6}
+            sheenColor={emissive}
+            sheenRoughness={0.4}
           />
         </mesh>
         {/* Accumulating goo-splat decal — a transparent plane skimming the membrane top,

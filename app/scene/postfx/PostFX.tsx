@@ -7,27 +7,33 @@ import {
   HueSaturation,
   Vignette,
 } from "@react-three/postprocessing";
-import type { BloomEffect, BrightnessContrastEffect, HueSaturationEffect } from "postprocessing";
 import { BlendFunction } from "postprocessing";
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { Vector2 } from "three";
 import { getBlobDiagnostics } from "@/state";
 import { N8AO } from "./N8AO";
 
-/** Smooth 0→1 ramp over the altitude where the world transitions ground → space. */
-const SPACE_AT = 700; // ~the stratosphere/space band
+/** Altitude (world Y) by which the grade reaches its full "space" mood. */
+const SPACE_AT = 700;
+/** Discrete grade steps so the altitude grade re-renders the composer only a handful of times
+ *  over a whole climb (not per frame) — passing live per-frame numbers as effect PROPS crashes
+ *  @react-three/postprocessing's reconciler (circular-structure serialize). */
+const GRADE_STEPS = 6;
 
 /**
  * Post-processing stack — soft gooey glow, not neon. Bloom for the wet highlights, a
  * gentle color grade, a vignette for depth, and a subtle chromatic aberration that
  * pulses with the blob's speed (juicy on big launches). Mobile-conscious: multisampling
  * off, modest bloom. Stack adapted from arcade-cabinet (midway-mayhem PostFX).
+ *
+ * Per-biome grade: bloom/saturation/contrast climb with altitude (warm+soft ground →
+ * brighter-glow+cooler+crisper space). Stepped into GRADE_STEPS bands held in state so the
+ * composer re-renders only on a band change — the ChromaticAberration offset is the only
+ * per-frame value, driven by mutating its Vector2 prop in place (never as a re-render).
  */
 export function PostFX() {
   const chroma = useRef(new Vector2(0.0006, 0.0006));
-  const bloom = useRef<BloomEffect>(null);
-  const hueSat = useRef<HueSaturationEffect>(null);
-  const briCon = useRef<BrightnessContrastEffect>(null);
+  const [grade, setGrade] = useState(0); // 0..1, quantized to GRADE_STEPS
 
   useFrame(() => {
     const diag = getBlobDiagnostics();
@@ -37,13 +43,10 @@ export function PostFX() {
     const k = 0.0006 + Math.min(speed / 40, 1) * 0.0024;
     chroma.current.set(k, k);
 
-    // Per-biome color GRADE by altitude: warm + soft at the ground, cold + high-contrast +
-    // brighter bloom up in space, so the climb's mood shifts with the sky. Drives the effect
-    // uniforms imperatively (no React churn).
+    // Quantize altitude → a grade band; only commit to state (re-render) on a band change.
     const sky = Math.min(1, Math.max(0, diag.position[1] / SPACE_AT));
-    if (bloom.current) bloom.current.intensity = 0.28 + sky * 0.5; // more glow on the highlights up high
-    if (hueSat.current) hueSat.current.saturation = 0.08 + sky * 0.12; // richer/cooler high
-    if (briCon.current) briCon.current.contrast = 0.06 + sky * 0.14; // crisper, moodier high
+    const stepped = Math.round(sky * GRADE_STEPS) / GRADE_STEPS;
+    if (stepped !== grade) setGrade(stepped);
   });
 
   return (
@@ -51,15 +54,16 @@ export function PostFX() {
       {/* AO first (right after the render pass) so creases are darkened before bloom/grade —
           grounds the goo where it meets pads and where droplets fuse into the body. */}
       <N8AO />
+      {/* Bloom/saturation/contrast lift with the altitude grade band (warm+soft ground →
+          brighter+cooler+crisper space). Props change only on a band crossing. */}
       <Bloom
-        ref={bloom}
-        intensity={0.28}
+        intensity={0.28 + grade * 0.5}
         luminanceThreshold={0.85}
         luminanceSmoothing={0.3}
         mipmapBlur
       />
-      <HueSaturation ref={hueSat} saturation={0.08} />
-      <BrightnessContrast ref={briCon} brightness={0.02} contrast={0.06} />
+      <HueSaturation saturation={0.08 + grade * 0.12} />
+      <BrightnessContrast brightness={0.02} contrast={0.06 + grade * 0.14} />
       <ChromaticAberration
         blendFunction={BlendFunction.NORMAL}
         offset={chroma.current}
