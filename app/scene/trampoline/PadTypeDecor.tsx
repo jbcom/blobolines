@@ -84,11 +84,7 @@ export function PadTypeDecor({ type, width, depth, cant }: PadTypeDecorProps) {
     return (
       <lineSegments>
         <bufferGeometry>
-          <bufferAttribute
-            attach="attributes-position"
-            args={[positions, 3]}
-            count={positions.length / 3}
-          />
+          <bufferAttribute attach="attributes-position" args={[positions, 3]} />
         </bufferGeometry>
         <lineBasicMaterial color={color} transparent opacity={0.9} />
       </lineSegments>

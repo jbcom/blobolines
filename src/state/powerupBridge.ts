@@ -18,18 +18,25 @@ export function activatePowerup(type: PowerUpType): void {
   remaining[type] = POWERUP_DURATION[type];
 }
 
+/** Shared empty result so the common (nothing-expired) path allocates nothing per frame. */
+const NONE_EXPIRED: readonly PowerUpType[] = [];
+
 /** Decrement all active timers by dt (called once per frame by the blob). Returns the list of
  *  power-ups that EXPIRED this tick (crossed from active to 0) so the caller can fire a
- *  power-down cue exactly once. */
-export function tickPowerups(dt: number): PowerUpType[] {
-  const expired: PowerUpType[] = [];
+ *  power-down cue exactly once. Returns a shared empty array when nothing expired (the common
+ *  case) so the per-frame call doesn't churn the GC. */
+export function tickPowerups(dt: number): readonly PowerUpType[] {
+  let expired: PowerUpType[] | null = null;
   for (const type of ["magnet", "thruster"] as const) {
     if (remaining[type] > 0) {
       remaining[type] = Math.max(0, remaining[type] - dt);
-      if (remaining[type] === 0) expired.push(type);
+      if (remaining[type] === 0) {
+        if (!expired) expired = [];
+        expired.push(type);
+      }
     }
   }
-  return expired;
+  return expired ?? NONE_EXPIRED;
 }
 
 export function isPowerupActive(type: PowerUpType): boolean {

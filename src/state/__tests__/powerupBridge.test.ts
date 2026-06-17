@@ -34,7 +34,7 @@ describe("powerupBridge", () => {
     activatePowerup("magnet");
     activatePowerup("thruster");
     const expired = tickPowerups(Math.max(POWERUP_DURATION.magnet, POWERUP_DURATION.thruster));
-    expect(expired.sort()).toEqual(["magnet", "thruster"]);
+    expect([...expired].sort()).toEqual(["magnet", "thruster"]);
   });
 
   it("resetPowerups clears all timers", () => {
