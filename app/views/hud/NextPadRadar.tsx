@@ -1,8 +1,7 @@
 import { Navigation } from "lucide-react";
 import { useEffect, useRef } from "react";
 import type { TrampolineSpec, Vec3 } from "@/core/types";
-import { getBlobDiagnostics, useWorldStore } from "@/state";
-import { nextRouteStep } from "@/world";
+import { getBlobDiagnostics, nextRouteStep, useWorldStore } from "@/state";
 
 const CLOSE_HORIZONTAL = 1.25;
 

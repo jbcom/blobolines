@@ -77,22 +77,27 @@ export function DevHarness() {
    * gitignored `artifacts/` dir via the dev capture middleware. Lets the build agent see
    * exactly how the event changed the blob + environment without timing anything.
    */
-  const fire = (label: string, action: () => void, delayMs = 600) => {
+  const fire = (label: string, action: () => void | Promise<void>, delayMs = 600) => {
     const before = envSnapshot();
-    action();
-    setTimeout(() => {
-      const after = envSnapshot();
-      // Diagnostics first + independent, so a canvas-read failure can't suppress it.
-      void post("/__diagnostics", { label, before, after });
-      requestAnimationFrame(() => {
-        try {
-          const canvas = document.querySelector("canvas");
-          if (canvas) void post("/__capture", { label, dataUrl: canvas.toDataURL("image/png") });
-        } catch {
-          /* canvas read can fail on some GL configs; diagnostics already sent */
-        }
+    void Promise.resolve()
+      .then(action)
+      .catch(() => {})
+      .then(() => {
+        setTimeout(() => {
+          const after = envSnapshot();
+          // Diagnostics first + independent, so a canvas-read failure can't suppress it.
+          void post("/__diagnostics", { label, before, after });
+          requestAnimationFrame(() => {
+            try {
+              const canvas = document.querySelector("canvas");
+              if (canvas)
+                void post("/__capture", { label, dataUrl: canvas.toDataURL("image/png") });
+            } catch {
+              /* canvas read can fail on some GL configs; diagnostics already sent */
+            }
+          });
+        }, delayMs);
       });
-    }, delayMs);
   };
 
   const captureCanvas = (label: string) => {
@@ -106,15 +111,19 @@ export function DevHarness() {
     });
   };
 
-  const requestLaunchWhenReady = (req: LaunchRequest, attempt = 0) => {
+  const requestLaunchWhenReady = (req: LaunchRequest, attempt = 0): Promise<void> => {
     const ready =
       useGameStore.getState().phase === "playing" &&
       getBlobDiagnostics().position[1] >= STARTER_BLOB_Y * 0.7;
     if (ready || attempt >= 50) {
       requestLaunch(req);
-      return;
+      return Promise.resolve();
     }
-    window.setTimeout(() => requestLaunchWhenReady(req, attempt + 1), 50);
+    return new Promise((resolve) => {
+      window.setTimeout(() => {
+        void requestLaunchWhenReady(req, attempt + 1).then(resolve);
+      }, 50);
+    });
   };
 
   const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
