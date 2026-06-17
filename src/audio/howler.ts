@@ -3,6 +3,7 @@ import audioCfg from "@/config/audio.json";
 import type { TrampType } from "@/core/types";
 import { MAX_COMBO } from "@/sim/combo";
 import { padVoice } from "./padVoice";
+import { createPitchVariation } from "./variants";
 
 /**
  * Howler-backed audio engine playing the real itch.io sample library (config/audio.json)
@@ -123,8 +124,12 @@ export function playComboBlip(combo: number): void {
 export function playSplat(): void {
   playSfx("splat");
 }
+/** Crystal pickup with pitched round-robin variation — a multi-gather run (magnet sweep,
+ *  dense cluster) plays an ascending-ish spread with no two adjacent gems at the same pitch,
+ *  so it reads as a hand-played sparkle run rather than one looped blip. */
+const chimeRate = createPitchVariation([0.92, 1.0, 1.08, 1.16, 1.24]);
 export function playChime(): void {
-  playSfx("crystal");
+  playSfx("crystal", { rate: chimeRate() });
 }
 export function playPowerup(): void {
   playSfx("powerup");

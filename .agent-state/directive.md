@@ -538,7 +538,12 @@ game — touch/drag is primary; keyboard is a minor desktop-only secondary, don'
 - [x] Impact-strength → rate+volume scaling: padVoice(type, strength) brightens pitch (~+12%)
       and lifts volume (~+20%) with the hit; Trampoline passes speed/MAX_IMPACT_SPEED into
       playBounce so a hard landing sounds sharper + no two bounces are identical.
-- [ ] Round-robin engine (playRandom with no-immediate-repeat) for per-cue variant sets.
+- [x] Round-robin variant engine: src/audio/variants.ts (pure, tested) — createVariantPicker
+      returns a no-immediate-repeat index in O(1) (remap-around-last, no reject loop), and
+      createPitchVariation wraps it over a pitch-step set. Injectable rand for determinism. First
+      use: crystal pickup (playChime) now plays a pitched round-robin spread so a multi-gather
+      run reads as a hand-played sparkle, not one looped blip. Ready for any future variant
+      sample sets.
 - [x] Charged-launch whoosh by power: playLaunch now scales the whoosh by charge (rate
       0.85→1.25, volume 0.7→1.1) — a soft release is a low slow whoosh, a max charge a fast
       bright one (it ignored charge before; PlayerBlob already passes req.charge).
@@ -559,7 +564,11 @@ game — touch/drag is primary; keyboard is a minor desktop-only secondary, don'
       activate/countdown/expire-once/multi-expire/reset. (A per-type activate loop + magnet sweep
       loop would need new looped samples — left for an audio-sourcing pass; the power-down is the
       high-value distinct cue.)
-- [ ] Crystal pickup variation + multi-gather sparkle run (rate per gem); magnet "sweep" loop while active.
+- [x] Crystal pickup variation + multi-gather sparkle run: playChime now uses the round-robin
+      pitch variation (createPitchVariation over [0.92..1.24]), so each gem in a cluster/magnet
+      sweep plays a different pitch — a hand-played sparkle run instead of one repeated blip.
+      (A dedicated magnet "sweep" LOOP while active would need a looped sample — deferred to the
+      audio-sourcing pass; the per-gem variation is the high-value win.)
 - [ ] Near-miss whoosh when passing a pad close at speed without landing.
 - [ ] Three music tracks swapped by phase+altitude (menu / in-game / high-space) with crossfade.
 - [ ] Expand ambient beds per biome band (forest/wind/strong-wind/space/snow/magic) off biomeSkyAt.
