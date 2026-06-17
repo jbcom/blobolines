@@ -111,12 +111,20 @@ for (const pack of packs) {
     const safeName = basename(upload.filename);
     const dest = isArchive ? join(ARCHIVES, safeName) : join(looseDir, safeName);
 
-    if (existsSync(dest) && statSync(dest).size === upload.size) {
-      const md5 = createHash("md5").update(readFileSync(dest)).digest("hex");
-      if (md5 === upload.md5_hash) {
+    // Idempotency skip: try to read the existing file ONCE (no exists/stat pre-check, so there's
+    // no TOCTOU window) — if it's already the right size + md5, skip the re-download. A missing
+    // file throws ENOENT, caught → fall through to download.
+    try {
+      const existing = readFileSync(dest);
+      if (
+        existing.length === upload.size &&
+        createHash("md5").update(existing).digest("hex") === upload.md5_hash
+      ) {
         skipped++;
         continue;
       }
+    } catch {
+      // not present (or unreadable) — download it below.
     }
 
     if (DRY) {
