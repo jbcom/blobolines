@@ -9,6 +9,7 @@ export {
   playBounce,
   playChime,
   playComboBlip,
+  playComboFanfare,
   playLaunch,
   playMilestone,
   playPowerup,

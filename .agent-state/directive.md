@@ -517,7 +517,10 @@ game — touch/drag is primary; keyboard is a minor desktop-only secondary, don'
 - [x] Combo rising-pitch blip: new playComboBlip(combo) plays the bounce sample pitched up by
       the streak (rate 1+combo·0.06), fired on every clean bounce in PlayerBlob; silent on ice
       (combo resets to 0). Audio test covers both across charge/combo ranges incl. over-cap.
-- [ ] Combo-milestone fanfares (5/10/25) from the victory-stinger pack.
+- [x] Combo-milestone fanfare: playComboFanfare (the victory-pack milestone stinger pitched up
+      1.25×) fires ONCE the frame a clean streak first hits the cap — the "ON FIRE" milestone.
+      (The directive's 5/10/25 assumed a higher cap; MAX_COMBO is 8, so the fanfare marks the
+      max-tier on-fire moment — the one milestone that exists.) Test covers it.
 - [ ] New personal-best stinger on gameover when maxY>best.
 - [ ] Real game-over death sting (downer + gooey explosion) instead of reusing the splat.
 - [ ] Powerup activate/expire cues distinct from pickup (thruster laser-charge loop, magnet buff, expire power-down).

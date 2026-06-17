@@ -129,6 +129,12 @@ export function playChime(): void {
 export function playPowerup(): void {
   playSfx("powerup");
 }
+/** Combo-milestone fanfare: a short celebratory stinger when a clean streak hits the "on
+ *  fire" tier (combo cap), pitched up a bit from the altitude milestone so it reads as a
+ *  distinct "streak!" cue. Fired once per streak by the caller. */
+export function playComboFanfare(): void {
+  playSfx("milestone", { rate: 1.25, volume: 0.9 });
+}
 /** Bright arcade stinger when the blob crosses a 100m milestone. */
 export function playMilestone(): void {
   playSfx("milestone");
