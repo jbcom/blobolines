@@ -1,3 +1,4 @@
+import { Howler } from "howler";
 import { describe, expect, it } from "vitest";
 import {
   duckMusic,
@@ -133,6 +134,23 @@ describe("music + ambient lifecycle", () => {
     setMusicEnabled(false);
     expect(() => startMusic()).not.toThrow();
     setMusicEnabled(true);
+    stopMusic();
+  });
+
+  // Beds STREAM (html5:true) — long loops shouldn't fully decode into memory on mobile; short
+  // SFX use Web Audio (html5:false) for low-latency overlap. Inspect Howler's global registry
+  // to confirm the looping beds vs the one-shot SFX got the right backend.
+  it("music/ambient beds use html5 streaming; SFX use Web Audio", () => {
+    startMusic(); // creates the looping music + ambient beds
+    playBounce("standard"); // creates a one-shot SFX Howl
+    const howls = (Howler as unknown as { _howls: Array<{ _loop: boolean; _html5: boolean }> })
+      ._howls;
+    const beds = howls.filter((h) => h._loop);
+    const sfx = howls.filter((h) => !h._loop);
+    expect(beds.length).toBeGreaterThan(0);
+    expect(sfx.length).toBeGreaterThan(0);
+    expect(beds.every((h) => h._html5 === true)).toBe(true); // beds stream
+    expect(sfx.every((h) => h._html5 === false)).toBe(true); // SFX low-latency
     stopMusic();
   });
 });

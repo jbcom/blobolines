@@ -763,7 +763,10 @@ says KEEP + WIRE these deliberate-architecture deps, never cut. Verified call si
       GooCsg.tsx + src/render/goo/merge.ts (the one goo path); n8ao in postfx/N8AO.tsx +
       PostFX.tsx; three-mesh-bvh is three-bvh-csg's peer dep. None unused. Keep.
 ### Audio/asset loading
-- [ ] html5:true for music+ambient Howls (stream, not full-decode); keep html5:false for short SFX.
+- [x] html5:true for music+ambient Howls (stream, not full-decode); keep html5:false for short
+      SFX. howlFor gained an `html5` param (default false); startBed passes true so the looping
+      beds stream while one-shot SFX stay on low-latency Web Audio. Unit test asserts the split
+      via Howler's global registry (beds._html5 true, sfx._html5 false).
 - [ ] Preload SFX Howls on LoadingScreen behind the gesture unlock (no first-play hitch).
 - [ ] Re-encode theme.mp3 smaller (~96kbps mono / shorter loop) and/or lazy-load post-interaction.
 ### Bundle/build

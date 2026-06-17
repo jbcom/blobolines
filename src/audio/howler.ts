@@ -39,10 +39,14 @@ const musicTarget = () => vol.music * musicVolume;
 /** Target play volume for the ambient bed = config base × the ambient bus level. */
 const ambientTarget = () => vol.ambient * ambientVolume;
 
-function howlFor(path: string, loop: boolean, volume: number): Howl {
+function howlFor(path: string, loop: boolean, volume: number, html5 = false): Howl {
   let h = howls.get(path);
   if (!h) {
-    h = new Howl({ src: [url(path)], loop, volume, html5: false });
+    // html5:true STREAMS the file (HTML5 Audio) instead of fully decoding it into memory — the
+    // right mode for the long music + ambient loops (lower memory + no big up-front decode on
+    // mobile). Short SFX keep html5:false: Web Audio gives them low-latency, overlap-friendly
+    // playback (an HTML5 element can't play the same sample twice at once).
+    h = new Howl({ src: [url(path)], loop, volume, html5 });
     howls.set(path, h);
   }
   return h;
@@ -72,7 +76,7 @@ function startBed(path: string, volume: number): Howl {
     clearTimeout(pending);
     pendingStops.delete(path);
   }
-  const h = howlFor(path, true, 0);
+  const h = howlFor(path, true, 0, true); // beds stream (html5) — long loops, not low-latency SFX
   h.mute(muted);
   h.play();
   h.fade(0, volume, vol.themeFadeMs);
