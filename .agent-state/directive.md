@@ -714,7 +714,13 @@ permeability (permeable one-way pads rejected by owner).
       progression); revisit only if playtest shows the high tower feels sparse.
 - [ ] Daily-challenge seed plumbing (Rng is seedable; add a daily seed + leaderboard-ready run hash).
 - [ ] Missions/objectives/achievements layer (e.g. "reach 200m", "10-combo", "100 crystals").
-- [ ] Charge-time/overcharge nuance on the slingshot (hold penalty or perfect-release window).
+- [x] Charge-time/overcharge nuance on the slingshot: a PERFECT-RELEASE window. Charging into a
+      sweet-spot band (0.85–0.97, config launch.perfectRelease) and releasing earns a power bonus
+      (×1.18) — a timing skill on top of "drag farther = stronger", WITHOUT punishing (below the
+      band is just normal power; over-charging to 1.0 misses the bonus, the gentle "overcharge"
+      nuance). LaunchInput flips its bar + flourish to a gold "PERFECT!" cue in the window;
+      PlayerBlob fires a gold flash + fanfare on a perfect launch. Pure perfectRelease helpers
+      unit-tested (window bounds + bonus baked into launchVelocity).
 
 ### PoC-parity gaps (features the original PoC had that the rebuild dropped/left unwired)
 Surfaced by a PoC-vs-rebuild diff (docs/reference/neon-launch-poc.html). The rebuild is far

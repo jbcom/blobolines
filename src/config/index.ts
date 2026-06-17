@@ -49,6 +49,8 @@ export const launch = launchCfg as {
   powerPerCharge: number;
   comboStep: number;
   comboStart: number;
+  /** Perfect-release sweet spot (charge band + power bonus) — a launch-timing skill. */
+  perfectRelease: { min: number; max: number; bonus: number };
 };
 
 export const trampoline = trampolineCfg as {

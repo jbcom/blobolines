@@ -3,6 +3,7 @@ import { useDrag } from "@use-gesture/react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { useState } from "react";
 import { computeAim, computeAirSteer } from "@/input";
+import { isPerfectRelease } from "@/sim/launch";
 import {
   bounceChargesLeft,
   getBlobDiagnostics,
@@ -12,9 +13,6 @@ import {
   setAirSteer,
   useGameStore,
 } from "@/state";
-
-/** Charge fraction at/above which the slingshot reads as "maxed" (full-power flourish). */
-const MAX_CHARGE = 0.85;
 
 /**
  * Full-screen input surface (PLAYING only). Dual-mode, matching the PoC:
@@ -67,7 +65,9 @@ export function LaunchInput() {
     }
   });
 
-  const maxed = charge >= MAX_CHARGE;
+  // "Perfect" = the live charge sits in the perfect-release sweet spot — releasing here earns
+  // the power bonus, so the bar + flourish flip to a gold "PERFECT!" cue to invite the timing.
+  const perfect = isPerfectRelease(charge);
 
   return (
     <div
@@ -78,7 +78,7 @@ export function LaunchInput() {
     >
       {/* Edge glow that ignites as the charge nears max — the screen itself tenses up. */}
       <AnimatePresence>
-        {maxed && (
+        {perfect && (
           <motion.div
             aria-hidden
             initial={{ opacity: 0 }}
@@ -102,7 +102,7 @@ export function LaunchInput() {
           aria-valuenow={Math.round(charge * 100)}
         >
           <AnimatePresence>
-            {maxed && (
+            {perfect && (
               <motion.span
                 aria-hidden
                 initial={{ scale: 0.4, opacity: 0 }}
@@ -111,21 +111,21 @@ export function LaunchInput() {
                 transition={{ duration: 0.4, repeat }}
                 className="font-display text-sm font-bold uppercase tracking-[0.2em] text-tramp-gold"
               >
-                Max!
+                PERFECT!
               </motion.span>
             )}
           </AnimatePresence>
           <motion.div
             className="h-2 w-44 overflow-hidden rounded-full border border-border bg-bg/70"
-            // Pulse the bar's scale when maxed so it visibly strains at full power.
-            animate={maxed && !reduced ? { scaleY: [1, 1.5, 1] } : { scaleY: 1 }}
-            transition={{ duration: 0.4, repeat: maxed ? repeat : 0 }}
+            // Pulse the bar's scale in the perfect window so it visibly snaps to the sweet spot.
+            animate={perfect && !reduced ? { scaleY: [1, 1.5, 1] } : { scaleY: 1 }}
+            transition={{ duration: 0.4, repeat: perfect ? repeat : 0 }}
           >
             <div
               className="h-full rounded-full"
               style={{
                 width: `${charge * 100}%`,
-                background: maxed
+                background: perfect
                   ? "var(--color-tramp-gold)"
                   : "linear-gradient(to right, var(--color-accent), var(--color-accent-warm))",
               }}

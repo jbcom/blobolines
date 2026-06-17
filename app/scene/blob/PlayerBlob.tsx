@@ -20,7 +20,7 @@ import { ImpactStyle, impact as impact_, vibrate } from "@/platform";
 import { blobTraitsFromSnapshot, classifyExpression } from "@/sim/blob";
 import { MAX_COMBO } from "@/sim/combo";
 import { downdraftAt, windAt } from "@/sim/hazard";
-import { launchVelocity } from "@/sim/launch";
+import { isPerfectRelease, launchVelocity } from "@/sim/launch";
 import {
   AUTO_LAUNCH_DELAY,
   BLOB,
@@ -220,8 +220,15 @@ export function PlayerBlob() {
         charge: req.charge,
         kind: "launch",
       });
-      // Blue flash on a big charged launch (the bigger the charge, the brighter the pop).
-      if (req.charge > 0.6) flash("blue", req.charge);
+      // PERFECT RELEASE: a launch charged into the sweet-spot window earns the power bonus (baked
+      // into launchVelocity above) PLUS a gold flourish + a celebratory cue — the satisfying
+      // "nailed it" beat that rewards the timing skill. Otherwise a blue flash scales with charge.
+      if (isPerfectRelease(req.charge)) {
+        flash("gold", 1);
+        playComboFanfare();
+      } else if (req.charge > 0.6) {
+        flash("blue", req.charge);
+      }
     } else if (airborne) {
       // Mid-air steering: nudge lateral velocity on the X/Z plane (PoC air control).
       const [sx, sz] = getAirSteer();
