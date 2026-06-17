@@ -83,11 +83,12 @@ function variantLandingMiss(
   );
 }
 
-function expectedSourceMode(source: TrampolineSpec): GoldenPathProof["sourceMode"] {
+function expectedSourceMode(source: TrampolineSpec): GoldenPathProof["sourceMode"] | null {
+  if (source.type === "standard") return "flat";
   if (source.type === "canted") return "canted";
   if (source.type === "moving") return "moving";
   if (source.type === "wobbler") return "wobbler";
-  return "flat";
+  return null;
 }
 
 function addFailure(
@@ -162,7 +163,10 @@ export function verifySeedRoute({
     if (proof.toPadId !== target.id) {
       addFailure(failures, i, source, target, "proof points at the wrong successor");
     }
-    if (proof.sourceMode !== expectedSourceMode(source)) {
+    const expectedMode = expectedSourceMode(source);
+    if (!expectedMode) {
+      addFailure(failures, i, source, target, "unsupported pad type stored as proof source");
+    } else if (proof.sourceMode !== expectedMode) {
       addFailure(failures, i, source, target, "proof source mode does not match pad mechanic");
     }
     if (variants.length !== activeProfile.proofVariants) {

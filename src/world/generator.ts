@@ -298,9 +298,7 @@ function applySourceMechanic(
   target: TrampolineSpec,
   profile: RouteDifficultyProfile,
 ) {
-  if (type !== "standard" || SOURCE_MECHANICS.includes(prev.type)) {
-    prev.type = type;
-  }
+  prev.type = type;
   aimSourceMechanic(prev, target, profile);
 }
 
@@ -401,15 +399,22 @@ function proofWithVariants(
   target: TrampolineSpec,
   profile: RouteDifficultyProfile,
 ): GoldenPathProof | null {
-  if (prev.type !== "canted" && prev.type !== "moving" && prev.type !== "wobbler") {
-    const accepted = solveFlatLaunchProofs(prev, target).filter((proof) =>
+  if (prev.type === "standard") {
+    const accepted = solveFlatLaunchProofs(prev, target, undefined, false).filter((proof) =>
       proofAccepted(proof, profile),
     );
     const selected = selectVariantProofs(accepted, profile.proofVariants);
     if (!selected) return null;
-    const [primary, ...variants] = selected;
+    const materialized = selected
+      .map((proof) =>
+        solveGoldenPath(prev, target, proof.launchSpeed, undefined, undefined, false, "flat"),
+      )
+      .filter((proof): proof is GoldenPathProof => proofAccepted(proof, profile));
+    if (materialized.length < profile.proofVariants) return null;
+    const [primary, ...variants] = materialized;
     return { ...primary, variants: [primary, ...variants].map(proofToVariant) };
   }
+  if (prev.type !== "canted" && prev.type !== "moving" && prev.type !== "wobbler") return null;
 
   const primary = solveGoldenPath(
     prev,

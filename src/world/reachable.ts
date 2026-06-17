@@ -230,6 +230,7 @@ function proofFromVelocity(
   g: number,
   requiredCant: boolean,
   sourceMode: SourceMode,
+  includeSamples = true,
 ): GoldenPathProof | null {
   const origin: Vec3 = [a.position[0], a.position[1] + PAD_SURFACE_Y, a.position[2]];
   const targetY = b.position[1] + PAD_SURFACE_Y;
@@ -257,11 +258,12 @@ function proofFromVelocity(
   const peakBudget = Math.max(1, (velocity[1] * velocity[1]) / (2 * g));
   const arcCompression = clamp01(1 - apexClearance / peakBudget);
   const launchAngleRad = Math.acos(Math.min(1, Math.max(-1, launchNormal[1])));
-  const samples: Vec3[] = [];
-  for (let i = 0; i <= SAMPLE_COUNT; i++) {
-    const t = flightTime * (i / SAMPLE_COUNT);
-    samples.push(trajectoryPoint(origin, velocity, g, t));
-  }
+  const samples: Vec3[] = includeSamples
+    ? Array.from({ length: SAMPLE_COUNT + 1 }, (_, i) => {
+        const t = flightTime * (i / SAMPLE_COUNT);
+        return trajectoryPoint(origin, velocity, g, t);
+      })
+    : [];
   return {
     toPadId: b.id,
     launchNormal,
@@ -285,12 +287,22 @@ export function solveFlatLaunchProofs(
   a: TrampolineSpec,
   b: TrampolineSpec,
   g = G,
+  includeSamples = true,
 ): GoldenPathProof[] {
   const proofs: GoldenPathProof[] = [];
   for (let charge = MANUAL_CHARGE_STEP; charge <= 1 + 1e-9; charge += MANUAL_CHARGE_STEP) {
     const launchNormal = slingshotDirectionToward(a, b, charge);
     const launchSpeed = launchSpeedForCharge(charge);
-    const proof = proofFromVelocity(a, b, launchNormal, launchSpeed, g, false, "flat");
+    const proof = proofFromVelocity(
+      a,
+      b,
+      launchNormal,
+      launchSpeed,
+      g,
+      false,
+      "flat",
+      includeSamples,
+    );
     if (proof) proofs.push(proof);
   }
   return proofs;
@@ -311,6 +323,7 @@ export function solveGoldenPath(
   sourceMode = inferredMode(a),
 ): GoldenPathProof | null {
   if (sourceMode === "flat") {
+    if (a.type !== "standard") return null;
     const proofs = solveFlatLaunchProofs(a, b, g);
     if (speed !== undefined) {
       return proofs.find((proof) => Math.abs(proof.launchSpeed - speed) < 0.001) ?? null;
