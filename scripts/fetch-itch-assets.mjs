@@ -142,7 +142,8 @@ for (const pack of packs) {
       continue;
     }
     if (!dlInfo.url.startsWith("https://")) {
-      console.error(`  [${pack.title}] refusing non-https download URL: ${dlInfo.url}`);
+      // Don't log the URL — a signed itch download URL can carry a token (CWE-532).
+      console.error(`  [${pack.title}] refusing non-https download URL`);
       failed++;
       continue;
     }

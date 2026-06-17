@@ -47,12 +47,12 @@ export function BlobCustomizer({
     // have flushed yet) so arrow nav is robust regardless of how focus arrived.
     const cur = tileRefs.current.indexOf(document.activeElement as HTMLButtonElement);
     const from = cur >= 0 ? cur : focusIdx;
-    let next = from;
+    let next: number;
     if (e.key === "ArrowRight") next = (from + 1) % n;
     else if (e.key === "ArrowLeft") next = (from - 1 + n) % n;
     else if (e.key === "ArrowDown") next = Math.min(from + GRID_COLS, n - 1);
     else if (e.key === "ArrowUp") next = Math.max(from - GRID_COLS, 0);
-    else return;
+    else return; // not an arrow key — next is only assigned in the arrow branches above
     e.preventDefault();
     setFocusIdx(next);
     tileRefs.current[next]?.focus();
