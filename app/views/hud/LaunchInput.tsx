@@ -1,3 +1,4 @@
+import { useKeyboardSteer } from "@app/hooks";
 import { useDrag } from "@use-gesture/react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { useState } from "react";
@@ -23,6 +24,9 @@ const MAX_CHARGE = 0.85;
  */
 export function LaunchInput() {
   const sensitivity = useGameStore((s) => s.settings.slingshotSensitivity);
+  // Desktop keyboard air-steering (WASD/arrows) — the secondary control alongside the primary
+  // touch/mouse drag below. Mounted here so all input lives in one PLAYING-scoped place.
+  useKeyboardSteer();
   const [charge, setCharge] = useState(0);
   // Honor prefers-reduced-motion: drop the infinite pulse loops to a single static cue.
   const reduced = useReducedMotion();

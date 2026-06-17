@@ -712,6 +712,20 @@ permeability (permeable one-way pads rejected by owner).
 - [ ] Daily-challenge seed plumbing (Rng is seedable; add a daily seed + leaderboard-ready run hash).
 - [ ] Missions/objectives/achievements layer (e.g. "reach 200m", "10-combo", "100 crystals").
 - [ ] Charge-time/overcharge nuance on the slingshot (hold penalty or perfect-release window).
+
+### PoC-parity gaps (features the original PoC had that the rebuild dropped/left unwired)
+Surfaced by a PoC-vs-rebuild diff (docs/reference/neon-launch-poc.html). The rebuild is far
+ahead overall, but these concrete affordances regressed:
+- [x] Auto-launch on idle: WIRED. PlayerBlob now tracks an idle timer (reset while airborne or
+      aiming, accumulates on a resting blob in real time); past AUTO_LAUNCH_DELAY it auto-fires a
+      gentle straight-up launch (launchVelocity [0,1,0] @0.35 charge) with the launch cue + ring,
+      so the run never soft-locks. Verified live (resting blob hops on its own).
+- [x] Keyboard air-steering: WIRED. New useKeyboardSteer hook (mounted by LaunchInput, PLAYING-
+      scoped) listens WASD/arrows and writes the existing pure keyboardSteer() accel into the
+      air-steer bridge — but only while airborne; clears on keyup/blur/unmount. Browser tests
+      cover steer-while-airborne, clear-on-release, and inert-while-resting.
+- [ ] FOV warp on launch: a brief camera FOV punch on a big launch (PoC 65→up to 83° by power,
+      lerps back) for a "hyperspace" kick — distinct from the existing dolly-back + shake.
 - [x] Wire walls/misses to break combo… RESOLVED as a no-op by design. Premise was stale: NO
       doc actually claims a wall/miss breaks the combo (checked GAME-DESIGN/STANDARDS — they only
       say a clean LANDING builds it). The combo only advances on a landing, so a miss already

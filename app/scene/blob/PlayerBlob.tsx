@@ -21,7 +21,13 @@ import { blobTraitsFromSnapshot, classifyExpression } from "@/sim/blob";
 import { MAX_COMBO } from "@/sim/combo";
 import { downdraftAt, windAt } from "@/sim/hazard";
 import { launchVelocity } from "@/sim/launch";
-import { BLOB, DEATH_FALL_DISTANCE, MAX_IMPACT_SPEED, WORLD_BOUND_XZ } from "@/sim/physics";
+import {
+  AUTO_LAUNCH_DELAY,
+  BLOB,
+  DEATH_FALL_DISTANCE,
+  MAX_IMPACT_SPEED,
+  WORLD_BOUND_XZ,
+} from "@/sim/physics";
 import {
   consumeBounceCharge,
   consumeImpact,
@@ -30,6 +36,7 @@ import {
   consumeRebound,
   consumeShield,
   flash,
+  getAim,
   getAirSteer,
   isPowerupActive,
   reportLaunchBurst,
@@ -83,6 +90,9 @@ export function PlayerBlob() {
   const impact = useRef(0);
   /** Countdown to the next near-death heartbeat haptic (shrinks as death nears). */
   const dangerBeat = useRef(0);
+  /** Seconds the blob has rested idle (not airborne, not being aimed) — auto-launches straight
+   *  up once it passes AUTO_LAUNCH_DELAY so the run never stalls if the player just sits there. */
+  const idle = useRef(0);
 
   // Spawn the blob ECS entity for this run; destroy it on unmount (PlayerBlob remounts per
   // run). The entity is the blob's queryable logical state, synced from Rapier each step.
@@ -115,6 +125,7 @@ export function PlayerBlob() {
     resetFlash(); // no leftover combo/launch/death flash crossing into the new run
     impact.current = 0;
     dangerBeat.current = 0;
+    idle.current = 0;
   }, [resetDroplets]);
 
   useFrame((state, rawDt) => {
@@ -226,6 +237,29 @@ export function PlayerBlob() {
           { x: v.x + (sx + wx) * dt, y: v.y - down * dt, z: v.z + (sz + wz) * dt },
           true,
         );
+      }
+    }
+
+    // AUTO-LAUNCH on idle: if the blob is resting on a pad and the player isn't aiming, count up;
+    // past AUTO_LAUNCH_DELAY fling it gently straight up so the run never stalls (the PoC's
+    // anti-soft-lock). Reset the timer the moment it's airborne or being aimed. Uses real time so
+    // a slow-mo buff doesn't stretch the patience window.
+    if (airborne || getAim()) {
+      idle.current = 0;
+    } else {
+      idle.current += realDt;
+      if (idle.current >= AUTO_LAUNCH_DELAY) {
+        idle.current = 0;
+        body.wakeUp();
+        const lv = launchVelocity([0, 1, 0], 0.35, "standard", useGameStore.getState().run.combo);
+        body.setLinvel({ x: lv[0], y: lv[1], z: lv[2] }, true);
+        playLaunch(0.35);
+        launchBurst([p.x, p.y - BLOB.radius, p.z], 0.35);
+        reportLaunchBurst({
+          position: [p.x, p.y - BLOB.radius, p.z],
+          charge: 0.35,
+          kind: "launch",
+        });
       }
     }
 
