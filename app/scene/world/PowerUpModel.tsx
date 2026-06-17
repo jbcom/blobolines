@@ -23,14 +23,45 @@ const MODEL = {
     color: palette.tramp.orange,
     rotation: [0, 0, 0] as const,
   },
-} satisfies Record<
-  PowerUpType,
-  { url: string; scale: number; color: string; rotation: readonly [number, number, number] }
+} satisfies Partial<
+  Record<
+    PowerUpType,
+    { url: string; scale: number; color: string; rotation: readonly [number, number, number] }
+  >
 >;
+
+/** Power-up types that have a GLB model (others render their primitive — e.g. shield). */
+type ModelledType = keyof typeof MODEL;
+const hasModel = (t: PowerUpType): t is ModelledType => t in MODEL;
 
 const url = (file: string) => `${import.meta.env.BASE_URL}assets/models/${file}`;
 
 export function PowerUpModel({ type }: { type: PowerUpType }) {
+  // Dispatch (no hook above this) so the GLB component's useGLTF is never called conditionally.
+  // Shield (and any future model-less type) has no GLB → render a simple glowing orb.
+  return hasModel(type) ? <GlbModel type={type} /> : <ShieldOrb />;
+}
+
+/** A model-less power-up rendered as a glowing icy orb (the shield's second-life pickup). */
+function ShieldOrb() {
+  return (
+    <mesh>
+      <icosahedronGeometry args={[0.45, 1]} />
+      <meshStandardMaterial
+        color={palette.tramp.ice}
+        emissive={palette.tramp.ice}
+        emissiveIntensity={0.6}
+        roughness={0.15}
+        metalness={0.3}
+        transparent
+        opacity={0.85}
+      />
+    </mesh>
+  );
+}
+
+/** A GLB-backed power-up (magnet/thruster) — useGLTF is called unconditionally here. */
+function GlbModel({ type }: { type: ModelledType }) {
   const spec = MODEL[type];
   const { scene } = useGLTF(url(spec.url));
   // Clone so multiple instances + tint don't share/mutate the cached scene.

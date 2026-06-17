@@ -17,6 +17,7 @@ const PICKUP_R2 = (0.75 + 0.85) * (0.75 + 0.85);
 const AURA_COLOR: Record<PowerUpType, string> = {
   magnet: palette.tramp.blue,
   thruster: palette.tramp.orange,
+  shield: palette.tramp.ice,
 };
 const FLASH_LIFE = 0.3; // seconds the collect flash plays
 
@@ -151,6 +152,23 @@ function PrimitivePowerup({ type }: { type: PowerUpType }) {
           emissive={palette.tramp.blue}
           emissiveIntensity={0.7}
           roughness={0.2}
+        />
+      </mesh>
+    );
+  }
+  if (type === "shield") {
+    // A glowing protective orb (icy/cyan) — the one-shot second-life pickup.
+    return (
+      <mesh>
+        <icosahedronGeometry args={[0.45, 1]} />
+        <meshStandardMaterial
+          color={palette.tramp.ice}
+          emissive={palette.tramp.ice}
+          emissiveIntensity={0.6}
+          roughness={0.15}
+          metalness={0.3}
+          transparent
+          opacity={0.85}
         />
       </mesh>
     );

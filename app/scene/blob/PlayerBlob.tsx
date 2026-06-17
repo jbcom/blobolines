@@ -9,6 +9,7 @@ import {
   playComboFanfare,
   playLaunch,
   playPowerdown,
+  playPowerup,
   playSplat,
   playThump,
   setMusicAltitude,
@@ -25,6 +26,7 @@ import {
   consumeImpact,
   consumeLaunch,
   consumeRebound,
+  consumeShield,
   flash,
   getAirSteer,
   isPowerupActive,
@@ -112,9 +114,13 @@ export function PlayerBlob() {
     dangerBeat.current = 0;
   }, [resetDroplets]);
 
-  useFrame((state, dt) => {
+  useFrame((state, rawDt) => {
     const body = bodyRef.current;
     if (!body) return;
+    // Clamp the frame delta: a tab-refocus / GC pause can spike rawDt to 1–2s, which would turn
+    // the per-frame accel integrations (air-steer, wind, downdraft — all `v + a*dt`) into a huge
+    // one-frame velocity kick. Cap at 0.1s so a stall never launches the blob.
+    const dt = Math.min(rawDt, 0.1);
     const p = body.translation();
     const v = body.linvel();
     const airborne = Math.abs(v.y) > 0.5;
@@ -349,12 +355,22 @@ export function PlayerBlob() {
       entity.set(Blob, u.blob);
     }
 
-    // Death: fire exactly once (guard against firing every frame while still falling).
+    // Death: fire exactly once (guard against firing every frame while still falling). A held
+    // SHIELD absorbs the fatal fall instead — consume it, fling the blob back up to its safe
+    // pad, and keep the run alive (a one-shot second life).
     if (!dead.current && fallDepth > DEATH_FALL_DISTANCE) {
-      dead.current = true;
-      playSplat();
-      commitBestHeight(maxY.current);
-      setPhase("gameover");
+      if (consumeShield()) {
+        body.wakeUp();
+        body.setTranslation({ x: p.x, y: safeY.current + 2, z: p.z }, true);
+        body.setLinvel({ x: 0, y: 18, z: 0 }, true); // pop back up to safety
+        flash("blue", 1); // bright save flash
+        playPowerup(); // the shield-save cue
+      } else {
+        dead.current = true;
+        playSplat();
+        commitBestHeight(maxY.current);
+        setPhase("gameover");
+      }
     }
   });
 

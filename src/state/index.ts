@@ -31,6 +31,8 @@ export {
 export { attachPersistence, hydrateStore } from "./persistence";
 export {
   activatePowerup,
+  consumeShield,
+  hasShield,
   isPowerupActive,
   POWERUP_DURATION,
   powerupRemaining,

@@ -16,8 +16,9 @@ export type Vec3 = readonly [x: number, y: number, z: number];
 /** The blob's expressive eye state, driven by velocity + impact. */
 export type EyeExpression = "idle" | "blink" | "squint" | "wide" | "tear";
 
-/** Power-up kinds. */
-export type PowerUpType = "magnet" | "thruster";
+/** Power-up kinds. magnet (pull crystals), thruster (skyward boost), shield (one-shot
+ *  second-life — absorbs a fatal fall instead of dying). */
+export type PowerUpType = "magnet" | "thruster" | "shield";
 
 /** Crystal rarity tiers. Higher tiers are worth more crystals (and so more score), rarer,
  *  larger, and brighter — the reward for ranging off the safe line + climbing higher. */

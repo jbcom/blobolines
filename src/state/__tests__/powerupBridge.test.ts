@@ -1,6 +1,8 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import {
   activatePowerup,
+  consumeShield,
+  hasShield,
   isPowerupActive,
   POWERUP_DURATION,
   powerupRemaining,
@@ -41,5 +43,27 @@ describe("powerupBridge", () => {
     activatePowerup("magnet");
     resetPowerups();
     expect(isPowerupActive("magnet")).toBe(false);
+  });
+
+  it("shield is a one-shot flag: activate → held → consume once → gone", () => {
+    expect(hasShield()).toBe(false);
+    activatePowerup("shield");
+    expect(hasShield()).toBe(true);
+    expect(isPowerupActive("shield")).toBe(true);
+    expect(consumeShield()).toBe(true); // absorbed a fatal fall
+    expect(hasShield()).toBe(false);
+    expect(consumeShield()).toBe(false); // already spent
+  });
+
+  it("shield doesn't tick down like a timer (tickPowerups ignores it)", () => {
+    activatePowerup("shield");
+    tickPowerups(100); // a huge dt shouldn't expire the shield
+    expect(hasShield()).toBe(true);
+  });
+
+  it("resetPowerups clears the shield too", () => {
+    activatePowerup("shield");
+    resetPowerups();
+    expect(hasShield()).toBe(false);
   });
 });

@@ -178,13 +178,17 @@ export function generateUpTo(
 
     // ~12% of pads (above the forgiving start) float a power-up.
     if (y > 30 && rng.next() > 0.88) {
+      // Shield is the rarest (a prized one-shot second life) — ~1 in 5 power-ups; the rest
+      // split magnet/thruster.
+      const roll = rng.next();
+      const type: PowerUpType = roll < 0.2 ? "shield" : roll < 0.6 ? "magnet" : "thruster";
       powerups.push({
         position: [
           x + (rng.next() - 0.5) * 1.5,
           y + 4.5 + rng.next() * 2,
           z + (rng.next() - 0.5) * 1.5,
         ],
-        type: rng.bool() ? "magnet" : "thruster",
+        type,
       });
     }
   }
