@@ -1,6 +1,6 @@
 ---
 title: Testing
-updated: 2026-06-16
+updated: 2026-06-17
 status: current
 domain: quality
 ---
@@ -11,10 +11,10 @@ Three layers, each catching a different class of bug. All run in CI on every PR.
 
 ## Unit — `pnpm test` (Vitest, happy-dom)
 
-Pure logic: deterministic RNG/clock/springs, engine loop, world generator, launch/combo/
-collect math, ECS traits, design tokens. Fast, no GPU. Determinism is explicitly tested
-(same seed → same sequence; fixed-timestep reproducibility). Lives next to the code in
-`__tests__/`. Current local count: 318 tests.
+Pure logic: deterministic RNG/clock/springs, engine loop, world generator, golden-path
+parabola proofs, launch/combo/collect math, ECS traits, design tokens. Fast, no GPU.
+Determinism is explicitly tested (same seed → same sequence; fixed-timestep reproducibility).
+Lives next to the code in `__tests__/`.
 
 ## Browser fixtures — `pnpm test:browser` (Vitest browser mode, real Chromium + WebGL)
 
@@ -23,6 +23,8 @@ Render regressions that only a real GPU context catches:
 - `app/scene/blob/__tests__/BlobActor.fixture.test.tsx` — gooey blob + eyes render
 - `app/scene/blob/__tests__/GooCsg.fixture.test.tsx` — merged CSG goo body renders and
   survives rest/deform/refraction paths
+- `app/scene/world/__tests__/GoldenRoutePreview.fixture.test.tsx` — solid red route-proof
+  parabola renders from stored golden-path samples
 - `app/views/hud/__tests__/LaunchInput.browser.test.tsx` — launch surface, keyboard
   steering, and air-steer reticle behavior
 - `app/views/hud/__tests__/NextPadRadar.browser.test.tsx` — next-target direction,
@@ -47,6 +49,12 @@ end to end. It passes against both `pnpm dev` and the production preview build.
 game-over) and **auto-writes** a scene screenshot + before/after diagnostics JSON to the
 gitignored `artifacts/` dir via Vite middleware (`scripts/capturePlugin.ts`). Use it to
 inspect or screenshot gameplay states without timing anything by hand.
+
+The harness also has **route proof sequence**: it steps through the first consecutive
+trampoline pairs, enables the solid red golden-path parabola for each pair, and writes
+`artifacts/route-proof-XX-*.png` plus matching JSON. Those JSON files include the source
+pad, target pad, source mode, launch normal, samples, flight time, apex, landing, lip
+clearance, landing precision, and compressed-arc score.
 
 ## Coverage gates
 

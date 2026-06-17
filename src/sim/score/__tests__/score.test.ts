@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vitest";
 import { score as cfg } from "@/config";
-import { comboStyleBonus, computeScore, geometricSum } from "../score";
+import {
+  comboStyleBonus,
+  computeScore,
+  geometricSum,
+  goldenPathLandingBonus,
+  goldenPathLandingQuality,
+} from "../score";
 
 describe("geometricSum", () => {
   it("sums base·growth^i for i in [0,n) via the closed form", () => {
@@ -40,7 +46,7 @@ describe("computeScore", () => {
   });
 
   it("clamps negative inputs to zero (never a negative score)", () => {
-    expect(computeScore({ height: -10, crystals: -5, maxCombo: -3 })).toBe(0);
+    expect(computeScore({ height: -10, crystals: -5, maxCombo: -3, stylePoints: -10 })).toBe(0);
   });
 
   it("rewards a longer combo streak super-linearly (style payoff)", () => {
@@ -71,5 +77,34 @@ describe("computeScore", () => {
   it("combines all three axes", () => {
     const s = computeScore({ height: 120, crystals: 4, maxCombo: 5 });
     expect(s).toBe(120 * cfg.heightPoints + 4 * cfg.crystalPoints + comboStyleBonus(5));
+  });
+
+  it("adds route style points", () => {
+    expect(computeScore({ height: 10, crystals: 1, maxCombo: 0, stylePoints: 37 })).toBe(
+      10 * cfg.heightPoints + cfg.crystalPoints + 37,
+    );
+  });
+});
+
+describe("goldenPathLandingBonus", () => {
+  it("normalizes quality from perfect to edge", () => {
+    expect(goldenPathLandingQuality(0, 4)).toBe(1);
+    expect(goldenPathLandingQuality(2, 4)).toBe(0.5);
+    expect(goldenPathLandingQuality(4, 4)).toBe(0);
+  });
+
+  it("awards max points at the certified landing point", () => {
+    expect(goldenPathLandingBonus(0, 4)).toBe(cfg.goldenPathPerfectPoints);
+  });
+
+  it("falls off quadratically toward the target edge", () => {
+    const half = goldenPathLandingBonus(2, 4);
+    expect(half).toBeGreaterThan(0);
+    expect(half).toBeLessThan(cfg.goldenPathPerfectPoints / 2);
+  });
+
+  it("awards nothing outside the footprint", () => {
+    expect(goldenPathLandingBonus(5, 4)).toBe(0);
+    expect(goldenPathLandingBonus(0, 0)).toBe(0);
   });
 });

@@ -3,8 +3,8 @@
     {
       "name": "ground",
       "minHeight": 0,
-      "sky": { "top": "#ffe3c4", "mid": "#6fc8f0", "deep": "#5a4fb0" },
-      "fog": "#bfe0f5"
+      "sky": { "top": "#ffe3c4", "mid": "#9edfc8", "deep": "#7b6bc2" },
+      "fog": "#ead8c8"
     },
     {
       "name": "sky",

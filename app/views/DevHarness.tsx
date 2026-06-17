@@ -1,6 +1,14 @@
 import { useState } from "react";
 import type { BlobSkin } from "@/core/types";
-import { getBlobDiagnostics, requestLaunch, setAim, useGameStore, useWorldStore } from "@/state";
+import {
+  getBlobDiagnostics,
+  getRouteProofTarget,
+  requestLaunch,
+  setAim,
+  setRouteProofTarget,
+  useGameStore,
+  useWorldStore,
+} from "@/state";
 
 /**
  * Dev harness overlay — manual triggers for blob events so gameplay can be exercised
@@ -49,6 +57,7 @@ export function DevHarness() {
       bestHeight: g.progress.bestHeight,
       trampolineCount: w.trampolines.length,
       highestGeneratedY: w.highestY,
+      routeProof: getRouteProofTarget(),
       blob: getBlobDiagnostics(),
     };
   };
@@ -82,6 +91,48 @@ export function DevHarness() {
         }
       });
     }, delayMs);
+  };
+
+  const captureCanvas = (label: string) => {
+    requestAnimationFrame(() => {
+      try {
+        const canvas = document.querySelector("canvas");
+        if (canvas) void post("/__capture", { label, dataUrl: canvas.toDataURL("image/png") });
+      } catch {
+        /* diagnostics are written separately */
+      }
+    });
+  };
+
+  const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+  const routeProofSequence = async () => {
+    if (useGameStore.getState().phase !== "playing") {
+      startRun();
+      await sleep(900);
+    }
+    const pairCount = Math.min(8, useWorldStore.getState().trampolines.length - 1);
+    for (let i = 0; i < pairCount; i++) {
+      setRouteProofTarget({ pairIndex: i });
+      await sleep(700);
+      const w = useWorldStore.getState();
+      const from = w.trampolines[i];
+      const to = w.trampolines[i + 1];
+      const proof = from?.goldenPath;
+      const label = `route-proof-${String(i).padStart(2, "0")}-${from?.type ?? "none"}-to-${to?.type ?? "none"}`;
+      void post("/__diagnostics", {
+        label,
+        pairIndex: i,
+        from,
+        to,
+        proof,
+        snapshot: envSnapshot(),
+      });
+      captureCanvas(label);
+      await sleep(560);
+    }
+    await sleep(260);
+    setRouteProofTarget(null);
   };
 
   return (
@@ -131,6 +182,9 @@ export function DevHarness() {
             onClick={() => fire("aim", () => setAim({ dir: norm([0.35, 1, 0]), charge: 0.8 }))}
           >
             🎯 show aim 📸
+          </button>
+          <button type="button" className={btn} onClick={() => void routeProofSequence()}>
+            route proof sequence 📸
           </button>
           <button
             type="button"

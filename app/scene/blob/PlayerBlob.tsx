@@ -30,9 +30,11 @@ import {
   STARTER_BLOB_Y,
   WORLD_BOUND_XZ,
 } from "@/sim/physics";
+import { goldenPathLandingBonus, goldenPathLandingQuality } from "@/sim/score";
 import {
   consumeBounceCharge,
   consumeImpact,
+  consumeLanding,
   consumeLaunch,
   consumeMidAirBounce,
   consumeRebound,
@@ -95,6 +97,8 @@ export function PlayerBlob() {
   /** Seconds the blob has rested idle (not airborne, not being aimed) — auto-launches straight
    *  up once it passes AUTO_LAUNCH_DELAY so the run never stalls if the player just sits there. */
   const idle = useRef(0);
+  /** Recent happy energy from a strong/accurate bounce; drives idle burble + face. */
+  const excitement = useRef(0);
   /** Combo is a skill reward, not attract-mode scoring: only build it after the player has
    *  launched, air-steered, or spent a mid-air bounce in the current run. */
   const playerControlStarted = useRef(false);
@@ -133,6 +137,7 @@ export function PlayerBlob() {
     impact.current = 0;
     dangerBeat.current = 0;
     idle.current = 0;
+    excitement.current = 0;
     playerControlStarted.current = false;
     setBlobDiagnostics({
       position: [0, STARTER_BLOB_Y, 0],
@@ -143,6 +148,8 @@ export function PlayerBlob() {
       squash: 1,
       maxHeight: 0,
       groundY: STARTER_BLOB_Y,
+      idleSeconds: 0,
+      excitement: 0,
     });
   }, [resetDroplets]);
 
@@ -365,6 +372,29 @@ export function PlayerBlob() {
       // This pad is now the safe floor — death is measured below the highest pad reached,
       // so a tall launch can fall back past DEATH_FALL_DISTANCE of its own apex and live.
       if (p.y > safeY.current) safeY.current = p.y;
+      let routeQuality = 0;
+      const landing = consumeLanding();
+      if (landing) {
+        const pads = useWorldStore.getState().trampolines;
+        const source = pads.find((pad) => pad.goldenPath?.toPadId === landing.padId);
+        const targetPad = pads.find((pad) => pad.id === landing.padId);
+        const proof = source?.goldenPath;
+        if (proof && targetPad) {
+          const miss = Math.hypot(
+            landing.position[0] - proof.landing[0],
+            landing.position[2] - proof.landing[2],
+          );
+          const halfFoot = Math.max(targetPad.width, targetPad.depth) * 0.5;
+          routeQuality = goldenPathLandingQuality(miss, halfFoot);
+          const bonus = goldenPathLandingBonus(miss, halfFoot);
+          if (bonus > 0) {
+            const run = useGameStore.getState().run;
+            setRun({ stylePoints: run.stylePoints + bonus });
+          }
+          if (routeQuality > 0.72) flash("gold", Math.min(1, routeQuality));
+        }
+      }
+      excitement.current = Math.max(excitement.current, strength, 0.25 + routeQuality * 0.75);
       // Fling a gooey splash from the contact point (just under the blob).
       splash([p.x, p.y - BLOB.radius, p.z], strength);
       // Low-end thump layer under the bounce, mirroring the haptic strength split.
@@ -394,6 +424,7 @@ export function PlayerBlob() {
       }
     }
     impact.current = Math.max(0, impact.current - dt * 2.5);
+    excitement.current = Math.max(0, excitement.current - dt * 0.65);
     // Death is fall below the highest pad LANDED on (safeY), not the airborne apex (maxY) —
     // otherwise a big launch kills itself on the way back down to its own pad.
     const fallDepth = safeY.current - p.y;
@@ -427,6 +458,8 @@ export function PlayerBlob() {
       squash,
       maxHeight: runHeightFromWorldY(maxY.current),
       groundY: safeY.current,
+      idleSeconds: idle.current,
+      excitement: excitement.current,
     });
 
     // Project the Rapier-driven state onto the blob's ECS entity so systems + UI can query

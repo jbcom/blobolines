@@ -1,38 +1,14 @@
 import { describe, expect, it } from "vitest";
-import { trampoline as trampCfg } from "@/config";
 import { createRng } from "@/core/math";
-import { DEFAULT_STEER } from "@/input";
-import { GRAVITY } from "@/sim/physics";
 import { generateUpTo, starterPad } from "../generator";
-import { canReach } from "../reachable";
+import { reaches } from "../reachable";
 
 /**
  * The CLIMB PROOF — the playability safety net the navigability work exists to guarantee.
  *
- * The golden-path generator promises the tower is climbable: every pad has a launch that
- * carries the blob to the next one. generator.test.ts proves the *placement* rule (far
- * successors get a canted predecessor pointing at them); this proves that placement is
- * *sufficient* — a ballistic launch off each pad, along its surface normal at an achievable
- * launch speed, actually lands within the next pad's footprint. If a future tuning change
- * (tilt, multipliers, step heights) silently broke reachability, this test goes red.
- *
- * Model (conservative — treats the blob as a passive point, ignores air-steer, which only
- * helps): launch off pad A at `speed` along A's normal under gravity g; can it reach B?
+ * Every consecutive pad pair must have a visible passive parabola, stored on the source pad
+ * as `goldenPath`. The dev harness renders these exact samples in red for screenshot proof.
  */
-
-const G = Math.abs(GRAVITY[1]);
-const TILT = trampCfg.cantedTiltRad;
-// The same lateral air-control budget the game gives the player (src/input DEFAULT_STEER).
-// The golden-path generator only cants pads whose successor is beyond this steerable range;
-// sub-cant gaps are meant to be closed by the player nudging mid-air, so the climb proof
-// must model that budget too (passing 0 would test a stricter game than we ship).
-const STEER = DEFAULT_STEER.maxAirAccel;
-
-// A representative sustained climbing launch speed: a clean drop onto a slightly-springy
-// standard pad plus the player's slingshot keeps the blob moving up at roughly this rate.
-// (canReach is monotone in speed once the arc clears B's height, so this is the threshold a
-// competent player meets — not a flagged maximum.)
-const CLIMB_SPEED = 30;
 
 function fullTower(seed: string | number, targetY: number) {
   const start = starterPad();
@@ -40,71 +16,88 @@ function fullTower(seed: string | number, targetY: number) {
   return [start, ...chunk.trampolines];
 }
 
-describe("tower is climbable (reachability proof)", () => {
-  it("canted pads do the lateral work their flat selves couldn't", () => {
-    // A pad is canted precisely BECAUSE a flat bounce off it can't reach its successor. So
-    // for every canted pad: (a) flattening it would FAIL the reach (the cant is load-bearing,
-    // not decoration), and (b) the canted launch DOES reach (with the player's steer budget).
+function expectCertifiedPair(
+  a: ReturnType<typeof starterPad>,
+  b: ReturnType<typeof starterPad>,
+  label: string,
+) {
+  const proof = a.goldenPath;
+  expect(proof, `${label}: missing stored goldenPath`).toBeDefined();
+  expect(proof?.toPadId, `${label}: proof points at wrong successor`).toBe(b.id);
+  expect(proof?.samples.length, `${label}: proof needs visible samples`).toBeGreaterThan(12);
+  expect(proof?.clearance, `${label}: proof lands outside target footprint`).toBeGreaterThanOrEqual(
+    0,
+  );
+  expect(proof?.apex[1], `${label}: apex must clear the successor`).toBeGreaterThanOrEqual(
+    b.position[1],
+  );
+  expect(reaches(a, b), `${label}: solveGoldenPath predicate failed`).toBe(true);
+}
+
+describe("tower is climbable (golden-path proof)", () => {
+  it("canted pads carry aimed, varied route proofs", () => {
     const pads = fullTower("climb", 400);
     let cantedPairs = 0;
+    const angles = new Set<string>();
     for (let i = 0; i < pads.length - 1; i++) {
       const a = pads[i];
       if (a.type !== "canted") continue;
       cantedPairs++;
       const b = pads[i + 1];
-      const flat = { ...a, type: "standard" as const, cant: undefined };
-      expect(
-        canReach(flat, b, CLIMB_SPEED, G, TILT, STEER),
-        `pad #${i} was canted but a flat bounce already reached — needless cant`,
-      ).toBe(false);
-      expect(
-        canReach(a, b, CLIMB_SPEED, G, TILT, STEER),
-        `canted pad #${i} at y=${a.position[1].toFixed(1)} still cannot reach its successor`,
-      ).toBe(true);
+      expectCertifiedPair(a, b, `canted pad #${i}`);
+      expect(a.goldenPath?.requiredCant).toBe(true);
+      expect(a.goldenPath?.sourceMode).toBe("canted");
+      expect(a.goldenPath?.launchAngleRad).toBeGreaterThan(0.25);
+      angles.add(a.goldenPath?.launchAngleRad.toFixed(2) ?? "missing");
     }
-    // A spiral tower this tall must produce canted pads — otherwise there's nothing to prove
-    // and the navigability guarantee is vacuous.
     expect(cantedPairs).toBeGreaterThan(0);
+    expect(angles.size).toBeGreaterThan(1);
   });
 
-  it("the whole chain is reachable end to end (no stranded pad)", () => {
-    const pads = fullTower("endtoend", 500);
-    const unreachable: number[] = [];
+  it("moving and wobbler pads also store playable proof arcs", () => {
+    const pads = fullTower("special-route", 300);
+    const sourceModes = new Set<string>();
     for (let i = 0; i < pads.length - 1; i++) {
-      if (!canReach(pads[i], pads[i + 1], CLIMB_SPEED, G, TILT, STEER)) unreachable.push(i);
+      const a = pads[i];
+      if (a.type !== "moving" && a.type !== "wobbler") continue;
+      expectCertifiedPair(a, pads[i + 1], `${a.type} pad #${i}`);
+      sourceModes.add(a.goldenPath?.sourceMode ?? "missing");
+      if (a.type === "moving") expect(a.moveAxis).toBeDefined();
     }
-    expect(unreachable, `stranded pad indices: ${unreachable.join(", ")}`).toEqual([]);
+    expect(sourceModes.has("moving")).toBe(true);
+    expect(sourceModes.has("wobbler")).toBe(true);
+  });
+
+  it("the whole chain stores end-to-end visible parabolas", () => {
+    const pads = fullTower("endtoend", 500);
+    for (let i = 0; i < pads.length - 1; i++) {
+      expectCertifiedPair(pads[i], pads[i + 1], `pad #${i}`);
+      expect(pads[i].goldenPath?.landingPrecision).toBeGreaterThanOrEqual(0);
+      expect(pads[i].goldenPath?.landingPrecision).toBeLessThanOrEqual(1);
+      expect(pads[i].goldenPath?.lipClearance).toBeGreaterThanOrEqual(0);
+      expect(pads[i].goldenPath?.arcCompression).toBeGreaterThanOrEqual(0);
+      expect(pads[i].goldenPath?.arcCompression).toBeLessThanOrEqual(1);
+    }
   });
 
   it("holds across many seeds (the guarantee isn't seed-luck)", () => {
     for (const seed of ["a", "b", "c", "d", "e"]) {
       const pads = fullTower(seed, 300);
       for (let i = 0; i < pads.length - 1; i++) {
-        expect(
-          canReach(pads[i], pads[i + 1], CLIMB_SPEED, G, TILT, STEER),
-          `seed ${seed}: pad #${i} (y=${pads[i].position[1].toFixed(1)}) strands the climb`,
-        ).toBe(true);
+        expectCertifiedPair(pads[i], pads[i + 1], `seed ${seed}: pad #${i}`);
       }
     }
   });
 
-  // The generator GUARANTEES reachability by construction (ensureReachable), not just usually.
-  // Sweep a wide seed range to a tall target — a single stranded pad anywhere fails this. This
-  // is the adversarial backstop for the "cant might be insufficient / clamp might bail early"
-  // failure modes: if any geometry slipped through the constructive fixup, it surfaces here.
-  it("EVERY pad is reachable across 60 seeds up to a tall tower (constructive guarantee)", () => {
+  it("EVERY pad is certified across 60 seeds up to a tall tower", () => {
     let pairsChecked = 0;
     for (let s = 0; s < 60; s++) {
       const pads = fullTower(`sweep-${s}`, 700);
       for (let i = 0; i < pads.length - 1; i++) {
         pairsChecked++;
-        expect(
-          canReach(pads[i], pads[i + 1], CLIMB_SPEED, G, TILT, STEER),
-          `seed sweep-${s}: pad #${i} (y=${pads[i].position[1].toFixed(1)}, type=${pads[i].type}) strands the climb`,
-        ).toBe(true);
+        expectCertifiedPair(pads[i], pads[i + 1], `seed sweep-${s}: pad #${i}`);
       }
     }
-    // Sanity: the sweep actually exercised a large number of pads (not a no-op).
     expect(pairsChecked).toBeGreaterThan(2000);
   });
 });

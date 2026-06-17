@@ -1,1 +1,7 @@
-export { comboStyleBonus, computeScore, type ScoreInputs } from "./score";
+export {
+  comboStyleBonus,
+  computeScore,
+  goldenPathLandingBonus,
+  goldenPathLandingQuality,
+  type ScoreInputs,
+} from "./score";

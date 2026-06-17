@@ -19,6 +19,7 @@ beforeEach(() => {
       maxCombo: 0,
       recordDelta: 0,
       score: 0,
+      stylePoints: 0,
       scoreDelta: 0,
     },
   });
@@ -135,14 +136,14 @@ describe("useGameStore", () => {
     const s = useGameStore.getState();
     s.commitBestHeight(200);
     s.addCrystals(50);
-    s.unlockSkin("slime");
-    s.setSkin("slime");
+    s.unlockSkin("blue");
+    s.setSkin("blue");
     s.resetProgress();
     const p = useGameStore.getState().progress;
     expect(p.bestHeight).toBe(0);
     expect(p.crystals).toBe(0);
-    expect(p.unlockedSkins).toEqual(["blue"]);
-    expect(p.skin).toBe("blue");
+    expect(p.unlockedSkins).toEqual(["slime"]);
+    expect(p.skin).toBe("slime");
   });
 
   it("setSkin changes equipped skin", () => {
@@ -157,8 +158,8 @@ describe("useGameStore", () => {
     expect(skins.filter((s) => s === "ghost").length).toBe(1);
   });
 
-  it("SKIN_COST blue is free", () => {
-    expect(SKIN_COST.blue).toBe(0);
+  it("SKIN_COST slime is free", () => {
+    expect(SKIN_COST.slime).toBe(0);
   });
 
   it("equippedSkinColor returns token hex", () => {

@@ -36,10 +36,50 @@ export type PowerUpType = (typeof POWERUP_TYPES)[number];
  *  larger, and brighter — the reward for ranging off the safe line + climbing higher. */
 export type CrystalTier = "common" | "rare" | "radiant";
 
+/** Route-generation difficulty. Higher difficulties allow more precision flat arcs; lower
+ *  difficulties bias the tower toward readable trampoline mechanics. */
+export type WorldDifficulty = "ready" | "medium" | "hard" | "blobmare" | "ultraBlobmare";
+
 /** A generated collectible crystal: where it floats + its rarity tier. */
 export interface CrystalSpec {
   position: Vec3;
   tier: CrystalTier;
+}
+
+/** Certified launch route from one trampoline to its successor. The world generator attaches
+ *  this to the SOURCE pad after proving the shipped launch tuning produces a visible
+ *  ballistic arc that lands inside the successor footprint. */
+export interface GoldenPathProof {
+  /** Successor pad id this proof lands on. */
+  toPadId: number;
+  /** Unit launch normal used for the bounce. Flat pads use [0,1,0]; canted pads tilt. */
+  launchNormal: Vec3;
+  /** Launch speed used by the proof. */
+  launchSpeed: number;
+  /** Seconds from launch to the first crossing of the successor pad's height. */
+  flightTime: number;
+  /** Highest point reached by the certified parabola. */
+  apex: Vec3;
+  /** Ballistic point at the successor height; must be inside the successor footprint. */
+  landing: Vec3;
+  /** Non-negative margin between the ballistic landing miss and the successor half-footprint. */
+  clearance: number;
+  /** World-space samples along the visible parabola, for dev proof rendering/screenshots. */
+  samples: Vec3[];
+  /** Whether the generator had to promote the source pad from flat to canted. */
+  requiredCant: boolean;
+  /** Source mechanic used by the proof arc. */
+  sourceMode: "flat" | "canted" | "moving" | "wobbler";
+  /** Radians away from straight-up used by the certified launch. */
+  launchAngleRad: number;
+  /** 0..1, where 1 lands at target center and 0 lands exactly on the legal lip. */
+  landingPrecision: number;
+  /** Meters between the ballistic landing and the target lip. */
+  lipClearance: number;
+  /** Lip clearance as a share of the target half-footprint. */
+  lipClearanceRatio: number;
+  /** 0..1, higher means a tighter, lower-apex compressed arc. */
+  arcCompression: number;
 }
 
 /** Persistent player progress. */
@@ -103,6 +143,16 @@ export interface TrampolineSpec {
    *  generator points it at the next pad so the bounce carries the blob there). Omitted /
    *  zero = flat. */
   cant?: readonly [number, number];
+  /** Optional per-pad cant strength. Harder routes vary this instead of using one fixed angle. */
+  cantAngleRad?: number;
+  /** Unit lateral slide axis for moving pads. The generator aims it at the certified
+   *  successor so a timed catch can follow the red proof arc. */
+  moveAxis?: readonly [number, number];
+  /** Monotonic route order. The starter is 0; each successor increments by one. */
+  routeIndex?: number;
+  /** Certified route from this pad to its immediate successor. Omitted only for the highest
+   *  generated tail pad until the next chunk attaches its successor. */
+  goldenPath?: GoldenPathProof;
 }
 
 export const GAME_PHASES = ["menu", "playing", "gameover"] as const;

@@ -8,7 +8,7 @@
   },
   "puddle": {
     "settleSpeed": 4,
-    "scale": [1.55, 0.42, 1.55]
+    "scale": [1.22, 0.78, 1.22]
   },
   "deformSpringTau": 0.06,
   "wobbleDecayTau": 0.7

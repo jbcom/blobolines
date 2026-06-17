@@ -52,11 +52,14 @@ export function TrampolineField({ onImpact }: TrampolineFieldProps) {
       {visible.map((t) => (
         <Trampoline
           key={t.id}
+          id={t.id}
           position={t.position}
           width={t.width}
           depth={t.depth}
           type={t.type}
           cant={t.cant}
+          cantAngleRad={t.cantAngleRad}
+          moveAxis={t.moveAxis}
           onImpact={(speed) => onImpact?.(t.id, speed)}
         />
       ))}

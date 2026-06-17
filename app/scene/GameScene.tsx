@@ -20,6 +20,7 @@ import {
   BlobFollowLight,
   BlobShadow,
   CrystalField,
+  GoldenRoutePreview,
   LaunchRing,
   Lighting,
   PowerUpField,
@@ -72,6 +73,7 @@ export function GameScene() {
       {playing && <LaunchRing />}
       {playing && <BlobTrail skin={skin} />}
       {playing && <TrajectoryPreview />}
+      {playing && <GoldenRoutePreview />}
 
       <PostFX playing={playing} />
     </>

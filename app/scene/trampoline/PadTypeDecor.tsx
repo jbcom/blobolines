@@ -16,48 +16,19 @@ interface PadTypeDecorProps {
   depth: number;
   /** Lateral cant direction for "canted" pads, to aim the arrow. */
   cant?: readonly [number, number];
+  /** Lateral slide direction for "moving" pads, to aim the rail cue. */
+  moveAxis?: readonly [number, number];
 }
 
 const TOP = 0.16; // just above the membrane top
 
-export function PadTypeDecor({ type, width, depth, cant }: PadTypeDecorProps) {
+export function PadTypeDecor({ type, width, depth, cant, moveAxis }: PadTypeDecorProps) {
   const color = hex(trampColor[type] ?? palette.tramp.gold);
 
   // Line-segment ENDPOINTS (not a geometry object) built once per (type, size) — pads don't
   // resize after spawn. Rendered via a JSX <bufferGeometry> below so R3F owns its lifecycle +
   // disposal (Strict-Mode-safe, unlike a useMemo'd geometry disposed by hand).
   const positions = useMemo(() => {
-    const hw = (width * 0.96) / 2;
-    const hd = (depth * 0.96) / 2;
-    if (type === "super") {
-      // Box outline frame (flat on the pad top).
-      return new Float32Array([
-        -hw,
-        TOP,
-        -hd,
-        hw,
-        TOP,
-        -hd,
-        hw,
-        TOP,
-        -hd,
-        hw,
-        TOP,
-        hd,
-        hw,
-        TOP,
-        hd,
-        -hw,
-        TOP,
-        hd,
-        -hw,
-        TOP,
-        hd,
-        -hw,
-        TOP,
-        -hd,
-      ]);
-    }
     if (type === "fragile") {
       // Crack lines radiating from center.
       const r = Math.min(width, depth) * 0.42;
@@ -91,11 +62,45 @@ export function PadTypeDecor({ type, width, depth, cant }: PadTypeDecorProps) {
     );
   }
 
+  if (type === "moving") {
+    const [x, z] = moveAxis ?? [1, 0];
+    const angle = Math.atan2(z, x);
+    const length = Math.min(width, depth) * 0.7;
+    const gap = Math.min(width, depth) * 0.12;
+    return (
+      <group position={[0, TOP, 0]} rotation={[0, -angle, 0]}>
+        <mesh position={[0, 0, -gap]}>
+          <boxGeometry args={[length, 0.055, 0.07]} />
+          <meshBasicMaterial color={color} transparent opacity={0.9} />
+        </mesh>
+        <mesh position={[0, 0, gap]}>
+          <boxGeometry args={[length, 0.055, 0.07]} />
+          <meshBasicMaterial color={color} transparent opacity={0.9} />
+        </mesh>
+        <mesh position={[length * 0.32, 0, 0]} rotation={[0, 0, -Math.PI / 2]}>
+          <coneGeometry args={[0.18, 0.42, 3]} />
+          <meshBasicMaterial color={color} transparent opacity={0.8} />
+        </mesh>
+      </group>
+    );
+  }
+
+  if (type === "super") {
+    return (
+      <mesh position={[0, TOP, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+        <torusGeometry args={[Math.min(width, depth) * 0.36, 0.045, 8, 32]} />
+        <meshBasicMaterial color={color} transparent opacity={0.9} />
+      </mesh>
+    );
+  }
+
   if (type === "ice") {
-    // A frosty translucent slab over the membrane — slippery, see-through.
+    // A frosty translucent round film over the membrane — slippery, see-through.
     return (
       <mesh position={[0, TOP, 0]}>
-        <boxGeometry args={[width * 0.9, 0.06, depth * 0.9]} />
+        <cylinderGeometry
+          args={[Math.min(width, depth) * 0.34, Math.min(width, depth) * 0.36, 0.06, 40]}
+        />
         <meshPhysicalMaterial
           color={hex(palette.tramp.blue)}
           transmission={0.6}
