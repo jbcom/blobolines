@@ -415,7 +415,12 @@ game — touch/drag is primary; keyboard is a minor desktop-only secondary, don'
       physics-driven sag.)
 - [ ] Speed lines / motion streaks above a velocity threshold (PostFX/overlay).
 - [ ] Continuous tapered trail ribbon behind the airborne blob (igniting toward flame at high combo), replacing sparse trail dots.
-- [ ] Crystal sparkle glint + collect burst (CrystalField).
+- [x] Crystal sparkle glint + collect burst: each gem now TWINKLES (per-instance brightness
+      pulse, phase-offset by id, with a sharp sin^8 sparkle spike) baked into its instance color;
+      material is toneMapped:false so the peaks pop as glints. On collect, the gem POPS — scales
+      out + flashes bright then dissolves over 0.22s (popping map) instead of vanishing instantly.
+      Folded the goo-lighting review fix: floored the biome-tinted fresnel rim at 40% of base so
+      the wet edge can't be snuffed out in a dark-sky biome (deep-space tops ~#180a30).
 - [ ] Powerup attract aura/halo + collect flash (PowerUpField/PowerUpModel).
 - [ ] Per-biome particle ambience (petals ground, ice/wind stratosphere, nebula dust space) — extend BiomeProps.
 - [ ] Per-biome color grade + bloom driven by biomeSkyAt (warm ground, cold high-contrast space) in PostFX.

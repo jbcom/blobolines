@@ -146,9 +146,11 @@ export const GooMaterial = shaderMaterial(
       lit = mix(lit, lit * (0.6 + 0.8 * uEnvTint), uEnvLight * (0.4 + 0.6 * wrap));
       // Tint the specular by a touch of the goo color so the hotspot stays "wet goo", not a
       // white hole; keep the rim fresnel for the volumetric edge — the rim also picks up the
-      // biome tint (the wet edge catches the sky).
+      // biome tint (the wet edge catches the sky). FLOOR the biome-tinted rim at 40% of the
+      // base rim so a dark-sky biome (deep space tops ~#180a30) can't snuff out the wet edge
+      // that defines the goo silhouette — it goes moody, not invisible.
       vec3 spec   = specular * mix(vec3(1.0), uColor, 0.25);
-      vec3 rimCol = mix(uRim, uRim * uEnvTint * 1.6, uEnvLight);
+      vec3 rimCol = mix(uRim, max(uRim * uEnvTint * 1.6, uRim * 0.4), uEnvLight);
       vec3 finalC = lit + spec + fresnel * rimCol * 0.8;
 
       gl_FragColor = vec4(finalC, 1.0);
