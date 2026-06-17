@@ -2,8 +2,8 @@ import { Navigation } from "lucide-react";
 import { useEffect, useRef } from "react";
 import type { TrampolineSpec, Vec3 } from "@/core/types";
 import { getBlobDiagnostics, useWorldStore } from "@/state";
+import { nextRouteStep } from "@/world";
 
-const TARGET_ABOVE_GROUND = 0.5;
 const CLOSE_HORIZONTAL = 1.25;
 
 export interface NextPadGuidance {
@@ -34,15 +34,8 @@ export function nextPadGuidance(
   groundY: number,
   pads: readonly TrampolineSpec[],
 ): NextPadGuidance | null {
-  let target: TrampolineSpec | null = null;
-  let minY = Number.POSITIVE_INFINITY;
-  for (const pad of pads) {
-    const y = pad.position[1];
-    if (y > groundY + TARGET_ABOVE_GROUND && y < minY) {
-      target = pad;
-      minY = y;
-    }
-  }
+  const step = nextRouteStep(groundY, pads);
+  const target = step?.target;
   if (!target) return null;
 
   const dx = target.position[0] - blobPosition[0];

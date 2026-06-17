@@ -52,6 +52,15 @@ export {
   timeScale,
 } from "./powerupBridge";
 export {
+  clearRouteLandingFeedback,
+  getRouteLandingFeedback,
+  type RouteLandingFeedback,
+  type RouteLandingGrade,
+  reportRouteLandingFeedback,
+  routeLandingGrade,
+  subscribeRouteLandingFeedback,
+} from "./routeFeedbackBridge";
+export {
   getRouteProofTarget,
   type RouteProofTarget,
   setRouteProofTarget,

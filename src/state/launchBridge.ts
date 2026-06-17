@@ -6,6 +6,7 @@
  * through the React tree while keeping UI and physics decoupled.
  */
 
+import { clearRouteLandingFeedback } from "./routeFeedbackBridge";
 import { setRouteProofTarget } from "./routeProofBridge";
 
 export interface LaunchRequest {
@@ -190,4 +191,5 @@ export function resetBridges(): void {
   landing = null;
   midAirBounce = false;
   setRouteProofTarget(null);
+  clearRouteLandingFeedback();
 }

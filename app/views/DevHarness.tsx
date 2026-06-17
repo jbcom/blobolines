@@ -1,8 +1,10 @@
 import { useState } from "react";
 import type { BlobSkin } from "@/core/types";
+import { STARTER_BLOB_Y } from "@/sim/physics";
 import {
   getBlobDiagnostics,
   getRouteProofTarget,
+  type LaunchRequest,
   requestLaunch,
   setAim,
   setRouteProofTarget,
@@ -104,6 +106,17 @@ export function DevHarness() {
     });
   };
 
+  const requestLaunchWhenReady = (req: LaunchRequest, attempt = 0) => {
+    const ready =
+      useGameStore.getState().phase === "playing" &&
+      getBlobDiagnostics().position[1] >= STARTER_BLOB_Y * 0.7;
+    if (ready || attempt >= 50) {
+      requestLaunch(req);
+      return;
+    }
+    window.setTimeout(() => requestLaunchWhenReady(req, attempt + 1), 50);
+  };
+
   const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
   const routeProofSequence = async () => {
@@ -153,7 +166,7 @@ export function DevHarness() {
             type="button"
             className={btn}
             onClick={() =>
-              fire("launch-up", () => requestLaunch({ dir: norm([0, 1, 0]), charge: 1 }))
+              fire("launch-up", () => requestLaunchWhenReady({ dir: norm([0, 1, 0]), charge: 1 }))
             }
           >
             ⤒ launch up (max) 📸
@@ -162,7 +175,9 @@ export function DevHarness() {
             type="button"
             className={btn}
             onClick={() =>
-              fire("launch-angled", () => requestLaunch({ dir: norm([0.4, 1, 0]), charge: 0.7 }))
+              fire("launch-angled", () =>
+                requestLaunchWhenReady({ dir: norm([0.4, 1, 0]), charge: 0.7 }),
+              )
             }
           >
             ⤴ launch angled 📸

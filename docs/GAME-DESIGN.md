@@ -53,6 +53,17 @@ allow flatter precision arcs, canted-to-canted chains, tighter lip margins, and 
 parabolas. The dev harness can render these proof samples as a solid red parabola and capture
 a timed PNG/JSON sequence for inspection.
 
+During a live run, the same proof feeds two player-facing cues:
+
+- a warm bullseye hovering at the certified landing point for the next route step, so the
+  player can see the intended catch point in world space instead of guessing from the HUD alone
+- a short route-quality toast after each certified landing (`Perfect route`, `Great route`,
+  `Clean route`, or `Edge catch`) with the style-point bonus earned by proximity to that point
+
+The bullseye is intentionally world-locked to the proof landing, not parented to the pad mesh.
+That makes moving trampolines read as timing challenges: the ideal catch point is stable while
+the trampoline slides through it.
+
 ## Trampoline types
 
 | Type | Color (token) | Behavior |

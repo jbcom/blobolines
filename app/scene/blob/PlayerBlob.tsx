@@ -44,6 +44,7 @@ import {
   getAirSteer,
   isPowerupActive,
   reportLaunchBurst,
+  reportRouteLandingFeedback,
   reportSplat,
   resetBridges,
   resetFlash,
@@ -387,6 +388,14 @@ export function PlayerBlob() {
           const halfFoot = Math.max(targetPad.width, targetPad.depth) * 0.5;
           routeQuality = goldenPathLandingQuality(miss, halfFoot);
           const bonus = goldenPathLandingBonus(miss, halfFoot);
+          reportRouteLandingFeedback({
+            quality: routeQuality,
+            bonus,
+            miss,
+            halfFootprint: halfFoot,
+            sourceMode: proof.sourceMode,
+            targetType: targetPad.type,
+          });
           if (bonus > 0) {
             const run = useGameStore.getState().run;
             setRun({ stylePoints: run.stylePoints + bonus });
