@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.4](https://github.com/jbcom/blobolines/compare/blobolines-v0.1.3...blobolines-v0.1.4) (2026-06-17)
+
+
+### Features
+
+* proof-gate seeded route climbs ([40f23da](https://github.com/jbcom/blobolines/commit/40f23da5b65610b3b77617fc381fc7bdf1008ff9))
+
 ## [0.1.3](https://github.com/jbcom/blobolines/compare/blobolines-v0.1.2...blobolines-v0.1.3) (2026-06-17)
 
 
