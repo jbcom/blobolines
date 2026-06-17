@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  duckMusic,
   isAudioInitialized,
   playBounce,
   playChime,
@@ -88,6 +89,15 @@ describe("music + ambient lifecycle", () => {
       startMusic();
     }).not.toThrow();
     stopMusic();
+  });
+
+  it("duckMusic is a safe no-op when music isn't playing, and survives while it is", () => {
+    expect(() => duckMusic()).not.toThrow(); // not started yet
+    startMusic();
+    expect(() => duckMusic(600)).not.toThrow();
+    expect(() => duckMusic(600)).not.toThrow(); // overlapping duck resets the hold
+    stopMusic();
+    expect(() => duckMusic()).not.toThrow(); // after stop, no live bed
   });
 
   it("survives rapid altitude band crossings without throwing", () => {

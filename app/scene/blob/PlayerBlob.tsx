@@ -4,6 +4,7 @@ import type { Entity } from "koota";
 import { useWorld } from "koota/react";
 import { useEffect, useRef } from "react";
 import {
+  duckMusic,
   playComboBlip,
   playComboFanfare,
   playLaunch,
@@ -152,7 +153,10 @@ export function PlayerBlob() {
       // which resets the combo to 0). A celebratory fanfare fires ONCE on the frame the streak
       // first hits the cap (the "on fire" milestone).
       playComboBlip(nextCombo);
-      if (nextCombo >= MAX_COMBO && run.combo < MAX_COMBO) playComboFanfare();
+      if (nextCombo >= MAX_COMBO && run.combo < MAX_COMBO) {
+        playComboFanfare();
+        duckMusic(600); // sidechain the music so the on-fire fanfare punches through
+      }
       // Gold screen flash as the streak escalates (from 3×), intensity ramping with heat.
       if (nextCombo >= 3) flash("gold", Math.min(1, (nextCombo - 2) / 6));
     }

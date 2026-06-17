@@ -573,7 +573,11 @@ game — touch/drag is primary; keyboard is a minor desktop-only secondary, don'
 - [ ] Three music tracks swapped by phase+altitude (menu / in-game / high-space) with crossfade.
 - [ ] Expand ambient beds per biome band (forest/wind/strong-wind/space/snow/magic) off biomeSkyAt.
 - [ ] UI sounds (hover/click/confirm/cancel/popup/coin) wired to the shadcn overlay.
-- [ ] Music ducking (sidechain) under super-bounce/death/milestone — duckMusic(ms) helper.
+- [x] Music ducking (sidechain): duckMusic(ms) in howler — fast-dips the music to 25% then
+      fades it back over ms, with an overlap-safe hold reset; no-op when music isn't playing/is
+      muted. Wired to the two big in-game moments: the 100m milestone stinger and the on-fire
+      combo fanfare, so each punches through the music. (Death ducking is moot — music stops on
+      game-over.) Audio test covers the safe no-op + active + overlap + post-stop paths.
 - [ ] Three-bus mix (music/sfx/ambient/master) with independent enable+volume; retune ambient down to 0.25.
 - [ ] Audio thump layer mirroring the Light/Medium/Heavy haptic split.
 - [ ] Preload critical cues at startMusic to avoid first-play decode hitch (mobile).

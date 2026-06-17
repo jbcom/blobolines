@@ -175,6 +175,27 @@ export function stopMusic(): void {
   ambientBand = "";
 }
 
+/** Pending un-duck timer, so overlapping ducks don't restore early. */
+let unduckTimer: ReturnType<typeof setTimeout> | null = null;
+
+/**
+ * Duck (sidechain) the music under a big moment — quickly drop its volume, hold, then fade it
+ * back over `ms`. Used on super-bounce / death / milestone so the stinger punches through. A
+ * new duck during an active one resets the hold (no early restore). No-op if music isn't
+ * playing or is muted.
+ */
+export function duckMusic(ms = 700): void {
+  if (!music || muted) return;
+  const full = vol.music;
+  music.fade(music.volume(), full * 0.25, 120); // fast dip
+  if (unduckTimer) clearTimeout(unduckTimer);
+  unduckTimer = setTimeout(() => {
+    // Only restore if music is still the same live bed (a stop/restart clears it).
+    if (music && !muted) music.fade(music.volume(), full, ms);
+    unduckTimer = null;
+  }, 180);
+}
+
 /** Shift the ambient bed with altitude — swap to the airy "space" bed up high. */
 export function setMusicAltitude(height: number): void {
   if (!started) return;

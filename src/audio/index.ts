@@ -4,6 +4,7 @@
  * is unchanged, so game call sites are untouched.
  */
 export {
+  duckMusic,
   initAudio,
   isAudioInitialized,
   playBounce,
