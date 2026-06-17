@@ -21,6 +21,7 @@ const tmpQuat = new Quaternion();
 const tmpScale = new Vector3(1, 1, 1);
 const tmpMat = new Matrix4();
 const tmpColor = new Color();
+const UP = new Vector3(0, 1, 0);
 const MAX_CRYSTALS = worldCfg.maxCrystals;
 const POP_LIFE = 0.22; // seconds the collect-burst pop plays before the gem vanishes
 // Per-tier gem color: common reads as the slime-green pickup, rare as a violet jewel, radiant
@@ -148,5 +149,3 @@ export function CrystalField() {
     </instancedMesh>
   );
 }
-
-const UP = new Vector3(0, 1, 0);

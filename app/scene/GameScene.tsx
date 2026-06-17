@@ -2,7 +2,7 @@ import { Physics } from "@react-three/rapier";
 import { Suspense } from "react";
 import { GRAVITY } from "@/sim/physics";
 import { useGameStore } from "@/state";
-import { BlobActor, PlayerBlob, SplatChunks, TrajectoryPreview } from "./blob";
+import { BlobActor, BlobTrail, PlayerBlob, SplatChunks, TrajectoryPreview } from "./blob";
 import { CameraRig } from "./CameraRig";
 import { PostFX } from "./postfx";
 import { TrampolineField } from "./trampoline";
@@ -56,6 +56,7 @@ export function GameScene() {
       {playing && <CrystalField />}
       {playing && <PowerUpField />}
       {playing && <LaunchRing />}
+      {playing && <BlobTrail skin={skin} />}
       {playing && <TrajectoryPreview />}
 
       <PostFX />

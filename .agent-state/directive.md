@@ -418,7 +418,15 @@ game — touch/drag is primary; keyboard is a minor desktop-only secondary, don'
       (14→34 m/s) and out at rest, opacity smoothed in a rAF loop reading blob speed off the
       diagnostics bridge (no React re-render). Fully off under prefers-reduced-motion. Browser
       fixture asserts ramp-in at speed + fade-out at rest.
-- [ ] Continuous tapered trail ribbon behind the airborne blob (igniting toward flame at high combo), replacing sparse trail dots.
+- [x] Continuous tapered trail ribbon: BlobTrail — a ring buffer of recent blob positions
+      rebuilt each frame into a camera-facing strip that tapers (wide at the head → pinched tail)
+      and fades along its length; additive + depth-write off so it reads as wet light. Color
+      IGNITES from the skin tint toward flame (goo.flame) as the combo climbs, so a hot streak
+      trails fire. Retracts onto the blob when slow/grounded; only the airborne fast phase shows
+      it. The close-range goo-droplet wake is kept (it fuses into the body — a different, good
+      effect). Browser fixture builds the ribbon over moving frames. Also folded the VFX review's
+      fixes: PowerUpField now orders the aura mesh FIRST (stable child index) so the Suspense
+      model swap can't shift model/aura indices; CrystalField's UP const hoisted above use.
 - [x] Crystal sparkle glint + collect burst: each gem now TWINKLES (per-instance brightness
       pulse, phase-offset by id, with a sharp sin^8 sparkle spike) baked into its instance color;
       material is toneMapped:false so the peaks pop as glints. On collect, the gem POPS — scales

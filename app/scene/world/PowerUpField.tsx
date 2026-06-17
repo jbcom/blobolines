@@ -46,9 +46,12 @@ export function PowerUpField() {
     g.children.forEach((child, i) => {
       const p = powerups[i];
       if (!p) return;
-      const model = child.children[0];
-      const aura = child.children[1] as Mesh | undefined;
+      // Aura is the FIRST child (a plain mesh that mounts synchronously, so its index is
+      // stable); the model is the Suspense-wrapped subtree after it (fallback OR GLB — index 1
+      // either way). Ordering aura-first avoids the Suspense swap shifting the indices.
+      const aura = child.children[0] as Mesh | undefined;
       const auraMat = aura?.material as MeshBasicMaterial | undefined;
+      const model = child.children[1];
 
       // Collect flash: a quick bright aura bloom + the model hides, then the whole group goes.
       const flashAge = flashing.current.get(i);
@@ -114,12 +117,8 @@ export function PowerUpField() {
       {powerups.map((p, i) => (
         // biome-ignore lint/suspicious/noArrayIndexKey: append-only world list
         <group key={i}>
-          {/* GLB model (3DLowPoly) with the primitive as the Suspense fallback so the
-              powerup never blanks while the model streams in. */}
-          <Suspense fallback={<PrimitivePowerup type={p.type} />}>
-            <PowerUpModel type={p.type} />
-          </Suspense>
-          {/* Attract aura / collect-flash halo (billboarded, additive). */}
+          {/* Aura FIRST (synchronous mount → stable child index 0) so the Suspense model swap
+              below can't shift the model/aura indices the frame loop relies on. */}
           <mesh visible={false}>
             <circleGeometry args={[0.9, 32]} />
             <meshBasicMaterial
@@ -130,6 +129,11 @@ export function PowerUpField() {
               depthWrite={false}
             />
           </mesh>
+          {/* GLB model (3DLowPoly) with the primitive as the Suspense fallback so the
+              powerup never blanks while the model streams in. */}
+          <Suspense fallback={<PrimitivePowerup type={p.type} />}>
+            <PowerUpModel type={p.type} />
+          </Suspense>
         </group>
       ))}
     </group>
