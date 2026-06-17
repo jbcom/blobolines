@@ -3,7 +3,7 @@ import { BallCollider, type RapierRigidBody, RigidBody } from "@react-three/rapi
 import type { Entity } from "koota";
 import { useWorld } from "koota/react";
 import { useEffect, useRef } from "react";
-import { playLaunch, playSplat, setMusicAltitude } from "@/audio";
+import { playComboBlip, playLaunch, playSplat, setMusicAltitude } from "@/audio";
 import { Blob, Transform, Velocity } from "@/ecs";
 import { spawnBlob } from "@/factories";
 import { ImpactStyle, impact as impact_, vibrate } from "@/platform";
@@ -140,6 +140,9 @@ export function PlayerBlob() {
       // multiplier is balanced around that cap; leaving it unclamped overshot).
       const nextCombo = bounce.type === "ice" ? 0 : Math.min(run.combo + 1, MAX_COMBO);
       setRun({ combo: nextCombo, maxCombo: Math.max(run.maxCombo, nextCombo) });
+      // Rising-pitch combo blip on a clean bounce — the streak audibly climbs (silent on ice,
+      // which resets the combo to 0).
+      playComboBlip(nextCombo);
       // Gold screen flash as the streak escalates (from 3×), intensity ramping with heat.
       if (nextCombo >= 3) flash("gold", Math.min(1, (nextCombo - 2) / 6));
     }

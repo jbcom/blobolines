@@ -1,6 +1,7 @@
 import { Howl, Howler } from "howler";
 import audioCfg from "@/config/audio.json";
 import type { TrampType } from "@/core/types";
+import { MAX_COMBO } from "@/sim/combo";
 import { padVoice } from "./padVoice";
 
 /**
@@ -105,8 +106,19 @@ export function playBounce(type: TrampType, strength = 1): void {
   const v = padVoice(type, strength);
   playSfx(v.sample, { rate: v.rate, volume: v.volume });
 }
-export function playLaunch(_strength = 1): void {
-  playSfx("launch");
+/** Launch whoosh scaled by charge: a soft release is a low slow whoosh, a max charge a fast
+ *  bright one (rate 0.85→1.25, volume 0.7→1.1) — playLaunch used to ignore the charge. */
+export function playLaunch(charge = 1): void {
+  const c = Math.max(0, Math.min(1, charge));
+  playSfx("launch", { rate: 0.85 + c * 0.4, volume: 0.7 + c * 0.4 });
+}
+/** Rising-pitch combo blip: a clean bounce at combo N plays the bounce sample pitched up by
+ *  the streak (rate 1 + combo·0.06), so a hot streak audibly climbs. Resets when the combo
+ *  breaks (caller just stops calling it / passes 0). */
+export function playComboBlip(combo: number): void {
+  const n = Math.max(0, Math.min(MAX_COMBO, Math.floor(combo)));
+  if (n < 1) return;
+  playSfx("bounce", { rate: 1 + n * 0.06, volume: 0.5 });
 }
 export function playSplat(): void {
   playSfx("splat");

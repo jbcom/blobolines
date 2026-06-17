@@ -3,6 +3,7 @@ import {
   isAudioInitialized,
   playBounce,
   playChime,
+  playComboBlip,
   playLaunch,
   playMilestone,
   playPowerup,
@@ -40,7 +41,10 @@ describe("audio before init", () => {
       expect(() => playBounce(t, 0)).not.toThrow();
       expect(() => playBounce(t, 1)).not.toThrow();
     }
-    expect(() => playLaunch(1)).not.toThrow();
+    // Launch whoosh at every charge level (0 = soft, 1 = max) is a safe no-op pre-init.
+    for (const c of [0, 0.5, 1]) expect(() => playLaunch(c)).not.toThrow();
+    // Rising-pitch combo blip across the streak range, incl. 0 (silent) + over-cap.
+    for (const n of [0, 1, 5, 8, 50]) expect(() => playComboBlip(n)).not.toThrow();
     expect(() => playChime()).not.toThrow();
     expect(() => playPowerup()).not.toThrow();
     expect(() => playSplat()).not.toThrow();

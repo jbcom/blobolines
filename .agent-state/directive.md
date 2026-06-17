@@ -511,8 +511,12 @@ game — touch/drag is primary; keyboard is a minor desktop-only secondary, don'
       and lifts volume (~+20%) with the hit; Trampoline passes speed/MAX_IMPACT_SPEED into
       playBounce so a hard landing sounds sharper + no two bounces are identical.
 - [ ] Round-robin engine (playRandom with no-immediate-repeat) for per-cue variant sets.
-- [ ] Charged-launch whoosh by power (soft→fast→hard, rate scaled by charge) — playLaunch ignores charge today.
-- [ ] Combo-escalation rising-pitch blip per clean bounce (rate=1+combo*0.06), reset on break.
+- [x] Charged-launch whoosh by power: playLaunch now scales the whoosh by charge (rate
+      0.85→1.25, volume 0.7→1.1) — a soft release is a low slow whoosh, a max charge a fast
+      bright one (it ignored charge before; PlayerBlob already passes req.charge).
+- [x] Combo rising-pitch blip: new playComboBlip(combo) plays the bounce sample pitched up by
+      the streak (rate 1+combo·0.06), fired on every clean bounce in PlayerBlob; silent on ice
+      (combo resets to 0). Audio test covers both across charge/combo ranges incl. over-cap.
 - [ ] Combo-milestone fanfares (5/10/25) from the victory-stinger pack.
 - [ ] New personal-best stinger on gameover when maxY>best.
 - [ ] Real game-over death sting (downer + gooey explosion) instead of reusing the splat.

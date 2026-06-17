@@ -8,6 +8,7 @@ export {
   isAudioInitialized,
   playBounce,
   playChime,
+  playComboBlip,
   playLaunch,
   playMilestone,
   playPowerup,
