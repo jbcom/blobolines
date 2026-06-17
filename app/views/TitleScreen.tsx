@@ -1,14 +1,22 @@
 import { buttonVariants } from "@app/components/ui";
 import { CalendarDays, HelpCircle, Palette, Play, Settings } from "lucide-react";
 import { motion, useReducedMotion } from "motion/react";
-import { useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import { initAudio, startMusic } from "@/audio";
 import { cn } from "@/lib/utils";
 import { dailySeed } from "@/sim/daily";
 import { useGameStore, useWorldStore } from "@/state";
-import { BlobCustomizer } from "./BlobCustomizer";
-import { ManualModal } from "./ManualModal";
-import { SettingsModal } from "./SettingsModal";
+
+// The three menu modals are lazy-loaded — none is needed for the first paint (the menu CTA), so
+// their code (+ the customizer's 3D preview, the manual's content) is split into its own chunk
+// fetched only when the player opens one. Named exports → mapped to default for React.lazy.
+const BlobCustomizer = lazy(() =>
+  import("./BlobCustomizer").then((m) => ({ default: m.BlobCustomizer })),
+);
+const ManualModal = lazy(() => import("./ManualModal").then((m) => ({ default: m.ManualModal })));
+const SettingsModal = lazy(() =>
+  import("./SettingsModal").then((m) => ({ default: m.SettingsModal })),
+);
 
 /**
  * Title / main menu. The blob identity, the one-line pitch, and the launch CTA into
@@ -137,9 +145,13 @@ export function TitleScreen() {
         </span>
       )}
 
-      <BlobCustomizer open={customizing} onOpenChange={setCustomizing} />
-      <SettingsModal open={settingsOpen} onOpenChange={setSettingsOpen} />
-      <ManualModal open={manualOpen} onOpenChange={setManualOpen} />
+      {/* Mount each modal only once opened (Suspense covers the lazy chunk fetch), so the
+          modals' code isn't loaded until the player actually opens one. */}
+      <Suspense fallback={null}>
+        {customizing && <BlobCustomizer open={customizing} onOpenChange={setCustomizing} />}
+        {settingsOpen && <SettingsModal open={settingsOpen} onOpenChange={setSettingsOpen} />}
+        {manualOpen && <ManualModal open={manualOpen} onOpenChange={setManualOpen} />}
+      </Suspense>
     </motion.div>
   );
 }

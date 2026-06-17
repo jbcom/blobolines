@@ -837,7 +837,15 @@ says KEEP + WIRE these deliberate-architecture deps, never cut. Verified call si
       smoke-covers the side-effect.
 - [ ] Re-encode theme.mp3 smaller (~96kbps mono / shorter loop) and/or lazy-load post-interaction.
 ### Bundle/build
-- [ ] Lazy-load heavy modals (Manual/BlobCustomizer/Settings) + defer Rapier Physics chunk to first PLAY; address the large three chunk vs masking with chunkSizeWarningLimit.
+- [x] Lazy-load heavy modals (Manual/BlobCustomizer/Settings). All three are now React.lazy
+      chunks (named→default mapped) mounted only when opened (Suspense fallback null), so their
+      code isn't fetched until the player opens one — verified in the build output as separate
+      ManualModal/BlobCustomizer/SettingsModal chunks split out of the main index bundle. Browser
+      test opens Settings through the Suspense boundary. (Deferring the Rapier/Physics chunk to
+      first PLAY was NOT done — it's deliberately bundled WITH three so the WASM relative-URL
+      module graph stays intact, see vite.config manualChunks comment; <Physics> already mounts
+      only while playing, so the chunk loads at first PLAY anyway. chunkSizeWarningLimit already
+      set to 3000 to acknowledge the unavoidably-large three chunk.)
 ### Tests
 - [ ] Perf-regression e2e: Playwright frame-time budget over a scripted climb.
 - [ ] Broaden e2e: powerups, magnet collect, fragile/moving/super/ice pads, combo streak, gameover→retry remount, WebGL context-restore.

@@ -29,3 +29,10 @@ test("Play starts a normal run (dailyRun false even if a daily flag lingered)", 
   expect(useGameStore.getState().phase).toBe("playing");
   expect(useGameStore.getState().dailyRun).toBe(false); // normal Play clears it
 });
+
+test("opening Settings lazy-loads + shows the modal through the Suspense boundary", async () => {
+  const screen = await render(<TitleScreen />);
+  await screen.getByRole("button", { name: /Settings/ }).click();
+  // The modal's lazy chunk resolves and its heading appears (it isn't mounted until opened).
+  await expect.element(screen.getByRole("heading", { name: "Settings" })).toBeInTheDocument();
+});
