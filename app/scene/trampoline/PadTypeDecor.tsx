@@ -1,5 +1,4 @@
-import { useEffect, useMemo } from "react";
-import { BufferGeometry, Float32BufferAttribute } from "three";
+import { useMemo } from "react";
 import type { TrampType } from "@/core/types";
 import { hex, palette, trampColor } from "@/styles/tokens";
 
@@ -8,7 +7,8 @@ import { hex, palette, trampColor } from "@/styles/tokens";
  * glance (not only by color): super gets a glowing wireframe frame (a treasure pad), booster
  * upward chevrons (flings you higher), ice a frosty translucent slab, fragile crack lines,
  * wobbler an off-kilter ring (unstable), canted a directional arrow toward its tilt. Cheap
- * line/flat geometry built once per pad; purely decorative (no physics).
+ * line/flat geometry; purely decorative (no physics). Geometry is R3F-managed (JSX
+ * bufferGeometry) so its lifecycle/disposal is handled even under Strict-Mode double-mount.
  */
 interface PadTypeDecorProps {
   type: TrampType;
@@ -20,23 +20,18 @@ interface PadTypeDecorProps {
 
 const TOP = 0.16; // just above the membrane top
 
-/** Build a line-segments BufferGeometry from XZ-plane endpoint pairs (laid flat on the pad). */
-function lineGeo(points: number[]): BufferGeometry {
-  const g = new BufferGeometry();
-  g.setAttribute("position", new Float32BufferAttribute(points, 3));
-  return g;
-}
-
 export function PadTypeDecor({ type, width, depth, cant }: PadTypeDecorProps) {
   const color = hex(trampColor[type] ?? palette.tramp.gold);
 
-  // Line geometries are built once per (type, size) — pads don't resize after spawn.
-  const geo = useMemo(() => {
+  // Line-segment ENDPOINTS (not a geometry object) built once per (type, size) — pads don't
+  // resize after spawn. Rendered via a JSX <bufferGeometry> below so R3F owns its lifecycle +
+  // disposal (Strict-Mode-safe, unlike a useMemo'd geometry disposed by hand).
+  const positions = useMemo(() => {
     const hw = (width * 0.96) / 2;
     const hd = (depth * 0.96) / 2;
     if (type === "super") {
       // Box outline frame (flat on the pad top).
-      return lineGeo([
+      return new Float32Array([
         -hw,
         TOP,
         -hd,
@@ -71,7 +66,7 @@ export function PadTypeDecor({ type, width, depth, cant }: PadTypeDecorProps) {
         const a = (i / 5) * Math.PI * 2 + 0.4;
         pts.push(0, TOP, 0, Math.cos(a) * r, TOP, Math.sin(a) * r);
       }
-      return lineGeo(pts);
+      return new Float32Array(pts);
     }
     if (type === "booster") {
       // Two stacked upward chevrons pointing +Z (toward the back; reads as "up" in the tilt).
@@ -80,18 +75,21 @@ export function PadTypeDecor({ type, width, depth, cant }: PadTypeDecorProps) {
       for (const oz of [-depth * 0.12, depth * 0.08]) {
         pts.push(-w, TOP, oz, 0, TOP, oz + w, 0, TOP, oz + w, w, TOP, oz);
       }
-      return lineGeo(pts);
+      return new Float32Array(pts);
     }
     return null;
   }, [type, width, depth]);
 
-  // Dispose the line geometry when the pad unmounts (the render window remounts pads as it
-  // slides; a useMemo'd geometry passed as a prop isn't auto-disposed by R3F).
-  useEffect(() => () => geo?.dispose(), [geo]);
-
-  if (geo) {
+  if (positions) {
     return (
-      <lineSegments geometry={geo}>
+      <lineSegments>
+        <bufferGeometry>
+          <bufferAttribute
+            attach="attributes-position"
+            args={[positions, 3]}
+            count={positions.length / 3}
+          />
+        </bufferGeometry>
         <lineBasicMaterial color={color} transparent opacity={0.9} />
       </lineSegments>
     );
