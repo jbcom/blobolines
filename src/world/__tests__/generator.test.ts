@@ -86,7 +86,9 @@ describe("world generator", () => {
     const chunk = generateUpTo(createRng(3), 0, 600);
     for (const p of chunk.powerups) {
       expect(p.position[1]).toBeGreaterThan(30);
-      expect(["magnet", "thruster", "shield", "slowmo", "doubler"]).toContain(p.type);
+      expect(["magnet", "thruster", "shield", "slowmo", "doubler", "multibounce"]).toContain(
+        p.type,
+      );
     }
     // Over a tall tower at least one should appear.
     expect(chunk.powerups.length).toBeGreaterThan(0);

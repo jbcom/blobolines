@@ -70,6 +70,21 @@ export function PrimitivePowerup({ type }: { type: PowerUpType }) {
       </mesh>
     );
   }
+  if (type === "multibounce") {
+    // A green springy tetrahedron — the multi-bounce charges (green reads as bouncy slime).
+    return (
+      <mesh>
+        <tetrahedronGeometry args={[0.55, 0]} />
+        <meshStandardMaterial
+          color={palette.tramp.green}
+          emissive={palette.tramp.green}
+          emissiveIntensity={0.7}
+          roughness={0.2}
+          metalness={0.2}
+        />
+      </mesh>
+    );
+  }
   return (
     <mesh rotation={[Math.PI, 0, 0]}>
       <coneGeometry args={[0.4, 0.9, 16]} />

@@ -16,7 +16,14 @@ describe("domain types", () => {
   });
 
   it("POWERUP_TYPES covers all powerups", () => {
-    expect(POWERUP_TYPES).toEqual(["magnet", "thruster", "shield", "slowmo", "doubler"]);
+    expect(POWERUP_TYPES).toEqual([
+      "magnet",
+      "thruster",
+      "shield",
+      "slowmo",
+      "doubler",
+      "multibounce",
+    ]);
   });
 
   it("EYE_EXPRESSIONS covers all expressions", () => {

@@ -1,10 +1,13 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import {
   activatePowerup,
+  bounceChargesLeft,
+  consumeBounceCharge,
   consumeShield,
   DOUBLER_MULTIPLIER,
   hasShield,
   isPowerupActive,
+  MULTI_BOUNCE_CHARGES,
   POWERUP_DURATION,
   powerupRemaining,
   resetPowerups,
@@ -119,5 +122,46 @@ describe("powerupBridge", () => {
     resetPowerups();
     expect(scoreMultiplier()).toBe(1);
     expect(isPowerupActive("doubler")).toBe(false);
+  });
+
+  it("multi-bounce is a charge stack: grants N, spends one per consume, empties out", () => {
+    expect(bounceChargesLeft()).toBe(0);
+    expect(consumeBounceCharge()).toBe(false); // nothing to spend
+    activatePowerup("multibounce");
+    expect(bounceChargesLeft()).toBe(MULTI_BOUNCE_CHARGES);
+    expect(isPowerupActive("multibounce")).toBe(true);
+    for (let i = MULTI_BOUNCE_CHARGES; i > 0; i--) {
+      expect(consumeBounceCharge()).toBe(true);
+    }
+    expect(bounceChargesLeft()).toBe(0);
+    expect(consumeBounceCharge()).toBe(false); // stack empty
+    expect(isPowerupActive("multibounce")).toBe(false);
+  });
+
+  it("multi-bounce pickups stack additively (refill rather than reset)", () => {
+    activatePowerup("multibounce");
+    consumeBounceCharge();
+    activatePowerup("multibounce"); // second pickup adds on top of what's left
+    expect(bounceChargesLeft()).toBe(MULTI_BOUNCE_CHARGES * 2 - 1);
+  });
+
+  it("multi-bounce doesn't tick down like a timer (tickPowerups ignores it)", () => {
+    activatePowerup("multibounce");
+    tickPowerups(100); // a huge dt shouldn't drain charges
+    expect(bounceChargesLeft()).toBe(MULTI_BOUNCE_CHARGES);
+  });
+
+  it("powerupRemaining reports the live charge count for multi-bounce", () => {
+    activatePowerup("multibounce");
+    expect(powerupRemaining("multibounce")).toBe(MULTI_BOUNCE_CHARGES);
+    consumeBounceCharge();
+    expect(powerupRemaining("multibounce")).toBe(MULTI_BOUNCE_CHARGES - 1);
+  });
+
+  it("resetPowerups clears multi-bounce charges", () => {
+    activatePowerup("multibounce");
+    resetPowerups();
+    expect(bounceChargesLeft()).toBe(0);
+    expect(isPowerupActive("multibounce")).toBe(false);
   });
 });

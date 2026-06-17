@@ -23,8 +23,10 @@ import { downdraftAt, windAt } from "@/sim/hazard";
 import { launchVelocity } from "@/sim/launch";
 import { BLOB, DEATH_FALL_DISTANCE, MAX_IMPACT_SPEED, WORLD_BOUND_XZ } from "@/sim/physics";
 import {
+  consumeBounceCharge,
   consumeImpact,
   consumeLaunch,
+  consumeMidAirBounce,
   consumeRebound,
   consumeShield,
   flash,
@@ -136,6 +138,19 @@ export function PlayerBlob() {
     if (isPowerupActive("thruster")) {
       body.wakeUp();
       body.setLinvel({ x: v.x, y: 34, z: v.z }, true);
+    }
+
+    // MULTI-BOUNCE: a mid-air tap (requested by the input layer) spends one held charge for a
+    // free upward bounce — a recovery "double-jump". Consume the request and a charge together
+    // (the input layer only requests when a charge is held; re-check here so a stale request
+    // can't fire for free). Pops the blob up, keeping its lateral drift, with the launch cue.
+    if (consumeMidAirBounce() && consumeBounceCharge()) {
+      body.wakeUp();
+      body.setLinvel({ x: v.x, y: 22, z: v.z }, true);
+      launchBurst([p.x, p.y - BLOB.radius, p.z], 0.6);
+      reportLaunchBurst({ position: [p.x, p.y - BLOB.radius, p.z], charge: 0.6, kind: "launch" });
+      flash("blue", 0.6);
+      playLaunch(0.6);
     }
 
     // Trampoline auto-bounce: landing on a pad pops the blob back up (the springy core

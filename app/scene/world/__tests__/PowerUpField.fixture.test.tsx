@@ -120,3 +120,39 @@ test("PowerUpField renders the model-less score-doubler gem", async () => {
     { timeout: 6000, interval: 60 },
   );
 });
+
+// Multi-bounce is model-less too: its shared primitive is the green springy tetrahedron.
+test("PowerUpField renders the model-less multi-bounce gem", async () => {
+  useWorldStore.setState({ powerups: [{ position: [0, 0, 0], type: "multibounce" }] });
+  setBlobDiagnostics({
+    position: [3, 0, 0],
+    velocity: [0, 0, 0],
+    speed: 0,
+    airborne: true,
+    expression: "idle",
+    squash: 1,
+    maxHeight: 0,
+    groundY: 0,
+  });
+
+  const screen = await render(
+    <FixtureStage testId="multibounce-fixture" cameraDistance={5}>
+      <ambientLight intensity={1} />
+      <PowerUpField />
+    </FixtureStage>,
+  );
+
+  await expect.element(screen.getByTestId("multibounce-fixture")).toBeInTheDocument();
+  await new Promise((r) => setTimeout(r, 150));
+
+  await vi.waitFor(
+    () => {
+      const canvas = document
+        .querySelector('[data-testid="multibounce-fixture"]')
+        ?.querySelector("canvas");
+      if (!canvas) throw new Error("canvas not mounted");
+      expect(canvas.toDataURL("image/png").length).toBeGreaterThan(4000);
+    },
+    { timeout: 6000, interval: 60 },
+  );
+});

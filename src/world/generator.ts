@@ -178,20 +178,22 @@ export function generateUpTo(
 
     // ~12% of pads (above the forgiving start) float a power-up.
     if (y > 30 && rng.next() > 0.88) {
-      // Spawn weighting: the three "strong" buffs (shield one-shot revive, slow-mo bullet-
-      // time, score-doubler) are each uncommon, with the workhorse magnet/thruster splitting
-      // the rest. ~0.16 shield, ~0.16 slow-mo, ~0.16 doubler, ~0.26 magnet, ~0.26 thruster.
+      // Spawn weighting: the four "strong" buffs (shield one-shot revive, slow-mo bullet-time,
+      // score-doubler, multi-bounce charges) are each uncommon (~0.14), with the workhorse
+      // magnet/thruster splitting the rest (~0.22 each).
       const roll = rng.next();
       const type: PowerUpType =
-        roll < 0.16
+        roll < 0.14
           ? "shield"
-          : roll < 0.32
+          : roll < 0.28
             ? "slowmo"
-            : roll < 0.48
+            : roll < 0.42
               ? "doubler"
-              : roll < 0.74
-                ? "magnet"
-                : "thruster";
+              : roll < 0.56
+                ? "multibounce"
+                : roll < 0.78
+                  ? "magnet"
+                  : "thruster";
       powerups.push({
         position: [
           x + (rng.next() - 0.5) * 1.5,

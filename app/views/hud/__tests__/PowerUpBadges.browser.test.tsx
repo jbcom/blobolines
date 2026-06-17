@@ -32,3 +32,9 @@ test("mounts the score-doubler badge when the 2× buff is active", async () => {
   const screen = await render(<PowerUpBadges />);
   await expect.element(screen.getByText("2× Score")).toBeInTheDocument();
 });
+
+test("mounts the multi-bounce badge when charges are held", async () => {
+  activatePowerup("multibounce");
+  const screen = await render(<PowerUpBadges />);
+  await expect.element(screen.getByText("Bounce")).toBeInTheDocument();
+});

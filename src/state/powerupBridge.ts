@@ -5,7 +5,8 @@ import type { PowerUpType } from "@/core/types";
  * live here (imperative) rather than in the React store, to avoid a re-render every
  * frame. PlayerBlob ticks them; the HUD badges poll `isActive`. Collected power-ups call
  * `activate`; the run reset clears them. SHIELD is different — a one-shot second-life flag
- * (not a timer) consumed when a fatal fall would otherwise end the run.
+ * (not a timer) consumed when a fatal fall would otherwise end the run. MULTI-BOUNCE is a
+ * CHARGE COUNT (not a timer) — a stack of free mid-air bounces spent one per airborne tap.
  */
 
 /** Power-ups with a timed duration (shield is excluded — it's a one-shot flag). */
@@ -19,6 +20,11 @@ const remaining: Record<TimedPowerUp, number> = {
 };
 /** One-shot shield charge: true = the next fatal fall is absorbed instead of ending the run. */
 let shielded = false;
+/** Multi-bounce charges held: a stack of free mid-air bounces, spent one per airborne tap. */
+let bounceCharges = 0;
+
+/** Charges granted per multi-bounce pickup (a stack of free mid-air bounces). */
+export const MULTI_BOUNCE_CHARGES = 3;
 
 export const POWERUP_DURATION: Record<TimedPowerUp, number> = {
   magnet: 8,
@@ -54,6 +60,11 @@ export function activatePowerup(type: PowerUpType): void {
     shielded = true;
     return;
   }
+  if (type === "multibounce") {
+    // Stack additively so picking up a second refills the stack (not a hard reset to 3).
+    bounceCharges += MULTI_BOUNCE_CHARGES;
+    return;
+  }
   remaining[type] = POWERUP_DURATION[type];
 }
 
@@ -66,6 +77,19 @@ export function hasShield(): boolean {
 export function consumeShield(): boolean {
   if (!shielded) return false;
   shielded = false;
+  return true;
+}
+
+/** How many mid-air bounce charges are currently held (0 = none). */
+export function bounceChargesLeft(): number {
+  return bounceCharges;
+}
+
+/** Spend one mid-air bounce charge (call when an airborne tap triggers a free bounce).
+ *  Returns true if one was available (and was consumed), false if the stack was empty. */
+export function consumeBounceCharge(): boolean {
+  if (bounceCharges <= 0) return false;
+  bounceCharges -= 1;
   return true;
 }
 
@@ -92,12 +116,15 @@ export function tickPowerups(dt: number): readonly PowerUpType[] {
 
 export function isPowerupActive(type: PowerUpType): boolean {
   if (type === "shield") return shielded;
+  if (type === "multibounce") return bounceCharges > 0;
   return remaining[type] > 0;
 }
 
 export function powerupRemaining(type: PowerUpType): number {
   // Shield is a one-shot flag, not a timer — report 1/0 so a HUD badge can still show it.
   if (type === "shield") return shielded ? 1 : 0;
+  // Multi-bounce is a charge stack — report the raw count so a HUD badge can show "×N".
+  if (type === "multibounce") return bounceCharges;
   return remaining[type];
 }
 
@@ -107,4 +134,5 @@ export function resetPowerups(): void {
   remaining.slowmo = 0;
   remaining.doubler = 0;
   shielded = false;
+  bounceCharges = 0;
 }

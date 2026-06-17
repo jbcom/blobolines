@@ -2,7 +2,15 @@ import { useDrag } from "@use-gesture/react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { useState } from "react";
 import { computeAim, computeAirSteer } from "@/input";
-import { getBlobDiagnostics, requestLaunch, setAim, setAirSteer, useGameStore } from "@/state";
+import {
+  bounceChargesLeft,
+  getBlobDiagnostics,
+  requestLaunch,
+  requestMidAirBounce,
+  setAim,
+  setAirSteer,
+  useGameStore,
+} from "@/state";
 
 /** Charge fraction at/above which the slingshot reads as "maxed" (full-power flourish). */
 const MAX_CHARGE = 0.85;
@@ -20,10 +28,20 @@ export function LaunchInput() {
   const reduced = useReducedMotion();
   const repeat = reduced ? 0 : Number.POSITIVE_INFINITY;
 
-  const bind = useDrag(({ movement: [mx, my], down, last }) => {
+  const bind = useDrag(({ movement: [mx, my], down, last, tap }) => {
     const airborne = getBlobDiagnostics().airborne;
 
     if (airborne) {
+      // A TAP while airborne (quick press, no drag) spends a multi-bounce charge for a free
+      // mid-air bounce — a recovery "double-jump". Only fires when a charge is held; otherwise
+      // the tap is inert (no accidental no-op steering jolt). Guarded so a real drag (steering)
+      // is never misread as a bounce.
+      if (tap && last && bounceChargesLeft() > 0) {
+        requestMidAirBounce();
+        setAirSteer(0, 0);
+        setCharge(0);
+        return;
+      }
       // Mid-air 3D steering: drag → continuous lateral force; release → stop.
       if (down) {
         const [sx, sz] = computeAirSteer(mx, my);

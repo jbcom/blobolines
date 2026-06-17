@@ -86,6 +86,22 @@ export function consumeLaunchBursts(): LaunchBurstEvent[] {
   return out;
 }
 
+/** A pending MID-AIR BOUNCE request: the player tapped while airborne with multi-bounce
+ *  charges held, asking for a free extra upward bounce (a "double-jump" recovery). Set by the
+ *  input layer (only after a charge is confirmed available), consumed once by the blob. */
+let midAirBounce = false;
+
+export function requestMidAirBounce(): void {
+  midAirBounce = true;
+}
+
+/** Consume the pending mid-air bounce (returns true once, then clears). */
+export function consumeMidAirBounce(): boolean {
+  const b = midAirBounce;
+  midAirBounce = false;
+  return b;
+}
+
 /** Continuous mid-air steering force on the world X/Z plane (lateral accel). */
 let steer: readonly [number, number] = [0, 0];
 
@@ -149,4 +165,5 @@ export function resetBridges(): void {
   launchBurstQueue = [];
   steer = [0, 0];
   landingImpact = 0;
+  midAirBounce = false;
 }
