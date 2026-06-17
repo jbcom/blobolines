@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, expect, test } from "vitest";
 import { cleanup, render } from "vitest-browser-react";
-import { useGameStore } from "@/state";
+import { useGameStore, useWorldStore } from "@/state";
 import { GameOver } from "../GameOver";
 
 beforeEach(() => {
@@ -25,7 +25,7 @@ beforeEach(() => {
 });
 afterEach(() => {
   cleanup();
-  useGameStore.setState({ phase: "menu", customizerIntent: false });
+  useGameStore.setState({ phase: "menu", customizerIntent: false, dailyRun: false });
 });
 
 test("shows the run recap: score headline, altitude, max combo, crystals run + lifetime, short-by delta", async () => {
@@ -55,6 +55,20 @@ test("tapping Customize requests the customizer and returns to menu", async () =
   await screen.getByText(/Customize/).click();
   expect(useGameStore.getState().customizerIntent).toBe(true);
   expect(useGameStore.getState().phase).toBe("menu");
+});
+
+test("a DAILY run shows the shareable daily tag (date + hash); a normal run doesn't", async () => {
+  useWorldStore.setState({ seed: 12345 });
+  useGameStore.setState({ dailyRun: true });
+  const daily = await render(<GameOver />);
+  // The tag reads "Daily <YYYY-MM-DD> · <hash>" — assert the label + date shape are present.
+  await expect.element(daily.getByText(/Daily \d{4}-\d{2}-\d{2} · /)).toBeInTheDocument();
+  cleanup();
+
+  // A normal (non-daily) run must NOT show the daily tag.
+  useGameStore.setState({ dailyRun: false });
+  const normal = await render(<GameOver />);
+  await expect.element(normal.getByText(/Daily \d{4}-\d{2}-\d{2}/).query()).not.toBeInTheDocument();
 });
 
 test("celebrates a height record instead of a short-by delta", async () => {

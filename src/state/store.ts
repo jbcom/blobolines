@@ -35,9 +35,13 @@ export interface GameState {
   /** Transient (not persisted): set true to request the menu open the blob customizer on
    *  arrival — e.g. tapping "Customize" from the game-over card. TitleScreen consumes it. */
   customizerIntent: boolean;
+  /** Transient: is the CURRENT run a daily challenge (seeded from today's date)? Drives the
+   *  game-over card to show the shareable daily run hash. Cleared when a normal run starts. */
+  dailyRun: boolean;
 
   setPhase: (phase: GamePhase) => void;
   setCustomizerIntent: (open: boolean) => void;
+  setDailyRun: (daily: boolean) => void;
   updateSettings: (patch: Partial<GameSettings>) => void;
   setRun: (patch: Partial<RunStats>) => void;
   resetRun: () => void;
@@ -87,9 +91,11 @@ export const useGameStore = create<GameState>((set) => ({
   progress: { ...DEFAULT_PROGRESS },
   run: { ...EMPTY_RUN },
   customizerIntent: false,
+  dailyRun: false,
 
   setPhase: (phase) => set({ phase }),
   setCustomizerIntent: (open) => set({ customizerIntent: open }),
+  setDailyRun: (daily) => set({ dailyRun: daily }),
 
   updateSettings: (patch) => set((s) => ({ settings: { ...s.settings, ...patch } })),
 

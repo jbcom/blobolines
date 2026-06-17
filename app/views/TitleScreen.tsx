@@ -1,9 +1,10 @@
 import { buttonVariants } from "@app/components/ui";
-import { HelpCircle, Palette, Play, Settings } from "lucide-react";
+import { CalendarDays, HelpCircle, Palette, Play, Settings } from "lucide-react";
 import { motion, useReducedMotion } from "motion/react";
 import { useEffect, useState } from "react";
 import { initAudio, startMusic } from "@/audio";
 import { cn } from "@/lib/utils";
+import { dailySeed } from "@/sim/daily";
 import { useGameStore, useWorldStore } from "@/state";
 import { BlobCustomizer } from "./BlobCustomizer";
 import { ManualModal } from "./ManualModal";
@@ -16,6 +17,7 @@ import { SettingsModal } from "./SettingsModal";
 export function TitleScreen() {
   const setPhase = useGameStore((s) => s.setPhase);
   const resetRun = useGameStore((s) => s.resetRun);
+  const setDailyRun = useGameStore((s) => s.setDailyRun);
   const resetWorld = useWorldStore((s) => s.reset);
   const best = useGameStore((s) => s.progress.bestHeight);
   const reduced = useReducedMotion();
@@ -33,14 +35,21 @@ export function TitleScreen() {
     }
   }, [customizerIntent, setCustomizerIntent]);
 
-  const play = () => {
+  /** Start a run. `daily` seeds the world from today's date so everyone climbs the same tower
+   *  (and the game-over card shows a shareable hash); otherwise the world reseeds randomly. */
+  const start = (daily: boolean) => {
     // This click is the user gesture that unlocks the AudioContext; start ambient music
     // once it's ready.
     void initAudio().then(startMusic);
     resetRun();
-    resetWorld();
+    setDailyRun(daily);
+    // The Date is read HERE (UI layer) and passed into the pure dailySeed — sim never calls
+    // new Date(). undefined seed = random reseed for a normal run.
+    resetWorld(daily ? dailySeed(new Date()) : undefined);
     setPhase("playing");
   };
+  const play = () => start(false);
+  const playDaily = () => start(true);
 
   return (
     <motion.div
@@ -87,6 +96,16 @@ export function TitleScreen() {
       >
         Play <Play className="size-5 fill-current" aria-hidden />
       </motion.button>
+
+      {/* Daily Challenge — same tower for everyone today (date-seeded); the game-over card
+          shows a shareable run hash. A quieter secondary CTA below the main Play. */}
+      <button
+        type="button"
+        onClick={playDaily}
+        className="-mt-1 flex min-h-11 items-center gap-2 rounded-xl border border-border px-4 py-2 font-ui text-sm font-semibold text-fg-muted hover:text-cream"
+      >
+        <CalendarDays className="size-4" aria-hidden /> Daily Challenge
+      </button>
 
       <div className="flex items-center gap-5">
         <button

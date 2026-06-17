@@ -712,7 +712,20 @@ permeability (permeable one-way pads rejected by owner).
       height gravity would fight determinism + the reachability model for marginal gain.
       Crystal/powerup spawn density is uniform-by-design (the tier/type weighting carries the
       progression); revisit only if playtest shows the high tower feels sparse.
-- [ ] Daily-challenge seed plumbing (Rng is seedable; add a daily seed + leaderboard-ready run hash).
+- [ ] Investigate (low-pri, may be automation-only): after a page reload the menu's hero canvas
+      sometimes shows near-black + Play needs a second click before the game starts. Seen
+      repeatedly under claude-in-chrome navigate+screenshot, never confirmed for a real user
+      (likely a transition frame captured by the synthetic click/screenshot). Repro in a real
+      browser session before treating as a bug; if real, check TitleScreen mount/fade + BlobActor
+      first-paint vs the menu-orbit camera.
+- [x] Daily-challenge seed plumbing + leaderboard-ready run hash. New pure src/sim/daily:
+      dailyKey (UTC YYYY-MM-DD), dailySeed(date) → deterministic world seed (everyone climbs the
+      same tower that day), runHash(result) → compact tamper-evident base36 hash binding a result
+      to its seed. TitleScreen has a "Daily Challenge" CTA (seeds resetWorld from today's date,
+      sets a transient dailyRun flag); GameOver shows the shareable "Daily <date> · <hash>" tag +
+      folds it into the share text on a daily run; replay clears the flag (daily = one attempt).
+      Date is read in the UI + injected (sim never calls new Date()). Fully tested (daily math +
+      store flag + GameOver tag shown/hidden + TitleScreen CTAs).
 - [ ] Missions/objectives/achievements layer (e.g. "reach 200m", "10-combo", "100 crystals").
 - [x] Charge-time/overcharge nuance on the slingshot: a PERFECT-RELEASE window. Charging into a
       sweet-spot band (0.85–0.97, config launch.perfectRelease) and releasing earns a power bonus

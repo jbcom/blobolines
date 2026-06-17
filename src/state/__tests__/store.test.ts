@@ -56,6 +56,14 @@ describe("useGameStore", () => {
     expect(s.progress.crystals).toBe(5);
   });
 
+  it("dailyRun flag toggles (default false) for the daily-challenge framing", () => {
+    expect(useGameStore.getState().dailyRun).toBe(false);
+    useGameStore.getState().setDailyRun(true);
+    expect(useGameStore.getState().dailyRun).toBe(true);
+    useGameStore.getState().setDailyRun(false);
+    expect(useGameStore.getState().dailyRun).toBe(false);
+  });
+
   it("commitBestHeight only updates when new height is higher", () => {
     useGameStore.getState().commitBestHeight(100);
     expect(useGameStore.getState().progress.bestHeight).toBe(100);

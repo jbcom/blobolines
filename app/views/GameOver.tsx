@@ -5,6 +5,7 @@ import { motion } from "motion/react";
 import { useEffect, useRef, useState } from "react";
 import { playRecord, startMusic, stopMusic } from "@/audio";
 import type { BlobSkin } from "@/core/types";
+import { dailyKey, runHash } from "@/sim/daily";
 import { comboMultiplier } from "@/sim/launch";
 import { SKIN_COST, useGameStore, useWorldStore } from "@/state";
 
@@ -26,7 +27,15 @@ export function GameOver() {
   const setPhase = useGameStore((s) => s.setPhase);
   const setCustomizerIntent = useGameStore((s) => s.setCustomizerIntent);
   const resetRun = useGameStore((s) => s.resetRun);
+  const setDailyRun = useGameStore((s) => s.setDailyRun);
   const resetWorld = useWorldStore((s) => s.reset);
+  const dailyRun = useGameStore((s) => s.dailyRun);
+  const seed = useWorldStore((s) => s.seed);
+  // Daily run → a shareable verification hash binding this result to today's seed (so a
+  // leaderboard can spot a score that doesn't match its seed). Only shown for a daily run.
+  const dailyTag = dailyRun
+    ? `Daily ${dailyKey(new Date())} · ${runHash({ seed, height, crystals, maxCombo })}`
+    : null;
   const replayRef = useRef<HTMLButtonElement>(null);
 
   const toMenu = () => {
@@ -50,7 +59,10 @@ export function GameOver() {
   }, []);
 
   const replay = () => {
+    // "Climb again" is a normal random run — the daily is one attempt per day, so clear the flag
+    // (and resetWorld() reseeds randomly, not from today's date).
     resetRun();
+    setDailyRun(false);
     resetWorld();
     startMusic();
     setPhase("playing");
@@ -68,7 +80,9 @@ export function GameOver() {
     [],
   );
   const share = async () => {
-    const text = `I scored ${runScore.toLocaleString()} (${height}m) in Blobolines! 🫧`;
+    const text = dailyTag
+      ? `I scored ${runScore.toLocaleString()} (${height}m) on the Blobolines ${dailyTag} 🫧`
+      : `I scored ${runScore.toLocaleString()} (${height}m) in Blobolines! 🫧`;
     const url = "https://jbcom.github.io/blobolines/";
     try {
       if (typeof navigator !== "undefined" && navigator.share) {
@@ -220,6 +234,12 @@ export function GameOver() {
             </span>
             <Progress value={nextSkinPct} aria-label="Crystals toward the next skin" />
           </button>
+        )}
+
+        {dailyTag && (
+          <p className="text-center font-ui text-xs font-semibold text-fg-subtle tabular-nums">
+            {dailyTag}
+          </p>
         )}
 
         <Button ref={replayRef} cta size="lg" onClick={replay} className="w-full">
