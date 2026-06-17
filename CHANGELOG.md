@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.6](https://github.com/jbcom/blobolines/compare/blobolines-v0.1.5...blobolines-v0.1.6) (2026-06-17)
+
+
+### Features
+
+* certify playable route variants ([4b55060](https://github.com/jbcom/blobolines/commit/4b55060f36d462f3aeb1336b2c3d51c37bd438af))
+
 ## [0.1.5](https://github.com/jbcom/blobolines/compare/blobolines-v0.1.4...blobolines-v0.1.5) (2026-06-17)
 
 
