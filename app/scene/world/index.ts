@@ -1,4 +1,5 @@
 export { BiomeProps } from "./BiomeProps";
+export { BlobCaustic } from "./BlobCaustic";
 export { BlobFollowLight } from "./BlobFollowLight";
 export { BlobShadow } from "./BlobShadow";
 export { CrystalField } from "./CrystalField";

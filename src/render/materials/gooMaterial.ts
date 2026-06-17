@@ -141,15 +141,16 @@ export const GooMaterial = shaderMaterial(
 
       vec3 base   = uColor * (0.55 + 0.35 * wrap);
       vec3 lit    = base + uColor * diffuse * 0.5;
-      // Beer-Lambert-ish thickness: looking straight INTO the body (low fresnel) means more
-      // goo between the eye and the back, so the color deepens/saturates toward the center and
-      // thins at the grazing edge — the volumetric "you can see depth in the jelly" read. A
-      // cheap per-fragment proxy (1-fresnel) standing in for true raymarched path length.
-      float thickness = 1.0 - fresnel;
-      lit = mix(lit, lit * uColor * 1.5, thickness * 0.35);
       // Biome-reactive: bend the lit body color toward the biome key color (warm at ground,
       // cool/moody high up) on the LIT side, so the blob feels embedded in its environment.
       lit = mix(lit, lit * (0.6 + 0.8 * uEnvTint), uEnvLight * (0.4 + 0.6 * wrap));
+      // Beer-Lambert-ish thickness, applied LAST so it doesn't compound with the biome tint:
+      // looking straight INTO the body (low fresnel) means more goo to look through, so the
+      // center reads a touch deeper/darker than the thin grazing edge — volumetric "depth in
+      // the jelly". A flat darken (not a *uColor re-multiply, which squared the hue and muddied
+      // non-blue skins) keeps it palette-independent; (1-fresnel) proxies path length.
+      float thickness = 1.0 - fresnel;
+      lit *= 1.0 - 0.22 * thickness;
       // Tint the specular by a touch of the goo color so the hotspot stays "wet goo", not a
       // white hole; keep the rim fresnel for the volumetric edge — the rim also picks up the
       // biome tint (the wet edge catches the sky). FLOOR the biome-tinted rim at 40% of the

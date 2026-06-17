@@ -402,7 +402,15 @@ game — touch/drag is primary; keyboard is a minor desktop-only secondary, don'
       center (low fresnel = looking through more goo = "thicker") and thins it at the grazing
       edge, using (1-fresnel) as a cheap per-fragment path-length proxy. Reads as volumetric
       "depth in the jelly". Verified live (menu blob center now richer than the edge).
-- [ ] Fake caustics / moving light dapple cast under the goo on the pad.
+- [x] Fake caustics: BlobCaustic — a soft blobby caustic texture (baked once) on an additive,
+      skin-tinted disc under the blob that slowly rotates + breathes and brightens as the blob
+      nears the pad (gone at altitude), reading as light refracting through the wet goo onto the
+      surface. Sits just above the contact shadow. Flat disc, no extra render pass (mobile-cheap).
+      Also folded the trail/droplet/thickness review's actionable fixes: BlobTrail now disposes
+      its BufferGeometry on unmount (GPU leak) + dropped the dead per-frame computeBoundingSphere;
+      FreeDroplets skips droplets within the merge distance (no sphere poking through the goo
+      body); Beer-Lambert is now a palette-independent flat darken applied AFTER the biome tint
+      (was a *uColor re-multiply that muddied non-blue skins + compounded with the biome stack).
 - [x] Render the free droplets: FreeDroplets — an instanced wet-sphere mesh (MeshStandardMaterial,
       glossy, skin-colored) rendering the flung goo droplets so a splash/launch visibly throws
       goo that arcs + falls. Each scales by its remaining life (shrink + dissolve). GooCsg still

@@ -1,5 +1,5 @@
 import { useFrame, useThree } from "@react-three/fiber";
-import { useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import {
   AdditiveBlending,
   BufferGeometry,
@@ -56,6 +56,10 @@ export function BlobTrail({ skin }: BlobTrailProps) {
     g.setIndex(idx);
     return g;
   }, []);
+
+  // Release the per-mount BufferGeometry on unmount (the trail remounts each run via the
+  // `playing &&` gate; R3F does NOT auto-dispose a useMemo'd geometry passed as a prop).
+  useEffect(() => () => geo.dispose(), [geo]);
 
   const tmpA = useMemo(() => new Vector3(), []);
   const tmpDir = useMemo(() => new Vector3(), []);
@@ -122,7 +126,8 @@ export function BlobTrail({ skin }: BlobTrailProps) {
     }
     posAttr.needsUpdate = true;
     colAttr.needsUpdate = true;
-    geo.computeBoundingSphere();
+    // No computeBoundingSphere: the mesh is frustumCulled={false}, so the bounding sphere is
+    // never read — computing it per frame would be dead work.
   });
 
   return (

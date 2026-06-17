@@ -8,6 +8,7 @@ import { PostFX } from "./postfx";
 import { TrampolineField } from "./trampoline";
 import {
   BiomeProps,
+  BlobCaustic,
   BlobFollowLight,
   BlobShadow,
   CrystalField,
@@ -53,6 +54,7 @@ export function GameScene() {
       {playing && <BiomeProps />}
       {playing && <BlobFollowLight />}
       {playing && <BlobShadow />}
+      {playing && <BlobCaustic skin={skin} />}
       {playing && <CrystalField />}
       {playing && <PowerUpField />}
       {playing && <LaunchRing />}

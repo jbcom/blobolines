@@ -10,6 +10,8 @@ import {
 } from "three";
 import type { BlobSkin } from "@/core/types";
 import type { Droplet } from "@/render/vfx";
+import { BLOB } from "@/sim/physics";
+import { getBlobDiagnostics } from "@/state";
 import { palette } from "@/styles/tokens";
 
 /**
@@ -22,6 +24,9 @@ import { palette } from "@/styles/tokens";
  * they shrink + dissolve. MeshStandardMaterial (instancing-native) tuned wet/glossy.
  */
 const MAX = 40; // matches the droplet pool cap
+// Droplets within this distance of the blob center are merged into the CSG body by GooCsg, so
+// FreeDroplets skips them (else a sphere pokes through the goo surface). ~1.6× blob radius.
+const FREE_DIST2 = (BLOB.radius * 1.6) ** 2;
 
 interface FreeDropletsProps {
   skin: BlobSkin;
@@ -48,6 +53,7 @@ export function FreeDroplets({ skin, getDroplets }: FreeDropletsProps) {
     const mesh = meshRef.current;
     if (!mesh) return;
 
+    const [bx, by, bz] = getBlobDiagnostics().position;
     const drops = getDroplets();
     let n = 0;
     for (let i = 0; i < drops.length && n < MAX; i++) {
@@ -55,6 +61,13 @@ export function FreeDroplets({ skin, getDroplets }: FreeDropletsProps) {
       // Fade/shrink over the droplet's life so it dissolves rather than popping out.
       const lifeLeft = Math.max(0, 1 - d.age / d.life);
       if (lifeLeft <= 0.02) continue;
+      // Skip droplets close to the body — those are the ones GooCsg unions into the mesh, so
+      // rendering them here too would poke small spheres through the goo surface. Only the
+      // genuinely flung (far) droplets show as separate goo.
+      const dx = d.position[0] - bx;
+      const dy = d.position[1] - by;
+      const dz = d.position[2] - bz;
+      if (dx * dx + dy * dy + dz * dz < FREE_DIST2) continue;
       const r = d.radius * (0.4 + 0.6 * lifeLeft);
       tmpPos.set(d.position[0], d.position[1], d.position[2]);
       tmpScale.setScalar(r);
