@@ -396,7 +396,11 @@ game — touch/drag is primary; keyboard is a minor desktop-only secondary, don'
       ramping 0.15→0.7 by ~1400m (warm at ground → cool/moody in space). Menu hero keeps
       uEnvLight=0 (no biome). Verified in-game (resting puddle renders with the tint, no errors);
       uniform unit test updated.
-- [ ] Goo refraction: sample backbuffer along normal×fresnel so the blob bends what's behind it (marquee jelly upgrade).
+- [ ] Goo refraction: sample backbuffer along normal×fresnel so the blob bends what's behind it
+      (marquee jelly upgrade). DEPENDS ON the quality-tier system (real backbuffer refraction /
+      MeshTransmissionMaterial is a heavy mobile cost + needs the EffectComposer-safe wiring) —
+      gate it HIGH-tier-only. Building the quality-tier foundation first (see Tier-6 perf item);
+      refraction lands once that gate exists so mid-tier devices never pay for it.
 - [x] Thickness-based saturation (Beer-Lambert) — adapted to the CSG path (the raymarch it
       originally referenced was removed): GooMaterial deepens/saturates the body color toward the
       center (low fresnel = looking through more goo = "thicker") and thins it at the grazing
@@ -502,7 +506,15 @@ game — touch/drag is primary; keyboard is a minor desktop-only secondary, don'
       lid shaping (openY blink/squint/wide via eyeShape) + spontaneous blink + tear droplet, so
       this completes the expressive-eyes intent. (Eyebrows would need new geometry — the lid
       openY + mouth curve already carry the per-expression read.)
-- [ ] Quality-tier system (src/render/quality.ts): scale raymarch steps, pool sizes, DOF/god-rays/bloom by device/FPS — gate the heavy effects above.
+- [x] Quality-tier system: src/render/quality.ts (pure, tested) maps device class + measured FPS
+      → a tier (low/medium/high) + a flat QualitySettings (refraction/dof/godRays HIGH-only, bloom
+      scale, ao, maxDroplets, blobSegments). A sustained low FPS downgrades; a healthy FPS never
+      upgrades past the device's starting tier (fast phone stays medium → no desktop-only heavy
+      passes). qualityBridge holds the active settings (resolved at boot in App from the device
+      class, re-resolvable with FPS). FIRST consumers wired: PostFX gates AO to medium+ and scales
+      bloom by tier (effects built as a filtered array so the composer never gets a false child);
+      GooCsg caps blob segments by tier. This is the GATE the heavy effects (goo refraction, DOF,
+      god rays) hook into — they land behind it next.
 - [ ] Selective (emissive-channel) bloom instead of global luminance threshold — only goo hotspots/flame/crystals/powerups glow.
 - [x] Perpetual idle jiggle: a small constant uWobble floor (GooCsg IDLE_WOBBLE=0.12, BlobActor
       0.1) so the goo surface is ALWAYS subtly alive/shimmering, never perfectly still even at

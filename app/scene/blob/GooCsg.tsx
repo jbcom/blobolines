@@ -16,6 +16,7 @@ import { biomeSkyAt, blob as blobCfg, goo as gooCfg } from "@/config";
 import type { BlobSkin } from "@/core/types";
 import { selectMerges } from "@/render/goo";
 import { GooMaterial } from "@/render/materials";
+import { getQuality } from "@/render/qualityBridge";
 import type { Droplet } from "@/render/vfx";
 import { combineScale, impactSquash, speedStretch } from "@/sim/blob";
 import { getAim, getBlobDiagnostics } from "@/state";
@@ -71,7 +72,10 @@ export function GooCsg({ skin, blobRadius, getDroplets }: GooCsgProps) {
     evaluator.attributes = ["position", "normal"];
     evaluator.useGroups = false;
 
-    const blobBrush = new Brush(new SphereGeometry(blobRadius, blobSegments, blobSegments));
+    // Blob geometry density scales with the quality tier (low devices get a coarser sphere) —
+    // the config value is the high-tier ceiling; getQuality() caps it for the device.
+    const segs = Math.min(blobSegments, getQuality().blobSegments);
+    const blobBrush = new Brush(new SphereGeometry(blobRadius, segs, segs));
     // Droplet brushes are low-poly icospheres (cheap, round enough once unioned + wet-lit).
     // IcosahedronGeometry is non-indexed; three-bvh-csg's BVH needs an index, so weld it.
     // mergeVertices returns a NEW geometry — dispose the temporary unindexed source so it

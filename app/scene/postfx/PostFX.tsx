@@ -8,8 +8,9 @@ import {
   Vignette,
 } from "@react-three/postprocessing";
 import { BlendFunction } from "postprocessing";
-import { useRef, useState } from "react";
+import { type ReactElement, useRef, useState } from "react";
 import { Vector2 } from "three";
+import { getQuality } from "@/render/qualityBridge";
 import { getBlobDiagnostics } from "@/state";
 import { N8AO } from "./N8AO";
 
@@ -34,6 +35,10 @@ const GRADE_STEPS = 6;
 export function PostFX() {
   const chroma = useRef(new Vector2(0.0006, 0.0006));
   const [grade, setGrade] = useState(0); // 0..1, quantized to GRADE_STEPS
+  // Quality gate (resolved at boot from the device tier): AO is medium+ only, bloom scales by
+  // tier so low-end devices skip/soften the heavy passes. Read once on mount (tier is stable
+  // per session unless an FPS monitor downgrades it; PostFX remounts are rare).
+  const quality = getQuality();
 
   useFrame(() => {
     const diag = getBlobDiagnostics();
@@ -49,28 +54,33 @@ export function PostFX() {
     if (stepped !== grade) setGrade(stepped);
   });
 
-  return (
-    <EffectComposer multisampling={0}>
-      {/* AO first (right after the render pass) so creases are darkened before bloom/grade —
-          grounds the goo where it meets pads and where droplets fuse into the body. */}
-      <N8AO />
-      {/* Bloom/saturation/contrast lift with the altitude grade band (warm+soft ground →
-          brighter+cooler+crisper space). Props change only on a band crossing. */}
-      <Bloom
-        intensity={0.28 + grade * 0.5}
-        luminanceThreshold={0.85}
-        luminanceSmoothing={0.3}
-        mipmapBlur
-      />
-      <HueSaturation saturation={0.08 + grade * 0.12} />
-      <BrightnessContrast brightness={0.02} contrast={0.06 + grade * 0.14} />
-      <ChromaticAberration
-        blendFunction={BlendFunction.NORMAL}
-        offset={chroma.current}
-        radialModulation={false}
-        modulationOffset={0}
-      />
-      <Vignette eskil={false} offset={0.25} darkness={0.45} />
-    </EffectComposer>
-  );
+  // Build the effect list as an array, filtering out the tier-gated passes, so the composer
+  // never receives a `false`/`undefined` child (postprocessing's composer rejects non-effect
+  // children). AO is the medium+ pass the low tier drops entirely.
+  const effects = [
+    // AO first (right after the render pass) so creases are darkened before bloom/grade —
+    // grounds the goo where it meets pads and where droplets fuse into the body.
+    quality.ao ? <N8AO key="ao" /> : null,
+    // Bloom strength scales by tier (low devices get a softer, cheaper bloom) + lifts with the
+    // altitude grade band (warm+soft ground → brighter+cooler+crisper space).
+    <Bloom
+      key="bloom"
+      intensity={(0.28 + grade * 0.5) * quality.bloom}
+      luminanceThreshold={0.85}
+      luminanceSmoothing={0.3}
+      mipmapBlur
+    />,
+    <HueSaturation key="hue" saturation={0.08 + grade * 0.12} />,
+    <BrightnessContrast key="bc" brightness={0.02} contrast={0.06 + grade * 0.14} />,
+    <ChromaticAberration
+      key="ca"
+      blendFunction={BlendFunction.NORMAL}
+      offset={chroma.current}
+      radialModulation={false}
+      modulationOffset={0}
+    />,
+    <Vignette key="vig" eskil={false} offset={0.25} darkness={0.45} />,
+  ].filter((e): e is ReactElement => e !== null);
+
+  return <EffectComposer multisampling={0}>{effects}</EffectComposer>;
 }

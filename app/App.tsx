@@ -3,6 +3,7 @@ import { MotionConfig } from "motion/react";
 import { Suspense, useEffect } from "react";
 import { gameWorld } from "@/ecs/world";
 import { applyDeviceScale } from "@/platform";
+import { applyQuality } from "@/render/qualityBridge";
 import { attachPersistence, hydrateStore, useGameStore } from "@/state";
 import { ErrorBoundary } from "./ErrorBoundary";
 import { Game } from "./Game";
@@ -19,6 +20,9 @@ export function App() {
     // Device-aware UI scale → --ui-scale CSS var (phone bigger, desktop baseline), rebinds
     // on resize/orientation. Works on web + the Capacitor webview without a native dep.
     const scale = applyDeviceScale();
+    // Resolve the render quality tier from the device class — gates the heavy effects (high-
+    // tier-only) so mid/low devices never pay for them.
+    applyQuality();
     return () => {
       detach();
       scale.detach();
