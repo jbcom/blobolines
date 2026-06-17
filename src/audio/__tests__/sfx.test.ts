@@ -12,6 +12,7 @@ import {
   playPowerup,
   playRecord,
   playSplat,
+  playThump,
   setAmbientVolume,
   setMusicAltitude,
   setMusicEnabled,
@@ -55,6 +56,8 @@ describe("audio before init", () => {
     expect(() => playPowerup()).not.toThrow();
     expect(() => playPowerdown()).not.toThrow();
     expect(() => playSplat()).not.toThrow();
+    // Low-end thump layer across the strength range (incl. below the silent threshold).
+    for (const s of [0, 0.2, 0.5, 1]) expect(() => playThump(s)).not.toThrow();
     // Arcade-identity celebration stingers.
     expect(() => playMilestone()).not.toThrow();
     expect(() => playRecord()).not.toThrow();

@@ -17,6 +17,7 @@ export {
   playPowerup,
   playRecord,
   playSplat,
+  playThump,
   setAmbientVolume,
   setMasterVolume,
   setMusicAltitude,

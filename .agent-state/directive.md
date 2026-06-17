@@ -584,7 +584,10 @@ game — touch/drag is primary; keyboard is a minor desktop-only secondary, don'
       setSfxVolume already existed. Ambient base retuned 0.35→0.25 (it was competing with the
       music). Test covers clamp + live re-level + no-bed safety for all three buses. (Wiring per-
       bus sliders into SettingsModal/settings store is a thin follow-on on top of these setters.)
-- [ ] Audio thump layer mirroring the Light/Medium/Heavy haptic split.
+- [x] Audio thump layer: playThump(strength) plays the impact sample pitched WAY down (rate
+      0.5→0.32, louder with strength) as a body-felt sub-bass thud under the bright bounce on
+      landing, gated <0.25 silent so light taps don't thud — mirrors the Light/Medium/Heavy
+      haptic split. Fired alongside the landing splash in PlayerBlob. Test covers the range.
 - [ ] Preload critical cues at startMusic to avoid first-play decode hitch (mobile).
 
 ## M15 — game-design depth + CONFIRMED BUGS (from mechanics inventory, 2026-06-16)

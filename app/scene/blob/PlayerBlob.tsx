@@ -10,6 +10,7 @@ import {
   playLaunch,
   playPowerdown,
   playSplat,
+  playThump,
   setMusicAltitude,
 } from "@/audio";
 import { Blob, Transform, Velocity } from "@/ecs";
@@ -222,6 +223,8 @@ export function PlayerBlob() {
       if (p.y > safeY.current) safeY.current = p.y;
       // Fling a gooey splash from the contact point (just under the blob).
       splash([p.x, p.y - BLOB.radius, p.z], strength);
+      // Low-end thump layer under the bounce, mirroring the haptic strength split.
+      playThump(strength);
       // Landing impact RING on the pad, sized by impact — the touchdown counterpart to the
       // launch pop. Gated so micro-settles don't ping.
       if (strength > 0.2) {

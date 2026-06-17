@@ -129,6 +129,15 @@ export function playBounce(type: TrampType, strength = 1): void {
   const v = padVoice(type, strength);
   playSfx(v.sample, { rate: v.rate, volume: v.volume });
 }
+/** Low-end THUMP layer on landing, mirroring the Light/Medium/Heavy haptic split — the impact
+ *  sample pitched way down (a body-felt thud under the bright bounce), louder + lower the
+ *  harder the hit. Gated below a soft threshold so gentle settles don't thud. */
+export function playThump(strength: number): void {
+  const s = Math.max(0, Math.min(1, strength));
+  if (s < 0.25) return; // Light taps stay silent on the thump layer (haptic Light parallel)
+  // Pitch DOWN with strength (heavier = lower/bigger), volume up — the sub-bass of the impact.
+  playSfx("bounce", { rate: 0.5 - s * 0.18, volume: 0.4 + s * 0.5 });
+}
 /** Launch whoosh scaled by charge: a soft release is a low slow whoosh, a max charge a fast
  *  bright one (rate 0.85→1.25, volume 0.7→1.1) — playLaunch used to ignore the charge. */
 export function playLaunch(charge = 1): void {
@@ -208,15 +217,15 @@ let unduckTimer: ReturnType<typeof setTimeout> | null = null;
  */
 export function duckMusic(ms = 700): void {
   if (!music || muted) return;
-  const full = musicTarget();
   const bed = music; // capture identity — a stop/restart swaps `music` to a different Howl
-  bed.fade(bed.volume(), full * 0.25, 120); // fast dip
+  bed.fade(bed.volume(), musicTarget() * 0.25, 120); // fast dip
   if (unduckTimer) clearTimeout(unduckTimer);
   unduckTimer = setTimeout(() => {
     unduckTimer = null;
     // Restore ONLY if the same bed is still the live music (not a stop, not a restarted bed) —
-    // otherwise we'd yank the volume of a freshly-started track.
-    if (music === bed && !muted) bed.fade(bed.volume(), full, ms);
+    // otherwise we'd yank the volume of a freshly-started track. Re-read musicTarget() so a
+    // slider drag DURING the duck restores to the new level, not a stale captured one.
+    if (music === bed && !muted) bed.fade(bed.volume(), musicTarget(), ms);
   }, 180);
 }
 
