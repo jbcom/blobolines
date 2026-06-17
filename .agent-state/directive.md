@@ -578,7 +578,12 @@ game — touch/drag is primary; keyboard is a minor desktop-only secondary, don'
       muted. Wired to the two big in-game moments: the 100m milestone stinger and the on-fire
       combo fanfare, so each punches through the music. (Death ducking is moot — music stops on
       game-over.) Audio test covers the safe no-op + active + overlap + post-stop paths.
-- [ ] Three-bus mix (music/sfx/ambient/master) with independent enable+volume; retune ambient down to 0.25.
+- [x] Three-bus mix: howler now has independent runtime MUSIC / AMBIENT / SFX bus levels [0,1],
+      each multiplied into its channel's play volume on top of the per-cue config base and the
+      master (Howler.volume). setMusicVolume/setAmbientVolume re-level the live beds immediately;
+      setSfxVolume already existed. Ambient base retuned 0.35→0.25 (it was competing with the
+      music). Test covers clamp + live re-level + no-bed safety for all three buses. (Wiring per-
+      bus sliders into SettingsModal/settings store is a thin follow-on on top of these setters.)
 - [ ] Audio thump layer mirroring the Light/Medium/Heavy haptic split.
 - [ ] Preload critical cues at startMusic to avoid first-play decode hitch (mobile).
 

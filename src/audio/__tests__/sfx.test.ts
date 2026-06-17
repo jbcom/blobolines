@@ -12,8 +12,10 @@ import {
   playPowerup,
   playRecord,
   playSplat,
+  setAmbientVolume,
   setMusicAltitude,
   setMusicEnabled,
+  setMusicVolume,
   setSfxVolume,
   startMusic,
   stopMusic,
@@ -89,6 +91,20 @@ describe("music + ambient lifecycle", () => {
       startMusic();
     }).not.toThrow();
     stopMusic();
+  });
+
+  it("the three mix buses (music/ambient/sfx) clamp + re-level live beds without throwing", () => {
+    startMusic();
+    for (const set of [setMusicVolume, setAmbientVolume, setSfxVolume]) {
+      expect(() => set(0)).not.toThrow();
+      expect(() => set(0.5)).not.toThrow();
+      expect(() => set(5)).not.toThrow(); // clamped
+      expect(() => set(-1)).not.toThrow(); // clamped
+    }
+    stopMusic();
+    // Setting bus levels with no live bed is still safe.
+    expect(() => setMusicVolume(0.7)).not.toThrow();
+    expect(() => setAmbientVolume(0.3)).not.toThrow();
   });
 
   it("duckMusic is a safe no-op when music isn't playing, and survives while it is", () => {

@@ -1,5 +1,5 @@
 {
-  "volumes": { "music": 0.4, "ambient": 0.35, "sfx": 0.7, "themeFadeMs": 1400 },
+  "volumes": { "music": 0.4, "ambient": 0.25, "sfx": 0.7, "themeFadeMs": 1400 },
   "sfx": {
     "bounce": "assets/audio/sfx/bounce.mp3",
     "bounce_soft": "assets/audio/sfx/bounce_soft.mp3",

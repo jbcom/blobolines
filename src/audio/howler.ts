@@ -26,8 +26,18 @@ let ambient: Howl | null = null;
 let ambientBand = "";
 let started = false;
 let muted = false;
-/** SFX channel level [0,1], settable independently of music (settings.sfxVolume). */
+/** Independent mix-bus levels [0,1], each multiplied into its channel's play volume on top of
+ *  the per-cue base (config) volume and the master (Howler.volume). The three buses — music,
+ *  ambient, sfx — are settable independently so a player can e.g. keep SFX punchy but drop the
+ *  music. (Master is Howler.volume via setMasterVolume.) */
 let sfxVolume = 1;
+let musicVolume = 1;
+let ambientVolume = 1;
+
+/** Target play volume for the music bed = config base × the music bus level. */
+const musicTarget = () => vol.music * musicVolume;
+/** Target play volume for the ambient bed = config base × the ambient bus level. */
+const ambientTarget = () => vol.ambient * ambientVolume;
 
 function howlFor(path: string, loop: boolean, volume: number): Howl {
   let h = howls.get(path);
@@ -94,9 +104,21 @@ function playSfx(id: SfxId, opts?: { rate?: number; volume?: number }): void {
   h.volume(vol.sfx * sfxVolume * (opts?.volume ?? 1), playId);
 }
 
-/** Set the SFX channel volume [0,1], independent of music. */
+/** Set the SFX bus level [0,1], independent of music/ambient. */
 export function setSfxVolume(v: number): void {
   sfxVolume = Math.max(0, Math.min(1, v));
+}
+
+/** Set the MUSIC bus level [0,1] and re-level the live music bed (no fade — immediate). */
+export function setMusicVolume(v: number): void {
+  musicVolume = Math.max(0, Math.min(1, v));
+  if (music) music.volume(musicTarget());
+}
+
+/** Set the AMBIENT bus level [0,1] and re-level the live ambient bed. */
+export function setAmbientVolume(v: number): void {
+  ambientVolume = Math.max(0, Math.min(1, v));
+  if (ambient) ambient.volume(ambientTarget());
 }
 
 // ── SFX API (same surface the game already calls) ──────────────────────────────
@@ -160,9 +182,9 @@ export function startMusic(): void {
   started = true;
   // startBed applies the current `muted` state and cancels any stale stop on that path —
   // without it a quick restart plays at full volume / gets killed by a leftover fade timer.
-  music = startBed(audioCfg.music.play, vol.music);
+  music = startBed(audioCfg.music.play, musicTarget());
   ambientBand = "sky";
-  ambient = startBed(audioCfg.ambient.sky, vol.ambient);
+  ambient = startBed(audioCfg.ambient.sky, ambientTarget());
 }
 
 export function stopMusic(): void {
@@ -186,7 +208,7 @@ let unduckTimer: ReturnType<typeof setTimeout> | null = null;
  */
 export function duckMusic(ms = 700): void {
   if (!music || muted) return;
-  const full = vol.music;
+  const full = musicTarget();
   const bed = music; // capture identity — a stop/restart swaps `music` to a different Howl
   bed.fade(bed.volume(), full * 0.25, 120); // fast dip
   if (unduckTimer) clearTimeout(unduckTimer);
@@ -207,7 +229,7 @@ export function setMusicAltitude(height: number): void {
   const path = (audioCfg.ambient as Record<string, string>)[band];
   ambientBand = band;
   if (ambient) scheduleStop(oldPath, ambient);
-  ambient = startBed(path, vol.ambient);
+  ambient = startBed(path, ambientTarget());
 }
 
 // ── Settings ─────────────────────────────────────────────────────────────────
