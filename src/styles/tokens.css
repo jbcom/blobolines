@@ -34,17 +34,17 @@
   --goo-wet: #ffffff; /* specular sheen */
   --goo-flame: #ffb238; /* combo streak glow */
 
-  /* ---- Semantic UI surface (dark, glassy, soft) ---- */
-  --bg: #24120d;
-  --bg-elevated: #351b12;
-  --surface: rgba(53, 27, 18, 0.92);
-  --surface-glass: rgba(53, 27, 18, 0.66);
-  --border: rgba(255, 193, 122, 0.24);
-  --border-strong: rgba(255, 193, 122, 0.48);
+  /* ---- Semantic UI surface (deep berry-plum, warm, glassy, high contrast) ---- */
+  --bg: #2a1024;
+  --bg-elevated: #3a1630;
+  --surface: rgba(58, 22, 48, 0.92);
+  --surface-glass: rgba(58, 22, 48, 0.68);
+  --border: rgba(255, 186, 124, 0.3);
+  --border-strong: rgba(255, 210, 144, 0.58);
 
-  --fg: #f3efd6;
-  --fg-muted: #f3c89b;
-  --fg-subtle: #d89c74;
+  --fg: #fff2d1;
+  --fg-muted: #ffd1a8;
+  --fg-subtle: #ffb684;
 
   --accent: var(--blob-blue);
   --accent-warm: var(--tramp-orange);
@@ -85,9 +85,9 @@
   --radius-full: 9999px;
 
   /* ---- Shadows: soft, gooey glow ---- */
-  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.25);
-  --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.32);
-  --shadow-lg: 0 18px 48px rgba(0, 0, 0, 0.42);
+  --shadow-sm: 0 2px 8px rgba(32, 8, 25, 0.28);
+  --shadow-md: 0 8px 24px rgba(32, 8, 25, 0.36);
+  --shadow-lg: 0 18px 48px rgba(32, 8, 25, 0.46);
   --glow-blue: 0 0 24px rgba(255, 122, 61, 0.45);
   --glow-warm: 0 0 24px rgba(240, 138, 60, 0.45);
   --glow-slime: 0 0 24px rgba(255, 79, 123, 0.45);

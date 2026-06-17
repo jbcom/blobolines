@@ -63,16 +63,20 @@ selected profile. The long-run goal is Tetris-like cadence: every seed is theore
 endless and eventually reaches one-path precision, but Easy should give a kid a long runway
 before that ramp while Ultra Blobmare reaches it much sooner.
 
-During a live run, the same proof feeds two player-facing cues:
+During a live run, the proof stays hidden. Easy mode means larger footprints, more accepted
+trajectory variants, wider lips, and slower cadence; it does **not** mean the game draws the
+golden solution. Player-facing guidance comes from:
 
-- a warm bullseye hovering at the certified landing point for the next route step, so the
-  player can see the intended catch point in world space instead of guessing from the HUD alone
+- camera framing that keeps the current, immediate, and following trampolines readable
+- the next-pad radar, which gives direction/distance without naming the exact catch point
+- a live aim preview while charging: Easy/Medium/Hard show a dotted launch arc plus a pulsing
+  endpoint reticle at the descending height crossing, Blobmare keeps only the dotted arc, and
+  Ultra Blobmare / One Wrong Move hide the parabola overlay entirely
 - a short route-quality toast after each certified landing (`Perfect route`, `Great route`,
   `Clean route`, or `Edge catch`) with the style-point bonus earned by proximity to that point
 
-The bullseye is intentionally world-locked to the proof landing, not parented to the pad mesh.
-That makes moving trampolines read as timing challenges: the ideal catch point is stable while
-the trampoline slides through it.
+The solid red parabola and red impact circle are dev-harness evidence only. They prove the
+seed and generator, but they are not mounted as normal player HUD.
 
 ## Trampoline types
 

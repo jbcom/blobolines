@@ -69,7 +69,9 @@ export {
 } from "./routeFeedbackBridge";
 export {
   getRouteProofTarget,
+  isRouteProofSequenceActive,
   type RouteProofTarget,
+  setRouteProofSequenceActive,
   setRouteProofTarget,
 } from "./routeProofBridge";
 export {

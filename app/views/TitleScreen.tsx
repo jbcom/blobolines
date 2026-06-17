@@ -202,7 +202,7 @@ export function TitleScreen() {
               {pendingDaily ? "Daily difficulty" : "New game"}
             </h2>
             <p className="mt-1 font-ui text-xs text-fg-subtle">
-              Pick the route-proof leniency for this climb.
+              Pick the landing leniency and aim help for this climb.
             </p>
           </div>
         </div>

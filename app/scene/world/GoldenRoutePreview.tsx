@@ -1,13 +1,20 @@
 import { useFrame } from "@react-three/fiber";
 import { useRef } from "react";
-import { CatmullRomCurve3, type Mesh, TubeGeometry, Vector3 } from "three";
+import {
+  AdditiveBlending,
+  CatmullRomCurve3,
+  DoubleSide,
+  type Mesh,
+  TubeGeometry,
+  Vector3,
+} from "three";
 import type { TrampolineSpec } from "@/core/types";
 import { getRouteProofTarget, useWorldStore } from "@/state";
 import { palette } from "@/styles/tokens";
 
 const MIN_POINTS = 2;
-const RADIUS = 0.09;
-const TORUS_NORMAL = new Vector3(0, 0, 1);
+const RADIUS = 0.045;
+const RING_NORMAL = new Vector3(0, 0, 1);
 
 function applyPadNormal(out: Vector3, pad: TrampolineSpec | undefined) {
   if (pad?.type !== "canted" || !pad.cant) {
@@ -47,7 +54,7 @@ export function GoldenRoutePreview() {
     const from = world.trampolines[target.pairIndex];
     const to = world.trampolines[target.pairIndex + 1];
     const proof = from?.goldenPath;
-    if (!from || !proof || proof.samples.length < MIN_POINTS) {
+    if (!from || !to || !proof || proof.samples.length < MIN_POINTS) {
       mesh.visible = false;
       impact.visible = false;
       activeKey.current = "";
@@ -58,7 +65,7 @@ export function GoldenRoutePreview() {
     if (key !== activeKey.current) {
       const points = proof.samples.map((p) => new Vector3(p[0], p[1], p[2]));
       const curve = new CatmullRomCurve3(points);
-      const next = new TubeGeometry(curve, Math.max(8, points.length * 3), RADIUS, 8, false);
+      const next = new TubeGeometry(curve, Math.max(16, points.length * 4), RADIUS, 14, false);
       const previous = mesh.geometry;
       mesh.geometry = next;
       previous.dispose();
@@ -67,7 +74,7 @@ export function GoldenRoutePreview() {
     mesh.visible = true;
     applyPadNormal(impactNormal.current, to);
     impact.position.set(proof.landing[0], proof.landing[1] + 0.08, proof.landing[2]);
-    impact.quaternion.setFromUnitVectors(TORUS_NORMAL, impactNormal.current);
+    impact.quaternion.setFromUnitVectors(RING_NORMAL, impactNormal.current);
     impact.visible = true;
   });
 
@@ -81,11 +88,19 @@ export function GoldenRoutePreview() {
         ref={impactRef}
         frustumCulled={false}
         renderOrder={51}
-        scale={[0.9, 0.9, 0.9]}
+        scale={[1.15, 1.15, 1.15]}
         visible={false}
       >
-        <torusGeometry args={[1, 0.05, 8, 48]} />
-        <meshBasicMaterial color={palette.danger} depthTest={false} depthWrite={false} />
+        <ringGeometry args={[0.72, 1.12, 72]} />
+        <meshBasicMaterial
+          color={palette.danger}
+          transparent
+          opacity={0.82}
+          depthTest={false}
+          depthWrite={false}
+          side={DoubleSide}
+          blending={AdditiveBlending}
+        />
       </mesh>
     </group>
   );

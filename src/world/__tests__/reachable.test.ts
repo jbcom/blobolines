@@ -146,7 +146,7 @@ describe("tower is climbable (golden-path proof)", () => {
     }
   });
 
-  it("the whole chain stores end-to-end visible parabolas", () => {
+  it("the whole chain stores end-to-end dev-proof parabolas", () => {
     const pads = fullTower("endtoend", 500);
     for (let i = 0; i < pads.length - 1; i++) {
       expectCertifiedPair(pads[i], pads[i + 1], `pad #${i}`);

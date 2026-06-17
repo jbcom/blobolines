@@ -11,7 +11,7 @@ export interface RouteStep {
 /**
  * Select the next intended trampoline from the player's progression floor, independent of
  * array ordering. When a source pad has the stored golden-path proof for that target, return
- * it too so render/UI feedback can point at the exact certified landing point.
+ * it too for post-landing scoring, diagnostics, and dev-harness route evidence.
  */
 export function nextRouteStep(
   groundY: number,
