@@ -16,6 +16,8 @@
   --tramp-gold: #f2c14e;
   --tramp-orange: #f08a3c;
   --tramp-green: #6cc04a;
+  --tramp-violet: #9d6cf0;
+  --tramp-ice: #7fe3ef;
 
   /* ---- Atmosphere: painterly sky/background ---- */
   --sky-top: #ffe3c4; /* warm peach high light */
@@ -74,7 +76,10 @@
   --radius-md: 0.875rem;
   --radius-lg: 1.25rem;
   --radius-xl: 1.75rem;
-  --radius-blob: 42% 58% 56% 44% / 48% 44% 56% 52%; /* organic blob shape */
+  --radius-blob: 42% 58% 56% 44% / 48% 44% 56% 52%; /* organic blob shape (decorative) */
+  /* Subtle gooey corners for chrome (CTAs, badges): asymmetric enough to read hand-made /
+     soft-bodied, gentle enough that text + layout stay clean. */
+  --radius-goo: 1.4rem 1rem 1.4rem 1rem / 1rem 1.4rem 1rem 1.4rem;
   --radius-full: 9999px;
 
   /* ---- Shadows: soft, gooey glow ---- */
@@ -92,6 +97,9 @@
   --dur-fast: 140ms;
   --dur-base: 240ms;
   --dur-slow: 420ms;
+
+  /* ---- Device-aware UI scale (set at runtime by applyDeviceScale; default 1) ---- */
+  --ui-scale: 1;
 
   /* ---- Z layers ---- */
   --z-canvas: 0;

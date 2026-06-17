@@ -6,14 +6,16 @@ describe("design tokens", () => {
     expect(Object.keys(blobSkinColor).sort()).toEqual(["blue", "ghost", "ink", "slime"]);
   });
 
-  it("exposes the trampoline gameplay types (incl. super + ice bonus pads)", () => {
+  it("exposes the trampoline gameplay types (incl. super/ice bonus + canted/wobbler nav pads)", () => {
     expect(Object.keys(trampColor).sort()).toEqual([
       "booster",
+      "canted",
       "fragile",
       "ice",
       "moving",
       "standard",
       "super",
+      "wobbler",
     ]);
   });
 

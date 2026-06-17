@@ -1,4 +1,10 @@
-import { setMasterVolume, setMusicEnabled, setSfxVolume } from "@/audio";
+import {
+  setAmbientVolume,
+  setMasterVolume,
+  setMusicEnabled,
+  setMusicVolume,
+  setSfxVolume,
+} from "@/audio";
 import type { GameSettings, PlayerProgress } from "@/core/types";
 import { loadJson, saveJson } from "@/platform";
 import { DEFAULT_PROGRESS, DEFAULT_SETTINGS, type GameState, useGameStore } from "./store";
@@ -26,6 +32,8 @@ export async function hydrateStore(): Promise<void> {
   // when the user next touches a control.
   setMasterVolume(mergedSettings.masterVolume);
   setSfxVolume(mergedSettings.sfxVolume);
+  setMusicVolume(mergedSettings.musicVolume);
+  setAmbientVolume(mergedSettings.ambientVolume);
   setMusicEnabled(mergedSettings.musicEnabled);
 }
 

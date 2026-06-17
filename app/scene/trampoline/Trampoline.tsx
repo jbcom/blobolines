@@ -3,11 +3,15 @@ import { CuboidCollider, type RapierRigidBody, RigidBody } from "@react-three/ra
 import { useEffect, useMemo, useRef } from "react";
 import { CanvasTexture, type Group, type Mesh, SRGBColorSpace } from "three";
 import { playBounce } from "@/audio";
-import { biomeSkyAt } from "@/config";
+import { biomeSkyAt, trampoline as trampCfg } from "@/config";
 import { clamp } from "@/core/math";
 import type { TrampType } from "@/core/types";
+import { getQuality } from "@/render/qualityBridge";
 import { createSplatCanvas } from "@/render/vfx";
+import { MAX_IMPACT_SPEED } from "@/sim/physics";
 import {
+  cantEuler,
+  cantNormal,
   createTrampState,
   impactTargets,
   REBOUND_SETTLE_SPEED,
@@ -18,6 +22,7 @@ import {
 } from "@/sim/trampoline";
 import { reportImpact, reportRebound, useGameStore } from "@/state";
 import { mixHex, palette, trampColor } from "@/styles/tokens";
+import { PadTypeDecor } from "./PadTypeDecor";
 
 /**
  * A single trampoline: a fixed Rapier body (the blob bounces off it) with a squishy
@@ -31,20 +36,32 @@ interface TrampolineProps {
   width: number;
   depth: number;
   type: TrampType;
+  /** Lateral cant direction for "canted" pads (unit [x,z]); the bounce launches along the
+   *  resulting tilted normal so the blob is thrown toward the next pad. */
+  cant?: readonly [number, number];
   /** Called when the blob lands, with impact speed + relative hit point. */
   onImpact?: (speed: number, relX: number, relZ: number) => void;
 }
 
 const THICKNESS = 1.2;
+const { movingAmplitude, movingSpeed } = trampCfg;
+const WOBBLER_MAX_TILT = trampCfg.wobblerMaxTiltRad;
 
-export function Trampoline({ position, width, depth, type, onImpact }: TrampolineProps) {
+export function Trampoline({ position, width, depth, type, cant, onImpact }: TrampolineProps) {
   const rbRef = useRef<RapierRigidBody>(null);
   const meshRef = useRef<Group>(null);
   const membraneRef = useRef<Mesh>(null);
   const spring = useRef<TrampState>(createTrampState());
   const color = trampColor[type];
+  // Canted pads lean toward `cant`: the static tilt that redirects the bounce. Normal =
+  // launch direction reported on rebound; euler = the visual lean of the frame.
+  const canted = type === "canted" && !!cant;
+  const cantN = useMemo(() => (canted ? cantNormal(cant) : null), [canted, cant]);
+  const cantRot = useMemo(() => (canted ? cantEuler(cant) : null), [canted, cant]);
   // Per-pad deterministic phase/dir for moving pads (seeded by world position).
   const movePhase = useRef((position[0] * 0.37 + position[2] * 0.91) % (Math.PI * 2));
+  // Live lateral slide speed of a moving pad — imparted into the bounce (timing skill).
+  const slideVx = useRef(0);
   // Fragile pads break shortly after the first impact.
   const breaking = useRef(false);
   const breakTimer = useRef(0);
@@ -55,7 +72,9 @@ export function Trampoline({ position, width, depth, type, onImpact }: Trampolin
   // Accumulating goo-splat decal painted onto the membrane top each landing. One Canvas2D
   // texture per pad; impacts smear a colored blob at the (relX,relZ) contact point.
   const splat = useMemo(() => {
-    const sc = createSplatCanvas(128);
+    // Tier-driven splat resolution: there's one CanvasTexture per live pad, so mid/low halve it
+    // to 64px to cut texture memory across the render window (high keeps 128px crispness).
+    const sc = createSplatCanvas(getQuality().splatResolution);
     const texture = new CanvasTexture(sc.canvas);
     // The canvas holds sRGB colors (palette hexes); without this the goo decal renders in
     // linear space — the blue gets crushed to dark muddy rings (worse under ACES tonemapping).
@@ -78,8 +97,10 @@ export function Trampoline({ position, width, depth, type, onImpact }: Trampolin
     const membrane = membraneRef.current;
     if (membrane) {
       membrane.position.y = THICKNESS / 2 + 0.02 + depress; // dip the sheet in
-      membrane.rotation.x = spring.current.tiltX.value;
-      membrane.rotation.z = spring.current.tiltZ.value;
+      // Static cant tilt (canted pads lean permanently toward `cant`) + the dynamic impact
+      // flex spring on top, so a canted pad both visibly leans and still flexes on hit.
+      membrane.rotation.x = (cantRot?.rotX ?? 0) + spring.current.tiltX.value;
+      membrane.rotation.z = (cantRot?.rotZ ?? 0) + spring.current.tiltZ.value;
       // Flatten + widen as it stretches down (a sheet under load), proportional to dip.
       const dip = Math.min(-depress / 5.4, 1); // 0..1
       membrane.scale.set(1 + dip * 0.06, 1 - dip * 0.5, 1 + dip * 0.06);
@@ -88,11 +109,14 @@ export function Trampoline({ position, width, depth, type, onImpact }: Trampolin
     target.current.tiltX *= 0.86;
     target.current.tiltZ *= 0.86;
 
-    // Moving pads glide side to side on a kinematic body (collider moves with them).
+    // Moving pads glide side to side on a kinematic body (collider moves with them) and
+    // track their slide velocity so a bounce imparts that lateral momentum (timing skill).
     if (type === "moving" && rbRef.current) {
-      movePhase.current += step * 1.2;
-      const x = position[0] + Math.sin(movePhase.current) * 5.5;
+      movePhase.current += step * movingSpeed;
+      const x = position[0] + Math.sin(movePhase.current) * movingAmplitude;
       rbRef.current.setNextKinematicTranslation({ x, y: position[1], z: position[2] });
+      // d/dt of x: cos(phase)·amp·speed → instantaneous lateral slide speed (m/s).
+      slideVx.current = Math.cos(movePhase.current) * movingAmplitude * movingSpeed;
     }
 
     // Fragile pads shrink + fade then vanish ~0.8s after impact.
@@ -168,8 +192,29 @@ export function Trampoline({ position, width, depth, type, onImpact }: Trampolin
               ? Math.max(speed * reboundMultiplier.super, SUPER_MIN_REBOUND)
               : speed * reboundMultiplier[type];
           if (reboundSpeed >= REBOUND_SETTLE_SPEED) {
-            reportRebound({ speed: reboundSpeed, type });
-            playBounce(type);
+            // Canted pads launch along their tilted normal; moving pads tilt the launch
+            // toward their slide direction (so timing the catch flings you sideways — the
+            // type's real skill); flat pads bounce straight up (normal omitted → up).
+            let normal = cantN ?? undefined;
+            if (type === "moving" && Math.abs(slideVx.current) > 0.5) {
+              // Lateral fraction from the pad's slide speed (capped), up-component fills rest.
+              const lx = Math.max(-0.5, Math.min(0.5, slideVx.current / 12));
+              normal = [lx, Math.sqrt(Math.max(0, 1 - lx * lx)), 0];
+            } else if (type === "wobbler") {
+              // Unstable: the pad TIPS toward where you landed, so an off-center hit deflects
+              // the bounce that way (risk/reward — hit center for a clean launch). Tilt by the
+              // hit offset, scaled to the configured max tilt. Explicitly normalize so the
+              // launch speed is never inflated at extreme corner hits / large tilt configs.
+              const s = Math.sin(WOBBLER_MAX_TILT);
+              const lx = relX * 2 * s;
+              const lz = relZ * 2 * s;
+              const up = Math.sqrt(Math.max(0.01, 1 - lx * lx - lz * lz));
+              const mag = Math.hypot(lx, up, lz) || 1;
+              normal = [lx / mag, up / mag, lz / mag];
+            }
+            reportRebound({ speed: reboundSpeed, type, normal });
+            // Impact strength [0,1] brightens the bounce voice — a hard landing sounds sharper.
+            playBounce(type, Math.min(1, speed / MAX_IMPACT_SPEED));
           }
           // Fragile pads start disintegrating after this bounce (gives one last launch).
           if (type === "fragile") breaking.current = true;
@@ -188,28 +233,47 @@ export function Trampoline({ position, width, depth, type, onImpact }: Trampolin
             metalness={0.1}
           />
         </mesh>
-        {/* glossy membrane (the bounce surface) — tinted toward the pad TYPE color (was
-            always cream, which made every pad read the same and the world colorless), with
-            a punchy emissive so each type glows its own hue. */}
+        {/* WET/JELLY membrane (the bounce surface) — tinted toward the pad TYPE color with a
+            punchy emissive so each type glows its own hue. Physical material with a clearcoat +
+            sheen gives it a wet, jelly-like fresnel sheen that matches the goo blob (was a
+            plainer standard material that read dry/plastic). */}
         <mesh ref={membraneRef} position={[0, THICKNESS / 2 + 0.02, 0]}>
           <boxGeometry args={[width * 0.92, 0.18, depth * 0.92]} />
-          <meshStandardMaterial
+          <meshPhysicalMaterial
             color={membraneColor}
             emissive={emissive}
             emissiveIntensity={0.5}
-            roughness={0.2}
-            metalness={0.15}
+            roughness={0.12}
+            metalness={0.1}
+            clearcoat={1}
+            clearcoatRoughness={0.08}
+            sheen={0.6}
+            sheenColor={emissive}
+            sheenRoughness={0.4}
           />
         </mesh>
+        {/* Per-type silhouette cue (super frame / booster chevrons / ice slab / fragile cracks
+            / wobbler ring / canted arrow) on top of the membrane so the pad KIND reads at a
+            glance, not just by color. */}
+        <group position={[0, THICKNESS / 2 + 0.02, 0]}>
+          <PadTypeDecor type={type} width={width} depth={depth} cant={cant} />
+        </group>
         {/* Accumulating goo-splat decal — a transparent plane skimming the membrane top,
-            painted by the Canvas2D splat texture on each landing. polygonOffset lifts it
-            above the membrane to avoid z-fighting. */}
+            painted by the Canvas2D splat texture on each landing. WET-shaded with a STANDARD
+            material (low roughness + a little metalness) so the goo smear catches the scene
+            light like the membrane it sits on, instead of reading flat/unlit. Deliberately NOT
+            MeshPhysical/clearcoat: the splat is ~coplanar with the clearcoated membrane, so a
+            second clearcoat lobe would stack into an over-bright patch AND add a costly extra
+            Physical shader per pad — Standard's spec is enough for the wet read. The splat
+            texture's alpha is the mask; polygonOffset lifts it to avoid z-fighting. */}
         <mesh position={[0, THICKNESS / 2 + 0.02 + 0.1, 0]} rotation={[-Math.PI / 2, 0, 0]}>
           <planeGeometry args={[width * 0.92, depth * 0.92]} />
-          <meshBasicMaterial
+          <meshStandardMaterial
             map={splat.texture}
             transparent
             depthWrite={false}
+            roughness={0.25}
+            metalness={0.1}
             polygonOffset
             polygonOffsetFactor={-1}
           />

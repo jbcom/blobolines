@@ -1,6 +1,6 @@
 import { useFrame } from "@react-three/fiber";
 import { useEffect, useMemo, useRef } from "react";
-import type { Color, Group, ShaderMaterial } from "three";
+import type { Color, Group, ShaderMaterial, Vector3 } from "three";
 import type { BlobSkin, EyeExpression } from "@/core/types";
 import { GooMaterial } from "@/render/materials";
 import { combineScale, impactSquash, speedStretch } from "@/sim/blob";
@@ -77,9 +77,28 @@ export function BlobActor({
     g.scale.z += (s.z - g.scale.z) * k;
 
     // Surface-tension wobble: a fresh impact pumps the envelope up (toward the impact
-    // amount), then it decays so the goo skin ripples and settles like a water balloon.
+    // amount), then it decays so the goo skin ripples and settles like a water balloon. A small
+    // constant floor keeps the hero subtly alive (never a perfectly still surface) at rest.
     wobble.current = Math.max(wobble.current * Math.exp(-dt / 0.5), imp);
-    material.uniforms.uWobble.value = wobble.current;
+    material.uniforms.uWobble.value = Math.max(0.1, wobble.current);
+
+    // Idle gooeyness so the hero blob is never a CLEAN sphere even at rest (the "less ball"
+    // feedback) — but SUBTLE: the eyes are separate meshes that don't follow vertex-level
+    // displacement, so a strong sag/lobe detaches them from the body. Keep it just enough to
+    // read as a living goo droplet (a soft uneven wobble + faint hang) without the eyes
+    // drifting off the deformed mass. ONLY in the posed (non-live) hero/fixture path —
+    // in-game the GooCsg blob owns these uniforms off the physics settle, so we never clobber
+    // them here (this BlobActor instance is the menu hero; guarding keeps the contract clean).
+    if (!live) {
+      const t = state.clock.elapsedTime;
+      material.uniforms.uSag.value = 0.16;
+      material.uniforms.uLobe.value = 0.14 + 0.05 * Math.sin(t * 0.7);
+      (material.uniforms.uLobeDir.value as Vector3).set(
+        Math.cos(t * 0.5),
+        Math.sin(t * 0.31) * 0.4,
+        Math.sin(t * 0.5),
+      );
+    }
   });
 
   return (

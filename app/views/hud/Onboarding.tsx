@@ -1,4 +1,4 @@
-import { AnimatePresence, motion } from "motion/react";
+import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { useEffect, useState } from "react";
 import { getAim, getBlobDiagnostics, useGameStore } from "@/state";
 
@@ -12,6 +12,7 @@ export function Onboarding() {
   const tutorialSeen = useGameStore((s) => s.progress.tutorialSeen);
   const markTutorialSeen = useGameStore((s) => s.markTutorialSeen);
   const [dismissed, setDismissed] = useState(false);
+  const reduced = useReducedMotion();
 
   const show = phase === "playing" && !tutorialSeen && !dismissed;
 
@@ -46,13 +47,24 @@ export function Onboarding() {
           className="pointer-events-none absolute inset-x-0 bottom-[26%] flex flex-col items-center gap-3"
           role="status"
         >
-          {/* Drag-ghost: a dot that pulls down-and-back on a loop, miming the slingshot. */}
-          <motion.div
-            aria-hidden
-            className="size-6 rounded-full border-2 border-cream/80 bg-cream/30"
-            animate={{ y: [0, 34, 0], scale: [1, 0.9, 1] }}
-            transition={{ duration: 1.4, repeat: Number.POSITIVE_INFINITY, ease: "easeInOut" }}
-          />
+          {/* Drag-ghost: a dot that pulls down-and-back on a loop, miming the slingshot.
+              Reduced-motion → a STATIC cue: park the ghost at the pulled-back position with a
+              down-arrow so the "drag back" intent still reads without the loop. */}
+          {reduced ? (
+            <div
+              aria-hidden
+              className="flex size-6 translate-y-[34px] items-center justify-center rounded-full border-2 border-cream/80 bg-cream/30 text-cream"
+            >
+              ↓
+            </div>
+          ) : (
+            <motion.div
+              aria-hidden
+              className="size-6 rounded-full border-2 border-cream/80 bg-cream/30"
+              animate={{ y: [0, 34, 0], scale: [1, 0.9, 1] }}
+              transition={{ duration: 1.4, repeat: Number.POSITIVE_INFINITY, ease: "easeInOut" }}
+            />
+          )}
           <span className="rounded-full bg-bg/70 px-4 py-1.5 font-display text-sm font-bold text-cream backdrop-blur-md">
             Drag back &amp; release to fling
           </span>

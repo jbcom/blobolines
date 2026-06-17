@@ -1,6 +1,13 @@
-import { Dialog, Slider, Switch } from "@app/components/ui";
+import { Button, Dialog, Slider, Switch } from "@app/components/ui";
 import { useEffect, useState } from "react";
-import { setMasterVolume, setMusicEnabled, setSfxVolume } from "@/audio";
+import {
+  setAmbientVolume,
+  setMasterVolume,
+  setMusicEnabled,
+  setMusicVolume,
+  setSfxVolume,
+} from "@/audio";
+import type { GameSettings } from "@/core/types";
 import { ImpactStyle, impact } from "@/platform";
 import { useGameStore } from "@/state";
 
@@ -9,6 +16,14 @@ import { useGameStore } from "@/state";
 const TOUCH_CAPABLE =
   typeof window !== "undefined" &&
   ("ontouchstart" in window || (navigator.maxTouchPoints ?? 0) > 0);
+
+/** Graphics-quality segmented options. Auto = device + FPS heuristic; the rest pin a tier. */
+const QUALITY_OPTIONS: { value: GameSettings["qualityPref"]; label: string }[] = [
+  { value: "auto", label: "Auto" },
+  { value: "low", label: "Low" },
+  { value: "medium", label: "Med" },
+  { value: "high", label: "High" },
+];
 
 /**
  * Settings — volumes, music/haptics/reduce-motion toggles, slingshot sensitivity, and a
@@ -66,6 +81,34 @@ export function SettingsModal({
           />
         </Row>
 
+        <Row label="Music volume" value={`${Math.round(settings.musicVolume * 100)}%`}>
+          <Slider
+            aria-label="Music volume"
+            min={0}
+            max={1}
+            step={0.05}
+            value={[settings.musicVolume]}
+            onValueChange={([v]) => {
+              update({ musicVolume: v });
+              setMusicVolume(v);
+            }}
+          />
+        </Row>
+
+        <Row label="Ambience volume" value={`${Math.round(settings.ambientVolume * 100)}%`}>
+          <Slider
+            aria-label="Ambience volume"
+            min={0}
+            max={1}
+            step={0.05}
+            value={[settings.ambientVolume]}
+            onValueChange={([v]) => {
+              update({ ambientVolume: v });
+              setAmbientVolume(v);
+            }}
+          />
+        </Row>
+
         <Toggle
           label="Music"
           checked={settings.musicEnabled}
@@ -117,6 +160,37 @@ export function SettingsModal({
           onChange={(on) => update({ reducedMotion: on })}
         />
 
+        {/* Graphics quality: Auto lets the device + frame-rate pick the tier; the explicit tiers
+            pin it (Low to save battery, High to force the heavy effects on a capable device).
+            Each segment is an aria-pressed toggle labelled by its text + the visible "Graphics"
+            heading, so no extra group role is needed. */}
+        <div className="flex items-center justify-between gap-3">
+          <span id="graphics-quality-label" className="font-semibold">
+            Graphics
+          </span>
+          <div className="flex gap-1">
+            {QUALITY_OPTIONS.map((opt) => {
+              const active = settings.qualityPref === opt.value;
+              return (
+                <button
+                  key={opt.value}
+                  type="button"
+                  aria-pressed={active}
+                  aria-label={`Graphics quality: ${opt.label}`}
+                  onClick={() => update({ qualityPref: opt.value })}
+                  className={`rounded-lg border px-2.5 py-1 font-ui text-[11px] font-bold ${
+                    active
+                      ? "border-accent bg-accent/15 text-cream"
+                      : "border-border text-fg-subtle hover:text-cream"
+                  }`}
+                >
+                  {opt.label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
         {/* Reset progress — destructive, so a two-step confirm: first tap arms ("Tap again
             to confirm"), second tap wipes best height / crystals / unlocks / skin. */}
         <div className="flex items-center justify-between gap-3 border-border/40 border-t pt-4">
@@ -140,16 +214,17 @@ export function SettingsModal({
         </div>
       </div>
 
-      <button
-        type="button"
+      <Button
+        cta
+        size="lg"
         onClick={() => {
           setConfirmReset(false);
           onOpenChange(false);
         }}
-        className="mt-6 w-full rounded-xl bg-accent py-2.5 font-display font-bold uppercase tracking-wider text-bg"
+        className="mt-6 w-full"
       >
         Done
-      </button>
+      </Button>
     </Dialog>
   );
 }
@@ -211,7 +286,6 @@ function SensitivityPreview({ sensitivity }: { sensitivity: number }) {
   };
 
   return (
-    // biome-ignore lint/a11y/noStaticElementInteractions: a non-essential drag-feel preview; the slider above is the accessible control
     <div
       ref={setEl}
       className="relative mt-1 h-8 select-none rounded-lg border border-border bg-bg/50 touch-none"

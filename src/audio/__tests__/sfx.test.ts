@@ -1,14 +1,28 @@
+import { Howler } from "howler";
 import { describe, expect, it } from "vitest";
 import {
+  duckMusic,
   isAudioInitialized,
   playBounce,
   playChime,
+  playComboBlip,
+  playComboFanfare,
+  playDeath,
   playLaunch,
+  playMilestone,
+  playPowerdown,
   playPowerup,
+  playRecord,
   playSplat,
+  playThump,
+  playUi,
+  preloadSfx,
+  setAmbientVolume,
   setMusicAltitude,
   setMusicEnabled,
+  setMusicVolume,
   setSfxVolume,
+  startMenuMusic,
   startMusic,
   stopMusic,
 } from "../index";
@@ -22,15 +36,41 @@ describe("audio before init", () => {
   });
 
   it("every SFX cue is a safe no-op (no throw) before init", () => {
-    expect(() => playBounce("standard")).not.toThrow();
-    expect(() => playBounce("booster")).not.toThrow();
-    // Bonus pads map to distinct samples (ice → bright click, fragile → soft).
-    expect(() => playBounce("super")).not.toThrow();
-    expect(() => playBounce("ice")).not.toThrow();
-    expect(() => playLaunch(1)).not.toThrow();
+    // Every pad type now has a distinct bounce voice (padVoice) — all must be safe no-ops,
+    // at any impact strength.
+    for (const t of [
+      "standard",
+      "booster",
+      "super",
+      "moving",
+      "canted",
+      "wobbler",
+      "fragile",
+      "ice",
+    ] as const) {
+      expect(() => playBounce(t)).not.toThrow();
+      expect(() => playBounce(t, 0)).not.toThrow();
+      expect(() => playBounce(t, 1)).not.toThrow();
+    }
+    // Launch whoosh at every charge level (0 = soft, 1 = max) is a safe no-op pre-init.
+    for (const c of [0, 0.5, 1]) expect(() => playLaunch(c)).not.toThrow();
+    // Rising-pitch combo blip across the streak range, incl. 0 (silent) + over-cap.
+    for (const n of [0, 1, 5, 8, 50]) expect(() => playComboBlip(n)).not.toThrow();
+    expect(() => playComboFanfare()).not.toThrow();
     expect(() => playChime()).not.toThrow();
     expect(() => playPowerup()).not.toThrow();
+    expect(() => playPowerdown()).not.toThrow();
     expect(() => playSplat()).not.toThrow();
+    // Low-end thump layer across the strength range (incl. below the silent threshold).
+    for (const s of [0, 0.2, 0.5, 1]) expect(() => playThump(s)).not.toThrow();
+    // Arcade-identity celebration stingers.
+    expect(() => playMilestone()).not.toThrow();
+    expect(() => playRecord()).not.toThrow();
+    // Death sting + UI interface cues are safe no-ops pre-init too.
+    expect(() => playDeath()).not.toThrow();
+    for (const id of ["hover", "click", "confirm", "cancel", "popup", "coin"] as const) {
+      expect(() => playUi(id)).not.toThrow();
+    }
   });
 
   it("rate-limits / repeats without error", () => {
@@ -40,6 +80,21 @@ describe("audio before init", () => {
   it("setMusicAltitude is a safe no-op before music starts", () => {
     expect(() => setMusicAltitude(0)).not.toThrow();
     expect(() => setMusicAltitude(900)).not.toThrow();
+  });
+
+  it("preloadSfx constructs every SFX Howl (no-throw, idempotent, none playing)", () => {
+    expect(() => preloadSfx()).not.toThrow();
+    const after = (Howler as unknown as { _howls: Array<{ _loop: boolean; playing(): boolean }> })
+      ._howls;
+    const sfx = after.filter((h) => !h._loop);
+    // All the one-shot SFX are now constructed (cached) — preload built the full set.
+    expect(sfx.length).toBeGreaterThanOrEqual(8);
+    // Preloading must not start playback (it only loads/decodes).
+    expect(sfx.every((h) => !h.playing())).toBe(true);
+    // Idempotent — a second call doesn't throw or duplicate beyond the cache.
+    const count = after.length;
+    preloadSfx();
+    expect(after.length).toBe(count);
   });
 
   it("setSfxVolume clamps + never throws, and SFX still play at any level", () => {
@@ -66,6 +121,29 @@ describe("music + ambient lifecycle", () => {
     stopMusic();
   });
 
+  it("the three mix buses (music/ambient/sfx) clamp + re-level live beds without throwing", () => {
+    startMusic();
+    for (const set of [setMusicVolume, setAmbientVolume, setSfxVolume]) {
+      expect(() => set(0)).not.toThrow();
+      expect(() => set(0.5)).not.toThrow();
+      expect(() => set(5)).not.toThrow(); // clamped
+      expect(() => set(-1)).not.toThrow(); // clamped
+    }
+    stopMusic();
+    // Setting bus levels with no live bed is still safe.
+    expect(() => setMusicVolume(0.7)).not.toThrow();
+    expect(() => setAmbientVolume(0.3)).not.toThrow();
+  });
+
+  it("duckMusic is a safe no-op when music isn't playing, and survives while it is", () => {
+    expect(() => duckMusic()).not.toThrow(); // not started yet
+    startMusic();
+    expect(() => duckMusic(600)).not.toThrow();
+    expect(() => duckMusic(600)).not.toThrow(); // overlapping duck resets the hold
+    stopMusic();
+    expect(() => duckMusic()).not.toThrow(); // after stop, no live bed
+  });
+
   it("survives rapid altitude band crossings without throwing", () => {
     startMusic();
     expect(() => {
@@ -80,6 +158,52 @@ describe("music + ambient lifecycle", () => {
     setMusicEnabled(false);
     expect(() => startMusic()).not.toThrow();
     setMusicEnabled(true);
+    stopMusic();
+  });
+
+  it("phase music: menu → in-game → high/space crossfades via the right track loops", () => {
+    const loopPaths = () => {
+      const hs = (Howler as unknown as { _howls: Array<{ _loop: boolean; _src: string[] }> })
+        ._howls;
+      return hs
+        .filter((h) => h._loop)
+        .flatMap((h) => h._src)
+        .join(" ");
+    };
+    startMenuMusic();
+    expect(loopPaths()).toContain("menu.mp3"); // menu loop is live
+    startMusic(); // PLAY → in-game track + ground ambient
+    setMusicAltitude(50);
+    expect(loopPaths()).toContain("ingame.mp3");
+    setMusicAltitude(1000); // past the high-start → tense track + space bed
+    const high = loopPaths();
+    expect(high).toContain("highspace.mp3");
+    expect(high).toContain("space.mp3"); // biome bed followed altitude
+    stopMusic();
+  });
+
+  it("ambient bed follows the biome bands (ground → space) without throwing", () => {
+    startMusic();
+    expect(() => {
+      for (const y of [0, 250, 700, 1200, 100]) setMusicAltitude(y);
+    }).not.toThrow();
+    stopMusic();
+  });
+
+  // Beds STREAM (html5:true) — long loops shouldn't fully decode into memory on mobile; short
+  // SFX use Web Audio (html5:false) for low-latency overlap. Inspect Howler's global registry
+  // to confirm the looping beds vs the one-shot SFX got the right backend.
+  it("music/ambient beds use html5 streaming; SFX use Web Audio", () => {
+    startMusic(); // creates the looping music + ambient beds
+    playBounce("standard"); // creates a one-shot SFX Howl
+    const howls = (Howler as unknown as { _howls: Array<{ _loop: boolean; _html5: boolean }> })
+      ._howls;
+    const beds = howls.filter((h) => h._loop);
+    const sfx = howls.filter((h) => !h._loop);
+    expect(beds.length).toBeGreaterThan(0);
+    expect(sfx.length).toBeGreaterThan(0);
+    expect(beds.every((h) => h._html5 === true)).toBe(true); // beds stream
+    expect(sfx.every((h) => h._html5 === false)).toBe(true); // SFX low-latency
     stopMusic();
   });
 });

@@ -56,6 +56,7 @@ export function TrampolineField({ onImpact }: TrampolineFieldProps) {
           width={t.width}
           depth={t.depth}
           type={t.type}
+          cant={t.cant}
           onImpact={(speed) => onImpact?.(t.id, speed)}
         />
       ))}

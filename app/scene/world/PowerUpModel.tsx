@@ -3,6 +3,7 @@ import { useMemo } from "react";
 import type { Material, Mesh, MeshStandardMaterial } from "three";
 import type { PowerUpType } from "@/core/types";
 import { palette } from "@/styles/tokens";
+import { PrimitivePowerup } from "./PrimitivePowerup";
 
 /**
  * GLB powerup models (3DLowPoly): a Space-Kit rocket for the hyper-thrust and a
@@ -23,14 +24,28 @@ const MODEL = {
     color: palette.tramp.orange,
     rotation: [0, 0, 0] as const,
   },
-} satisfies Record<
-  PowerUpType,
-  { url: string; scale: number; color: string; rotation: readonly [number, number, number] }
+} satisfies Partial<
+  Record<
+    PowerUpType,
+    { url: string; scale: number; color: string; rotation: readonly [number, number, number] }
+  >
 >;
+
+/** Power-up types that have a GLB model (others render their primitive — e.g. shield). */
+type ModelledType = keyof typeof MODEL;
+const hasModel = (t: PowerUpType): t is ModelledType => t in MODEL;
 
 const url = (file: string) => `${import.meta.env.BASE_URL}assets/models/${file}`;
 
 export function PowerUpModel({ type }: { type: PowerUpType }) {
+  // Dispatch (no hook above this) so the GLB component's useGLTF is never called conditionally.
+  // Model-less types (shield, slow-mo) render their shared primitive — same look as the
+  // Suspense fallback, so there's no orb/gem duplication to drift.
+  return hasModel(type) ? <GlbModel type={type} /> : <PrimitivePowerup type={type} />;
+}
+
+/** A GLB-backed power-up (magnet/thruster) — useGLTF is called unconditionally here. */
+function GlbModel({ type }: { type: ModelledType }) {
   const spec = MODEL[type];
   const { scene } = useGLTF(url(spec.url));
   // Clone so multiple instances + tint don't share/mutate the cached scene.

@@ -20,8 +20,29 @@ export function comboMultiplier(combo: number): number {
   return combo >= comboStart ? 1 + (combo - comboStart + 1) * comboStep : 1;
 }
 
+/** Perfect-release sweet spot: charging into this band (just shy of full) and releasing earns a
+ *  power bonus — a timing skill on top of "drag farther = stronger", rewarding a committed-but-
+ *  controlled pull without punishing anyone (below the band is just normal power). */
+export const PERFECT_RELEASE = launchCfg.perfectRelease as {
+  min: number;
+  max: number;
+  bonus: number;
+};
+
+/** True if a release at `charge` lands in the perfect window. */
+export function isPerfectRelease(charge: number): boolean {
+  return charge >= PERFECT_RELEASE.min && charge <= PERFECT_RELEASE.max;
+}
+
+/** Power multiplier from the release timing: PERFECT_RELEASE.bonus inside the window, else 1. */
+export function perfectReleaseMultiplier(charge: number): number {
+  return isPerfectRelease(charge) ? PERFECT_RELEASE.bonus : 1;
+}
+
 /**
- * Launch velocity = dir × (base + charge·perCharge) × rebound(type) × combo(streak).
+ * Launch velocity = dir × (base + charge·perCharge) × rebound(type) × combo(streak) ×
+ * perfect-release(charge). The perfect-release window is a timing-skill bonus on top of the
+ * pure charge ramp.
  */
 export function launchVelocity(
   dir: readonly [number, number, number],
@@ -32,7 +53,8 @@ export function launchVelocity(
   const power =
     (BASE_POWER + charge * POWER_PER_CHARGE) *
     reboundMultiplier[trampType] *
-    comboMultiplier(combo);
+    comboMultiplier(combo) *
+    perfectReleaseMultiplier(charge);
   return [dir[0] * power, dir[1] * power, dir[2] * power];
 }
 

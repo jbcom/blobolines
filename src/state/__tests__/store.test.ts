@@ -12,7 +12,15 @@ beforeEach(() => {
     phase: "menu",
     settings: { ...DEFAULT_SETTINGS },
     progress: { ...DEFAULT_PROGRESS },
-    run: { height: 0, crystals: 0, combo: 0, maxCombo: 0, recordDelta: 0 },
+    run: {
+      height: 0,
+      crystals: 0,
+      combo: 0,
+      maxCombo: 0,
+      recordDelta: 0,
+      score: 0,
+      scoreDelta: 0,
+    },
   });
 });
 
@@ -48,6 +56,40 @@ describe("useGameStore", () => {
     expect(s.progress.crystals).toBe(5);
   });
 
+  it("dailyRun flag toggles (default false) for the daily-challenge framing", () => {
+    expect(useGameStore.getState().dailyRun).toBe(false);
+    useGameStore.getState().setDailyRun(true);
+    expect(useGameStore.getState().dailyRun).toBe(true);
+    useGameStore.getState().setDailyRun(false);
+    expect(useGameStore.getState().dailyRun).toBe(false);
+  });
+
+  it("unlockAchievements persists newly-met ids once and returns only the fresh ones", () => {
+    // A 100m best unlocks "height-100"; the action returns it and stores it.
+    const fresh = useGameStore.getState().unlockAchievements({
+      bestHeight: 100,
+      bestScore: 0,
+      lifetimeCrystals: 0,
+      runHeight: 100,
+      runMaxCombo: 0,
+      runCrystals: 0,
+    });
+    expect(fresh).toContain("height-100");
+    expect(useGameStore.getState().progress.unlockedAchievements).toContain("height-100");
+    // Re-evaluating the same stats reports NOTHING new (already unlocked) + no duplicate stored.
+    const again = useGameStore.getState().unlockAchievements({
+      bestHeight: 100,
+      bestScore: 0,
+      lifetimeCrystals: 0,
+      runHeight: 100,
+      runMaxCombo: 0,
+      runCrystals: 0,
+    });
+    expect(again).toEqual([]);
+    const ids = useGameStore.getState().progress.unlockedAchievements;
+    expect(ids.filter((id) => id === "height-100")).toHaveLength(1);
+  });
+
   it("commitBestHeight only updates when new height is higher", () => {
     useGameStore.getState().commitBestHeight(100);
     expect(useGameStore.getState().progress.bestHeight).toBe(100);
@@ -58,6 +100,35 @@ describe("useGameStore", () => {
   it("commitBestHeight floors to int", () => {
     useGameStore.getState().commitBestHeight(123.9);
     expect(useGameStore.getState().progress.bestHeight).toBe(123);
+  });
+
+  it("commitBestHeight computes + records a composite score (height + crystals + combo)", () => {
+    const s = useGameStore.getState();
+    s.addCrystals(4);
+    s.setRun({ maxCombo: 5 });
+    s.commitBestHeight(120);
+    const after = useGameStore.getState();
+    expect(after.run.score).toBeGreaterThan(120); // more than height alone (crystals + combo)
+    expect(after.progress.bestScore).toBe(after.run.score);
+    expect(after.run.scoreDelta).toBe(after.run.score); // first run: whole score is the delta
+  });
+
+  it("a higher SCORE sets a record even when height is LOWER (separate records)", () => {
+    const s = useGameStore.getState();
+    // First run: tall, no crystals/combo.
+    s.commitBestHeight(200);
+    const firstScore = useGameStore.getState().progress.bestScore;
+    // Second run: shorter height but loaded with crystals → can beat the score.
+    s.resetRun();
+    s.addCrystals(20);
+    s.setRun({ maxCombo: 8 });
+    s.commitBestHeight(150);
+    const after = useGameStore.getState();
+    expect(after.progress.bestHeight).toBe(200); // height best unchanged (150 < 200)
+    expect(after.run.recordDelta).toBe(0); // not a height record
+    expect(after.run.score).toBeGreaterThan(firstScore); // but a score record
+    expect(after.run.scoreDelta).toBeGreaterThan(0);
+    expect(after.progress.bestScore).toBe(after.run.score);
   });
 
   it("resetProgress wipes best height, crystals, unlocks and skin to defaults", () => {

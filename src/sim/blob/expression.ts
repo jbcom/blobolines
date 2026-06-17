@@ -80,3 +80,28 @@ export function eyeShape(expression: EyeExpression, blink = 0): EyeShape {
   base.openY *= 1 - Math.min(Math.max(blink, 0), 1);
   return base;
 }
+
+export interface MouthShape {
+  /** Vertical openness (0 = flat line, 1 = wide open). */
+  open: number;
+  /** Width scale of the mouth. */
+  width: number;
+  /** Corner curve: +1 smile, 0 neutral, -1 frown. */
+  curve: number;
+}
+
+/** Resolve an expression to a procedural mouth — Blobby's expressiveness beyond the eyes.
+ *  idle = soft smile, wide (rocketing up) = open "wheee", squint (hard impact) = grimace,
+ *  tear (falling to death) = open "o" of dread, blink uses the idle mouth. */
+export function mouthShape(expression: EyeExpression): MouthShape {
+  switch (expression) {
+    case "wide":
+      return { open: 0.85, width: 1.05, curve: 0.6 };
+    case "squint":
+      return { open: 0.15, width: 1.1, curve: -0.7 };
+    case "tear":
+      return { open: 0.7, width: 0.8, curve: -0.3 };
+    default:
+      return { open: 0.18, width: 1, curve: 0.7 }; // idle: gentle happy smile
+  }
+}

@@ -1,11 +1,18 @@
+import { useKeyboardSteer } from "@app/hooks";
 import { useDrag } from "@use-gesture/react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { useState } from "react";
 import { computeAim, computeAirSteer } from "@/input";
-import { getBlobDiagnostics, requestLaunch, setAim, setAirSteer, useGameStore } from "@/state";
-
-/** Charge fraction at/above which the slingshot reads as "maxed" (full-power flourish). */
-const MAX_CHARGE = 0.85;
+import { isPerfectRelease } from "@/sim/launch";
+import {
+  bounceChargesLeft,
+  getBlobDiagnostics,
+  requestLaunch,
+  requestMidAirBounce,
+  setAim,
+  setAirSteer,
+  useGameStore,
+} from "@/state";
 
 /**
  * Full-screen input surface (PLAYING only). Dual-mode, matching the PoC:
@@ -15,15 +22,28 @@ const MAX_CHARGE = 0.85;
  */
 export function LaunchInput() {
   const sensitivity = useGameStore((s) => s.settings.slingshotSensitivity);
+  // Desktop keyboard air-steering (WASD/arrows) — the secondary control alongside the primary
+  // touch/mouse drag below. Mounted here so all input lives in one PLAYING-scoped place.
+  useKeyboardSteer();
   const [charge, setCharge] = useState(0);
   // Honor prefers-reduced-motion: drop the infinite pulse loops to a single static cue.
   const reduced = useReducedMotion();
   const repeat = reduced ? 0 : Number.POSITIVE_INFINITY;
 
-  const bind = useDrag(({ movement: [mx, my], down, last }) => {
+  const bind = useDrag(({ movement: [mx, my], down, last, tap }) => {
     const airborne = getBlobDiagnostics().airborne;
 
     if (airborne) {
+      // A TAP while airborne (quick press, no drag) spends a multi-bounce charge for a free
+      // mid-air bounce — a recovery "double-jump". Only fires when a charge is held; otherwise
+      // the tap is inert (no accidental no-op steering jolt). Guarded so a real drag (steering)
+      // is never misread as a bounce.
+      if (tap && last && bounceChargesLeft() > 0) {
+        requestMidAirBounce();
+        setAirSteer(0, 0);
+        setCharge(0);
+        return;
+      }
       // Mid-air 3D steering: drag → continuous lateral force; release → stop.
       if (down) {
         const [sx, sz] = computeAirSteer(mx, my);
@@ -45,7 +65,9 @@ export function LaunchInput() {
     }
   });
 
-  const maxed = charge >= MAX_CHARGE;
+  // "Perfect" = the live charge sits in the perfect-release sweet spot — releasing here earns
+  // the power bonus, so the bar + flourish flip to a gold "PERFECT!" cue to invite the timing.
+  const perfect = isPerfectRelease(charge);
 
   return (
     <div
@@ -56,7 +78,7 @@ export function LaunchInput() {
     >
       {/* Edge glow that ignites as the charge nears max — the screen itself tenses up. */}
       <AnimatePresence>
-        {maxed && (
+        {perfect && (
           <motion.div
             aria-hidden
             initial={{ opacity: 0 }}
@@ -80,7 +102,7 @@ export function LaunchInput() {
           aria-valuenow={Math.round(charge * 100)}
         >
           <AnimatePresence>
-            {maxed && (
+            {perfect && (
               <motion.span
                 aria-hidden
                 initial={{ scale: 0.4, opacity: 0 }}
@@ -89,21 +111,21 @@ export function LaunchInput() {
                 transition={{ duration: 0.4, repeat }}
                 className="font-display text-sm font-bold uppercase tracking-[0.2em] text-tramp-gold"
               >
-                Max!
+                PERFECT!
               </motion.span>
             )}
           </AnimatePresence>
           <motion.div
             className="h-2 w-44 overflow-hidden rounded-full border border-border bg-bg/70"
-            // Pulse the bar's scale when maxed so it visibly strains at full power.
-            animate={maxed && !reduced ? { scaleY: [1, 1.5, 1] } : { scaleY: 1 }}
-            transition={{ duration: 0.4, repeat: maxed ? repeat : 0 }}
+            // Pulse the bar's scale in the perfect window so it visibly snaps to the sweet spot.
+            animate={perfect && !reduced ? { scaleY: [1, 1.5, 1] } : { scaleY: 1 }}
+            transition={{ duration: 0.4, repeat: perfect ? repeat : 0 }}
           >
             <div
               className="h-full rounded-full"
               style={{
                 width: `${charge * 100}%`,
-                background: maxed
+                background: perfect
                   ? "var(--color-tramp-gold)"
                   : "linear-gradient(to right, var(--color-accent), var(--color-accent-warm))",
               }}

@@ -1,6 +1,7 @@
 import type { RootState } from "@react-three/fiber";
 import { Canvas } from "@react-three/fiber";
 import { ACESFilmicToneMapping } from "three";
+import { getQuality } from "@/render/qualityBridge";
 import { GameScene } from "./scene/GameScene";
 import { HudOverlay } from "./views/HudOverlay";
 
@@ -32,13 +33,17 @@ function handleCanvasCreated(state: RootState) {
  * touches three objects directly — it talks to the game through the store/bridge.
  */
 export function Game() {
+  // Quality tier (device-resolved at module load) drives the Canvas DPR cap + MSAA: high-DPI
+  // phones pay quadratic fill cost, so mid/low clamp DPR lower and drop antialias. Read at mount
+  // (these are set-once Canvas props; a later manual override applies on the next remount).
+  const quality = getQuality();
   return (
     <div className="relative h-full w-full overflow-hidden">
       <Canvas
         className="absolute inset-0"
-        dpr={[1, 2]}
+        dpr={[1, quality.maxDpr]}
         gl={{
-          antialias: true,
+          antialias: quality.antialias,
           powerPreference: "high-performance",
           // ACES filmic tonemapping rolls the wet-goo highlights + neon-soft pads off
           // gracefully instead of clipping to flat white (the old matte look was partly

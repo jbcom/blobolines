@@ -1,7 +1,21 @@
 import { FixtureStage } from "@app/fixtures";
-import { expect, test, vi } from "vitest";
+import { afterEach, expect, test, vi } from "vitest";
 import { render } from "vitest-browser-react";
+import { setBlobDiagnostics } from "@/state";
 import { BlobActor } from "../BlobActor";
+
+afterEach(() => {
+  setBlobDiagnostics({
+    position: [0, 0, 0],
+    velocity: [0, 0, 0],
+    speed: 0,
+    airborne: false,
+    expression: "idle",
+    squash: 1,
+    maxHeight: 0,
+    groundY: 0,
+  });
+});
 
 // Visual fixture: the gooey blob (goo shader + procedural eyes) renders painted pixels
 // in a real WebGL context — regression guard for the material + eye geometry.
@@ -45,6 +59,45 @@ test("BlobActor renders with impact wobble", async () => {
     () => {
       const canvas = document
         .querySelector('[data-testid="blob-wobble-fixture"]')
+        ?.querySelector("canvas");
+      if (!canvas) throw new Error("canvas not mounted");
+      expect(canvas.toDataURL("image/png").length).toBeGreaterThan(4000);
+    },
+    { timeout: 5000, interval: 50 },
+  );
+});
+
+// Visual fixture: the LIVE eyes (reading the diagnostics bridge) animate over several frames —
+// blink/pupil-dart/tear all driven off the once-bucketed lid/pupil/tear node arrays (the perf
+// ref-cache replacing the per-frame traverse). Guards that the cached-node animation loop still
+// paints a live, tearing blob face without erroring.
+test("BlobActor renders live animating eyes (ref-cached, tearing)", async () => {
+  // A fast downward fall → the eye model tears; live velocity drives the pupil dart.
+  setBlobDiagnostics({
+    position: [0, 0, 0],
+    velocity: [3, -14, 0],
+    speed: 14,
+    airborne: true,
+    expression: "tear",
+    squash: 1,
+    maxHeight: 50,
+    groundY: 50,
+  });
+
+  const screen = await render(
+    <FixtureStage testId="blob-eyes-fixture" cameraDistance={3}>
+      <BlobActor skin="blue" expression="tear" live velocity={[3, -14, 0]} />
+    </FixtureStage>,
+  );
+
+  await expect.element(screen.getByTestId("blob-eyes-fixture")).toBeInTheDocument();
+  // Several frames so the once-mount bucketing runs and the loop animates the cached nodes.
+  await new Promise((r) => setTimeout(r, 200));
+
+  await vi.waitFor(
+    () => {
+      const canvas = document
+        .querySelector('[data-testid="blob-eyes-fixture"]')
         ?.querySelector("canvas");
       if (!canvas) throw new Error("canvas not mounted");
       expect(canvas.toDataURL("image/png").length).toBeGreaterThan(4000);

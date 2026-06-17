@@ -20,3 +20,21 @@ test("mounts the magnet badge with its countdown bar when active", async () => {
   const screen = await render(<PowerUpBadges />);
   await expect.element(screen.getByText("Magnet")).toBeInTheDocument();
 });
+
+test("mounts the slow-mo badge when the bullet-time buff is active", async () => {
+  activatePowerup("slowmo");
+  const screen = await render(<PowerUpBadges />);
+  await expect.element(screen.getByText("Slow-Mo")).toBeInTheDocument();
+});
+
+test("mounts the score-doubler badge when the 2× buff is active", async () => {
+  activatePowerup("doubler");
+  const screen = await render(<PowerUpBadges />);
+  await expect.element(screen.getByText("2× Score")).toBeInTheDocument();
+});
+
+test("mounts the multi-bounce badge when charges are held", async () => {
+  activatePowerup("multibounce");
+  const screen = await render(<PowerUpBadges />);
+  await expect.element(screen.getByText("Bounce")).toBeInTheDocument();
+});

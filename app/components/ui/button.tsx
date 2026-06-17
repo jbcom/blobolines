@@ -1,6 +1,7 @@
 import { Slot } from "@radix-ui/react-slot";
 import { cva, type VariantProps } from "class-variance-authority";
 import * as React from "react";
+import { playUi } from "@/audio";
 import { cn } from "@/lib/utils";
 
 const buttonVariants = cva(
@@ -27,10 +28,18 @@ const buttonVariants = cva(
         lg: "h-12 px-7 text-[length:var(--text-lg)]",
         icon: "h-10 w-10 rounded-[var(--radius-md)]",
       },
+      /** The big arcade CTA voice (display font, uppercase, wide tracking) the menus/cards
+       *  share, with subtly GOOEY asymmetric corners (--radius-goo) so a primary button reads
+       *  soft-bodied, not a hard rounded rect. Off by default so generic buttons stay plain. */
+      cta: {
+        true: "font-[family-name:var(--font-display)] font-bold uppercase tracking-wider !rounded-[var(--radius-goo)]",
+        false: "",
+      },
     },
     defaultVariants: {
       variant: "default",
       size: "default",
+      cta: false,
     },
   },
 );
@@ -39,19 +48,48 @@ export interface ButtonProps
   extends React.ButtonHTMLAttributes<HTMLButtonElement>,
     VariantProps<typeof buttonVariants> {
   asChild?: boolean;
+  /** Opt OUT of the default click/hover UI sound (e.g. a button that owns a louder cue). */
+  silent?: boolean;
 }
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant, size, asChild = false, type, ...props }, ref) => {
+  (
+    {
+      className,
+      variant,
+      size,
+      cta,
+      asChild = false,
+      type,
+      silent,
+      onClick,
+      onPointerEnter,
+      ...props
+    },
+    ref,
+  ) => {
     const Comp = asChild ? Slot : "button";
     // Default native buttons to type="button" so they never accidentally submit a form;
     // callers can still override. (Omit when rendering asChild — the child owns its type.)
     const typeProp = asChild ? {} : { type: type ?? "button" };
+    // Interface sounds wired at the shadcn primitive so the whole overlay gets them for free:
+    // a soft hover cue on pointer-enter + a click cue on press, composed with the caller's
+    // handlers. Both are safe no-ops before the AudioContext unlocks. `silent` opts out.
+    const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+      if (!silent) playUi("click");
+      onClick?.(e);
+    };
+    const handleEnter = (e: React.PointerEvent<HTMLButtonElement>) => {
+      if (!silent) playUi("hover");
+      onPointerEnter?.(e);
+    };
     return (
       <Comp
-        className={cn(buttonVariants({ variant, size, className }))}
+        className={cn(buttonVariants({ variant, size, cta, className }))}
         ref={ref}
         {...typeProp}
+        onClick={handleClick}
+        onPointerEnter={handleEnter}
         {...props}
       />
     );

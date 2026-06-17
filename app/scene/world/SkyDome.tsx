@@ -67,6 +67,9 @@ export function SkyDome() {
     };
   }, [scene, fog]);
 
+  const sunRef = useRef<THREE.Group>(null);
+  const camera = useThree((s) => s.camera);
+
   useFrame(() => {
     const m = matRef.current;
     if (!m) return;
@@ -77,11 +80,55 @@ export function SkyDome() {
     (m.uniforms.uDeep.value as THREE.Color).set(hex(b.deep));
     // Match fog to the band's fog color so distance haze reads as the right atmosphere.
     fog.color.set(hex(b.fog));
+
+    // Sun sprite — the visible SOURCE of the warm shafts the dome paints. Sits high toward the
+    // shaft origin, billboards to the camera, and FADES OUT as the blob climbs into space
+    // (there's no sun in the void). Parented to the camera-relative dome so it tracks the view.
+    const sun = sunRef.current;
+    if (sun) {
+      // Track the camera so the sun stays high in view as the blob climbs (it's at a fixed
+      // OFFSET from the camera, not a fixed world point — otherwise it sinks below the horizon
+      // once the camera ascends past its world Y and vanishes long before the intended fade).
+      sun.position.set(camera.position.x + 40, camera.position.y + 70, camera.position.z - 90);
+      sun.lookAt(camera.position);
+      const fade = Math.max(0, 1 - height / 750); // gone by ~space (no sun in the void)
+      sun.visible = fade > 0.02;
+      for (const child of sun.children) {
+        const mat = (child as THREE.Mesh).material as THREE.MeshBasicMaterial;
+        mat.opacity = (child === sun.children[0] ? 0.9 : 0.35) * fade;
+      }
+    }
   });
 
   return (
-    <mesh material={material} scale={150}>
-      <sphereGeometry args={[1, 32, 16]} />
-    </mesh>
+    <>
+      <mesh material={material} scale={150}>
+        <sphereGeometry args={[1, 32, 16]} />
+      </mesh>
+      {/* Sun sprite high in the warm-shaft band: a bright core + a soft additive halo. */}
+      <group ref={sunRef} position={[40, 80, -90]}>
+        <mesh>
+          <circleGeometry args={[6, 32]} />
+          <meshBasicMaterial
+            color={hex(palette.cream)}
+            transparent
+            opacity={0.9}
+            depthWrite={false}
+            fog={false}
+          />
+        </mesh>
+        <mesh>
+          <circleGeometry args={[16, 32]} />
+          <meshBasicMaterial
+            color={hex(palette.sky.top)}
+            transparent
+            opacity={0.35}
+            blending={THREE.AdditiveBlending}
+            depthWrite={false}
+            fog={false}
+          />
+        </mesh>
+      </group>
+    </>
   );
 }

@@ -1,6 +1,6 @@
 import { AnimatePresence, motion } from "motion/react";
 import { useEffect, useRef, useState } from "react";
-import { playChime } from "@/audio";
+import { duckMusic, playMilestone } from "@/audio";
 import { useGameStore } from "@/state";
 
 /** Altitude band size that triggers a celebration (every this-many metres). */
@@ -33,7 +33,8 @@ export function MilestoneBanner() {
       lastMilestone.current = milestone;
       if (milestone > 0) {
         setShown(milestone * MILESTONE_STEP);
-        playChime();
+        playMilestone();
+        duckMusic(700); // sidechain so the milestone stinger reads over the music
       }
     }
   }, [milestone, phase]);

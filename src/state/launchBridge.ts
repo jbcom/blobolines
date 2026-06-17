@@ -60,6 +60,48 @@ export function consumeSplats(): SplatBurst[] {
   return out;
 }
 
+/** A ground-ring "pop" event: an expanding ring blooms at the pad. `kind` "launch" is the
+ *  slingshot release pop (blue, blooms from small); "land" is the impact ring on touchdown
+ *  (gold, sized by impact). `charge` [0,1] scales the ring's size + brightness. Reported by
+ *  the blob, drained by the LaunchRing VFX. */
+export type GroundRingKind = "launch" | "land";
+export interface LaunchBurstEvent {
+  position: readonly [number, number, number];
+  charge: number;
+  kind: GroundRingKind;
+}
+
+let launchBurstQueue: LaunchBurstEvent[] = [];
+
+export function reportLaunchBurst(ev: LaunchBurstEvent): void {
+  launchBurstQueue.push(ev);
+  if (launchBurstQueue.length > 4) launchBurstQueue = launchBurstQueue.slice(-4);
+}
+
+/** Drain pending launch-burst events (returns them once, then clears). */
+export function consumeLaunchBursts(): LaunchBurstEvent[] {
+  if (launchBurstQueue.length === 0) return launchBurstQueue;
+  const out = launchBurstQueue;
+  launchBurstQueue = [];
+  return out;
+}
+
+/** A pending MID-AIR BOUNCE request: the player tapped while airborne with multi-bounce
+ *  charges held, asking for a free extra upward bounce (a "double-jump" recovery). Set by the
+ *  input layer (only after a charge is confirmed available), consumed once by the blob. */
+let midAirBounce = false;
+
+export function requestMidAirBounce(): void {
+  midAirBounce = true;
+}
+
+/** Consume the pending mid-air bounce (returns true once, then clears). */
+export function consumeMidAirBounce(): boolean {
+  const b = midAirBounce;
+  midAirBounce = false;
+  return b;
+}
+
 /** Continuous mid-air steering force on the world X/Z plane (lateral accel). */
 let steer: readonly [number, number] = [0, 0];
 
@@ -85,11 +127,16 @@ export function consumeImpact(): number {
   return s;
 }
 
-/** A pending trampoline rebound: the upward speed to bounce the blob at, plus the pad
- *  type (for combo/scoring). Reported by a trampoline on contact, consumed by the blob. */
+/** A pending trampoline rebound: the rebound speed to bounce the blob at, the pad type
+ *  (for combo/scoring), and the pad's surface NORMAL — the launch direction. A flat pad's
+ *  normal is straight up [0,1,0]; a canted pad's normal tilts, redirecting the bounce
+ *  laterally so the blob is thrown sideways-and-up toward the next pad (navigability).
+ *  Reported by a trampoline on contact, consumed by the blob. */
 export interface ReboundRequest {
   speed: number;
   type: string;
+  /** Unit surface normal = launch direction. Defaults to straight up when omitted. */
+  normal?: readonly [number, number, number];
 }
 
 let rebound: ReboundRequest | null = null;
@@ -115,6 +162,8 @@ export function resetBridges(): void {
   aim = null;
   rebound = null;
   splatQueue = [];
+  launchBurstQueue = [];
   steer = [0, 0];
   landingImpact = 0;
+  midAirBounce = false;
 }

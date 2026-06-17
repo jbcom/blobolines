@@ -2,5 +2,10 @@
   "basePower": 14,
   "powerPerCharge": 17.5,
   "comboStep": 0.15,
-  "comboStart": 2
+  "comboStart": 2,
+  "perfectRelease": {
+    "min": 0.85,
+    "max": 0.97,
+    "bonus": 1.18
+  }
 }

@@ -1,5 +1,6 @@
 import { motion } from "motion/react";
 import { useEffect, useState } from "react";
+import { preloadSfx } from "@/audio";
 
 /**
  * Loading screen — Suspense fallback while the app boots (first Canvas, fonts, Rapier WASM).
@@ -12,6 +13,11 @@ export function LoadingScreen() {
   const [pct, setPct] = useState(8);
 
   useEffect(() => {
+    // Fetch + decode the SFX samples while the splash is up, so the first bounce/launch/chime
+    // doesn't hitch on an on-demand decode (worst on mobile). Construction-only — nothing plays
+    // before the AudioContext unlocks on the first PLAY gesture.
+    preloadSfx();
+
     let raf = 0;
     let mounted = true;
     let target = 35; // before any real checkpoint, creep toward a modest ceiling

@@ -4,6 +4,8 @@ import { LoadingScreen } from "../LoadingScreen";
 
 afterEach(() => cleanup());
 
+// Mounting LoadingScreen also fires preloadSfx() (SFX decode behind the splash), so this render
+// doubles as a smoke check that the preload side-effect doesn't break the splash mount.
 test("renders a determinate loading progressbar that advances", async () => {
   const screen = await render(<LoadingScreen />);
   const bar = screen.getByRole("progressbar", { name: /loading/i });

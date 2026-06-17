@@ -1,20 +1,25 @@
+import { useFBO } from "@react-three/drei";
 import { useFrame, useThree } from "@react-three/fiber";
 import { damp } from "maath/easing";
 import { useEffect, useMemo, useRef } from "react";
 import {
   type Color,
+  CylinderGeometry,
   type Group,
   IcosahedronGeometry,
   type Mesh,
   type ShaderMaterial,
   SphereGeometry,
+  Vector2,
+  Vector3,
 } from "three";
 import { mergeVertices } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 import { ADDITION, Brush, Evaluator } from "three-bvh-csg";
-import { blob as blobCfg, goo as gooCfg } from "@/config";
+import { biomeSkyAt, blob as blobCfg, goo as gooCfg } from "@/config";
 import type { BlobSkin } from "@/core/types";
-import { selectMerges } from "@/render/goo";
+import { bridgeFor, selectMerges } from "@/render/goo";
 import { GooMaterial } from "@/render/materials";
+import { getQuality } from "@/render/qualityBridge";
 import type { Droplet } from "@/render/vfx";
 import { combineScale, impactSquash, speedStretch } from "@/sim/blob";
 import { getAim, getBlobDiagnostics } from "@/state";
@@ -40,19 +45,49 @@ interface GooCsgProps {
 }
 
 const { maxMerges, blobSegments, dropletDetail } = gooCfg.csg;
+/** Constant surface-wobble floor so the goo is never perfectly still — always subtly alive. */
+const IDLE_WOBBLE = 0.12;
+/** CylinderGeometry points up +Y by default; bridge necks orient FROM this axis to the
+ *  blob→droplet axis via setFromUnitVectors. Module-scope reusable (no per-frame allocation). */
+const CYL_UP = new Vector3(0, 1, 0);
+const tmpAxis = new Vector3();
 
 export function GooCsg({ skin, blobRadius, getDroplets }: GooCsgProps) {
   const groupRef = useRef<Group>(null);
   const resultRef = useRef<Mesh>(null);
   const eyesRef = useRef<Group>(null);
   const camera = useThree((s) => s.camera);
+  const gl = useThree((s) => s.gl);
+  const scene = useThree((s) => s.scene);
+  const size = useThree((s) => s.size);
+
+  // Backbuffer-refraction is HIGH-tier only — the marquee jelly look where the blob bends what's
+  // behind it. We render the scene (with the goo hidden) into a half-res FBO each frame and feed
+  // it to the goo shader's uBackbuffer; mid/low keep uRefraction=0 so the pass is skipped. The FBO
+  // is allocated unconditionally (hooks stay top-level) but only RENDERED when the LIVE tier (read
+  // each frame in the loop) has refraction on, so a runtime tier downgrade stops the pass at once.
+  const fbo = useFBO(
+    Math.max(2, Math.floor(size.width / 2)),
+    Math.max(2, Math.floor(size.height / 2)),
+  );
+  const resolution = useMemo(() => new Vector2(1, 1), []);
 
   /** Surface-tension wobble envelope [0,1] — spikes on impact, decays each frame. */
   const wobble = useRef(0);
   /** Current squash/stretch deform, sprung toward the target each frame. */
   const deform = useRef({ x: 1, y: 1, z: 1 });
+  /** Directional lean (radians, sprung) — the body tilts toward its horizontal motion. */
+  const lean = useRef({ x: 0, z: 0 });
+  /** Sprung gooey deform-mode amounts: wet sag (rest droop) + asymmetric lobe (wandering
+   *  fat side), eased so they ramp/decay smoothly instead of popping with state changes. */
+  const modes = useRef({ sag: 0, lobe: 0.25 });
 
   const material = useMemo(() => new GooMaterial() as unknown as ShaderMaterial, []);
+
+  // Blob geometry density scales with the quality tier (low devices get a coarser sphere) — the
+  // config value is the high-tier ceiling; getQuality() caps it. In the csg dep array so a
+  // quality change (e.g. an FPS-triggered downgrade) rebuilds the CSG brush at the new density.
+  const segs = Math.min(blobSegments, getQuality().blobSegments);
 
   // The CSG machinery: one evaluator (pooled buffers), a unit-ish blob brush + a pool of
   // droplet brushes reused across frames, and two ping-pong targets for the union chain.
@@ -63,7 +98,7 @@ export function GooCsg({ skin, blobRadius, getDroplets }: GooCsgProps) {
     evaluator.attributes = ["position", "normal"];
     evaluator.useGroups = false;
 
-    const blobBrush = new Brush(new SphereGeometry(blobRadius, blobSegments, blobSegments));
+    const blobBrush = new Brush(new SphereGeometry(blobRadius, segs, segs));
     // Droplet brushes are low-poly icospheres (cheap, round enough once unioned + wet-lit).
     // IcosahedronGeometry is non-indexed; three-bvh-csg's BVH needs an index, so weld it.
     // mergeVertices returns a NEW geometry — dispose the temporary unindexed source so it
@@ -72,18 +107,36 @@ export function GooCsg({ skin, blobRadius, getDroplets }: GooCsgProps) {
     const dropletGeo = mergeVertices(tmpIco);
     tmpIco.dispose();
     const dropletBrushes = Array.from({ length: maxMerges }, () => new Brush(dropletGeo));
+    // Bridge NECKS: a unit cylinder (radius 1, height 1, centered on origin) per merge slot,
+    // scaled/oriented each frame into a stretched teardrop strand between blob + droplet. Few
+    // radial segments (it's a thin wet neck once shaded) keep the per-frame union cheap. Welded
+    // so three-bvh-csg's BVH has an index (same requirement as the droplet icospheres).
+    const tmpCyl = new CylinderGeometry(1, 1, 1, 8, 1);
+    const bridgeGeo = mergeVertices(tmpCyl);
+    tmpCyl.dispose();
+    const bridgeBrushes = Array.from({ length: maxMerges }, () => new Brush(bridgeGeo));
     const ping = new Brush();
     const pong = new Brush();
-    return { evaluator, blobBrush, dropletGeo, dropletBrushes, ping, pong };
-  }, [blobRadius]);
+    return {
+      evaluator,
+      blobBrush,
+      dropletGeo,
+      dropletBrushes,
+      bridgeGeo,
+      bridgeBrushes,
+      ping,
+      pong,
+    };
+  }, [blobRadius, segs]);
 
   // Release GL programs + CSG geometry on unmount (respawn/skin-swap/HMR remounts this).
   useEffect(() => {
-    const { blobBrush, dropletGeo, ping, pong } = csg;
+    const { blobBrush, dropletGeo, bridgeGeo, ping, pong } = csg;
     return () => {
       material.dispose();
       blobBrush.geometry.dispose();
       dropletGeo.dispose(); // shared by every droplet brush
+      bridgeGeo.dispose(); // shared by every bridge-neck brush
       ping.geometry?.dispose();
       pong.geometry?.dispose();
     };
@@ -95,20 +148,63 @@ export function GooCsg({ skin, blobRadius, getDroplets }: GooCsgProps) {
     (material.uniforms.uRim.value as Color).set(palette.goo.rim);
   }, [material, skin]);
 
+  // Bind the backbuffer texture + the resolution Vector2 object once. uRefraction itself is driven
+  // LIVE per-frame in the loop (so a tier change takes effect immediately), and the resolution
+  // VALUE is refreshed there too — drei's useFBO keeps the SAME target identity across window
+  // resizes (resizes in place), so an effect keyed on `fbo` would never re-run for a resize.
+  useEffect(() => {
+    material.uniforms.uBackbuffer.value = fbo.texture;
+    material.uniforms.uResolution.value = resolution;
+  }, [material, fbo, resolution]);
+
   useFrame((state, dt) => {
     const group = groupRef.current;
     const result = resultRef.current;
     if (!group || !result) return;
 
+    // BACKBUFFER pass (HIGH only): render the scene with the goo group hidden into the FBO, so the
+    // shader can sample "what's behind the blob" and refract it. Hide → render-to-FBO → restore,
+    // all before the main frame draws the goo with the fresh texture. Cheap-ish at half-res.
+    // Read the tier LIVE each frame (not the mount-time `refracts`) so a manual Settings downgrade
+    // (HIGH→Low) or a future FPS-driven downgrade stops the expensive pass immediately, and keep
+    // the shader's uRefraction in lockstep so it doesn't sample a stale/empty FBO.
+    const refractNow = getQuality().refraction;
+    material.uniforms.uRefraction.value = refractNow ? (gooCfg.refractionStrength ?? 0.06) : 0;
+    if (refractNow) {
+      // Refresh uResolution from the LIVE fbo size every frame — useFBO resizes the same target in
+      // place on a window resize, so this is the only place that reliably tracks the new size.
+      resolution.set(fbo.width, fbo.height);
+      const wasVisible = group.visible;
+      group.visible = false;
+      const prevTarget = gl.getRenderTarget();
+      // Self-contained clear: EffectComposer manages gl.autoClear and may leave it false, which
+      // would ghost/accumulate into the backbuffer FBO. Force a clear for this pass, then restore.
+      const prevAutoClear = gl.autoClear;
+      gl.autoClear = true;
+      gl.setRenderTarget(fbo);
+      gl.clear();
+      gl.render(scene, camera);
+      gl.setRenderTarget(prevTarget);
+      gl.autoClear = prevAutoClear;
+      group.visible = wasVisible;
+    }
+
     const diag = getBlobDiagnostics();
     const [bx, by, bz] = diag.position;
+
+    // Biome-reactive goo lighting: tint the blob toward the current sky's key color and ramp
+    // the tint strength with altitude (subtle low → moody high), so the goo reads as embedded
+    // in its biome (warm at the ground, cool in space). Cheap: one color set + one float/frame.
+    const biome = biomeSkyAt(by);
+    (material.uniforms.uEnvTint.value as Color).set(biome.top);
+    material.uniforms.uEnvLight.value = Math.min(0.7, 0.15 + by / 1400);
 
     material.uniforms.uTime.value = state.clock.elapsedTime;
 
     // ── Build the merged goo mesh (blob ∪ nearby droplets) in the blob's LOCAL frame ──
     // The group is positioned at the blob, so brushes live at blob-relative offsets and
     // the union result is local — cheaper + keeps the deform/scale on the group simple.
-    const { evaluator, blobBrush, dropletBrushes, ping, pong } = csg;
+    const { evaluator, blobBrush, dropletBrushes, bridgeBrushes, ping, pong } = csg;
     blobBrush.position.set(0, 0, 0);
     blobBrush.updateMatrixWorld();
 
@@ -117,53 +213,133 @@ export function GooCsg({ skin, blobRadius, getDroplets }: GooCsgProps) {
     const merges = selectMerges([bx, by, bz], blobRadius, positions, maxMerges);
 
     // Chain ADDITION over the merging droplets, ping-ponging targets so nothing allocates.
+    // Capture the geometry the mesh is CURRENTLY showing: unionInto skips disposing it mid-chain
+    // (it's still on screen), so once we swap in the new result below we must dispose this old one
+    // ourselves or it leaks one BufferGeometry per frame (it loses its last reference).
+    const prevDisplayed = result.geometry;
     let acc: Brush = blobBrush;
     let useping = true;
+    // A Brush used as an evaluate TARGET comes back with boundsTree=null but its cached geometry
+    // hash unchanged, so prepareGeometry() early-returns and never rebuilds the BVH — feeding it
+    // back as an input then throws `bvhcast of null` every frame. Clear the hash on a result-as-
+    // input so the Evaluator rebuilds its bounds tree. (Confirmed root cause; without this the
+    // whole CSG goo path errors out.) Factored out so droplet AND bridge unions both apply it.
+    const unionInto = (input: Brush, brush: Brush): Brush => {
+      if (input !== blobBrush) (input as Brush & { _hash: string | null })._hash = null;
+      const target = useping ? ping : pong;
+      // evaluate() overwrites target.geometry with a freshly-generated BufferGeometry and does
+      // NOT free the old one — a per-frame GPU leak. Dispose the outgoing geometry first, unless
+      // it's the one the mesh is currently rendering (last frame's result).
+      const old = target.geometry;
+      if (old && old !== result.geometry) old.dispose();
+      const out = evaluator.evaluate(input, brush, ADDITION, target);
+      useping = !useping;
+      return out;
+    };
+
+    // Bound the extra union work the strands add: only the nearest few droplets get a neck
+    // (they're nearest-first), so a busy splash doesn't double the per-frame CSG cost. Scales
+    // down with the quality tier alongside the droplet merges.
+    const maxBridges = Math.min(merges.length, Math.max(2, Math.floor(maxMerges / 2)));
+    let bridges = 0;
+
     for (let i = 0; i < merges.length; i++) {
       const m = merges[i];
       const d = droplets[m.index];
       const brush = dropletBrushes[i];
       // Local offset from the blob; droplet radius grows slightly with merge weight so a
       // fully-overlapping droplet reads as fused mass, a far one as a small bud.
-      brush.position.set(d.position[0] - bx, d.position[1] - by, d.position[2] - bz);
+      const lx = d.position[0] - bx;
+      const ly = d.position[1] - by;
+      const lz = d.position[2] - bz;
+      brush.position.set(lx, ly, lz);
       const r = d.radius * (0.7 + 0.5 * m.weight);
       brush.scale.setScalar(r);
       brush.updateMatrixWorld();
-      // A Brush used as an evaluate TARGET comes back with boundsTree=null but its cached
-      // geometry hash unchanged, so prepareGeometry() early-returns and never rebuilds the
-      // BVH — feeding it back as an input then throws `bvhcast of null` every frame. Clear
-      // the hash on a result-as-input so the Evaluator rebuilds its bounds tree. (Confirmed
-      // root cause; without this the whole CSG goo path errors out.)
-      if (acc !== blobBrush) (acc as Brush & { _hash: string | null })._hash = null;
-      const target = useping ? ping : pong;
-      // evaluate() overwrites target.geometry with a freshly-generated BufferGeometry and
-      // does NOT free the old one — a per-frame GPU leak. Dispose the outgoing geometry
-      // first, unless it's the one the mesh is currently rendering (last frame's result).
-      const old = target.geometry;
-      if (old && old !== result.geometry) old.dispose();
-      acc = evaluator.evaluate(acc, brush, ADDITION, target);
-      useping = !useping;
+      acc = unionInto(acc, brush);
+
+      // STRETCH STRAND: a separating droplet trails a thinning teardrop neck back to the body
+      // (the signature World-of-Goo look). bridgeFor returns null when the droplet overlaps
+      // (already fused) or has pinched off, so necks only appear in the in-between window.
+      const bridge =
+        bridges < maxBridges ? bridgeFor([0, 0, 0], blobRadius, [lx, ly, lz], r) : null;
+      if (bridge) {
+        bridges++;
+        const neck = bridgeBrushes[i];
+        neck.position.set(bridge.midpoint[0], bridge.midpoint[1], bridge.midpoint[2]);
+        // Orient the +Y cylinder onto the blob→droplet axis, then scale: radius on X/Z, full
+        // neck length (2·halfLength) on Y.
+        tmpAxis.set(bridge.axis[0], bridge.axis[1], bridge.axis[2]);
+        neck.quaternion.setFromUnitVectors(CYL_UP, tmpAxis);
+        neck.scale.set(bridge.radius, bridge.halfLength * 2, bridge.radius);
+        neck.updateMatrixWorld();
+        acc = unionInto(acc, neck);
+      }
     }
 
     // Hand the merged geometry to the rendered mesh (shared buffer — no copy).
     if (result.geometry !== acc.geometry) result.geometry = acc.geometry;
+    // Dispose the geometry the mesh WAS showing now that it's been replaced — unless it's somehow
+    // still live (the new result, or a ping/pong target reused for next frame). Without this the
+    // previous frame's result leaks (unionInto deliberately skipped it while it was on screen).
+    if (
+      prevDisplayed &&
+      prevDisplayed !== result.geometry &&
+      prevDisplayed !== csg.ping.geometry &&
+      prevDisplayed !== csg.pong.geometry
+    ) {
+      prevDisplayed.dispose();
+    }
 
     // ── Wet wobble + squash/stretch (same juice model as the hero blob) ──
     const imp = Math.min(1, Math.max(0, (1 - diag.squash) / 0.3));
-    wobble.current = Math.max(wobble.current * Math.exp(-dt / blobCfg.wobbleDecayTau), imp);
-    material.uniforms.uWobble.value = wobble.current;
+    // A FRESH impact spikes the surface-tension wobble well past the impact amount, so a
+    // hard landing sends a big travelling ripple across the goo that settles like a water
+    // balloon (decays each frame). Overshoot factor makes it read fluid, not stiff.
+    wobble.current = Math.max(wobble.current * Math.exp(-dt / blobCfg.wobbleDecayTau), imp * 1.6);
+    // Perpetual idle jiggle: a small constant wobble floor so the goo surface is ALWAYS subtly
+    // alive (breathing/shimmering), never a perfectly still surface even when the body itself
+    // is at rest — the impact spike rides on top of it.
+    material.uniforms.uWobble.value = Math.min(1.4, Math.max(IDLE_WOBBLE, wobble.current));
 
     const [vx, vy, vz] = diag.velocity;
+
+    // Impact direction = where the goo is moving (the ripple travels FROM the contact, i.e.
+    // along the motion at the moment of impact). Falls back to straight-down while resting.
+    const vMag = Math.hypot(vx, vy, vz);
+    if (vMag > 0.5) {
+      (material.uniforms.uImpactDir.value as Vector3).set(vx / vMag, vy / vMag, vz / vMag);
+    }
+
+    // ASYMMETRIC lobe: a slow-wandering fat side so Blobby is never a clean sphere even idle.
+    // The bulge amount eases up at rest/low-speed (a heavy settled glob bulges) and the
+    // direction sweeps on a slow Lissajous so the fat side migrates around the body.
+    const t = state.clock.elapsedTime;
+    (material.uniforms.uLobeDir.value as Vector3).set(
+      Math.cos(t * 0.6),
+      Math.sin(t * 0.37) * 0.5,
+      Math.sin(t * 0.6),
+    );
     let target = combineScale(speedStretch(vx, vy, vz), impactSquash(imp));
 
-    // Puddle at rest: settle into a wide flat happy puddle when grounded + slow.
+    // Puddle at rest: settle into a wide flat happy puddle when grounded + slow, with a slow
+    // breathe so Blobby is never a perfectly static ball even standing still.
     const settled = diag.airborne ? 0 : 1 - Math.min(diag.speed / blobCfg.puddle.settleSpeed, 1);
+
+    // WET SAG eases in as Blobby settles (a resting glob hangs/bulges under its weight); the
+    // ASYMMETRIC lobe is always a little present (never a clean sphere) and grows when settled.
+    damp(modes.current, "sag", settled, 0.18, dt);
+    damp(modes.current, "lobe", 0.25 + settled * 0.4, 0.3, dt);
+    material.uniforms.uSag.value = modes.current.sag;
+    material.uniforms.uLobe.value = modes.current.lobe;
+
     if (settled > 0.01) {
       const [px, py, pz] = blobCfg.puddle.scale;
+      const breathe = Math.sin(state.clock.elapsedTime * 1.8) * 0.04 * settled;
       target = {
-        x: target.x + (px - target.x) * settled,
-        y: target.y + (py - target.y) * settled,
-        z: target.z + (pz - target.z) * settled,
+        x: target.x + (px - target.x) * settled + breathe,
+        y: target.y + (py - target.y) * settled - breathe,
+        z: target.z + (pz - target.z) * settled + breathe,
       };
     }
     // Charging the slingshot: the resting puddle gathers up toward the pull.
@@ -186,6 +362,14 @@ export function GooCsg({ skin, blobRadius, getDroplets }: GooCsgProps) {
     const squash = Math.min(1, deform.current.y);
     group.position.set(bx, by - blobRadius * (1 - squash), bz);
     group.scale.set(deform.current.x, deform.current.y, deform.current.z);
+    // Directional LEAN: tilt the whole body toward its horizontal travel (a fluid body leans
+    // into motion, never a rigid upright ball). Spring the tilt so it lags + overshoots a
+    // touch. Magnitude scales with horizontal speed, capped so it stays a lean not a faceplant.
+    const hSpeed = Math.hypot(vx, vz);
+    const leanK = Math.min(hSpeed / 26, 1) * 0.5; // radians, capped ~0.5
+    damp(lean.current, "x", (vz / (hSpeed || 1)) * leanK, 0.12, dt);
+    damp(lean.current, "z", (-vx / (hSpeed || 1)) * leanK, 0.12, dt);
+    group.rotation.set(lean.current.x, 0, lean.current.z);
 
     // Eyes ride the goo face, billboarded at the blob center (counter the group scale so
     // they don't squash with the body).

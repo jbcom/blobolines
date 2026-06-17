@@ -1,9 +1,13 @@
-import { Dialog } from "@app/components/ui";
+import { Button, Dialog } from "@app/components/ui";
 import { usePunchOnChange } from "@app/hooks";
 import { Check, Gem, Lock } from "lucide-react";
+import { useRef, useState } from "react";
 import type { BlobSkin } from "@/core/types";
 import { SKIN_COST, useGameStore } from "@/state";
 import { mixHex, palette } from "@/styles/tokens";
+
+/** Columns in the skin grid — used for arrow-key (and gamepad d-pad → arrow) roving nav. */
+const GRID_COLS = 2;
 
 /**
  * Blob customizer — pick or unlock a goo skin with collected crystals. Equipped skins
@@ -32,6 +36,30 @@ export function BlobCustomizer({
   // Punch the header gem count whenever crystals change (the deduct on a purchase reads as
   // a satisfying kick rather than a silent number swap).
   const gemRef = usePunchOnChange<HTMLSpanElement>(crystals, { scale: 1.3 });
+
+  // Roving-tabindex grid nav: one tile is in the tab order at a time; arrow keys (and a
+  // gamepad d-pad, which most browsers map to arrows) move focus across the 2-col grid.
+  const [focusIdx, setFocusIdx] = useState(0);
+  const tileRefs = useRef<(HTMLButtonElement | null)[]>([]);
+  const onGridKey = (e: React.KeyboardEvent) => {
+    const n = SKINS.length;
+    // Derive the current index from the actually-focused tile (not React state, which may not
+    // have flushed yet) so arrow nav is robust regardless of how focus arrived.
+    const cur = tileRefs.current.indexOf(document.activeElement as HTMLButtonElement);
+    const from = cur >= 0 ? cur : focusIdx;
+    let next: number;
+    if (e.key === "ArrowRight") next = (from + 1) % n;
+    else if (e.key === "ArrowLeft") next = (from - 1 + n) % n;
+    // Up/Down move a whole row, but ONLY if a tile exists directly above/below — at a grid edge
+    // stay put rather than clamping to n-1/0 (which would jump COLUMNS, e.g. bottom-left →
+    // bottom-right). `from + GRID_COLS < n` = a full row below exists; `from - GRID_COLS >= 0` above.
+    else if (e.key === "ArrowDown") next = from + GRID_COLS < n ? from + GRID_COLS : from;
+    else if (e.key === "ArrowUp") next = from - GRID_COLS >= 0 ? from - GRID_COLS : from;
+    else return; // not an arrow key — next is only assigned in the arrow branches above
+    e.preventDefault();
+    setFocusIdx(next);
+    tileRefs.current[next]?.focus();
+  };
 
   const pick = (id: BlobSkin) => {
     if (unlocked.includes(id)) {
@@ -67,8 +95,14 @@ export function BlobCustomizer({
         </p>
       )}
 
-      <div className="mt-4 grid grid-cols-2 gap-3">
-        {SKINS.map((s) => {
+      {/* biome-ignore lint/a11y/useSemanticElements: grid wrapper for roving-tabindex skin tiles (children are buttons) */}
+      <div
+        className="mt-4 grid grid-cols-2 gap-3"
+        role="grid"
+        aria-label="Goo skins"
+        onKeyDown={onGridKey}
+      >
+        {SKINS.map((s, i) => {
           const isUnlocked = unlocked.includes(s.id);
           const isEquipped = equipped === s.id;
           const cost = SKIN_COST[s.id];
@@ -76,7 +110,12 @@ export function BlobCustomizer({
           return (
             <button
               key={s.id}
+              ref={(el) => {
+                tileRefs.current[i] = el;
+              }}
               type="button"
+              tabIndex={i === focusIdx ? 0 : -1}
+              onFocus={() => setFocusIdx(i)}
               onClick={() => pick(s.id)}
               disabled={!isUnlocked && !affordable}
               aria-pressed={isEquipped}
@@ -156,13 +195,9 @@ export function BlobCustomizer({
         })}
       </div>
 
-      <button
-        type="button"
-        onClick={() => onOpenChange(false)}
-        className="mt-5 w-full rounded-xl bg-accent py-2.5 font-display font-bold uppercase tracking-wider text-bg"
-      >
+      <Button cta size="lg" onClick={() => onOpenChange(false)} className="mt-5 w-full">
         Done
-      </button>
+      </Button>
     </Dialog>
   );
 }

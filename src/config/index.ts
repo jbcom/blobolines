@@ -17,6 +17,7 @@ import collectCfg from "./collect.json";
 import gooCfg from "./goo.json";
 import launchCfg from "./launch.json";
 import physicsCfg from "./physics.json";
+import scoreCfg from "./score.json";
 import trampolineCfg from "./trampoline.json";
 import worldCfg from "./world.json";
 
@@ -48,10 +49,14 @@ export const launch = launchCfg as {
   powerPerCharge: number;
   comboStep: number;
   comboStart: number;
+  /** Perfect-release sweet spot (charge band + power bonus) — a launch-timing skill. */
+  perfectRelease: { min: number; max: number; bonus: number };
 };
 
 export const trampoline = trampolineCfg as {
   reboundMultiplier: Record<TrampType, number>;
+  cantedTiltRad: number;
+  wobblerMaxTiltRad: number;
   superMinRebound: number;
   reboundSettleSpeed: number;
   depressSpring: { stiffness: number; damping: number };
@@ -74,6 +79,8 @@ export const goo = gooCfg as {
     blobSegments: number;
     dropletDetail: number;
   };
+  /** HIGH-tier backbuffer-refraction strength (screen-UV offset scale; 0.06 ≈ a subtle bend). */
+  refractionStrength: number;
   splash: {
     countScale: number;
     maxCount: number;
@@ -89,4 +96,16 @@ export const world = worldCfg as {
   maxRetainedTramps: number;
   maxCrystals: number;
   skinCost: Record<BlobSkin, number>;
+};
+
+export const score = scoreCfg as {
+  /** Points per metre of height climbed. */
+  heightPoints: number;
+  /** Points per crystal collected. */
+  crystalPoints: number;
+  /** Base points for the first combo tier of the run's best streak. */
+  comboStyleBase: number;
+  /** Geometric growth per combo tier, so a long clean streak is worth disproportionately
+   *  more than the same total spread over short streaks — style is rewarded. */
+  comboStyleGrowth: number;
 };

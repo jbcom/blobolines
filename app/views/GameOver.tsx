@@ -1,9 +1,12 @@
+import { Button } from "@app/components/ui";
 import { Progress } from "@app/components/ui/progress";
 import { Check, RotateCcw, Share2 } from "lucide-react";
 import { motion } from "motion/react";
 import { useEffect, useRef, useState } from "react";
-import { playChime, startMusic, stopMusic } from "@/audio";
+import { playRecord, startMusic, stopMusic } from "@/audio";
 import type { BlobSkin } from "@/core/types";
+import { achievementById } from "@/sim/achievements";
+import { dailyKey, runHash } from "@/sim/daily";
 import { comboMultiplier } from "@/sim/launch";
 import { SKIN_COST, useGameStore, useWorldStore } from "@/state";
 
@@ -16,13 +19,43 @@ export function GameOver() {
   const crystals = useGameStore((s) => s.run.crystals);
   const maxCombo = useGameStore((s) => s.run.maxCombo);
   const recordDelta = useGameStore((s) => s.run.recordDelta);
+  const runScore = useGameStore((s) => s.run.score);
+  const scoreDelta = useGameStore((s) => s.run.scoreDelta);
   const lifetimeCrystals = useGameStore((s) => s.progress.crystals);
   const unlockedSkins = useGameStore((s) => s.progress.unlockedSkins);
   const best = useGameStore((s) => s.progress.bestHeight);
+  const bestScore = useGameStore((s) => s.progress.bestScore);
   const setPhase = useGameStore((s) => s.setPhase);
   const setCustomizerIntent = useGameStore((s) => s.setCustomizerIntent);
   const resetRun = useGameStore((s) => s.resetRun);
+  const setDailyRun = useGameStore((s) => s.setDailyRun);
   const resetWorld = useWorldStore((s) => s.reset);
+  const dailyRun = useGameStore((s) => s.dailyRun);
+  const seed = useWorldStore((s) => s.seed);
+  const unlockAchievements = useGameStore((s) => s.unlockAchievements);
+
+  // Evaluate achievements ONCE on game-over (the run is final here): persist newly-unlocked +
+  // capture them to celebrate on this card. commitBestHeight already merged this run into
+  // bestHeight/bestScore before the phase flip, so the lifetime stats are current.
+  const [freshAchievements, setFreshAchievements] = useState<string[]>([]);
+  // biome-ignore lint/correctness/useExhaustiveDependencies: evaluate exactly once on mount
+  useEffect(() => {
+    setFreshAchievements(
+      unlockAchievements({
+        bestHeight: best,
+        bestScore,
+        lifetimeCrystals,
+        runHeight: height,
+        runMaxCombo: maxCombo,
+        runCrystals: crystals,
+      }),
+    );
+  }, []);
+  // Daily run → a shareable verification hash binding this result to today's seed (so a
+  // leaderboard can spot a score that doesn't match its seed). Only shown for a daily run.
+  const dailyTag = dailyRun
+    ? `Daily ${dailyKey(new Date())} · ${runHash({ seed, height, crystals, maxCombo })}`
+    : null;
   const replayRef = useRef<HTMLButtonElement>(null);
 
   const toMenu = () => {
@@ -46,7 +79,10 @@ export function GameOver() {
   }, []);
 
   const replay = () => {
+    // "Climb again" is a normal random run — the daily is one attempt per day, so clear the flag
+    // (and resetWorld() reseeds randomly, not from today's date).
     resetRun();
+    setDailyRun(false);
     resetWorld();
     startMusic();
     setPhase("playing");
@@ -64,7 +100,9 @@ export function GameOver() {
     [],
   );
   const share = async () => {
-    const text = `I climbed ${height}m in Blobolines! 🫧`;
+    const text = dailyTag
+      ? `I scored ${runScore.toLocaleString()} (${height}m) on the Blobolines ${dailyTag} 🫧`
+      : `I scored ${runScore.toLocaleString()} (${height}m) in Blobolines! 🫧`;
     const url = "https://jbcom.github.io/blobolines/";
     try {
       if (typeof navigator !== "undefined" && navigator.share) {
@@ -80,10 +118,16 @@ export function GameOver() {
     }
   };
 
-  // commitBestHeight already merged this run into `best` before game-over, so on a new
-  // record best === height. `>=` is therefore correct: it's a record exactly when this
-  // run reached the (now-updated) best. A losing run has height < best.
-  const isRecord = height >= best && height > 0;
+  // commitBestHeight already merged this run into `best`/`bestScore` before game-over, so on a
+  // new record they equal this run's value. A record on EITHER axis (height OR composite
+  // score) earns the trophy card — a crystal/combo-rich short run can set a score record
+  // without a height record, and vice versa.
+  // recordDelta is metres over the PREVIOUS best (0 on a tie or a non-record), so it — not
+  // `height >= best` — is the true height-record signal: `best` already includes this run, so
+  // `>=` would falsely flag a tied run as a record (and play the chime).
+  const heightRecord = recordDelta > 0;
+  const scoreRecord = scoreDelta > 0;
+  const isRecord = heightRecord || scoreRecord;
   // Delta vs the all-time best: on a record show how far over the *previous* best we went;
   // on a losing run show how short. (best already includes this run, so a record's gap is
   // 0 against itself — fall back to a celebratory label instead of "+0m".)
@@ -111,7 +155,7 @@ export function GameOver() {
   useEffect(() => {
     if (isRecord && !chimedRef.current) {
       chimedRef.current = true;
-      playChime();
+      playRecord();
     }
   }, [isRecord]);
 
@@ -121,7 +165,14 @@ export function GameOver() {
       animate={{ opacity: 1 }}
       role="dialog"
       aria-labelledby="gameover-title"
-      className="pointer-events-auto absolute inset-0 flex flex-col items-center justify-center gap-6 bg-bg/70 px-6 backdrop-blur-md"
+      className="pointer-events-auto absolute inset-0 flex flex-col items-center justify-center gap-6 bg-bg/70 backdrop-blur-md"
+      style={{
+        // Honor notch/rounded-corner insets so the card never sits under a landscape notch.
+        paddingLeft: "calc(var(--safe-left) + 1.5rem)",
+        paddingRight: "calc(var(--safe-right) + 1.5rem)",
+        paddingTop: "calc(var(--safe-top) + 1rem)",
+        paddingBottom: "calc(var(--safe-bottom) + 1rem)",
+      }}
     >
       <motion.div
         initial={{ scale: 0.85, y: 16 }}
@@ -134,8 +185,26 @@ export function GameOver() {
         style={isRecord ? { boxShadow: "0 0 32px var(--color-tramp-gold)" } : undefined}
       >
         <h2 id="gameover-title" className="font-display text-2xl font-bold text-cream">
-          {isRecord ? "New best climb!" : "Splat!"}
+          {isRecord ? "New record!" : "Splat!"}
         </h2>
+
+        {/* SCORE is the headline metric — big, gold on a score record, with the +over-best
+            flourish. Height/crystals/combo below are the breakdown that fed it. */}
+        <div className="flex flex-col items-center gap-0.5">
+          <span className="font-ui text-[11px] uppercase tracking-wider text-fg-subtle">Score</span>
+          <span
+            className={`font-display text-4xl font-bold tabular-nums ${
+              scoreRecord ? "text-tramp-gold" : "text-cream"
+            }`}
+          >
+            {runScore.toLocaleString()}
+          </span>
+          <span className="font-ui text-[11px] font-semibold text-fg-subtle">
+            {scoreRecord
+              ? `+${scoreDelta.toLocaleString()} over best`
+              : `best ${bestScore.toLocaleString()}`}
+          </span>
+        </div>
 
         <div className="flex w-full flex-col gap-2 font-ui text-sm">
           <Row label="Altitude" value={`${height} m`} accent="text-accent" />
@@ -144,7 +213,7 @@ export function GameOver() {
             value={`${best} m`}
             accent="text-tramp-gold"
             sub={
-              isRecord
+              heightRecord
                 ? recordDelta > 0
                   ? `+${recordDelta} m over best`
                   : "New record!"
@@ -190,19 +259,40 @@ export function GameOver() {
           </button>
         )}
 
-        <button
-          ref={replayRef}
-          type="button"
-          onClick={replay}
-          className="flex w-full items-center justify-center gap-2 rounded-xl bg-accent py-3 font-display font-bold uppercase tracking-wider text-bg"
-        >
+        {dailyTag && (
+          <p className="text-center font-ui text-xs font-semibold text-fg-subtle tabular-nums">
+            {dailyTag}
+          </p>
+        )}
+
+        {/* Newly-unlocked achievements this run — a small celebratory list. */}
+        {freshAchievements.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="flex flex-col gap-1 rounded-xl border border-tramp-gold/40 bg-tramp-gold/10 px-3 py-2"
+          >
+            <span className="font-display text-xs font-bold text-tramp-gold uppercase tracking-wide">
+              Achievement{freshAchievements.length > 1 ? "s" : ""} unlocked
+            </span>
+            {freshAchievements.map((id) => {
+              const a = achievementById(id);
+              if (!a) return null;
+              return (
+                <span key={id} className="font-ui text-xs text-cream">
+                  <span className="font-semibold">{a.title}</span>
+                  <span className="text-fg-muted"> — {a.description}</span>
+                </span>
+              );
+            })}
+          </motion.div>
+        )}
+
+        <Button ref={replayRef} cta size="lg" onClick={replay} className="w-full">
           <RotateCcw className="size-4" aria-hidden /> Climb again
-        </button>
-        <button
-          type="button"
-          onClick={share}
-          className="flex w-full items-center justify-center gap-2 rounded-xl border border-border py-2.5 font-display font-bold uppercase tracking-wider text-fg-muted hover:text-cream"
-        >
+        </Button>
+        <Button variant="surface" cta size="lg" onClick={share} className="w-full">
           {shared ? (
             <>
               <Check className="size-4" aria-hidden /> Copied!
@@ -212,7 +302,7 @@ export function GameOver() {
               <Share2 className="size-4" aria-hidden /> Share
             </>
           )}
-        </button>
+        </Button>
         <button
           type="button"
           onClick={toMenu}

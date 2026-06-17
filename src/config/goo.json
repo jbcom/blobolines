@@ -4,6 +4,7 @@
     "blobSegments": 24,
     "dropletDetail": 1
   },
+  "refractionStrength": 0.06,
   "splash": {
     "countScale": 22,
     "maxCount": 28,

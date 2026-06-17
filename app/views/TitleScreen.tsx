@@ -1,11 +1,22 @@
-import { HelpCircle, Palette, Play, Settings } from "lucide-react";
-import { motion } from "motion/react";
-import { useEffect, useState } from "react";
-import { initAudio, startMusic } from "@/audio";
+import { buttonVariants } from "@app/components/ui";
+import { CalendarDays, HelpCircle, Palette, Play, Settings } from "lucide-react";
+import { motion, useReducedMotion } from "motion/react";
+import { lazy, Suspense, useEffect, useState } from "react";
+import { initAudio, startMenuMusic, startMusic } from "@/audio";
+import { cn } from "@/lib/utils";
+import { dailySeed } from "@/sim/daily";
 import { useGameStore, useWorldStore } from "@/state";
-import { BlobCustomizer } from "./BlobCustomizer";
-import { ManualModal } from "./ManualModal";
-import { SettingsModal } from "./SettingsModal";
+
+// The three menu modals are lazy-loaded — none is needed for the first paint (the menu CTA), so
+// their code (+ the customizer's 3D preview, the manual's content) is split into its own chunk
+// fetched only when the player opens one. Named exports → mapped to default for React.lazy.
+const BlobCustomizer = lazy(() =>
+  import("./BlobCustomizer").then((m) => ({ default: m.BlobCustomizer })),
+);
+const ManualModal = lazy(() => import("./ManualModal").then((m) => ({ default: m.ManualModal })));
+const SettingsModal = lazy(() =>
+  import("./SettingsModal").then((m) => ({ default: m.SettingsModal })),
+);
 
 /**
  * Title / main menu. The blob identity, the one-line pitch, and the launch CTA into
@@ -14,8 +25,10 @@ import { SettingsModal } from "./SettingsModal";
 export function TitleScreen() {
   const setPhase = useGameStore((s) => s.setPhase);
   const resetRun = useGameStore((s) => s.resetRun);
+  const setDailyRun = useGameStore((s) => s.setDailyRun);
   const resetWorld = useWorldStore((s) => s.reset);
   const best = useGameStore((s) => s.progress.bestHeight);
+  const reduced = useReducedMotion();
   const [customizing, setCustomizing] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [manualOpen, setManualOpen] = useState(false);
@@ -30,22 +43,42 @@ export function TitleScreen() {
     }
   }, [customizerIntent, setCustomizerIntent]);
 
-  const play = () => {
+  // Crossfade to the calm MENU music whenever the title is showing. Safe no-op until the
+  // AudioContext is unlocked (first PLAY gesture), so on the very first menu it's silent and
+  // on every return-to-menu after a run it fades the menu loop back in.
+  useEffect(() => {
+    startMenuMusic();
+  }, []);
+
+  /** Start a run. `daily` seeds the world from today's date so everyone climbs the same tower
+   *  (and the game-over card shows a shareable hash); otherwise the world reseeds randomly. */
+  const start = (daily: boolean) => {
     // This click is the user gesture that unlocks the AudioContext; start ambient music
     // once it's ready.
     void initAudio().then(startMusic);
     resetRun();
-    resetWorld();
+    setDailyRun(daily);
+    // The Date is read HERE (UI layer) and passed into the pure dailySeed — sim never calls
+    // new Date(). undefined seed = random reseed for a normal run.
+    resetWorld(daily ? dailySeed(new Date()) : undefined);
     setPhase("playing");
   };
+  const play = () => start(false);
+  const playDaily = () => start(true);
 
   return (
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.5 }}
-      className="pointer-events-auto flex h-full w-full flex-col items-center justify-end gap-6 px-6"
-      style={{ paddingBottom: "calc(var(--safe-bottom) + 2.5rem)" }}
+      className="pointer-events-auto flex h-full w-full flex-col items-center justify-end gap-6"
+      style={{
+        // Respect the notch/rounded-corner insets in landscape too (not just the bottom) so
+        // the menu never tucks under a notch or the home indicator on a sideways phone.
+        paddingBottom: "calc(var(--safe-bottom) + 2.5rem)",
+        paddingLeft: "calc(var(--safe-left) + 1.5rem)",
+        paddingRight: "calc(var(--safe-right) + 1.5rem)",
+      }}
     >
       <div className="flex flex-col items-center text-center">
         <motion.h1
@@ -61,16 +94,33 @@ export function TitleScreen() {
         </p>
       </div>
 
+      {/* The hero Play CTA reuses the shared button's variant styling (buttonVariants) so it
+          matches the modal/card CTAs, but stays a motion.button for the spring squish. Press
+          SQUISHES it (wide + short, like pressing a goo blob) and a touch of overshoot on
+          release — gooier than a uniform shrink; honors reduced-motion (no squish). */}
       <motion.button
         type="button"
         onClick={play}
-        whileTap={{ scale: 0.94 }}
-        whileHover={{ scale: 1.04 }}
-        transition={{ type: "spring", stiffness: 400, damping: 18 }}
-        className="flex items-center gap-3 rounded-2xl bg-accent px-10 py-4 font-display text-xl font-bold uppercase tracking-wider text-bg shadow-[var(--glow-blue)]"
+        whileTap={reduced ? { scale: 0.97 } : { scaleX: 1.08, scaleY: 0.82 }}
+        whileHover={reduced ? undefined : { scale: 1.04 }}
+        transition={{ type: "spring", stiffness: 500, damping: 14 }}
+        className={cn(
+          buttonVariants({ variant: "default", size: "lg", cta: true }),
+          "gap-3 rounded-2xl px-10 py-4 text-xl",
+        )}
       >
         Play <Play className="size-5 fill-current" aria-hidden />
       </motion.button>
+
+      {/* Daily Challenge — same tower for everyone today (date-seeded); the game-over card
+          shows a shareable run hash. A quieter secondary CTA below the main Play. */}
+      <button
+        type="button"
+        onClick={playDaily}
+        className="-mt-1 flex min-h-11 items-center gap-2 rounded-xl border border-border px-4 py-2 font-ui text-sm font-semibold text-fg-muted hover:text-cream"
+      >
+        <CalendarDays className="size-4" aria-hidden /> Daily Challenge
+      </button>
 
       <div className="flex items-center gap-5">
         <button
@@ -102,9 +152,13 @@ export function TitleScreen() {
         </span>
       )}
 
-      <BlobCustomizer open={customizing} onOpenChange={setCustomizing} />
-      <SettingsModal open={settingsOpen} onOpenChange={setSettingsOpen} />
-      <ManualModal open={manualOpen} onOpenChange={setManualOpen} />
+      {/* Mount each modal only once opened (Suspense covers the lazy chunk fetch), so the
+          modals' code isn't loaded until the player actually opens one. */}
+      <Suspense fallback={null}>
+        {customizing && <BlobCustomizer open={customizing} onOpenChange={setCustomizing} />}
+        {settingsOpen && <SettingsModal open={settingsOpen} onOpenChange={setSettingsOpen} />}
+        {manualOpen && <ManualModal open={manualOpen} onOpenChange={setManualOpen} />}
+      </Suspense>
     </motion.div>
   );
 }
