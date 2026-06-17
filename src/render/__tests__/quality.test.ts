@@ -61,6 +61,9 @@ describe("quality tiers", () => {
     expect(high.chroma).toBe(true);
     expect(high.antialias).toBe(true);
     expect(high.maxDpr).toBe(2);
+    // Per-pad splat texture is halved on low vs high.
+    expect(low.splatResolution).toBeLessThan(high.splatResolution);
+    expect(high.splatResolution).toBe(128);
   });
 
   it("DPR cap never decreases as the tier increases", () => {

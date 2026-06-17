@@ -812,7 +812,13 @@ ahead overall, but these concrete affordances regressed:
 - [x] metaball fieldNormal: forward-difference… OBSOLETE — no metaball field / fieldNormal
       exists; CSG goo gets its normals from the merged BufferGeometry, not a field-gradient
       eval. Nothing to optimize here. (Verified 2026-06-16.)
-- [ ] Instance/share trampoline geometry+materials (per-type), keep only splat texture per-pad; 64px splat on mobile.
+- [x] Trampoline per-pad texture cost: splat CanvasTexture resolution is now tier-driven —
+      64px on mid/low (halved memory across the render window), 128px on high. (The
+      "instance/share geometry+materials per-type" half was deliberately NOT done: every pad has
+      a UNIQUE width/depth + altitude-tinted color + per-pad splat, so same-type pads don't
+      actually share geometry or materials; and the live pad count is already bounded by the
+      render-window fix [memory blobolines-perf-profile], so per-pad mesh creation isn't a hot
+      path. Full InstancedMesh would be a large refactor for marginal gain on a bounded set.)
 ### Dead code / deps
 These were flagged "dead" in an earlier pass but are NOT — they were wired in
 subsequent sessions, and the library doctrine (memory blobolines-library-doctrine)

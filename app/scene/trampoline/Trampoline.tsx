@@ -6,6 +6,7 @@ import { playBounce } from "@/audio";
 import { biomeSkyAt, trampoline as trampCfg } from "@/config";
 import { clamp } from "@/core/math";
 import type { TrampType } from "@/core/types";
+import { getQuality } from "@/render/qualityBridge";
 import { createSplatCanvas } from "@/render/vfx";
 import { MAX_IMPACT_SPEED } from "@/sim/physics";
 import {
@@ -71,7 +72,9 @@ export function Trampoline({ position, width, depth, type, cant, onImpact }: Tra
   // Accumulating goo-splat decal painted onto the membrane top each landing. One Canvas2D
   // texture per pad; impacts smear a colored blob at the (relX,relZ) contact point.
   const splat = useMemo(() => {
-    const sc = createSplatCanvas(128);
+    // Tier-driven splat resolution: there's one CanvasTexture per live pad, so mid/low halve it
+    // to 64px to cut texture memory across the render window (high keeps 128px crispness).
+    const sc = createSplatCanvas(getQuality().splatResolution);
     const texture = new CanvasTexture(sc.canvas);
     // The canvas holds sRGB colors (palette hexes); without this the goo decal renders in
     // linear space — the blue gets crushed to dark muddy rings (worse under ACES tonemapping).

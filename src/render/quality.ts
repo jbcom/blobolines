@@ -38,6 +38,9 @@ export interface QualitySettings {
   /** MSAA on the default framebuffer (the Canvas antialias flag). Off on mid/low — bloom +
    *  the postfx grade hide most edge crawl, and MSAA is a real mobile fill cost. */
   antialias: boolean;
+  /** Per-pad splat-decal CanvasTexture resolution (px). Halved on mid/low — there's one of
+   *  these per live trampoline, so the texture memory adds up across the render window. */
+  splatResolution: number;
 }
 
 const LOW: QualitySettings = {
@@ -52,6 +55,7 @@ const LOW: QualitySettings = {
   blobSegments: 24,
   maxDpr: 1.5,
   antialias: false,
+  splatResolution: 64,
 };
 
 const MEDIUM: QualitySettings = {
@@ -66,6 +70,7 @@ const MEDIUM: QualitySettings = {
   blobSegments: 32,
   maxDpr: 1.5,
   antialias: false,
+  splatResolution: 64,
 };
 
 const HIGH: QualitySettings = {
@@ -80,6 +85,7 @@ const HIGH: QualitySettings = {
   blobSegments: 40,
   maxDpr: 2,
   antialias: true,
+  splatResolution: 128,
 };
 
 const BY_TIER: Record<QualityTier, QualitySettings> = { low: LOW, medium: MEDIUM, high: HIGH };
