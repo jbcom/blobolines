@@ -7,6 +7,7 @@ import {
   setMusicVolume,
   setSfxVolume,
 } from "@/audio";
+import type { GameSettings } from "@/core/types";
 import { ImpactStyle, impact } from "@/platform";
 import { useGameStore } from "@/state";
 
@@ -15,6 +16,14 @@ import { useGameStore } from "@/state";
 const TOUCH_CAPABLE =
   typeof window !== "undefined" &&
   ("ontouchstart" in window || (navigator.maxTouchPoints ?? 0) > 0);
+
+/** Graphics-quality segmented options. Auto = device + FPS heuristic; the rest pin a tier. */
+const QUALITY_OPTIONS: { value: GameSettings["qualityPref"]; label: string }[] = [
+  { value: "auto", label: "Auto" },
+  { value: "low", label: "Low" },
+  { value: "medium", label: "Med" },
+  { value: "high", label: "High" },
+];
 
 /**
  * Settings — volumes, music/haptics/reduce-motion toggles, slingshot sensitivity, and a
@@ -150,6 +159,37 @@ export function SettingsModal({
           checked={settings.reducedMotion}
           onChange={(on) => update({ reducedMotion: on })}
         />
+
+        {/* Graphics quality: Auto lets the device + frame-rate pick the tier; the explicit tiers
+            pin it (Low to save battery, High to force the heavy effects on a capable device).
+            Each segment is an aria-pressed toggle labelled by its text + the visible "Graphics"
+            heading, so no extra group role is needed. */}
+        <div className="flex items-center justify-between gap-3">
+          <span id="graphics-quality-label" className="font-semibold">
+            Graphics
+          </span>
+          <div className="flex gap-1">
+            {QUALITY_OPTIONS.map((opt) => {
+              const active = settings.qualityPref === opt.value;
+              return (
+                <button
+                  key={opt.value}
+                  type="button"
+                  aria-pressed={active}
+                  aria-label={`Graphics quality: ${opt.label}`}
+                  onClick={() => update({ qualityPref: opt.value })}
+                  className={`rounded-lg border px-2.5 py-1 font-ui text-[11px] font-bold ${
+                    active
+                      ? "border-accent bg-accent/15 text-cream"
+                      : "border-border text-fg-subtle hover:text-cream"
+                  }`}
+                >
+                  {opt.label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
 
         {/* Reset progress — destructive, so a two-step confirm: first tap arms ("Tap again
             to confirm"), second tap wipes best height / crystals / unlocks / skin. */}

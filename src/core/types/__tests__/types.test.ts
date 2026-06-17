@@ -58,6 +58,7 @@ describe("domain types", () => {
       slingshotSensitivity: 1,
       haptics: true,
       reducedMotion: false,
+      qualityPref: "auto",
     };
     expect(s.masterVolume).toBeGreaterThan(0);
     expect(s.masterVolume).toBeLessThanOrEqual(1);

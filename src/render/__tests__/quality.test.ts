@@ -56,4 +56,22 @@ describe("quality tiers", () => {
       resolveQuality("desktop").blobSegments,
     );
   });
+
+  it('"auto" pref runs the device+FPS heuristic (unchanged default behavior)', () => {
+    expect(resolveQuality("desktop", 0, "auto").tier).toBe("high");
+    expect(resolveQuality("desktop", 20, "auto").tier).toBe("low"); // heuristic still downgrades
+  });
+
+  it("an explicit pref PINS the tier, overriding device + FPS", () => {
+    // A phone forced to high gets the heavy effects even though its device tier is medium.
+    const forcedHigh = resolveQuality("phone", 60, "high");
+    expect(forcedHigh.tier).toBe("high");
+    expect(forcedHigh.refraction).toBe(true);
+    // A fast desktop forced to low gets the low tier even with a great FPS.
+    const forcedLow = resolveQuality("desktop", 120, "low");
+    expect(forcedLow.tier).toBe("low");
+    expect(forcedLow.refraction).toBe(false);
+    // Pinned tiers ignore the FPS evidence entirely.
+    expect(resolveQuality("desktop", 10, "high").tier).toBe("high");
+  });
 });

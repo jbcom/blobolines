@@ -725,7 +725,13 @@ permeability (permeable one-way pads rejected by owner).
 - [x] BUG fixed: resetBridges() clears launch/aim/rebound/splat/steer/impact on run start (PlayerBlob mount) — no stale value firing next run.
 - [x] BUG fixed: worldStore.reset derives the next seed via LCG from the previous (was performance.now) — deterministic/replayable; explicit seed still honored. Tested.
 ### Quality tier (biggest mobile gap)
-- [ ] Runtime quality-tier system (low/med/high) in store.settings → DPR, raymarch steps, postfx passes, shadows, AA, pool/particle counts. Expose in SettingsModal.
+- [x] Runtime quality-tier system (low/med/high) → postfx passes, pool/particle counts, blob
+      segments. The tier system (src/render/quality + qualityBridge) already auto-resolves from
+      device class + FPS and gates the heavy effects (refraction/DOF/godRays/bloom HIGH-only) +
+      droplet pool + CSG density. NOW exposed in SettingsModal as a Graphics picker (Auto/Low/
+      Med/High): "auto" runs the device+FPS heuristic, an explicit tier PINS it (qualityPref in
+      settings → setQualityPref bridge → resolveQuality). Persisted; synced at boot in App. (No
+      "raymarch steps" — that path was replaced by CSG goo, see the obsolete-items note above.)
 - [x] Make raymarchSteps a uniform (u_maxSteps loop bound)… OBSOLETE — there is no raymarch
       shader. The metaball raymarch goo was replaced by the three-bvh-csg merged-mesh goo
       (GooCsg), which has no step-count uniform. Nothing to do. (Verified 2026-06-16.)

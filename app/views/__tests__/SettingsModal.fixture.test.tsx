@@ -1,6 +1,9 @@
-import { expect, test } from "vitest";
+import { afterEach, expect, test } from "vitest";
 import { render } from "vitest-browser-react";
+import { useGameStore } from "@/state";
 import { SettingsModal } from "../SettingsModal";
+
+afterEach(() => useGameStore.getState().updateSettings({ qualityPref: "auto" }));
 
 // Guards the settings modal renders open with its controls (same Dialog-animation
 // regression class as the customizer).
@@ -44,6 +47,21 @@ test("dialog caps its height and scrolls its panel internally", async () => {
   // The inner panel is the scroll container (overflow-y auto).
   const panel = content.querySelector(".overflow-y-auto");
   expect(panel).toBeTruthy();
+});
+
+test("Graphics quality picker pins the tier in settings", async () => {
+  const screen = await render(<SettingsModal open onOpenChange={() => {}} />);
+  await expect.element(screen.getByTestId("settings")).toBeVisible();
+  // Default is "auto".
+  expect(useGameStore.getState().settings.qualityPref).toBe("auto");
+  // Pin Low, then High — the setting follows each tap, and the active segment is aria-pressed.
+  const low = screen.getByRole("button", { name: "Graphics quality: Low" });
+  await low.click();
+  expect(useGameStore.getState().settings.qualityPref).toBe("low");
+  await expect.element(low).toHaveAttribute("aria-pressed", "true");
+  const high = screen.getByRole("button", { name: "Graphics quality: High" });
+  await high.click();
+  expect(useGameStore.getState().settings.qualityPref).toBe("high");
 });
 
 test("Reset progress requires a two-step confirm", async () => {

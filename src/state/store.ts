@@ -59,6 +59,7 @@ export const DEFAULT_SETTINGS: GameSettings = {
   slingshotSensitivity: 1,
   haptics: true,
   reducedMotion: false,
+  qualityPref: "auto",
 };
 
 export const DEFAULT_PROGRESS: PlayerProgress = {

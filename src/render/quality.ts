@@ -9,6 +9,10 @@ import type { DeviceClass } from "@/platform";
  */
 
 export type QualityTier = "low" | "medium" | "high";
+/** Player-facing quality preference: "auto" lets the device class + FPS pick the tier (the
+ *  default); the explicit tiers PIN the quality, overriding the heuristic (force Low to save
+ *  battery, or force High on a device the heuristic under-rated). */
+export type QualityPref = "auto" | QualityTier;
 
 export interface QualitySettings {
   tier: QualityTier;
@@ -76,8 +80,17 @@ export function tierForDevice(device: DeviceClass): QualityTier {
  * A sustained low FPS downgrades a tier (high→medium→low); a healthy FPS never upgrades past
  * the device's starting tier (so a fast phone doesn't get desktop-only heavy passes). FPS of
  * 0/undefined means "no measurement yet" → just the device tier.
+ *
+ * `pref` is the player's setting: "auto" (default) runs the device+FPS heuristic above; an
+ * explicit tier PINS that tier and skips the heuristic entirely (manual override — force Low to
+ * save battery, or force High on a capable device the heuristic under-rated).
  */
-export function resolveQuality(device: DeviceClass, fps = 0): QualitySettings {
+export function resolveQuality(
+  device: DeviceClass,
+  fps = 0,
+  pref: QualityPref = "auto",
+): QualitySettings {
+  if (pref !== "auto") return BY_TIER[pref];
   let tier = tierForDevice(device);
   if (fps > 0) {
     if (fps < 30 && tier === "high") tier = "medium";

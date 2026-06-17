@@ -69,6 +69,11 @@ export interface GameSettings {
   haptics: boolean;
   /** Force reduced motion in-app (on top of the OS preference). */
   reducedMotion: boolean;
+  /** Render quality preference: "auto" lets the device class + FPS pick the tier; an explicit
+   *  tier pins it (force Low to save battery, or High on a capable device). Kept as a string
+   *  literal here (not imported from render/quality) so core/types stays dependency-light;
+   *  render/quality's QualityPref is the same union. */
+  qualityPref: "auto" | "low" | "medium" | "high";
 }
 
 /** Snapshot of the blob each frame (read by render + UI; written by sim). */
