@@ -43,6 +43,7 @@ describe("domain types", () => {
       skin: "blue",
       unlockedSkins: ["blue", "slime"],
       tutorialSeen: true,
+      unlockedAchievements: ["height-100"],
     };
     expect(p.bestHeight).toBe(100);
     expect(p.unlockedSkins).toHaveLength(2);

@@ -64,6 +64,32 @@ describe("useGameStore", () => {
     expect(useGameStore.getState().dailyRun).toBe(false);
   });
 
+  it("unlockAchievements persists newly-met ids once and returns only the fresh ones", () => {
+    // A 100m best unlocks "height-100"; the action returns it and stores it.
+    const fresh = useGameStore.getState().unlockAchievements({
+      bestHeight: 100,
+      bestScore: 0,
+      lifetimeCrystals: 0,
+      runHeight: 100,
+      runMaxCombo: 0,
+      runCrystals: 0,
+    });
+    expect(fresh).toContain("height-100");
+    expect(useGameStore.getState().progress.unlockedAchievements).toContain("height-100");
+    // Re-evaluating the same stats reports NOTHING new (already unlocked) + no duplicate stored.
+    const again = useGameStore.getState().unlockAchievements({
+      bestHeight: 100,
+      bestScore: 0,
+      lifetimeCrystals: 0,
+      runHeight: 100,
+      runMaxCombo: 0,
+      runCrystals: 0,
+    });
+    expect(again).toEqual([]);
+    const ids = useGameStore.getState().progress.unlockedAchievements;
+    expect(ids.filter((id) => id === "height-100")).toHaveLength(1);
+  });
+
   it("commitBestHeight only updates when new height is higher", () => {
     useGameStore.getState().commitBestHeight(100);
     expect(useGameStore.getState().progress.bestHeight).toBe(100);

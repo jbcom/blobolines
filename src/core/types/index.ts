@@ -53,6 +53,9 @@ export interface PlayerProgress {
   unlockedSkins: BlobSkin[];
   /** Has the player seen the first-run drag-to-launch coachmark? Set true on first launch. */
   tutorialSeen: boolean;
+  /** Ids of unlocked achievements (src/sim/achievements). Persisted; keyed by id so adding or
+   *  reordering achievements never disturbs existing unlocks. */
+  unlockedAchievements: string[];
 }
 
 /** User-tunable settings. */

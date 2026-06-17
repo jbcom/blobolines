@@ -5,6 +5,7 @@ import { motion } from "motion/react";
 import { useEffect, useRef, useState } from "react";
 import { playRecord, startMusic, stopMusic } from "@/audio";
 import type { BlobSkin } from "@/core/types";
+import { achievementById } from "@/sim/achievements";
 import { dailyKey, runHash } from "@/sim/daily";
 import { comboMultiplier } from "@/sim/launch";
 import { SKIN_COST, useGameStore, useWorldStore } from "@/state";
@@ -31,6 +32,25 @@ export function GameOver() {
   const resetWorld = useWorldStore((s) => s.reset);
   const dailyRun = useGameStore((s) => s.dailyRun);
   const seed = useWorldStore((s) => s.seed);
+  const unlockAchievements = useGameStore((s) => s.unlockAchievements);
+
+  // Evaluate achievements ONCE on game-over (the run is final here): persist newly-unlocked +
+  // capture them to celebrate on this card. commitBestHeight already merged this run into
+  // bestHeight/bestScore before the phase flip, so the lifetime stats are current.
+  const [freshAchievements, setFreshAchievements] = useState<string[]>([]);
+  // biome-ignore lint/correctness/useExhaustiveDependencies: evaluate exactly once on mount
+  useEffect(() => {
+    setFreshAchievements(
+      unlockAchievements({
+        bestHeight: best,
+        bestScore,
+        lifetimeCrystals,
+        runHeight: height,
+        runMaxCombo: maxCombo,
+        runCrystals: crystals,
+      }),
+    );
+  }, []);
   // Daily run → a shareable verification hash binding this result to today's seed (so a
   // leaderboard can spot a score that doesn't match its seed). Only shown for a daily run.
   const dailyTag = dailyRun
@@ -240,6 +260,30 @@ export function GameOver() {
           <p className="text-center font-ui text-xs font-semibold text-fg-subtle tabular-nums">
             {dailyTag}
           </p>
+        )}
+
+        {/* Newly-unlocked achievements this run — a small celebratory list. */}
+        {freshAchievements.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="flex flex-col gap-1 rounded-xl border border-tramp-gold/40 bg-tramp-gold/10 px-3 py-2"
+          >
+            <span className="font-display text-xs font-bold text-tramp-gold uppercase tracking-wide">
+              Achievement{freshAchievements.length > 1 ? "s" : ""} unlocked
+            </span>
+            {freshAchievements.map((id) => {
+              const a = achievementById(id);
+              if (!a) return null;
+              return (
+                <span key={id} className="font-ui text-xs text-cream">
+                  <span className="font-semibold">{a.title}</span>
+                  <span className="text-fg-muted"> — {a.description}</span>
+                </span>
+              );
+            })}
+          </motion.div>
         )}
 
         <Button ref={replayRef} cta size="lg" onClick={replay} className="w-full">

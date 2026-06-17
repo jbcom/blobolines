@@ -20,6 +20,7 @@ beforeEach(() => {
       bestHeight: 134,
       bestScore: 5000,
       crystals: 42,
+      unlockedAchievements: [], // start clean so the unlock card is deterministic
     },
   });
 });
@@ -55,6 +56,26 @@ test("tapping Customize requests the customizer and returns to menu", async () =
   await screen.getByText(/Customize/).click();
   expect(useGameStore.getState().customizerIntent).toBe(true);
   expect(useGameStore.getState().phase).toBe("menu");
+});
+
+test("celebrates newly-unlocked achievements + persists them", async () => {
+  // beforeEach: bestHeight 134 (→ Cloud Niner / height-100) + run maxCombo 5 (→ On a Roll).
+  const screen = await render(<GameOver />);
+  await expect.element(screen.getByText(/Achievements? unlocked/i)).toBeInTheDocument();
+  await expect.element(screen.getByText("Cloud Niner")).toBeInTheDocument();
+  await expect.element(screen.getByText("On a Roll")).toBeInTheDocument();
+  // They were persisted to progress (so they won't re-celebrate next time).
+  const ids = useGameStore.getState().progress.unlockedAchievements;
+  expect(ids).toEqual(expect.arrayContaining(["height-100", "combo-5"]));
+});
+
+test("does not show the achievement card when nothing new is unlocked", async () => {
+  // Pre-unlock everything this run would earn, so there's nothing fresh.
+  useGameStore.setState((s) => ({
+    progress: { ...s.progress, unlockedAchievements: ["height-100", "combo-5"] },
+  }));
+  const screen = await render(<GameOver />);
+  await expect.element(screen.getByText(/Achievements? unlocked/i).query()).not.toBeInTheDocument();
 });
 
 test("a DAILY run shows the shareable daily tag (date + hash); a normal run doesn't", async () => {

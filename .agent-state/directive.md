@@ -726,7 +726,14 @@ permeability (permeable one-way pads rejected by owner).
       folds it into the share text on a daily run; replay clears the flag (daily = one attempt).
       Date is read in the UI + injected (sim never calls new Date()). Fully tested (daily math +
       store flag + GameOver tag shown/hidden + TitleScreen CTAs).
-- [ ] Missions/objectives/achievements layer (e.g. "reach 200m", "10-combo", "100 crystals").
+- [x] Achievements layer. New pure src/sim/achievements: an ACHIEVEMENTS table (8 milestones —
+      height 100/250/500, combo 5/8, run-crystals 25, lifetime-crystals 250, score 10k) with pure
+      `met` predicates + newlyUnlocked(stats, unlocked) eval. Store holds a persisted
+      unlockedAchievements id-set + unlockAchievements(stats) action (unions + returns the fresh
+      ids). GameOver evaluates once on mount and celebrates the freshly-unlocked ones on the card.
+      Persists via the existing progress persistence (defaults [] for old saves). Fully tested
+      (predicate thresholds, no-re-report, store persist-once, GameOver shows/hides the card).
+      (A full all-achievements gallery modal can follow; the layer + unlock celebration ship now.)
 - [x] Charge-time/overcharge nuance on the slingshot: a PERFECT-RELEASE window. Charging into a
       sweet-spot band (0.85–0.97, config launch.perfectRelease) and releasing earns a power bonus
       (×1.18) — a timing skill on top of "drag farther = stronger", WITHOUT punishing (below the

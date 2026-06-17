@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { world as worldCfg } from "@/config";
 import type { BlobSkin, GamePhase, GameSettings, PlayerProgress } from "@/core/types";
+import { type AchievementStats, newlyUnlocked } from "@/sim/achievements";
 import { computeScore } from "@/sim/score";
 import { palette } from "@/styles/tokens";
 
@@ -48,6 +49,9 @@ export interface GameState {
   addCrystals: (n: number) => void;
   commitBestHeight: (height: number) => void;
   markTutorialSeen: () => void;
+  /** Evaluate achievements against the given stats snapshot, persist any newly-unlocked, and
+   *  return the freshly-unlocked ids (for the unlock toast). */
+  unlockAchievements: (stats: AchievementStats) => string[];
   setSkin: (skin: BlobSkin) => void;
   unlockSkin: (skin: BlobSkin) => void;
   /** Wipe all progress (best height, crystals, unlocks, skin) back to defaults. */
@@ -73,6 +77,7 @@ export const DEFAULT_PROGRESS: PlayerProgress = {
   skin: "blue",
   unlockedSkins: ["blue"],
   tutorialSeen: false,
+  unlockedAchievements: [],
 };
 
 const EMPTY_RUN: RunStats = {
@@ -105,6 +110,19 @@ export const useGameStore = create<GameState>((set) => ({
 
   markTutorialSeen: () =>
     set((s) => (s.progress.tutorialSeen ? s : { progress: { ...s.progress, tutorialSeen: true } })),
+
+  unlockAchievements: (stats) => {
+    const fresh = newlyUnlocked(stats, useGameStore.getState().progress.unlockedAchievements);
+    if (fresh.length > 0) {
+      set((s) => ({
+        progress: {
+          ...s.progress,
+          unlockedAchievements: [...s.progress.unlockedAchievements, ...fresh],
+        },
+      }));
+    }
+    return fresh;
+  },
 
   addCrystals: (n) =>
     set((s) => ({
