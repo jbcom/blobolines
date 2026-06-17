@@ -17,24 +17,31 @@ UI, persistence, CI/CD (incl. Android debug APK), e2e "is it playable" gate.
 
 ## In progress (Phase 2, branch `feat/goo-polish`)
 
-- **Goo skin** — raymarched metaball isosurface (`GooField` + `MetaballGooMaterial`) that
-  merges the blob body with impact splash droplets; eyes drawn on the goo face. ✅ in-game.
-- **Splash droplets** (`src/render/vfx/droplets`) + **splat painter** (`vfx/splat`). ✅
-- **Audio** — Tone.js SFX (bounce/launch/chime/powerup/splat), wired. ✅
-- **Post-processing** — bloom + grade + vignette + speed-reactive chromatic. ✅
-- **Crystals** — instanced, bob/spin, auto-collect, magnet-ready. ✅
+- **Goo skin** — three-bvh-csg merged goo body (`GooCsg`) with wet shader, deformation,
+  droplets, and expressive eyes. ✅
+- **Splash / splat / trail** — impact droplets, physical splat chunks, pad splat decals,
+  launch rings, and wet airborne trail. ✅
+- **Audio** — Howler sample library with per-pad bounce voices, music, altitude ambience,
+  stingers, and volume buses. ✅
+- **Post-processing** — N8AO, bloom, grade, vignette, and speed-reactive chromatic. ✅
+- **Crystals + power-ups** — instanced crystals, magnet/thruster/shield/slowmo/doubler/
+  multi-bounce pickups, HUD badges, and 3D models/fallbacks. ✅
+- **Pad behaviors** — standard, booster, moving, fragile, super, ice, canted, and wobbler
+  pads with reachability guarantees. ✅
 
 ## Next
 
-- Wire splat decals onto pads; goo trail; combo/launch burst VFX.
-- Power-ups (magnet, hyper-thrust) as entities; moving/fragile pad behaviors.
-- Blob skin customizer UI; settings/manual modals (shadcn + Motion); ambient music.
-- anime.js + haptics micro-juice; Pixel-5a 60fps perf pass (metaball budget).
-- Loading screen + favicon/app icon; remaining docs (per-system READMEs, HADS).
+- Continue balance and feel passes with real browser playthroughs: pad spacing, rebound
+  strength, air-steer sensitivity, hazard pressure, and altitude pacing.
+- Keep screenshot/diagnostic reads in the loop for camera framing, blob readability, and
+  3D spatial awareness.
+- Track upstream dependency warnings separately from app-owned warnings; do not hide console
+  noise by suppressing real app errors.
 
 ## Key facts for contributors
 
 - Enter a run via **PLAY** to verify (reliable physics + audio gesture); the dev-harness
   `start run` reseeds each press. Read `artifacts/*.json` for deterministic blob state.
-- Goo metaball centers must be **world-space** (see `src/render/goo/metaballField.ts`).
+- The in-game goo body follows diagnostics in world space; avoid parenting it under the
+  Rapier body unless the world-space CSG alignment is preserved.
 - Rapier must stay un-pre-bundled + in the `three` chunk (WASM init).

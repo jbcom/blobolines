@@ -67,3 +67,47 @@ test("keyboard steering is inert when the blob is resting (not airborne)", async
   expect(getAirSteer()).toEqual([0, 0]); // no steering on a grounded blob
   window.dispatchEvent(new KeyboardEvent("keyup", { code: "ArrowLeft" }));
 });
+
+test("airborne drag shows the 3D steer reticle and writes X/Z steering", async () => {
+  const screen = await render(<LaunchInput />);
+  setAirborne(true);
+  const surface = document.querySelector('[role="application"]') as HTMLElement;
+  expect(surface).toBeTruthy();
+
+  surface.dispatchEvent(
+    new PointerEvent("pointerdown", {
+      bubbles: true,
+      pointerId: 1,
+      pointerType: "touch",
+      clientX: 300,
+      clientY: 300,
+      buttons: 1,
+    }),
+  );
+  surface.dispatchEvent(
+    new PointerEvent("pointermove", {
+      bubbles: true,
+      pointerId: 1,
+      pointerType: "touch",
+      clientX: 360,
+      clientY: 250,
+      buttons: 1,
+    }),
+  );
+
+  await expect.element(screen.getByTestId("air-steer-reticle")).toBeInTheDocument();
+  expect(getAirSteer()[0]).toBeGreaterThan(0);
+  expect(getAirSteer()[1]).toBeLessThan(0);
+
+  surface.dispatchEvent(
+    new PointerEvent("pointerup", {
+      bubbles: true,
+      pointerId: 1,
+      pointerType: "touch",
+      clientX: 360,
+      clientY: 250,
+    }),
+  );
+  await expect.element(screen.getByTestId("air-steer-reticle").query()).not.toBeInTheDocument();
+  expect(getAirSteer()).toEqual([0, 0]);
+});

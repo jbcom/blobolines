@@ -26,11 +26,18 @@ export function LaunchInput() {
   // touch/mouse drag below. Mounted here so all input lives in one PLAYING-scoped place.
   useKeyboardSteer();
   const [charge, setCharge] = useState(0);
+  const [airReticle, setAirReticle] = useState({
+    active: false,
+    originX: 0,
+    originY: 0,
+    offsetX: 0,
+    offsetY: 0,
+  });
   // Honor prefers-reduced-motion: drop the infinite pulse loops to a single static cue.
   const reduced = useReducedMotion();
   const repeat = reduced ? 0 : Number.POSITIVE_INFINITY;
 
-  const bind = useDrag(({ movement: [mx, my], down, last, tap }) => {
+  const bind = useDrag(({ movement: [mx, my], down, last, tap, initial: [ix, iy] }) => {
     const airborne = getBlobDiagnostics().airborne;
 
     if (airborne) {
@@ -42,19 +49,32 @@ export function LaunchInput() {
         requestMidAirBounce();
         setAirSteer(0, 0);
         setCharge(0);
+        setAirReticle((r) => ({ ...r, active: false }));
         return;
       }
       // Mid-air 3D steering: drag → continuous lateral force; release → stop.
       if (down) {
         const [sx, sz] = computeAirSteer(mx, my);
         setAirSteer(sx, sz);
+        const dist = Math.hypot(mx, my);
+        const maxOffset = 42;
+        const k = dist > maxOffset ? maxOffset / dist : 1;
+        setAirReticle({
+          active: true,
+          originX: ix,
+          originY: iy,
+          offsetX: mx * k,
+          offsetY: my * k,
+        });
       } else {
         setAirSteer(0, 0);
+        setAirReticle((r) => ({ ...r, active: false }));
       }
       setCharge(0);
       return;
     }
 
+    setAirReticle((r) => (r.active ? { ...r, active: false } : r));
     // Slingshot on a pad: charge while dragging, launch on release.
     const aim = computeAim(mx, my, { maxDragDist: 140, sensitivity });
     setCharge(down ? aim.strength : 0);
@@ -77,6 +97,34 @@ export function LaunchInput() {
       className="pointer-events-auto absolute inset-0 touch-none"
     >
       {/* Edge glow that ignites as the charge nears max — the screen itself tenses up. */}
+      <AnimatePresence>
+        {airReticle.active && (
+          <motion.div
+            aria-hidden
+            data-testid="air-steer-reticle"
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.8 }}
+            transition={{ duration: 0.12 }}
+            className="pointer-events-none absolute size-24 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-accent/70 bg-bg/15 shadow-[var(--glow-blue)] backdrop-blur-[2px]"
+            style={{
+              left: airReticle.originX,
+              top: airReticle.originY,
+            }}
+          >
+            <span className="absolute top-1/2 left-2 right-2 h-px -translate-y-1/2 bg-accent/35" />
+            <span className="absolute top-2 bottom-2 left-1/2 w-px -translate-x-1/2 bg-accent/35" />
+            <motion.span
+              className="absolute top-1/2 left-1/2 size-7 rounded-full border-2 border-cream/90 bg-accent/70 shadow-[var(--glow-blue)]"
+              animate={{
+                x: airReticle.offsetX - 14,
+                y: airReticle.offsetY - 14,
+              }}
+              transition={{ type: "spring", stiffness: 520, damping: 34 }}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
       <AnimatePresence>
         {perfect && (
           <motion.div

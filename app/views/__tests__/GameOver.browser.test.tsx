@@ -78,18 +78,18 @@ test("does not show the achievement card when nothing new is unlocked", async ()
   await expect.element(screen.getByText(/Achievements? unlocked/i).query()).not.toBeInTheDocument();
 });
 
-test("a DAILY run shows the shareable daily tag (date + hash); a normal run doesn't", async () => {
+test("a DAILY run shows the shareable daily tag (date + hash)", async () => {
   useWorldStore.setState({ seed: 12345 });
   useGameStore.setState({ dailyRun: true });
-  const daily = await render(<GameOver />);
+  const screen = await render(<GameOver />);
   // The tag reads "Daily <YYYY-MM-DD> · <hash>" — assert the label + date shape are present.
-  await expect.element(daily.getByText(/Daily \d{4}-\d{2}-\d{2} · /)).toBeInTheDocument();
-  cleanup();
+  await expect.element(screen.getByText(/Daily \d{4}-\d{2}-\d{2} · /)).toBeInTheDocument();
+});
 
-  // A normal (non-daily) run must NOT show the daily tag.
+test("a normal run does not show the daily tag", async () => {
   useGameStore.setState({ dailyRun: false });
-  const normal = await render(<GameOver />);
-  await expect.element(normal.getByText(/Daily \d{4}-\d{2}-\d{2}/).query()).not.toBeInTheDocument();
+  const screen = await render(<GameOver />);
+  await expect.element(screen.getByText(/Daily \d{4}-\d{2}-\d{2}/).query()).not.toBeInTheDocument();
 });
 
 test("celebrates a height record instead of a short-by delta", async () => {

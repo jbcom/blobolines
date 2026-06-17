@@ -22,7 +22,7 @@ let snapshot: BlobDiagnostics = {
   position: [0, 0, 0],
   velocity: [0, 0, 0],
   speed: 0,
-  airborne: true,
+  airborne: false,
   expression: "idle",
   squash: 1,
   maxHeight: 0,

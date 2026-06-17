@@ -28,9 +28,9 @@ stretches, blinks, and splatters along the way.
 ## Stack
 
 React Three Fiber + drei + @react-three/rapier (physics) · `postprocessing` (soft
-glow) · koota (ECS) · Tone.js (procedural audio) · shadcn/ui (Radix) + Motion +
-anime.js (UI/juice) · Tailwind v4 · Vite 8 · TypeScript · Capacitor (Android) ·
-Vitest + Playwright. See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
+glow) · koota (ECS) · Howler.js (sample-based audio) · shadcn/ui (Radix) + Motion ·
+Tailwind v4 · Vite 8 · TypeScript · Capacitor (Android) · Vitest + Playwright. See
+[`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
 
 ## Develop
 

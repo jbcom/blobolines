@@ -30,6 +30,7 @@ export const physics = physicsCfg as {
     linearDamping: number;
     ccd: boolean;
   };
+  starterBlobY: number;
   autoLaunchDelay: number;
   deathFallDistance: number;
   worldBoundXZ: number;

@@ -278,6 +278,7 @@ export function startMusic(): void {
  *  unlocked (after the first gesture) — safe no-op before that, like every cue. Returning to the
  *  menu after a run crossfades from the in-game track back to this. */
 export function startMenuMusic(): void {
+  if (!isAudioInitialized()) return;
   started = true;
   setMusicTrack("menu");
   // No ambient bed on the menu — just the music.

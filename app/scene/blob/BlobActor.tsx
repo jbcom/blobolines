@@ -30,7 +30,7 @@ interface BlobActorProps {
   radius?: number;
   /** Read live state from the diagnostics bridge instead of props. */
   live?: boolean;
-  /** Render the solid goo sphere body. Off when a GooField metaball skin replaces it
+  /** Render the solid goo sphere body. Off when a merged in-game goo body owns the skin
    *  (the eyes + squash group still apply). Default on (menu/fixtures). */
   body?: boolean;
 }
