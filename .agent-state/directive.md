@@ -425,7 +425,11 @@ game — touch/drag is primary; keyboard is a minor desktop-only secondary, don'
       out + flashes bright then dissolves over 0.22s (popping map) instead of vanishing instantly.
       Folded the goo-lighting review fix: floored the biome-tinted fresnel rim at 40% of base so
       the wet edge can't be snuffed out in a dark-sky biome (deep-space tops ~#180a30).
-- [ ] Powerup attract aura/halo + collect flash (PowerUpField/PowerUpModel).
+- [x] Powerup attract aura/halo + collect flash: each power-up now has a billboarded additive
+      halo (type-colored — magnet blue / thruster orange) that pulses and brightens+grows as the
+      blob nears (within ~14u), drawing the eye toward the pickup. On collect, the halo BLOOMS
+      bright + scales out over 0.3s (the model hides) before the group vanishes — a satisfying
+      grab flash. Browser fixture renders a power-up + aura in WebGL.
 - [ ] Per-biome particle ambience (petals ground, ice/wind stratosphere, nebula dust space) — extend BiomeProps.
 - [ ] Per-biome color grade + bloom driven by biomeSkyAt (warm ground, cold high-contrast space) in PostFX.
 - [ ] Depth-of-field focused on the blob (quality-gated).

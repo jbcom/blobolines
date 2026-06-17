@@ -1,6 +1,6 @@
-import { useFrame } from "@react-three/fiber";
+import { useFrame, useThree } from "@react-three/fiber";
 import { Suspense, useEffect, useRef } from "react";
-import type { Group } from "three";
+import { AdditiveBlending, type Group, type Mesh, type MeshBasicMaterial } from "three";
 import { playPowerup } from "@/audio";
 import type { PowerUpType } from "@/core/types";
 import { activatePowerup, getBlobDiagnostics, useWorldStore } from "@/state";
@@ -14,43 +14,95 @@ import { PowerUpModel } from "./PowerUpModel";
  */
 const PICKUP_R2 = (0.75 + 0.85) * (0.75 + 0.85);
 
+const AURA_COLOR: Record<PowerUpType, string> = {
+  magnet: palette.tramp.blue,
+  thruster: palette.tramp.orange,
+};
+const FLASH_LIFE = 0.3; // seconds the collect flash plays
+
 export function PowerUpField() {
   const groupRef = useRef<Group>(null);
   const powerups = useWorldStore((s) => s.powerups);
   const collected = useRef<Set<number>>(new Set());
+  /** index → seconds-since-collected, drives the collect flash before the group hides. */
+  const flashing = useRef<Map<number, number>>(new Map());
+  const camera = useThree((s) => s.camera);
 
   // A world reset swaps the `powerups` array identity; clear the collected set so a new
   // power-up reusing an old index isn't immediately hidden as already-taken.
   // biome-ignore lint/correctness/useExhaustiveDependencies: reset keyed on array identity
   useEffect(() => {
     collected.current.clear();
+    flashing.current.clear();
   }, [powerups]);
 
-  useFrame((state) => {
+  useFrame((state, delta) => {
     const g = groupRef.current;
     if (!g) return;
     const [bx, by, bz] = getBlobDiagnostics().position;
     const t = state.clock.elapsedTime;
+    const dt = Math.min(delta, 1 / 30);
 
     g.children.forEach((child, i) => {
+      const p = powerups[i];
+      if (!p) return;
+      const model = child.children[0];
+      const aura = child.children[1] as Mesh | undefined;
+      const auraMat = aura?.material as MeshBasicMaterial | undefined;
+
+      // Collect flash: a quick bright aura bloom + the model hides, then the whole group goes.
+      const flashAge = flashing.current.get(i);
+      if (flashAge !== undefined) {
+        const na = flashAge + dt;
+        if (na >= FLASH_LIFE) {
+          flashing.current.delete(i);
+          child.visible = false;
+          return;
+        }
+        flashing.current.set(i, na);
+        const f = na / FLASH_LIFE;
+        if (model) model.visible = false;
+        if (aura && auraMat) {
+          aura.visible = true;
+          aura.lookAt(camera.position);
+          const s = 1 + 3 * f;
+          aura.scale.set(s, s, s);
+          auraMat.opacity = (1 - f) * 0.9;
+        }
+        return;
+      }
       if (collected.current.has(i)) {
         child.visible = false;
         return;
       }
-      const p = powerups[i];
-      if (!p) return;
+
       child.position.set(
         p.position[0],
         p.position[1] + Math.sin(t * 2.5 + i) * 0.25,
         p.position[2],
       );
-      child.rotation.y = t * 2 + i;
+      if (model) model.rotation.y = t * 2 + i;
+
+      // Attract AURA: a billboarded additive halo behind the model that pulses, and brightens
+      // + grows as the blob nears — drawing the eye toward a pickup. Billboard so it always
+      // faces the camera.
       const dx = p.position[0] - bx;
       const dy = p.position[1] - by;
       const dz = p.position[2] - bz;
-      if (dx * dx + dy * dy + dz * dz <= PICKUP_R2) {
+      const d2 = dx * dx + dy * dy + dz * dz;
+      if (aura && auraMat) {
+        aura.visible = true;
+        aura.lookAt(camera.position);
+        const near = Math.max(0, 1 - d2 / (14 * 14)); // 0 far → 1 close (within ~14u)
+        const pulse = 0.5 + 0.5 * Math.sin(t * 3 + i);
+        const s = 1.1 + 0.25 * pulse + 0.7 * near;
+        aura.scale.set(s, s, s);
+        auraMat.opacity = 0.18 + 0.22 * pulse + 0.4 * near;
+      }
+
+      if (d2 <= PICKUP_R2) {
         collected.current.add(i);
-        child.visible = false;
+        flashing.current.set(i, 0); // start the collect flash
         activatePowerup(p.type);
         playPowerup();
       }
@@ -67,6 +119,17 @@ export function PowerUpField() {
           <Suspense fallback={<PrimitivePowerup type={p.type} />}>
             <PowerUpModel type={p.type} />
           </Suspense>
+          {/* Attract aura / collect-flash halo (billboarded, additive). */}
+          <mesh visible={false}>
+            <circleGeometry args={[0.9, 32]} />
+            <meshBasicMaterial
+              color={AURA_COLOR[p.type]}
+              transparent
+              opacity={0}
+              blending={AdditiveBlending}
+              depthWrite={false}
+            />
+          </mesh>
         </group>
       ))}
     </group>
