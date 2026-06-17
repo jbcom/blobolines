@@ -1,3 +1,10 @@
+export {
+  nextRouteStep,
+  type RouteDifficultyProfile,
+  type RouteStep,
+  routeProfile,
+  TARGET_ABOVE_GROUND,
+} from "@/world";
 export { type BlobDiagnostics, getBlobDiagnostics, setBlobDiagnostics } from "./diagnostics";
 export {
   consumeFlash,
@@ -51,6 +58,15 @@ export {
   tickPowerups,
   timeScale,
 } from "./powerupBridge";
+export {
+  clearRouteLandingFeedback,
+  getRouteLandingFeedback,
+  type RouteLandingFeedback,
+  type RouteLandingGrade,
+  reportRouteLandingFeedback,
+  routeLandingGrade,
+  subscribeRouteLandingFeedback,
+} from "./routeFeedbackBridge";
 export {
   getRouteProofTarget,
   type RouteProofTarget,

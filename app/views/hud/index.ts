@@ -5,4 +5,5 @@ export { Hud } from "./Hud";
 export { MilestoneBanner } from "./MilestoneBanner";
 export { type NextPadGuidance, NextPadRadar, nextPadGuidance } from "./NextPadRadar";
 export { Onboarding } from "./Onboarding";
+export { RouteLandingToast } from "./RouteLandingToast";
 export { ScreenFlash } from "./ScreenFlash";

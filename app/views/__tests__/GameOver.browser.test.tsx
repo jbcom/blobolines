@@ -79,17 +79,19 @@ test("does not show the achievement card when nothing new is unlocked", async ()
 });
 
 test("a DAILY run shows the shareable daily tag (date + hash)", async () => {
-  useWorldStore.setState({ seed: 12345 });
+  useWorldStore.setState({ seed: 12345, seedPhrase: "blobolines-daily-2026-06-17" });
   useGameStore.setState({ dailyRun: true });
   const screen = await render(<GameOver />);
   // The tag reads "Daily <YYYY-MM-DD> · <hash>" — assert the label + date shape are present.
   await expect.element(screen.getByText(/Daily \d{4}-\d{2}-\d{2} · /)).toBeInTheDocument();
 });
 
-test("a normal run does not show the daily tag", async () => {
+test("a normal run shows its replay seed without the daily tag", async () => {
+  useWorldStore.setState({ seed: 12345, seedPhrase: "bouncy-bright-blob" });
   useGameStore.setState({ dailyRun: false });
   const screen = await render(<GameOver />);
   await expect.element(screen.getByText(/Daily \d{4}-\d{2}-\d{2}/).query()).not.toBeInTheDocument();
+  await expect.element(screen.getByText("Seed bouncy-bright-blob")).toBeInTheDocument();
 });
 
 test("celebrates a height record instead of a short-by delta", async () => {

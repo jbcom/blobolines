@@ -33,6 +33,7 @@ export function GameOver() {
   const resetWorld = useWorldStore((s) => s.reset);
   const dailyRun = useGameStore((s) => s.dailyRun);
   const seed = useWorldStore((s) => s.seed);
+  const seedPhrase = useWorldStore((s) => s.seedPhrase);
   const difficulty = useWorldStore((s) => s.difficulty);
   const unlockAchievements = useGameStore((s) => s.unlockAchievements);
 
@@ -55,7 +56,7 @@ export function GameOver() {
   }, []);
   // Daily run → a shareable verification hash binding this result to today's seed (so a
   // leaderboard can spot a score that doesn't match its seed). Only shown for a daily run.
-  const dailyTag = dailyRun
+  const runTag = dailyRun
     ? `Daily ${dailyKey(new Date())} · ${ROUTE_PROFILES[difficulty].label} · ${runHash({
         seed,
         height,
@@ -63,7 +64,7 @@ export function GameOver() {
         maxCombo,
         difficulty,
       })}`
-    : null;
+    : `Seed ${seedPhrase}`;
   const replayRef = useRef<HTMLButtonElement>(null);
 
   const toMenu = () => {
@@ -108,9 +109,9 @@ export function GameOver() {
     [],
   );
   const share = async () => {
-    const text = dailyTag
-      ? `I scored ${runScore.toLocaleString()} (${height}m) on the Blobolines ${dailyTag} 🫧`
-      : `I scored ${runScore.toLocaleString()} (${height}m) in Blobolines! 🫧`;
+    const text = dailyRun
+      ? `I scored ${runScore.toLocaleString()} (${height}m) on the Blobolines ${runTag} 🫧`
+      : `I scored ${runScore.toLocaleString()} (${height}m) in Blobolines (${runTag})! 🫧`;
     const url = "https://jbcom.github.io/blobolines/";
     try {
       if (typeof navigator !== "undefined" && navigator.share) {
@@ -267,9 +268,9 @@ export function GameOver() {
           </button>
         )}
 
-        {dailyTag && (
+        {runTag && (
           <p className="text-center font-ui text-xs font-semibold text-fg-subtle tabular-nums">
-            {dailyTag}
+            {runTag}
           </p>
         )}
 

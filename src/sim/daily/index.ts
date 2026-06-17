@@ -1,1 +1,1 @@
-export { dailyKey, dailySeed, type RunResult, runHash } from "./daily";
+export { dailyKey, dailySeed, dailySeedPhrase, type RunResult, runHash } from "./daily";

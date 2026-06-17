@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { dailyKey, dailySeed, runHash } from "../daily";
+import { dailyKey, dailySeed, dailySeedPhrase, runHash } from "../daily";
 
 // Fixed UTC dates (date is injected — sim never calls new Date()).
 const jun16 = new Date(Date.UTC(2026, 5, 16, 9, 30)); // month is 0-based → June
@@ -16,6 +16,7 @@ describe("daily challenge", () => {
   it("dailySeed is deterministic per day and differs across days", () => {
     expect(dailySeed(jun16)).toBe(dailySeed(jun16Late)); // same day → same seed
     expect(dailySeed(jun16)).not.toBe(dailySeed(jun17)); // different day → different seed
+    expect(dailySeedPhrase(jun16)).toBe("blobolines-daily-2026-06-16");
     expect(Number.isInteger(dailySeed(jun16))).toBe(true);
     expect(dailySeed(jun16)).toBeGreaterThanOrEqual(0); // u32
   });

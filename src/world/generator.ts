@@ -57,7 +57,6 @@ const STARTER_MAX_STEP_Y = 9.25;
 const STARTER_MIN_LATERAL = 3.6;
 const STARTER_MAX_LATERAL = 4.8;
 const STARTER_MIN_FOOTPRINT = 8.4;
-const FALLBACK_FOOTPRINT = 7.2;
 const G = Math.abs(GRAVITY[1]);
 
 function clamp(n: number, min: number, max: number): number {
@@ -144,11 +143,11 @@ function sourceLateralForProof(
     return { lateral: Math.sin(angle), up: Math.cos(angle) };
   }
   if (prev.type === "moving") {
-    const lateral = Math.min(0.5, (trampCfg.movingAmplitude * trampCfg.movingSpeed) / 12);
+    const lateral = Math.min(0.22, (trampCfg.movingAmplitude * trampCfg.movingSpeed) / 12);
     return { lateral, up: Math.sqrt(Math.max(0.01, 1 - lateral * lateral)) };
   }
   if (prev.type === "wobbler") {
-    const lateral = Math.sin(trampCfg.wobblerMaxTiltRad);
+    const lateral = Math.min(0.24, Math.sin(trampCfg.wobblerMaxTiltRad));
     return { lateral, up: Math.sqrt(Math.max(0.01, 1 - lateral * lateral)) };
   }
   return { lateral: 0, up: 1 };
@@ -159,13 +158,30 @@ function predictedLandingGap(
   target: TrampolineSpec,
   profile: RouteDifficultyProfile,
 ): number {
+  const proof = solveGoldenPath(
+    prev,
+    target,
+    undefined,
+    undefined,
+    undefined,
+    prev.type === "canted",
+  );
+  if (proof) {
+    return Math.hypot(proof.landing[0] - prev.position[0], proof.landing[2] - prev.position[2]);
+  }
+
   const { lateral, up } = sourceLateralForProof(prev, profile);
   if (lateral <= 0) return 0;
-  const vy = up * CLIMB_SPEED;
   const dy = target.position[1] - prev.position[1];
+  const minDescendingGap = (2 * Math.max(0, dy) * lateral) / Math.max(0.05, up) + 0.25;
+  const speed = Math.min(
+    CLIMB_SPEED,
+    Math.sqrt(Math.max(0, 2 * G * Math.max(0, dy + 1.4))) / Math.max(0.05, up),
+  );
+  const vy = up * speed;
   if (vy * vy < 2 * G * dy) return 0;
-  const t = Math.max(0, (vy - Math.sqrt(Math.max(0, vy * vy - 2 * G * dy))) / G);
-  return lateral * CLIMB_SPEED * t;
+  const t = Math.max(0, (vy + Math.sqrt(Math.max(0, vy * vy - 2 * G * dy))) / G);
+  return Math.max(minDescendingGap, lateral * speed * t);
 }
 
 function proofAccepted(
@@ -227,7 +243,7 @@ function widenForHumanMargin(
   const safety = 1.08;
   const halfForLip = (estimatedMiss + lip) * safety;
   const halfForPercent = (estimatedMiss / Math.max(0.05, 1 - precision)) * safety;
-  const footprint = Math.max(FALLBACK_FOOTPRINT, halfForLip * 2, halfForPercent * 2);
+  const footprint = Math.max(profile.minFootprint, halfForLip * 2, halfForPercent * 2);
   return {
     ...target,
     width: Math.max(target.width, footprint),
@@ -314,19 +330,31 @@ function ensureReachable(
   // the canted-proof ceiling, and widen the target only enough to preserve a playable landing
   // footprint. If this ever fails, the tuning constants are internally contradictory.
   const fallbackY = Math.min(pad.position[1], prev.position[1] + MAX_GOLDEN_STEP_Y);
+  const fallbackMaxGap =
+    prev.position[1] < STARTER_GUIDE_Y
+      ? STARTER_MAX_LATERAL
+      : Math.min(MAX_SUCCESSOR_LATERAL, 7 + prev.position[1] / 120);
+  const fallbackGap =
+    prev.type === "standard"
+      ? MIN_SUCCESSOR_LATERAL
+      : clamp(predictedLandingGap(prev, pad, profile), MIN_SUCCESSOR_LATERAL, fallbackMaxGap);
   result = withPosition(
     {
       ...pad,
-      width: Math.max(pad.width, FALLBACK_FOOTPRINT),
-      depth: Math.max(pad.depth, FALLBACK_FOOTPRINT),
+      width: Math.max(pad.width, profile.minFootprint),
+      depth: Math.max(pad.depth, profile.minFootprint),
     },
-    [px + dx * minK, fallbackY, pz + dz * minK],
+    [px + dirX * fallbackGap, fallbackY, pz + dirZ * fallbackGap],
   );
   result = widenForHumanMargin(prev, result, profile);
   const proof = proveAt(result);
   if (!proof) {
+    const finalGap = Math.hypot(
+      result.position[0] - prev.position[0],
+      result.position[2] - prev.position[2],
+    );
     throw new Error(
-      `Unable to certify golden path ${prev.type}->${result.type} from y=${prev.position[1].toFixed(2)} to y=${result.position[1].toFixed(2)}`,
+      `Unable to certify golden path ${prev.type}->${result.type} from y=${prev.position[1].toFixed(2)} to y=${result.position[1].toFixed(2)} gap=${finalGap.toFixed(2)} footprint=${Math.max(result.width, result.depth).toFixed(2)} route=${prev.routeIndex ?? "?"} angle=${prev.cantAngleRad?.toFixed(2) ?? "flat"}`,
     );
   }
   attachProof(proof);
@@ -384,19 +412,21 @@ export function generateUpTo(
 
     // Difficulty: pads shrink with altitude.
     const diff = Math.max(0.4, 1 - y / 650);
-    let width = (5.8 + rng.next() * 2.8) * diff;
-    let depth = (5.8 + rng.next() * 2.8) * diff;
+    let width = (5.8 + rng.next() * 2.8) * diff * profile.footprintScale;
+    let depth = (5.8 + rng.next() * 2.8) * diff * profile.footprintScale;
     // Shape variety: ~1 in 4 pads gets a distinct silhouette — a long plank (wide+thin) or a
     // beam (deep+narrow) — so the tower isn't a stack of identical squares (and the footprint
     // affects how you must land). The other axis shrinks to keep the area sane.
     const shapeRoll = rng.next();
-    if (shapeRoll > 0.85) {
+    if (shapeRoll > 1 - profile.shapeVariety / 2) {
       width *= 1.55;
       depth *= 0.6;
-    } else if (shapeRoll > 0.7) {
+    } else if (shapeRoll > 1 - profile.shapeVariety) {
       depth *= 1.55;
       width *= 0.6;
     }
+    width = Math.max(width, profile.minFootprint);
+    depth = Math.max(depth, profile.minFootprint);
 
     // The route profile owns the source/target rhythm. That is deliberate: a flat-to-flat
     // sequence can be mathematically reachable but hard to READ in 3D, so approachable modes

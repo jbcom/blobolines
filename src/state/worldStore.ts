@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { world as worldCfg } from "@/config";
-import { createRng, type Rng } from "@/core/math";
+import { createRng, createSeedPhrase, type Rng, type SeedInput } from "@/core/math";
 import type { CrystalSpec, TrampolineSpec, WorldDifficulty } from "@/core/types";
 import { generateUpTo, type PowerUpSpec, starterPad } from "@/world";
 
@@ -13,6 +13,8 @@ import { generateUpTo, type PowerUpSpec, starterPad } from "@/world";
 
 interface WorldState {
   seed: number;
+  seedPhrase: string;
+  runId: number;
   difficulty: WorldDifficulty;
   trampolines: TrampolineSpec[];
   crystals: CrystalSpec[];
@@ -24,7 +26,7 @@ interface WorldState {
   rng: Rng;
 
   /** Reset to a fresh tower for a new run (optionally with a given seed). */
-  reset: (seed?: number, difficulty?: WorldDifficulty) => void;
+  reset: (seed?: SeedInput, difficulty?: WorldDifficulty) => void;
   /** Update the selected route difficulty without resetting the current tower. */
   setDifficulty: (difficulty: WorldDifficulty) => void;
   /** Ensure the tower is generated at least up to `targetY`. */
@@ -44,7 +46,7 @@ function tail<T>(list: T[], max: number): T[] {
   return list.length > max ? list.slice(list.length - max) : list;
 }
 
-function freshTower(seed: number, difficulty: WorldDifficulty) {
+function freshTower(seed: SeedInput, difficulty: WorldDifficulty) {
   const rng = createRng(seed);
   const start = starterPad();
   // Thread the starter pad in as prev so the first generated pad is reachable from it too.
@@ -60,17 +62,32 @@ function freshTower(seed: number, difficulty: WorldDifficulty) {
   };
 }
 
+function resolveSeed(seed: SeedInput | undefined): Pick<WorldState, "seed" | "seedPhrase"> & {
+  input: SeedInput;
+} {
+  const input = seed ?? createSeedPhrase();
+  const rng = createRng(input);
+  return { input, seed: rng.seed, seedPhrase: rng.phrase };
+}
+
+const INITIAL_SEED = resolveSeed("bouncy-bright-blob");
+
 export const useWorldStore = create<WorldState>((set, get) => ({
-  seed: 1,
-  ...freshTower(1, "ready"),
+  seed: INITIAL_SEED.seed,
+  seedPhrase: INITIAL_SEED.seedPhrase,
+  runId: 0,
+  ...freshTower(INITIAL_SEED.input, "ready"),
 
   reset: (seed, difficulty) => {
-    // Deterministic next seed (not performance.now() — that was non-reproducible and
-    // violated the determinism doctrine): advance the previous seed by an LCG step so each
-    // run gets a fresh-but-replayable tower. Pass an explicit seed for a fixed/daily run.
-    const s = seed ?? ((get().seed * 1664525 + 1013904223) >>> 0 || 1);
+    // Normal runs get a fresh replayable phrase; explicit seeds/phrases are fixed replays.
+    const s = resolveSeed(seed);
     const d = difficulty ?? get().difficulty;
-    set({ seed: s, ...freshTower(s, d) });
+    set({
+      seed: s.seed,
+      seedPhrase: s.seedPhrase,
+      runId: get().runId + 1,
+      ...freshTower(s.input, d),
+    });
   },
 
   setDifficulty: (difficulty) => set({ difficulty }),

@@ -22,10 +22,12 @@ test("Daily Challenge starts a daily run (dailyRun true)", async () => {
   await expect
     .element(screen.getByRole("dialog", { name: /Daily challenge difficulty/ }))
     .toBeInTheDocument();
+  await expect.element(screen.getByText(/blobolines-daily-/)).toBeInTheDocument();
   await screen.getByRole("button", { name: /Medium/ }).click();
   expect(useGameStore.getState().phase).toBe("playing");
   expect(useGameStore.getState().dailyRun).toBe(true);
   expect(useWorldStore.getState().difficulty).toBe("medium");
+  expect(useWorldStore.getState().seedPhrase).toMatch(/^blobolines-daily-/);
 });
 
 test("Play starts a normal run (dailyRun false even if a daily flag lingered)", async () => {
@@ -35,10 +37,12 @@ test("Play starts a normal run (dailyRun false even if a daily flag lingered)", 
   await expect
     .element(screen.getByRole("dialog", { name: /New game difficulty/ }))
     .toBeInTheDocument();
-  await screen.getByRole("button", { name: /Ready/ }).click();
+  await expect.element(screen.getByRole("button", { name: /Shuffle seed/ })).toBeInTheDocument();
+  await screen.getByRole("button", { name: /Easy/ }).click();
   expect(useGameStore.getState().phase).toBe("playing");
   expect(useGameStore.getState().dailyRun).toBe(false); // normal Play clears it
   expect(useWorldStore.getState().difficulty).toBe("ready");
+  expect(useWorldStore.getState().seedPhrase).toMatch(/^[a-z]+-[a-z]+-[a-z]+$/);
 });
 
 test("opening Settings lazy-loads + shows the modal through the Suspense boundary", async () => {

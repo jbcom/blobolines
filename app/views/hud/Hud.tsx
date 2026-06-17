@@ -6,6 +6,7 @@ import { MilestoneBanner } from "./MilestoneBanner";
 import { NextPadRadar } from "./NextPadRadar";
 import { Onboarding } from "./Onboarding";
 import { PowerUpBadges } from "./PowerUpBadges";
+import { RouteLandingToast } from "./RouteLandingToast";
 import { ScreenFlash } from "./ScreenFlash";
 import { SpeedLines } from "./SpeedLines";
 
@@ -23,6 +24,8 @@ export function Hud() {
       <MilestoneBanner />
       {/* full-screen flash layer: gold combo / blue launch / red near-death */}
       <ScreenFlash />
+      {/* route landing quality callout, fed by the certified golden-path scorer */}
+      <RouteLandingToast />
       {/* radial motion streaks that fade in at high blob speed */}
       <SpeedLines />
       {/* first-run drag-to-launch coachmark (until the first launch) */}

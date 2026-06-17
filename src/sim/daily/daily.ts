@@ -25,7 +25,12 @@ export function dailyKey(date: Date): string {
 
 /** Deterministic numeric world seed for a given day (feed to useWorldStore.reset / createRng). */
 export function dailySeed(date: Date): number {
-  return normalizeSeed(`${DAILY_NS}:${dailyKey(date)}`);
+  return normalizeSeed(dailySeedPhrase(date));
+}
+
+/** Replayable phrase for today's shared challenge. */
+export function dailySeedPhrase(date: Date): string {
+  return `${DAILY_NS}-${dailyKey(date)}`;
 }
 
 /** The stats that define a run's outcome (what a leaderboard verifies). */

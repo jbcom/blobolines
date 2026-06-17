@@ -28,11 +28,12 @@ const FLASH_LIFE = 0.3; // seconds the collect flash plays
 export function PowerUpField() {
   const groupRef = useRef<Group>(null);
   const powerups = useWorldStore((s) => s.powerups);
-  // The reset effect MUST key on `seed`, NOT `powerups`: ensureHeight() replaces the powerups
+  // The reset effect MUST key on `runId`, NOT `powerups`: ensureHeight() replaces the powerups
   // array on every tower extension (~10m of climb), so a `[powerups]`-keyed reset would wipe
   // the taken-guard + rebuild the live list on every extension — defeating the live-list perf
-  // win AND letting a collected power-up be re-collected. `seed` only changes on a true new run.
-  const seed = useWorldStore((s) => s.seed);
+  // win AND letting a collected power-up be re-collected. `runId` only changes on a true reset,
+  // including deliberate same-seed replays.
+  const runId = useWorldStore((s) => s.runId);
   /** index → seconds-since-collected, drives the collect flash before the group hides. */
   const flashing = useRef<Map<number, number>>(new Map());
   /** Indices already collected — the durable "already taken" guard. Persists across tower
@@ -48,20 +49,20 @@ export function PowerUpField() {
   /** How many power-up indices the live list has already absorbed — so the append-only tower
    *  extension only adds the genuinely-new tail each frame. */
   const syncedLen = useRef(0);
+  const activeRunId = useRef(runId);
   const camera = useThree((s) => s.camera);
 
-  // A true run reset (new seed) starts a fresh tower: clear the flash + collected guards and
-  // reseed the live-index list. Tower EXTENSIONS (same seed, more powerups) are handled in the
+  // A true run reset starts a fresh tower: clear the flash + collected guards and
+  // reseed the live-index list. Tower EXTENSIONS (same run, more powerups) are handled in the
   // frame loop by appending only the new tail — they must NOT wipe these guards.
-  // `seed` is the intentional reset trigger (the body only touches refs, so biome can't see it
-  // matters — but re-running on a seed change is exactly the point).
-  // biome-ignore lint/correctness/useExhaustiveDependencies: seed is the reset trigger
   useEffect(() => {
+    if (activeRunId.current === runId) return;
+    activeRunId.current = runId;
     flashing.current.clear();
     collected.current.clear();
     live.current = [];
     syncedLen.current = 0;
-  }, [seed]);
+  }, [runId]);
 
   useFrame((state, delta) => {
     const g = groupRef.current;

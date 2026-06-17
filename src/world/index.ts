@@ -8,3 +8,4 @@ export {
 export { type GeneratedChunk, generateUpTo, type PowerUpSpec, starterPad } from "./generator";
 export { padTypeWeights, pickPadType } from "./padType";
 export { CLIMB_SPEED, canReach, reaches } from "./reachable";
+export { nextRouteStep, type RouteStep, TARGET_ABOVE_GROUND } from "./routeStep";

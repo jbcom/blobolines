@@ -45,13 +45,32 @@ blob still has to be steered onto the actual trampoline.
 
 Every consecutive trampoline pair also has a stored **golden path proof** on the source pad:
 a calculated passive parabola with launch normal, source mode (`flat`, `moving`, `canted`, or
-`wobbler`), flight time, apex, landing point, absolute lip clearance, landing precision
-percentile, compressed-arc score, and world-space samples. Generation is difficulty-profiled:
-approachable modes avoid flat-to-flat precision routing and teach with flat-to-slider,
-slider-to-canted, canted-to-flat, and wobbler recovery patterns. Harder modes deliberately
-allow flatter precision arcs, canted-to-canted chains, tighter lip margins, and compressed
-parabolas. The dev harness can render these proof samples as a solid red parabola and capture
-a timed PNG/JSON sequence for inspection.
+`wobbler`), flight time, apex, descending-impact landing point, absolute lip clearance,
+landing precision percentile, compressed-arc score, and world-space samples. The final sample
+is the impact point on the successor trampoline; an ascending height crossing is not a valid
+route proof. The dev harness renders these proof samples as a solid red parabola plus a red
+impact circle, then captures a timed PNG/JSON sequence for inspection.
+
+Generation is difficulty-profiled: approachable modes avoid flat-to-flat precision routing
+and teach with flat-to-slider, slider-to-canted, canted-to-flat, and wobbler recovery
+patterns. Harder modes deliberately allow flatter precision arcs, canted-to-canted chains,
+tighter lip margins, and compressed parabolas. Easy exposes three accepted proof variants per
+step and larger minimum footprints; Medium exposes two; Hard, Blobmare, and Ultra Blobmare
+expose one increasingly precise route; One Wrong Move starts in the one-path regime. The
+long-run goal is Tetris-like cadence: every seed is theoretically endless and eventually
+reaches one-path precision, but Easy should give a kid a long runway before that ramp while
+Ultra Blobmare reaches it much sooner.
+
+During a live run, the same proof feeds two player-facing cues:
+
+- a warm bullseye hovering at the certified landing point for the next route step, so the
+  player can see the intended catch point in world space instead of guessing from the HUD alone
+- a short route-quality toast after each certified landing (`Perfect route`, `Great route`,
+  `Clean route`, or `Edge catch`) with the style-point bonus earned by proximity to that point
+
+The bullseye is intentionally world-locked to the proof landing, not parented to the pad mesh.
+That makes moving trampolines read as timing challenges: the ideal catch point is stable while
+the trampoline slides through it.
 
 ## Trampoline types
 
@@ -66,10 +85,11 @@ a timed PNG/JSON sequence for inspection.
 | wobbler | `tramp.violet` | Tips toward off-center hits |
 | canted | `tramp.orange` | Certified tilted bounce toward the next pad |
 
-The default Ready opener is `standard → moving → canted → standard → wobbler → standard`, so
+The default Easy opener is `standard → moving → canted → standard → wobbler → standard`, so
 the player immediately sees readable route mechanics instead of a tool-assisted flat-to-flat
 stack. Pads still shrink with altitude (difficulty curve), while each difficulty profile sets
-its own lip-clearance, landing-precision, cant-angle, and compressed-arc rules.
+its own lip-clearance, landing-precision, cant-angle, footprint scale, small-pad frequency,
+and compressed-arc rules.
 
 Visually, trampolines are not platform slabs: each pad renders as a round raised frame with
 radial laces and a suspended jelly membrane. Impacts depress and tilt only the membrane, so
@@ -111,9 +131,18 @@ spring (stiffness 170 / damping 26 for depress; 150 / 22 for tilt), springing ba
 
 ## Determinism
 
-The world is seeded: a given seed replays the exact same tower (`createRng` → world
-generator). The sim advances on a fixed timestep, so runs are reproducible — important
-for testing and future features (daily seed, ghosts, replays).
+The world is seeded by a visible replay phrase. Normal New Game shuffles a fresh
+adjective-adjective-noun phrase with `seedrandom`; Daily Challenge uses a stable
+`blobolines-daily-YYYY-MM-DD` phrase; explicit numeric test seeds round-trip as
+`seed-<base36>`. `createRng` is the single seedrandom-backed facade used throughout world,
+sim, render VFX, and audio variation, so a given phrase replays the exact same tower and
+procedural effects.
+
+The sim advances on a fixed timestep, so runs are reproducible. A player can report a seed
+phrase from the difficulty picker or game-over card, and the dev harness diagnostics include
+that phrase alongside the route-proof screenshots. This is the basis for production seed
+verification: plug in the phrase, regenerate the route proofs, and prove the tower has a
+certified path under the selected difficulty profile.
 
 See `docs/ARCHITECTURE.md` for how these systems are wired, and `docs/DESIGN.md` for the
 visual identity / design tokens.

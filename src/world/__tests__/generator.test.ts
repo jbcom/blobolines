@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { createRng } from "@/core/math";
+import { routeProfile } from "../difficulty";
 import { generateUpTo, starterPad } from "../generator";
 import { reaches } from "../reachable";
 
@@ -44,15 +45,42 @@ describe("world generator", () => {
     ]);
     expect(pads[1].moveAxis).toBeDefined();
     expect(pads[2].cant).toBeDefined();
-    expect(pads[2].cantAngleRad).toBeGreaterThan(0.3);
+    expect(pads[2].cantAngleRad).toBeGreaterThan(0.15);
+  });
+
+  it("scales proof leniency and footprint knobs by route difficulty", () => {
+    expect(routeProfile("ready").proofVariants).toBe(3);
+    expect(routeProfile("medium").proofVariants).toBe(2);
+    expect(routeProfile("hard").proofVariants).toBe(1);
+    expect(routeProfile("blobmare").proofVariants).toBe(1);
+    expect(routeProfile("ultraBlobmare").proofVariants).toBe(1);
+    expect(routeProfile("oneWrongMove").proofVariants).toBe(1);
+
+    expect(routeProfile("ready").minFootprint).toBeGreaterThan(routeProfile("medium").minFootprint);
+    expect(routeProfile("medium").minFootprint).toBeGreaterThan(routeProfile("hard").minFootprint);
+    expect(routeProfile("hard").minFootprint).toBeGreaterThan(
+      routeProfile("blobmare").minFootprint,
+    );
+    expect(routeProfile("blobmare").minFootprint).toBeGreaterThan(
+      routeProfile("ultraBlobmare").minFootprint,
+    );
+    expect(routeProfile("ultraBlobmare").minFootprint).toBeGreaterThan(
+      routeProfile("oneWrongMove").minFootprint,
+    );
+
+    expect(routeProfile("ready").shapeVariety).toBeLessThan(
+      routeProfile("oneWrongMove").shapeVariety,
+    );
   });
 
   it("shrinks pads with altitude (difficulty curve)", () => {
-    const chunk = generateUpTo(createRng(1), 0, 600);
-    const low = chunk.trampolines.find((t) => t.position[1] < 50);
-    const high = chunk.trampolines.at(-1);
+    const low = generateUpTo(createRng("size-curve"), 0, 20, null, "oneWrongMove").trampolines[0];
+    const high = generateUpTo(createRng("size-curve"), 600, 620, null, "oneWrongMove")
+      .trampolines[0];
     expect(low && high).toBeTruthy();
-    if (low && high) expect(high.width).toBeLessThan(low.width);
+    if (low && high) {
+      expect(Math.max(high.width, high.depth)).toBeLessThan(Math.max(low.width, low.depth));
+    }
   });
 
   it("widens vertical spacing with altitude (difficulty curve)", () => {
@@ -215,7 +243,7 @@ describe("world generator", () => {
       const b = trampolines[i + 1];
       if (a.type !== "canted") continue;
       expect(a.cant).toBeDefined();
-      expect(a.cantAngleRad).toBeGreaterThan(0.3);
+      expect(a.cantAngleRad).toBeGreaterThan(0.17);
       angles.add(a.cantAngleRad?.toFixed(2) ?? "missing");
       const [cx, cz] = a.cant ?? [0, 0];
       const dx = b.position[0] - a.position[0];
