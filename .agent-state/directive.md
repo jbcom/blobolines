@@ -648,10 +648,11 @@ permeability (permeable one-way pads rejected by owner).
 - [x] WOBBLER pads: unstable pad type that TIPS toward the hit point — an off-center landing
       deflects the bounce that way (hit center for a clean launch; risk/reward). Tilt scaled
       by hit offset × config wobblerMaxTiltRad, launched via the rebound normal. In TYPE_BAG.
-- [ ] [x] CANTED pad type: tilted membrane whose normal redirects the bounce laterally
+- [x] CANTED pad type: tilted membrane whose normal redirects the bounce laterally
       (DONE — config cantedTiltRad, src/sim/trampoline/cant, spec.cant, ReboundRequest.normal,
       PlayerBlob launches along the normal, membrane visually leans). Generator placement +
-      tests next.
+      golden-path canting + tests all shipped (see the navigability work + canted-trampoline
+      commit). Fixed the malformed `[ ] [x]` checkbox.
 
 ### Mechanics depth
 - [x] Real SCORE system: pure computeScore (src/sim/score) weights height·heightPoints +
@@ -731,7 +732,10 @@ permeability (permeable one-way pads rejected by owner).
 - [x] GooField: set palette colors on change only… OBSOLETE — there is no GooField component;
       the goo is GooCsg (mesh CSG), which already sets skin/rim colors only on a skin change
       (a useEffect), not per frame. (Verified 2026-06-16.)
-- [ ] BlobEyes: cache lid/pupil/tear refs instead of per-frame traverse()+startsWith.
+- [x] BlobEyes: cache lid/pupil/tear refs instead of per-frame traverse()+startsWith. A single
+      mount-time traverse buckets the lid/pupil/tear nodes into arrays; the frame loop iterates
+      those directly (no per-frame traverse, no string matching). Browser fixture renders the
+      live animating (tearing) eyes to guard the cached-node loop.
 - [x] PowerUpField: skip collected entries (live-only list), no distance calc for hidden. The
       frame loop now iterates a maintained live-index array (uncollected, or collected-and-
       still-flashing) instead of every child; entries are spliced out when their collect flash

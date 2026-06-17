@@ -1,6 +1,6 @@
 import { useFrame } from "@react-three/fiber";
-import { useRef } from "react";
-import type { Group } from "three";
+import { useEffect, useRef } from "react";
+import type { Group, Object3D } from "three";
 import type { EyeExpression } from "@/core/types";
 import { eyeShape } from "@/sim/blob";
 import { getBlobDiagnostics } from "@/state";
@@ -61,6 +61,29 @@ function Eye({ side }: { side: 1 | -1 }) {
 export function BlobEyes({ expression, radius, live = false }: BlobEyesProps) {
   const groupRef = useRef<Group>(null);
   const timer = useRef(0);
+  // Cached animated nodes, bucketed ONCE on mount (a single traverse) instead of traversing +
+  // string-matching every frame. The frame loop then iterates these arrays directly.
+  const parts = useRef<{ lids: Object3D[]; pupils: Object3D[]; tears: Object3D[] }>({
+    lids: [],
+    pupils: [],
+    tears: [],
+  });
+
+  // Bucket the lid/pupil/tear meshes once after mount. The eye subtree is static (two fixed
+  // Eye components), so a one-time categorization is sufficient; no per-frame traverse needed.
+  useEffect(() => {
+    const g = groupRef.current;
+    if (!g) return;
+    const lids: Object3D[] = [];
+    const pupils: Object3D[] = [];
+    const tears: Object3D[] = [];
+    g.traverse((o) => {
+      if (o.name.startsWith("lid-")) lids.push(o);
+      else if (o.name.startsWith("pupil-")) pupils.push(o);
+      else if (o.name.startsWith("tear-")) tears.push(o);
+    });
+    parts.current = { lids, pupils, tears };
+  }, []);
 
   useFrame((_, dt) => {
     const g = groupRef.current;
@@ -92,14 +115,15 @@ export function BlobEyes({ expression, radius, live = false }: BlobEyesProps) {
     }
 
     const tearing = shape.tear > 0;
-    g.traverse((o) => {
-      if (o.name.startsWith("lid-")) o.scale.set(1, shape.openY, 1);
-      else if (o.name.startsWith("pupil-")) {
-        o.scale.setScalar(shape.pupil);
-        // Dart from the pupil's base local position (0,0,0.18 inside its parent eye group).
-        o.position.set(dartX, dartY, 0.18);
-      } else if (o.name.startsWith("tear-")) o.visible = tearing;
-    });
+    const { lids, pupils, tears } = parts.current;
+    // The lid mesh holds the vertical eye opening (blink/squint/wide); pupils/tears stay round.
+    for (const lid of lids) lid.scale.set(1, shape.openY, 1);
+    for (const pupil of pupils) {
+      pupil.scale.setScalar(shape.pupil);
+      // Dart from the pupil's base local position (0,0,0.18 inside its parent eye group).
+      pupil.position.set(dartX, dartY, 0.18);
+    }
+    for (const tear of tears) tear.visible = tearing;
   });
 
   return (
