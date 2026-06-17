@@ -61,7 +61,7 @@ export function GameScene() {
       {playing && <BlobTrail skin={skin} />}
       {playing && <TrajectoryPreview />}
 
-      <PostFX />
+      <PostFX playing={playing} />
     </>
   );
 }

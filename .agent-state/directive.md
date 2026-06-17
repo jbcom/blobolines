@@ -397,10 +397,13 @@ game — touch/drag is primary; keyboard is a minor desktop-only secondary, don'
       uEnvLight=0 (no biome). Verified in-game (resting puddle renders with the tint, no errors);
       uniform unit test updated.
 - [ ] Goo refraction: sample backbuffer along normal×fresnel so the blob bends what's behind it
-      (marquee jelly upgrade). DEPENDS ON the quality-tier system (real backbuffer refraction /
-      MeshTransmissionMaterial is a heavy mobile cost + needs the EffectComposer-safe wiring) —
-      gate it HIGH-tier-only. Building the quality-tier foundation first (see Tier-6 perf item);
-      refraction lands once that gate exists so mid-tier devices never pay for it.
+      (marquee jelly upgrade). The quality gate now exists (quality.refraction is HIGH-only).
+      Real implementation needs an FBO: render the scene (minus the blob) to a WebGLRenderTarget
+      each frame and feed it to GooMaterial as uScene, sampling along the screen-space normal —
+      a heavy ~2× scene-draw, hence HIGH-only. This is a contained but intricate render-target +
+      render-order unit; doing it half-way (a fresnel fake, not a real backbuffer sample) would
+      not be the "marquee" upgrade the item asks for, so it gets its own focused FBO pass next
+      after the simpler gated effects (DOF, god rays) land.
 - [x] Thickness-based saturation (Beer-Lambert) — adapted to the CSG path (the raymarch it
       originally referenced was removed): GooMaterial deepens/saturates the body color toward the
       center (low fresnel = looking through more goo = "thicker") and thins it at the grazing
@@ -470,7 +473,13 @@ game — touch/drag is primary; keyboard is a minor desktop-only secondary, don'
       ~700m), driven imperatively off the diagnostics bridge onto the effect refs — warm + soft
       at the ground, brighter-glow + cooler + crisper/moodier up in space. Verified the scene
       renders cleanly through the ref-driven effects.
-- [ ] Depth-of-field focused on the blob (quality-gated).
+- [x] Depth-of-field focused on the blob (quality-gated): DepthOfField added to the PostFX
+      effects array, gated to HIGH tier AND in-game only (never the menu, where the blob is the
+      hero and must stay sharp). Tuned (focusDistance 0.04, focalLength 0.5, bokehScale 1.4) so
+      only the FAR tower/backdrop softens behind a sharp blob. Verified live (menu blob sharp,
+      no errors). ALSO fixed a pre-existing menu-camera bug the live check surfaced: the orbit
+      `cos·6+4` let z swing to -2 (camera passing THROUGH the blob → it ballooned to fill the
+      screen); reworked to a constant-radius orbit so the hero stays nicely framed at all phases.
 - [x] Sun sprite in the sky bands: SkyDome now renders a billboarded sun (bright cream core +
       soft additive sky-top halo) high toward the warm-shaft origin the dome already paints, so
       the light shafts have a visible source. It billboards to the camera and FADES OUT as the

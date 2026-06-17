@@ -48,9 +48,15 @@ export function CameraRig({ active }: { active: boolean }) {
       // Look at the blob, biased a little upward (toward where it's headed).
       camera.lookAt(bx, by + 1.5, bz);
     } else {
-      camera.position.x = Math.sin(t.current * 0.25) * 4;
-      camera.position.z = Math.cos(t.current * 0.25) * 6 + 4;
-      camera.position.y = 1 + Math.sin(t.current * 0.4) * 0.5;
+      // Menu: a gentle orbit AROUND the hero blob at a fixed, sane distance. (The old form
+      // `cos·6+4` let z swing to -2 — the camera passing THROUGH the blob, blowing it up to
+      // fill the screen. Drive a constant-radius circle instead so the blob stays nicely
+      // framed at all orbit phases.)
+      const a = t.current * 0.25;
+      const RADIUS = 9;
+      camera.position.x = Math.sin(a) * RADIUS;
+      camera.position.z = Math.cos(a) * RADIUS;
+      camera.position.y = 1.5 + Math.sin(t.current * 0.4) * 0.5;
       camera.lookAt(0, 0, 0);
     }
   });

@@ -3,6 +3,7 @@ import {
   Bloom,
   BrightnessContrast,
   ChromaticAberration,
+  DepthOfField,
   EffectComposer,
   HueSaturation,
   Vignette,
@@ -32,7 +33,7 @@ const GRADE_STEPS = 6;
  * composer re-renders only on a band change — the ChromaticAberration offset is the only
  * per-frame value, driven by mutating its Vector2 prop in place (never as a re-render).
  */
-export function PostFX() {
+export function PostFX({ playing }: { playing: boolean }) {
   const chroma = useRef(new Vector2(0.0006, 0.0006));
   const [grade, setGrade] = useState(0); // 0..1, quantized to GRADE_STEPS
   // Quality gate (resolved at boot from the device tier): AO is medium+ only, bloom scales by
@@ -80,6 +81,12 @@ export function PostFX() {
       modulationOffset={0}
     />,
     <Vignette key="vig" eskil={false} offset={0.25} darkness={0.45} />,
+    // Depth-of-field — HIGH-tier AND in-game only (NOT the menu, where the blob is the hero and
+    // must stay sharp). Focus sits at the blob's mid-distance with a long focal range so only
+    // the FAR tower/backdrop softens behind a sharp blob — gentle bokeh, mobile-reasonable.
+    quality.dof && playing ? (
+      <DepthOfField key="dof" focusDistance={0.04} focalLength={0.5} bokehScale={1.4} />
+    ) : null,
   ].filter((e): e is ReactElement => e !== null);
 
   return <EffectComposer multisampling={0}>{effects}</EffectComposer>;
