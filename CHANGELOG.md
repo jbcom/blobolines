@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.5](https://github.com/jbcom/blobolines/compare/blobolines-v0.1.4...blobolines-v0.1.5) (2026-06-17)
+
+
+### Bug Fixes
+
+* gate route proof and aim assists ([d689ec0](https://github.com/jbcom/blobolines/commit/d689ec0e81ae9e6cf46aba23f19f939e1879f763))
+
 ## [0.1.4](https://github.com/jbcom/blobolines/compare/blobolines-v0.1.3...blobolines-v0.1.4) (2026-06-17)
 
 
