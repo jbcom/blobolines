@@ -687,9 +687,10 @@ permeability (permeable one-way pads rejected by owner).
       system) over a spike/obstacle pad — a kill-on-contact pad would conflict with the generator's
       every-pad-reachable guarantee (it'd guarantee routing you onto a death pad); a proper
       off-path obstacle hazard needs its own spawn+collision unit, noted for later if wanted.
-- [ ] More powerups beyond magnet/thruster: shield/second-life DONE (one-shot revive,
-      rarest spawn); slow-mo, score-doubler, multi-bounce still open; allow stacking or
-      distinct refresh.
+- [ ] More powerups beyond magnet/thruster: shield/second-life DONE (one-shot revive); slow-mo
+      DONE (bullet-time via manual physics stepping); score-doubler DONE (2× crystal value while
+      active, gold gem + 2× Score badge); multi-bounce still open; allow stacking or distinct
+      refresh.
 - [x] Comeback/revive mechanic on death (watch-style or one-shot shield) for run length.
       Shipped as the shield power-up: a one-shot flag (hasShield/consumeShield) consumed on
       the first fatal fall — relaunches the blob from its last safe height at +18 m/s with a

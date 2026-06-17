@@ -1,4 +1,4 @@
-import { Hourglass, Magnet, Rocket } from "lucide-react";
+import { Hourglass, Magnet, Rocket, Star } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import type React from "react";
 import { useEffect, useRef, useState } from "react";
@@ -29,6 +29,12 @@ const TYPES = [
     label: "Slow-Mo",
     icon: <Hourglass className="size-3.5" strokeWidth={2.5} />,
     tint: "text-tramp-violet border-tramp-violet/50 bg-tramp-violet/15",
+  },
+  {
+    key: "doubler",
+    label: "2× Score",
+    icon: <Star className="size-3.5" strokeWidth={2.5} />,
+    tint: "text-tramp-gold border-tramp-gold/50 bg-tramp-gold/15",
   },
 ] as const;
 

@@ -2,12 +2,14 @@ import { beforeEach, describe, expect, it } from "vitest";
 import {
   activatePowerup,
   consumeShield,
+  DOUBLER_MULTIPLIER,
   hasShield,
   isPowerupActive,
   POWERUP_DURATION,
   powerupRemaining,
   resetPowerups,
   SLOWMO_SCALE,
+  scoreMultiplier,
   tickPowerups,
   timeScale,
 } from "../powerupBridge";
@@ -92,5 +94,30 @@ describe("powerupBridge", () => {
     resetPowerups();
     expect(timeScale()).toBe(1);
     expect(isPowerupActive("slowmo")).toBe(false);
+  });
+
+  it("score-doubler is a normal timed buff (activates, ticks down, expires once)", () => {
+    expect(isPowerupActive("doubler")).toBe(false);
+    activatePowerup("doubler");
+    expect(isPowerupActive("doubler")).toBe(true);
+    expect(powerupRemaining("doubler")).toBe(POWERUP_DURATION.doubler);
+    expect(tickPowerups(POWERUP_DURATION.doubler - 0.1)).toEqual([]);
+    expect(tickPowerups(0.2)).toEqual(["doubler"]);
+    expect(isPowerupActive("doubler")).toBe(false);
+  });
+
+  it("scoreMultiplier is DOUBLER_MULTIPLIER only while the doubler is active", () => {
+    expect(scoreMultiplier()).toBe(1); // no bonus at rest
+    activatePowerup("doubler");
+    expect(scoreMultiplier()).toBe(DOUBLER_MULTIPLIER); // doubled while held
+    tickPowerups(POWERUP_DURATION.doubler); // run it out
+    expect(scoreMultiplier()).toBe(1); // back to normal
+  });
+
+  it("resetPowerups clears the score-doubler (scoreMultiplier returns to 1)", () => {
+    activatePowerup("doubler");
+    resetPowerups();
+    expect(scoreMultiplier()).toBe(1);
+    expect(isPowerupActive("doubler")).toBe(false);
   });
 });

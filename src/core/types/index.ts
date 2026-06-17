@@ -18,9 +18,10 @@ export type EyeExpression = "idle" | "blink" | "squint" | "wide" | "tear";
 
 /** Every power-up kind — the single source of truth. magnet (pull crystals), thruster
  *  (skyward boost), shield (one-shot second-life — absorbs a fatal fall), slowmo (bullet-
- *  time — slows the sim to stretch the mid-air reaction window). PowerUpType derives from it
- *  so the type and the runtime list can never drift apart. */
-export const POWERUP_TYPES = ["magnet", "thruster", "shield", "slowmo"] as const;
+ *  time — slows the sim to stretch the mid-air reaction window), doubler (score-doubler —
+ *  crystals collected while active are worth double). PowerUpType derives from it so the type
+ *  and the runtime list can never drift apart. */
+export const POWERUP_TYPES = ["magnet", "thruster", "shield", "slowmo", "doubler"] as const;
 export type PowerUpType = (typeof POWERUP_TYPES)[number];
 
 /** Crystal rarity tiers. Higher tiers are worth more crystals (and so more score), rarer,

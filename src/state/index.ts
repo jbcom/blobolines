@@ -32,12 +32,14 @@ export { attachPersistence, hydrateStore } from "./persistence";
 export {
   activatePowerup,
   consumeShield,
+  DOUBLER_MULTIPLIER,
   hasShield,
   isPowerupActive,
   POWERUP_DURATION,
   powerupRemaining,
   resetPowerups,
   SLOWMO_SCALE,
+  scoreMultiplier,
   tickPowerups,
   timeScale,
 } from "./powerupBridge";

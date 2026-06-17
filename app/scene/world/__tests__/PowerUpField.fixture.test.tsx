@@ -83,3 +83,40 @@ test("PowerUpField renders the model-less slow-mo gem", async () => {
     { timeout: 6000, interval: 60 },
   );
 });
+
+// Score-doubler is also model-less: its shared primitive is the gold "value gem"
+// (dodecahedron). Same render guarantee as the other power-ups.
+test("PowerUpField renders the model-less score-doubler gem", async () => {
+  useWorldStore.setState({ powerups: [{ position: [0, 0, 0], type: "doubler" }] });
+  setBlobDiagnostics({
+    position: [3, 0, 0],
+    velocity: [0, 0, 0],
+    speed: 0,
+    airborne: true,
+    expression: "idle",
+    squash: 1,
+    maxHeight: 0,
+    groundY: 0,
+  });
+
+  const screen = await render(
+    <FixtureStage testId="doubler-fixture" cameraDistance={5}>
+      <ambientLight intensity={1} />
+      <PowerUpField />
+    </FixtureStage>,
+  );
+
+  await expect.element(screen.getByTestId("doubler-fixture")).toBeInTheDocument();
+  await new Promise((r) => setTimeout(r, 150));
+
+  await vi.waitFor(
+    () => {
+      const canvas = document
+        .querySelector('[data-testid="doubler-fixture"]')
+        ?.querySelector("canvas");
+      if (!canvas) throw new Error("canvas not mounted");
+      expect(canvas.toDataURL("image/png").length).toBeGreaterThan(4000);
+    },
+    { timeout: 6000, interval: 60 },
+  );
+});

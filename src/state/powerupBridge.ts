@@ -9,9 +9,14 @@ import type { PowerUpType } from "@/core/types";
  */
 
 /** Power-ups with a timed duration (shield is excluded — it's a one-shot flag). */
-type TimedPowerUp = "magnet" | "thruster" | "slowmo";
+type TimedPowerUp = "magnet" | "thruster" | "slowmo" | "doubler";
 
-const remaining: Record<TimedPowerUp, number> = { magnet: 0, thruster: 0, slowmo: 0 };
+const remaining: Record<TimedPowerUp, number> = {
+  magnet: 0,
+  thruster: 0,
+  slowmo: 0,
+  doubler: 0,
+};
 /** One-shot shield charge: true = the next fatal fall is absorbed instead of ending the run. */
 let shielded = false;
 
@@ -19,7 +24,18 @@ export const POWERUP_DURATION: Record<TimedPowerUp, number> = {
   magnet: 8,
   thruster: 3.5,
   slowmo: 5,
+  doubler: 10,
 };
+
+/** Crystal-value multiplier while the score-doubler is active (crystals are the run's discrete
+ *  score source, so the doubler doubles what each pickup is worth for its duration). */
+export const DOUBLER_MULTIPLIER = 2;
+
+/** Current crystal-value multiplier: DOUBLER_MULTIPLIER while the score-doubler is active,
+ *  else 1. CrystalField multiplies each collected gem's value by this. */
+export function scoreMultiplier(): number {
+  return remaining.doubler > 0 ? DOUBLER_MULTIPLIER : 1;
+}
 
 /** Simulation time-scale while slow-mo is active — the world steps at this fraction of real
  *  time, stretching the player's reaction window mid-air without breaking determinism (the
@@ -62,7 +78,7 @@ const NONE_EXPIRED: readonly PowerUpType[] = [];
  *  case) so the per-frame call doesn't churn the GC. */
 export function tickPowerups(dt: number): readonly PowerUpType[] {
   let expired: PowerUpType[] | null = null;
-  for (const type of ["magnet", "thruster", "slowmo"] as const) {
+  for (const type of ["magnet", "thruster", "slowmo", "doubler"] as const) {
     if (remaining[type] > 0) {
       remaining[type] = Math.max(0, remaining[type] - dt);
       if (remaining[type] === 0) {
@@ -89,5 +105,6 @@ export function resetPowerups(): void {
   remaining.magnet = 0;
   remaining.thruster = 0;
   remaining.slowmo = 0;
+  remaining.doubler = 0;
   shielded = false;
 }

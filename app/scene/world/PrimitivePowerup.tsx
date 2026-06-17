@@ -55,6 +55,21 @@ export function PrimitivePowerup({ type }: { type: PowerUpType }) {
       </mesh>
     );
   }
+  if (type === "doubler") {
+    // A gold dodecahedron "value gem" — the score-doubler pickup (gold reads as score/value).
+    return (
+      <mesh>
+        <dodecahedronGeometry args={[0.46, 0]} />
+        <meshStandardMaterial
+          color={palette.tramp.gold}
+          emissive={palette.tramp.gold}
+          emissiveIntensity={0.7}
+          roughness={0.12}
+          metalness={0.5}
+        />
+      </mesh>
+    );
+  }
   return (
     <mesh rotation={[Math.PI, 0, 0]}>
       <coneGeometry args={[0.4, 0.9, 16]} />

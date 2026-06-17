@@ -20,6 +20,7 @@ const AURA_COLOR: Record<PowerUpType, string> = {
   thruster: palette.tramp.orange,
   shield: palette.tramp.ice,
   slowmo: palette.tramp.violet,
+  doubler: palette.tramp.gold,
 };
 const FLASH_LIFE = 0.3; // seconds the collect flash plays
 

@@ -6,7 +6,13 @@ import { playChime } from "@/audio";
 import { world as worldCfg } from "@/config";
 import type { CrystalTier } from "@/core/types";
 import { stepCrystal } from "@/sim/collect";
-import { getBlobDiagnostics, isPowerupActive, useGameStore, useWorldStore } from "@/state";
+import {
+  getBlobDiagnostics,
+  isPowerupActive,
+  scoreMultiplier,
+  useGameStore,
+  useWorldStore,
+} from "@/state";
 import { hex, palette } from "@/styles/tokens";
 import { CRYSTAL_SCALE, CRYSTAL_VALUE } from "@/world";
 
@@ -134,7 +140,9 @@ export function CrystalField() {
     if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
 
     if (gathered > 0) {
-      addCrystals(gathered);
+      // Score-doubler: each gem collected while the buff is active is worth double (rounded so
+      // the crystal total stays an integer). scoreMultiplier() is 1 when inactive.
+      addCrystals(Math.round(gathered * scoreMultiplier()));
       playChime();
     }
   });

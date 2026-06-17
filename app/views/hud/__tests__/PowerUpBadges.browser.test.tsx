@@ -26,3 +26,9 @@ test("mounts the slow-mo badge when the bullet-time buff is active", async () =>
   const screen = await render(<PowerUpBadges />);
   await expect.element(screen.getByText("Slow-Mo")).toBeInTheDocument();
 });
+
+test("mounts the score-doubler badge when the 2× buff is active", async () => {
+  activatePowerup("doubler");
+  const screen = await render(<PowerUpBadges />);
+  await expect.element(screen.getByText("2× Score")).toBeInTheDocument();
+});
