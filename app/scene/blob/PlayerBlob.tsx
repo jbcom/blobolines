@@ -206,21 +206,28 @@ export function PlayerBlob() {
     // beat. Cheap: only the bounded retained-pad tail is scanned, only while descending fast,
     // and each pad fires at most once (nearMissed set). Skipped when slow/ascending.
     if (v.y < -8) {
-      for (const pad of useWorldStore.getState().trampolines) {
+      const pads = useWorldStore.getState().trampolines;
+      for (const pad of pads) {
         if (nearMissed.current.has(pad.id)) continue;
-        // Did the blob cross this pad's top level THIS frame on the way down?
+        // Only pads within a small Y window of the crossing matter — skip the rest cheaply.
         const padTop = pad.position[1] + 0.5;
-        if (prevY.current > padTop && p.y <= padTop) {
-          const dx = p.x - pad.position[0];
-          const dz = p.z - pad.position[2];
-          const lateral = Math.hypot(dx, dz);
-          const half = Math.max(pad.width, pad.depth) * 0.5;
-          // Near band: just outside the pad footprint (would-have-missed) but within ~2.5u.
-          if (lateral > half + 0.4 && lateral < half + 2.5) {
-            nearMissed.current.add(pad.id);
-            playLaunch(0.45); // a soft whoosh (reuses the launch sample at low charge)
-          }
+        if (prevY.current <= padTop || p.y > padTop) continue; // didn't cross it this frame
+        const dx = p.x - pad.position[0];
+        const dz = p.z - pad.position[2];
+        const lateral = Math.hypot(dx, dz);
+        const half = Math.max(pad.width, pad.depth) * 0.5;
+        // Near band: just outside the pad footprint (would-have-missed) but within ~2.5u.
+        if (lateral > half + 0.4 && lateral < half + 2.5) {
+          nearMissed.current.add(pad.id);
+          playLaunch(0.45); // a soft whoosh (reuses the launch sample at low charge)
         }
+      }
+      // Prune dead ids so the Set can't grow unbounded over a long run: drop anything below
+      // the lowest still-retained pad id (pad ids strictly increase + the tail is trimmed, so
+      // a pruned id can never reappear).
+      if (nearMissed.current.size > 64 && pads.length > 0) {
+        const lowest = pads[0].id;
+        for (const id of nearMissed.current) if (id < lowest) nearMissed.current.delete(id);
       }
     }
     prevY.current = p.y;
