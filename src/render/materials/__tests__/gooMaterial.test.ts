@@ -9,7 +9,17 @@ describe("GooMaterial deform uniforms", () => {
     const m = new GooMaterial() as unknown as {
       uniforms: Record<string, { value: unknown }>;
     };
-    for (const key of ["uWobble", "uSag", "uLobe", "uLobeDir", "uImpactDir", "uTime", "uWet"]) {
+    for (const key of [
+      "uWobble",
+      "uSag",
+      "uLobe",
+      "uLobeDir",
+      "uImpactDir",
+      "uTime",
+      "uWet",
+      "uEnvTint",
+      "uEnvLight",
+    ]) {
       expect(m.uniforms[key], `missing uniform ${key}`).toBeDefined();
     }
   });

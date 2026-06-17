@@ -12,7 +12,7 @@ import {
 } from "three";
 import { mergeVertices } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 import { ADDITION, Brush, Evaluator } from "three-bvh-csg";
-import { blob as blobCfg, goo as gooCfg } from "@/config";
+import { biomeSkyAt, blob as blobCfg, goo as gooCfg } from "@/config";
 import type { BlobSkin } from "@/core/types";
 import { selectMerges } from "@/render/goo";
 import { GooMaterial } from "@/render/materials";
@@ -108,6 +108,13 @@ export function GooCsg({ skin, blobRadius, getDroplets }: GooCsgProps) {
 
     const diag = getBlobDiagnostics();
     const [bx, by, bz] = diag.position;
+
+    // Biome-reactive goo lighting: tint the blob toward the current sky's key color and ramp
+    // the tint strength with altitude (subtle low → moody high), so the goo reads as embedded
+    // in its biome (warm at the ground, cool in space). Cheap: one color set + one float/frame.
+    const biome = biomeSkyAt(by);
+    (material.uniforms.uEnvTint.value as Color).set(biome.top);
+    material.uniforms.uEnvLight.value = Math.min(0.7, 0.15 + by / 1400);
 
     material.uniforms.uTime.value = state.clock.elapsedTime;
 

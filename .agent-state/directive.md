@@ -390,7 +390,12 @@ game — touch/drag is primary; keyboard is a minor desktop-only secondary, don'
       and in-game (GooCsg) now share the ONE GooMaterial — there is no divergence left. Verified
       no MetaballGoo references remain in code; fixed the stale src/render/README that still
       described two materials + the removed packMetaballField.
-- [ ] Biome-reactive goo lighting: feed biome key color + darkening as uniforms (blob warm at ground, cool/moody in space).
+- [x] Biome-reactive goo lighting: GooMaterial gained uEnvTint (biome key/sky color) + uEnvLight
+      [0,1] uniforms; the lit body color bends toward the biome color on the lit side and the wet
+      fresnel rim catches the sky tint. GooCsg drives it from biomeSkyAt(blobY) with the strength
+      ramping 0.15→0.7 by ~1400m (warm at ground → cool/moody in space). Menu hero keeps
+      uEnvLight=0 (no biome). Verified in-game (resting puddle renders with the tint, no errors);
+      uniform unit test updated.
 - [ ] Goo refraction: sample backbuffer along normal×fresnel so the blob bends what's behind it (marquee jelly upgrade).
 - [ ] Thickness-based inner glow (Beer-Lambert) in the raymarch — deeper goo more saturated.
 - [ ] Fake caustics / moving light dapple cast under the goo on the pad.

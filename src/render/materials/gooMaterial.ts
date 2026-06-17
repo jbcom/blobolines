@@ -34,6 +34,10 @@ export const GooMaterial = shaderMaterial(
     uLobe: 0,
     uLobeDir: new THREE.Vector3(1, 0, 0),
     uImpactDir: new THREE.Vector3(0, -1, 0),
+    // Biome-reactive lighting: the goo picks up the current sky's key color (warm at ground,
+    // cool/moody in space) and a darkening factor as it climbs into thinner/darker biomes.
+    uEnvTint: new THREE.Color(palette.sky.top),
+    uEnvLight: 0,
   },
   /* glsl */ `
     uniform float uTime;
@@ -108,6 +112,8 @@ export const GooMaterial = shaderMaterial(
     uniform vec3  uRim;
     uniform float uTime;
     uniform float uWet;
+    uniform vec3  uEnvTint;   // biome key color the goo picks up
+    uniform float uEnvLight;  // [0,1] how strongly the biome tints the goo
 
     varying vec3 vNormalV;
     varying vec3 vViewDir;
@@ -135,10 +141,15 @@ export const GooMaterial = shaderMaterial(
 
       vec3 base   = uColor * (0.55 + 0.35 * wrap);
       vec3 lit    = base + uColor * diffuse * 0.5;
+      // Biome-reactive: bend the lit body color toward the biome key color (warm at ground,
+      // cool/moody high up) on the LIT side, so the blob feels embedded in its environment.
+      lit = mix(lit, lit * (0.6 + 0.8 * uEnvTint), uEnvLight * (0.4 + 0.6 * wrap));
       // Tint the specular by a touch of the goo color so the hotspot stays "wet goo", not a
-      // white hole; keep the rim fresnel for the volumetric edge.
+      // white hole; keep the rim fresnel for the volumetric edge — the rim also picks up the
+      // biome tint (the wet edge catches the sky).
       vec3 spec   = specular * mix(vec3(1.0), uColor, 0.25);
-      vec3 finalC = lit + spec + fresnel * uRim * 0.8;
+      vec3 rimCol = mix(uRim, uRim * uEnvTint * 1.6, uEnvLight);
+      vec3 finalC = lit + spec + fresnel * rimCol * 0.8;
 
       gl_FragColor = vec4(finalC, 1.0);
     }
