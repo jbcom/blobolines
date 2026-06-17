@@ -25,6 +25,8 @@ Render regressions that only a real GPU context catches:
   survives rest/deform/refraction paths
 - `app/views/hud/__tests__/LaunchInput.browser.test.tsx` — launch surface, keyboard
   steering, and air-steer reticle behavior
+- `app/views/hud/__tests__/NextPadRadar.browser.test.tsx` — next-target direction,
+  vertical gap, distance, and hidden state when no target exists
 - `app/scene/__tests__/physics.fixture.test.tsx` — **Rapier physics regression**: a body
   falls under gravity (guards the WASM-suspension bug where `<Physics>` never mounts)
 

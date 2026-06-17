@@ -3,6 +3,7 @@ import { ComboBadge } from "./ComboBadge";
 import { CrystalCounter } from "./CrystalCounter";
 import { LaunchInput } from "./LaunchInput";
 import { MilestoneBanner } from "./MilestoneBanner";
+import { NextPadRadar } from "./NextPadRadar";
 import { Onboarding } from "./Onboarding";
 import { PowerUpBadges } from "./PowerUpBadges";
 import { ScreenFlash } from "./ScreenFlash";
@@ -70,6 +71,19 @@ export function Hud() {
           }}
         >
           <CrystalCounter />
+        </div>
+        {/* lower-left: next-pad spatial radar. Sits above the safe area and away from the
+            center launch-power affordance, while pointer-events remain disabled. */}
+        <div
+          className="absolute"
+          style={{
+            bottom: "calc(var(--safe-bottom) + 5rem)",
+            left: "calc(var(--safe-left) + 1rem)",
+            transform: "scale(var(--ui-scale))",
+            transformOrigin: "bottom left",
+          }}
+        >
+          <NextPadRadar />
         </div>
       </div>
     </>

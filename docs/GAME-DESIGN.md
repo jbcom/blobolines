@@ -21,11 +21,25 @@ trickier types, longer falls.
 3. In the air, **drag** to steer in 3D (left/right = world X, forward/back = world Z).
 4. Land on a higher trampoline — it **auto-bounces** you (springy), and a clean landing
    builds your **combo** multiplier, which boosts launch power.
-5. Climb. The **altimeter** tracks your height; your **best height** persists.
+5. Climb. The **altimeter** tracks your height; the **next-pad radar** points toward the
+   next intended trampoline in 3D space; your **best height** persists.
 6. Fall too far below the highest pad you reached → **game over** → replay.
 
 The whole game serves making that climb feel amazing: juicy goo, squash-stretch,
 expressive eyes, splats.
+
+## Spatial awareness
+
+The tower is a 3D climb, so the HUD gives players a compact **next-pad radar** while a
+run is active. It uses the last landed pad as the progression floor and points toward the
+next generated trampoline above it, showing:
+
+- lateral direction (`forward`, `back`, `left`, `right`, or a diagonal)
+- vertical gap in metres, including negative values when the blob has arced above the target
+- horizontal distance in metres
+
+This keeps the player oriented without flattening the 3D space into an auto-aim lane: the
+blob still has to be steered onto the actual trampoline.
 
 ## Trampoline types
 
