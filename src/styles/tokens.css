@@ -74,7 +74,10 @@
   --radius-md: 0.875rem;
   --radius-lg: 1.25rem;
   --radius-xl: 1.75rem;
-  --radius-blob: 42% 58% 56% 44% / 48% 44% 56% 52%; /* organic blob shape */
+  --radius-blob: 42% 58% 56% 44% / 48% 44% 56% 52%; /* organic blob shape (decorative) */
+  /* Subtle gooey corners for chrome (CTAs, badges): asymmetric enough to read hand-made /
+     soft-bodied, gentle enough that text + layout stay clean. */
+  --radius-goo: 1.4rem 1rem 1.4rem 1rem / 1rem 1.4rem 1rem 1.4rem;
   --radius-full: 9999px;
 
   /* ---- Shadows: soft, gooey glow ---- */

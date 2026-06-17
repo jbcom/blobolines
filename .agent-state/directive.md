@@ -326,7 +326,14 @@ Camera follow + shake, in-game deformation, wet glistening shader + color gradie
       (Settings/Customizer) on a short/landscape screen never overflows off-screen. Fixed once
       in the primitive → all three modals benefit. SettingsModal fixture asserts the cap +
       scroll container.
-- [ ] Goo-language pass on DOM chrome (organic corners/squish on CTA + badges).
+- [x] Goo-language pass on DOM chrome: new --radius-goo token (subtly asymmetric corners,
+      1.4/1rem alternating) applied to the CTA Button variant so primary buttons read soft-
+      bodied/gooey, not hard rounded rects (verified live on the Settings "DONE"). Badges
+      already use rounded-full (organic). Folded the UI-polish review's two real bugs:
+      (1) dialog Content was `flex` without `flex-col` → the panel's max-h-full never resolved
+      so the new max-height scroll silently didn't activate — added flex-col; (2) Button's `cta`
+      boolean leaked to the DOM (React unknown-prop warning) → destructured it out. Plus a HUD
+      combo max-w-[40vw] cap so a wide high-tier badge can't collide with the corner readouts.
 - [x] Consolidate bespoke accent buttons onto the shared Button primitive: added a `cta`
       variant (display font + uppercase + wide tracking — the arcade CTA voice) to button.tsx,
       then migrated all 5 hand-rolled accent CTAs (SettingsModal/ManualModal/BlobCustomizer

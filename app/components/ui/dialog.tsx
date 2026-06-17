@@ -63,7 +63,7 @@ export function Dialog({
               style={{
                 maxHeight: "calc(100dvh - var(--safe-top) - var(--safe-bottom) - 2rem)",
               }}
-              className="fixed left-1/2 top-1/2 z-[calc(var(--z-modal)+1)] flex w-[min(90vw,480px)] -translate-x-1/2 -translate-y-1/2 focus:outline-none"
+              className="fixed left-1/2 top-1/2 z-[calc(var(--z-modal)+1)] flex w-[min(90vw,480px)] -translate-x-1/2 -translate-y-1/2 flex-col focus:outline-none"
             >
               <RadixDialog.Title asChild>
                 <span className="sr-only">{ariaLabel}</span>

@@ -28,9 +28,10 @@ const buttonVariants = cva(
         icon: "h-10 w-10 rounded-[var(--radius-md)]",
       },
       /** The big arcade CTA voice (display font, uppercase, wide tracking) the menus/cards
-       *  share. Off by default so generic buttons stay in the UI font; on for primary CTAs. */
+       *  share, with subtly GOOEY asymmetric corners (--radius-goo) so a primary button reads
+       *  soft-bodied, not a hard rounded rect. Off by default so generic buttons stay plain. */
       cta: {
-        true: "font-[family-name:var(--font-display)] font-bold uppercase tracking-wider",
+        true: "font-[family-name:var(--font-display)] font-bold uppercase tracking-wider !rounded-[var(--radius-goo)]",
         false: "",
       },
     },
@@ -49,14 +50,14 @@ export interface ButtonProps
 }
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant, size, asChild = false, type, ...props }, ref) => {
+  ({ className, variant, size, cta, asChild = false, type, ...props }, ref) => {
     const Comp = asChild ? Slot : "button";
     // Default native buttons to type="button" so they never accidentally submit a form;
     // callers can still override. (Omit when rendering asChild — the child owns its type.)
     const typeProp = asChild ? {} : { type: type ?? "button" };
     return (
       <Comp
-        className={cn(buttonVariants({ variant, size, className }))}
+        className={cn(buttonVariants({ variant, size, cta, className }))}
         ref={ref}
         {...typeProp}
         {...props}

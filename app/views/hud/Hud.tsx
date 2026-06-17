@@ -41,9 +41,11 @@ export function Hud() {
         >
           <Altimeter />
         </div>
-        {/* top-center: combo + power-ups */}
+        {/* top-center: combo + power-ups. Capped to the center ~40vw so a wide high-tier "ON
+            FIRE" badge (which also scales by --ui-scale) can't grow into the corner readouts on
+            a narrow phone. */}
         <div
-          className="absolute flex flex-col items-center"
+          className="absolute flex max-w-[40vw] flex-col items-center"
           style={{
             top: "calc(var(--safe-top) + 0.75rem)",
             left: "50%",
