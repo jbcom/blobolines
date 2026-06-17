@@ -3,18 +3,19 @@ import { damp } from "maath/easing";
 import { useEffect, useMemo, useRef } from "react";
 import {
   type Color,
+  CylinderGeometry,
   type Group,
   IcosahedronGeometry,
   type Mesh,
   type ShaderMaterial,
   SphereGeometry,
-  type Vector3,
+  Vector3,
 } from "three";
 import { mergeVertices } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 import { ADDITION, Brush, Evaluator } from "three-bvh-csg";
 import { biomeSkyAt, blob as blobCfg, goo as gooCfg } from "@/config";
 import type { BlobSkin } from "@/core/types";
-import { selectMerges } from "@/render/goo";
+import { bridgeFor, selectMerges } from "@/render/goo";
 import { GooMaterial } from "@/render/materials";
 import { getQuality } from "@/render/qualityBridge";
 import type { Droplet } from "@/render/vfx";
@@ -44,6 +45,10 @@ interface GooCsgProps {
 const { maxMerges, blobSegments, dropletDetail } = gooCfg.csg;
 /** Constant surface-wobble floor so the goo is never perfectly still — always subtly alive. */
 const IDLE_WOBBLE = 0.12;
+/** CylinderGeometry points up +Y by default; bridge necks orient FROM this axis to the
+ *  blob→droplet axis via setFromUnitVectors. Module-scope reusable (no per-frame allocation). */
+const CYL_UP = new Vector3(0, 1, 0);
+const tmpAxis = new Vector3();
 
 export function GooCsg({ skin, blobRadius, getDroplets }: GooCsgProps) {
   const groupRef = useRef<Group>(null);
@@ -86,18 +91,36 @@ export function GooCsg({ skin, blobRadius, getDroplets }: GooCsgProps) {
     const dropletGeo = mergeVertices(tmpIco);
     tmpIco.dispose();
     const dropletBrushes = Array.from({ length: maxMerges }, () => new Brush(dropletGeo));
+    // Bridge NECKS: a unit cylinder (radius 1, height 1, centered on origin) per merge slot,
+    // scaled/oriented each frame into a stretched teardrop strand between blob + droplet. Few
+    // radial segments (it's a thin wet neck once shaded) keep the per-frame union cheap. Welded
+    // so three-bvh-csg's BVH has an index (same requirement as the droplet icospheres).
+    const tmpCyl = new CylinderGeometry(1, 1, 1, 8, 1);
+    const bridgeGeo = mergeVertices(tmpCyl);
+    tmpCyl.dispose();
+    const bridgeBrushes = Array.from({ length: maxMerges }, () => new Brush(bridgeGeo));
     const ping = new Brush();
     const pong = new Brush();
-    return { evaluator, blobBrush, dropletGeo, dropletBrushes, ping, pong };
+    return {
+      evaluator,
+      blobBrush,
+      dropletGeo,
+      dropletBrushes,
+      bridgeGeo,
+      bridgeBrushes,
+      ping,
+      pong,
+    };
   }, [blobRadius, segs]);
 
   // Release GL programs + CSG geometry on unmount (respawn/skin-swap/HMR remounts this).
   useEffect(() => {
-    const { blobBrush, dropletGeo, ping, pong } = csg;
+    const { blobBrush, dropletGeo, bridgeGeo, ping, pong } = csg;
     return () => {
       material.dispose();
       blobBrush.geometry.dispose();
       dropletGeo.dispose(); // shared by every droplet brush
+      bridgeGeo.dispose(); // shared by every bridge-neck brush
       ping.geometry?.dispose();
       pong.geometry?.dispose();
     };
@@ -129,7 +152,7 @@ export function GooCsg({ skin, blobRadius, getDroplets }: GooCsgProps) {
     // ── Build the merged goo mesh (blob ∪ nearby droplets) in the blob's LOCAL frame ──
     // The group is positioned at the blob, so brushes live at blob-relative offsets and
     // the union result is local — cheaper + keeps the deform/scale on the group simple.
-    const { evaluator, blobBrush, dropletBrushes, ping, pong } = csg;
+    const { evaluator, blobBrush, dropletBrushes, bridgeBrushes, ping, pong } = csg;
     blobBrush.position.set(0, 0, 0);
     blobBrush.updateMatrixWorld();
 
@@ -140,30 +163,62 @@ export function GooCsg({ skin, blobRadius, getDroplets }: GooCsgProps) {
     // Chain ADDITION over the merging droplets, ping-ponging targets so nothing allocates.
     let acc: Brush = blobBrush;
     let useping = true;
+    // A Brush used as an evaluate TARGET comes back with boundsTree=null but its cached geometry
+    // hash unchanged, so prepareGeometry() early-returns and never rebuilds the BVH — feeding it
+    // back as an input then throws `bvhcast of null` every frame. Clear the hash on a result-as-
+    // input so the Evaluator rebuilds its bounds tree. (Confirmed root cause; without this the
+    // whole CSG goo path errors out.) Factored out so droplet AND bridge unions both apply it.
+    const unionInto = (input: Brush, brush: Brush): Brush => {
+      if (input !== blobBrush) (input as Brush & { _hash: string | null })._hash = null;
+      const target = useping ? ping : pong;
+      // evaluate() overwrites target.geometry with a freshly-generated BufferGeometry and does
+      // NOT free the old one — a per-frame GPU leak. Dispose the outgoing geometry first, unless
+      // it's the one the mesh is currently rendering (last frame's result).
+      const old = target.geometry;
+      if (old && old !== result.geometry) old.dispose();
+      const out = evaluator.evaluate(input, brush, ADDITION, target);
+      useping = !useping;
+      return out;
+    };
+
+    // Bound the extra union work the strands add: only the nearest few droplets get a neck
+    // (they're nearest-first), so a busy splash doesn't double the per-frame CSG cost. Scales
+    // down with the quality tier alongside the droplet merges.
+    const maxBridges = Math.min(merges.length, Math.max(2, Math.floor(maxMerges / 2)));
+    let bridges = 0;
+
     for (let i = 0; i < merges.length; i++) {
       const m = merges[i];
       const d = droplets[m.index];
       const brush = dropletBrushes[i];
       // Local offset from the blob; droplet radius grows slightly with merge weight so a
       // fully-overlapping droplet reads as fused mass, a far one as a small bud.
-      brush.position.set(d.position[0] - bx, d.position[1] - by, d.position[2] - bz);
+      const lx = d.position[0] - bx;
+      const ly = d.position[1] - by;
+      const lz = d.position[2] - bz;
+      brush.position.set(lx, ly, lz);
       const r = d.radius * (0.7 + 0.5 * m.weight);
       brush.scale.setScalar(r);
       brush.updateMatrixWorld();
-      // A Brush used as an evaluate TARGET comes back with boundsTree=null but its cached
-      // geometry hash unchanged, so prepareGeometry() early-returns and never rebuilds the
-      // BVH — feeding it back as an input then throws `bvhcast of null` every frame. Clear
-      // the hash on a result-as-input so the Evaluator rebuilds its bounds tree. (Confirmed
-      // root cause; without this the whole CSG goo path errors out.)
-      if (acc !== blobBrush) (acc as Brush & { _hash: string | null })._hash = null;
-      const target = useping ? ping : pong;
-      // evaluate() overwrites target.geometry with a freshly-generated BufferGeometry and
-      // does NOT free the old one — a per-frame GPU leak. Dispose the outgoing geometry
-      // first, unless it's the one the mesh is currently rendering (last frame's result).
-      const old = target.geometry;
-      if (old && old !== result.geometry) old.dispose();
-      acc = evaluator.evaluate(acc, brush, ADDITION, target);
-      useping = !useping;
+      acc = unionInto(acc, brush);
+
+      // STRETCH STRAND: a separating droplet trails a thinning teardrop neck back to the body
+      // (the signature World-of-Goo look). bridgeFor returns null when the droplet overlaps
+      // (already fused) or has pinched off, so necks only appear in the in-between window.
+      const bridge =
+        bridges < maxBridges ? bridgeFor([0, 0, 0], blobRadius, [lx, ly, lz], r) : null;
+      if (bridge) {
+        bridges++;
+        const neck = bridgeBrushes[i];
+        neck.position.set(bridge.midpoint[0], bridge.midpoint[1], bridge.midpoint[2]);
+        // Orient the +Y cylinder onto the blob→droplet axis, then scale: radius on X/Z, full
+        // neck length (2·halfLength) on Y.
+        tmpAxis.set(bridge.axis[0], bridge.axis[1], bridge.axis[2]);
+        neck.quaternion.setFromUnitVectors(CYL_UP, tmpAxis);
+        neck.scale.set(bridge.radius, bridge.halfLength * 2, bridge.radius);
+        neck.updateMatrixWorld();
+        acc = unionInto(acc, neck);
+      }
     }
 
     // Hand the merged geometry to the rendered mesh (shared buffer — no copy).

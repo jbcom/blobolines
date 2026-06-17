@@ -49,6 +49,49 @@ test("GooCsg renders the merged goo body (with nearby droplets) in WebGL", async
   );
 });
 
+// A droplet in the SEPARATING window (surface gap between 0 and MERGE_RADIUS) makes bridgeFor
+// produce a stretch-strand neck, so the bridge-brush union runs — regression guard for the
+// teardrop-strand path (must paint pixels + not throw in the CSG chain).
+test("GooCsg renders a stretch-strand neck to a separating droplet", async () => {
+  setBlobDiagnostics({
+    position: [0, 0, 0],
+    velocity: [0, 8, 0],
+    speed: 8,
+    airborne: true,
+    expression: "idle",
+    squash: 1,
+    maxHeight: 0,
+    groundY: 0,
+  });
+  const blobR = 0.85;
+  const dropR = 0.3;
+  // Place the droplet so the surface-to-surface gap (~0.8) is inside (0, MERGE_RADIUS) → neck.
+  const droplets: Droplet[] = [
+    { position: [blobR + dropR + 0.8, 0, 0], velocity: [0, 0, 0], radius: dropR, age: 0, life: 1 },
+  ];
+
+  const screen = await render(
+    <FixtureStage testId="goocsg-strand-fixture" cameraDistance={5}>
+      <ambientLight intensity={1} />
+      <GooCsg skin="blue" blobRadius={blobR} getDroplets={() => droplets} />
+    </FixtureStage>,
+  );
+
+  await expect.element(screen.getByTestId("goocsg-strand-fixture")).toBeInTheDocument();
+  await new Promise((r) => setTimeout(r, 120));
+
+  await vi.waitFor(
+    () => {
+      const canvas = document
+        .querySelector('[data-testid="goocsg-strand-fixture"]')
+        ?.querySelector("canvas");
+      if (!canvas) throw new Error("canvas not mounted");
+      expect(canvas.toDataURL("image/png").length).toBeGreaterThan(4000);
+    },
+    { timeout: 6000, interval: 60 },
+  );
+});
+
 // Settled/resting goo exercises the myriad-deform path: wet SAG eases in + the asymmetric
 // LOBE grows when grounded + slow, so the body must still paint a real (non-sphere) goo
 // silhouette without erroring on the new vertex displacement modes.

@@ -424,7 +424,12 @@ game — touch/drag is primary; keyboard is a minor desktop-only secondary, don'
       merges the nearest few into the body (those are subsumed by the larger mass, so rendering
       all of them reads correct + avoids fragile mirroring of the merge selection). Mounted in
       PlayerBlob off the same droplet pool. Browser fixture renders flung droplets in WebGL.
-- [ ] Controlled drip/stretch strands (teardrop necks) that thin then snap over ~0.2s — the signature WoG look (re-tune smin per-droplet stretch weight).
+- [x] Controlled drip/stretch strands (teardrop necks) that thin then snap — the signature WoG
+      look. A separating droplet (surface gap in 0..MERGE_RADIUS) trails a tapered cylinder neck
+      unioned into the goo CSG, whose radius pinches with the gap (gap²) and scales with droplet
+      size, so it thins to a snap as the droplet pulls away. Pure bridgeFor() in render/goo/merge
+      (6 unit tests) feeds GooCsg's bridge-brush pool; bounded to the nearest ~half the merges so
+      it doesn't double per-frame CSG cost. Browser fixture renders a live neck. Verified live.
 - [x] Launch burst VFX: LaunchRing — an additive expanding+fading ring blooms at the pad on
       slingshot release (the in-world "pop"), pooled (4 slots, no per-frame alloc), driven off a
       new launch-burst bridge (reportLaunchBurst/consumeLaunchBursts), size+brightness scaled by

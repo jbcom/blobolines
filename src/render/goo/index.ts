@@ -1,1 +1,1 @@
-export { type DropletMerge, MERGE_RADIUS, selectMerges } from "./merge";
+export { bridgeFor, type DropletMerge, type GooBridge, MERGE_RADIUS, selectMerges } from "./merge";
