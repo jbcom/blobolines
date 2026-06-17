@@ -27,6 +27,7 @@ import {
   BLOB,
   DEATH_FALL_DISTANCE,
   MAX_IMPACT_SPEED,
+  STARTER_BLOB_Y,
   WORLD_BOUND_XZ,
 } from "@/sim/physics";
 import {
@@ -94,6 +95,11 @@ export function PlayerBlob() {
   /** Seconds the blob has rested idle (not airborne, not being aimed) — auto-launches straight
    *  up once it passes AUTO_LAUNCH_DELAY so the run never stalls if the player just sits there. */
   const idle = useRef(0);
+  /** Combo is a skill reward, not attract-mode scoring: only build it after the player has
+   *  launched, air-steered, or spent a mid-air bounce in the current run. */
+  const playerControlStarted = useRef(false);
+
+  const runHeightFromWorldY = (y: number) => Math.max(0, y - STARTER_BLOB_Y);
 
   // Spawn the blob ECS entity for this run; destroy it on unmount (PlayerBlob remounts per
   // run). The entity is the blob's queryable logical state, synced from Rapier each step.
@@ -112,13 +118,13 @@ export function PlayerBlob() {
   useEffect(() => {
     const body = bodyRef.current;
     if (!body) return;
-    body.setTranslation({ x: 0, y: 3, z: 0 }, true);
+    body.setTranslation({ x: 0, y: STARTER_BLOB_Y, z: 0 }, true);
     body.setLinvel({ x: 0, y: 0, z: 0 }, true);
-    maxY.current = 3;
-    safeY.current = 3;
-    prevY.current = 3;
+    maxY.current = STARTER_BLOB_Y;
+    safeY.current = STARTER_BLOB_Y;
+    prevY.current = STARTER_BLOB_Y;
     nearMissed.current.clear();
-    lastEnsureY.current = 3;
+    lastEnsureY.current = STARTER_BLOB_Y;
     dead.current = false;
     resetPowerups();
     resetDroplets();
@@ -127,6 +133,17 @@ export function PlayerBlob() {
     impact.current = 0;
     dangerBeat.current = 0;
     idle.current = 0;
+    playerControlStarted.current = false;
+    setBlobDiagnostics({
+      position: [0, STARTER_BLOB_Y, 0],
+      velocity: [0, 0, 0],
+      speed: 0,
+      airborne: false,
+      expression: "idle",
+      squash: 1,
+      maxHeight: 0,
+      groundY: STARTER_BLOB_Y,
+    });
   }, [resetDroplets]);
 
   useFrame((state, rawDt) => {
@@ -157,6 +174,7 @@ export function PlayerBlob() {
     // (the input layer only requests when a charge is held; re-check here so a stale request
     // can't fire for free). Pops the blob up, keeping its lateral drift, with the launch cue.
     if (consumeMidAirBounce() && consumeBounceCharge()) {
+      playerControlStarted.current = true;
       body.wakeUp();
       body.setLinvel({ x: v.x, y: 22, z: v.z }, true);
       launchBurst([p.x, p.y - BLOB.radius, p.z], 0.6);
@@ -192,7 +210,10 @@ export function PlayerBlob() {
       // Ice pads are slippery: a big bouncy launch but it BREAKS the clean-combo streak
       // (risk/reward). Every other pad builds the combo, capped at MAX_COMBO (the launch
       // multiplier is balanced around that cap; leaving it unclamped overshot).
-      const nextCombo = bounce.type === "ice" ? 0 : Math.min(run.combo + 1, MAX_COMBO);
+      const nextCombo =
+        !playerControlStarted.current || bounce.type === "ice"
+          ? 0
+          : Math.min(run.combo + 1, MAX_COMBO);
       setRun({ combo: nextCombo, maxCombo: Math.max(run.maxCombo, nextCombo) });
       // Rising-pitch combo blip on a clean bounce — the streak audibly climbs (silent on ice,
       // which resets the combo to 0). A celebratory fanfare fires ONCE on the frame the streak
@@ -209,6 +230,7 @@ export function PlayerBlob() {
     // Launch: set velocity directly for a crisp, predictable pop.
     const req = consumeLaunch();
     if (req) {
+      playerControlStarted.current = true;
       const lv = launchVelocity(req.dir, req.charge, "standard", useGameStore.getState().run.combo);
       body.wakeUp();
       body.setLinvel({ x: lv[0], y: lv[1], z: lv[2] }, true);
@@ -233,6 +255,7 @@ export function PlayerBlob() {
     } else if (airborne) {
       // Mid-air steering: nudge lateral velocity on the X/Z plane (PoC air control).
       const [sx, sz] = getAirSteer();
+      if (sx !== 0 || sz !== 0) playerControlStarted.current = true;
       // WIND-GUST hazard: high in the stratosphere a gusty crosswind pushes the airborne blob
       // sideways (altitude-gated, 0 below WIND_START), so the player must steer against the
       // drift. Added to the air-steer accel and integrated the same way.
@@ -248,16 +271,17 @@ export function PlayerBlob() {
       }
     }
 
-    // AUTO-LAUNCH on idle: if the blob is resting on a pad and the player isn't aiming, count up;
-    // past AUTO_LAUNCH_DELAY fling it gently straight up so the run never stalls (the PoC's
-    // anti-soft-lock). Reset the timer the moment it's airborne or being aimed. Uses real time so
-    // a slow-mo buff doesn't stretch the patience window.
+    // AUTO-LAUNCH on idle: after the player has already made a real control input, if the blob is
+    // resting on a pad and the player isn't aiming, count up; past AUTO_LAUNCH_DELAY fling it
+    // gently straight up so a post-launch run never stalls. The first move still belongs to the
+    // player. Reset the timer the moment it's airborne or being aimed. Uses real time so a slow-mo
+    // buff doesn't stretch the patience window.
     // Re-read the LIVE vertical velocity here, not the stale top-of-frame `airborne`: a launch /
     // rebound / thruster / mid-air-bounce earlier this frame may have just set a big vy, and the
     // auto-launch must NOT overwrite that with its gentle kick. (`airborne` was snapshotted before
     // those impulse branches ran.)
     const liveVy = body.linvel().y;
-    if (Math.abs(liveVy) > 0.5 || getAim()) {
+    if (Math.abs(liveVy) > 0.5 || getAim() || !playerControlStarted.current) {
       idle.current = 0;
     } else {
       idle.current += realDt;
@@ -324,11 +348,11 @@ export function PlayerBlob() {
     // RNG/world build doesn't run inside the frame loop on every ascent frame (mobile).
     if (p.y > maxY.current) {
       maxY.current = p.y;
-      setRun({ height: p.y });
+      setRun({ height: runHeightFromWorldY(p.y) });
       if (p.y - lastEnsureY.current > 10) {
         lastEnsureY.current = p.y;
         ensureHeight(p.y + 180);
-        setMusicAltitude(p.y); // shift the ambient bed with altitude (throttled to ~10m)
+        setMusicAltitude(runHeightFromWorldY(p.y)); // shift the ambient bed with altitude
       }
     }
 
@@ -401,7 +425,7 @@ export function PlayerBlob() {
       airborne,
       expression: expr,
       squash,
-      maxHeight: maxY.current,
+      maxHeight: runHeightFromWorldY(maxY.current),
       groundY: safeY.current,
     });
 
@@ -435,7 +459,7 @@ export function PlayerBlob() {
         dead.current = true;
         playSplat(); // the wet goo splat at the contact…
         playDeath(); // …layered with the gooey-explosion death sting (downer + music duck)
-        commitBestHeight(maxY.current);
+        commitBestHeight(runHeightFromWorldY(maxY.current));
         setPhase("gameover");
       }
     }
@@ -446,7 +470,7 @@ export function PlayerBlob() {
       <RigidBody
         ref={bodyRef}
         colliders={false}
-        position={[0, 3, 0]}
+        position={[0, STARTER_BLOB_Y, 0]}
         linearDamping={BLOB.linearDamping}
         friction={BLOB.friction}
         restitution={BLOB.restitution}

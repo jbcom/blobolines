@@ -161,7 +161,7 @@ describe("music + ambient lifecycle", () => {
     stopMusic();
   });
 
-  it("phase music: menu → in-game → high/space crossfades via the right track loops", () => {
+  it("menu music is a true no-op before audio unlock", () => {
     const loopPaths = () => {
       const hs = (Howler as unknown as { _howls: Array<{ _loop: boolean; _src: string[] }> })
         ._howls;
@@ -170,8 +170,20 @@ describe("music + ambient lifecycle", () => {
         .flatMap((h) => h._src)
         .join(" ");
     };
+    const before = loopPaths();
     startMenuMusic();
-    expect(loopPaths()).toContain("menu.mp3"); // menu loop is live
+    expect(loopPaths()).toBe(before);
+  });
+
+  it("phase music: in-game → high/space crossfades via the right track loops", () => {
+    const loopPaths = () => {
+      const hs = (Howler as unknown as { _howls: Array<{ _loop: boolean; _src: string[] }> })
+        ._howls;
+      return hs
+        .filter((h) => h._loop)
+        .flatMap((h) => h._src)
+        .join(" ");
+    };
     startMusic(); // PLAY → in-game track + ground ambient
     setMusicAltitude(50);
     expect(loopPaths()).toContain("ingame.mp3");

@@ -14,13 +14,17 @@ Three layers, each catching a different class of bug. All run in CI on every PR.
 Pure logic: deterministic RNG/clock/springs, engine loop, world generator, launch/combo/
 collect math, ECS traits, design tokens. Fast, no GPU. Determinism is explicitly tested
 (same seed → same sequence; fixed-timestep reproducibility). Lives next to the code in
-`__tests__/`. ~126 tests.
+`__tests__/`. Current local count: 318 tests.
 
 ## Browser fixtures — `pnpm test:browser` (Vitest browser mode, real Chromium + WebGL)
 
 Render regressions that only a real GPU context catches:
 - `app/scene/world/__tests__/SkyDome.fixture.test.tsx` — sky shader paints pixels
 - `app/scene/blob/__tests__/BlobActor.fixture.test.tsx` — gooey blob + eyes render
+- `app/scene/blob/__tests__/GooCsg.fixture.test.tsx` — merged CSG goo body renders and
+  survives rest/deform/refraction paths
+- `app/views/hud/__tests__/LaunchInput.browser.test.tsx` — launch surface, keyboard
+  steering, and air-steer reticle behavior
 - `app/scene/__tests__/physics.fixture.test.tsx` — **Rapier physics regression**: a body
   falls under gravity (guards the WASM-suspension bug where `<Physics>` never mounts)
 

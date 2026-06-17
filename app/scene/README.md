@@ -12,8 +12,8 @@ responsibility — no monolithic scene file.
 | Path | Owns |
 |------|------|
 | `GameScene.tsx` | Root composition: lighting, sky, camera rig, world fields, and (only while playing) the `<Physics>` provider + `PlayerBlob`. The menu shows a static hero `BlobActor`. |
-| `CameraRig.tsx` | Follows the blob's height. |
-| `blob/` | `PlayerBlob` (the dynamic Rapier body + frame loop), `GooField` (world-space metaball skin + billboarded eyes), `BlobActor` (squash/stretch + wobble for the hero/fixtures), `BlobEyes` (procedural expressive eyes), `useDroplets` (splash/launch-burst/trail runtime). |
+| `CameraRig.tsx` | Follows the blob's full x/y/z position, with launch FOV warp and impact shake. |
+| `blob/` | `PlayerBlob` (the dynamic Rapier body + frame loop), `GooCsg` (world-space merged goo body + eyes), `BlobActor` (squash/stretch + wobble for the hero/fixtures), `BlobEyes` (procedural expressive eyes), `useDroplets` (splash/launch-burst/trail runtime). |
 | `trampoline/` | `Trampoline` (springy pad + membrane + goo-splat decal + impact sensor), `TrampolineField` (bounded sliding render window — see perf note). |
 | `world/` | `SkyDome`, `Lighting`, `CrystalField` (one InstancedMesh), `PowerUpField`. |
 | `postfx/` | `PostFX` — bloom + vignette + speed-reactive chromatic aberration. |

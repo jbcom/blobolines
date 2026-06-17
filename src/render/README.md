@@ -1,7 +1,7 @@
-# `src/render` — three.js materials, goo field, and VFX (framework-agnostic)
+# `src/render` — three.js materials, goo merge helpers, and VFX (framework-agnostic)
 
-The visual building blocks: custom shaders, the metaball goo field packer, and
-particle/decal VFX. These are **plain three.js / pure helpers** — no React. The
+The visual building blocks: custom shaders, CSG goo merge selection, and particle/decal
+VFX. These are **plain three.js / pure helpers** — no React. The
 R3F components in [`app/scene`](../../app/scene) instantiate and drive them each
 frame. Keeping them here (not as JSX) lets us own GPU resource lifecycle and unit-
 test the pure parts.
@@ -16,16 +16,12 @@ test the pure parts.
 
 ## Gotchas (learned the hard way)
 
-- **Metaball centers are WORLD-space.** The fragment shader raymarches from the
-  hull's world surface, so `packMetaballField` must pack world-space centers —
-  packing hull-local offsets pinned the whole field to the origin (goo on the
-  floor, eyes floating). See `goo/metaballField.ts`.
-- **GLSL comments must not contain backticks** — the shader lives in a JS template
-  literal; a backtick in a comment terminates the string and breaks the build.
-- **The raymarch step is shortened while wobble is active** (`stepScale`) — the
-  wobble term raises the field's Lipschitz constant above 1, so a full sphere-trace
-  step would overstep and punch holes. Amplitude is tuned to stay safe at
-  `MAX_STEPS=48`. See [[blobolines-perf-profile]] for the budget.
+- **Goo merge inputs are world-space.** `PlayerBlob` reports the live body/droplets through
+  diagnostics, and `GooCsg` converts selected droplet offsets into its local merge frame.
+  Keep that boundary explicit so the goo never pins to the origin or drifts away from eyes.
+- **CSG merge count is bounded.** `selectMerges` caps near-body droplet unions with
+  `goo.csg.maxMerges`; far droplets render through `FreeDroplets` instead of entering the
+  CSG chain.
 - **Hand-built materials aren't auto-disposed by R3F.** The owning component must
   `material.dispose()` on unmount (respawn / skin swap / HMR) to avoid leaking GL
   programs.

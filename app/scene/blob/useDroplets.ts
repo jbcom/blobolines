@@ -16,8 +16,8 @@ import { GRAVITY } from "@/sim/physics";
  * `splash(origin, strength)` on a hard landing, `launchBurst(origin, charge)` on a pop,
  * and `trail(origin, dir, speed)` each frame while airborne (distance-throttled here so
  * the wet wake stays even regardless of frame rate). This steps all droplets under gravity
- * each frame and exposes `get()` for the GooField to read. A seeded RNG keeps everything
- * deterministic. Caps the pool so the metaball field + perf stay bounded.
+ * each frame and exposes `get()` for GooCsg/FreeDroplets to read. A seeded RNG keeps
+ * everything deterministic. Caps the pool so the CSG merge work + free-droplet draw stay bounded.
  */
 const MAX_DROPLETS = 40;
 /** Emit one trail droplet roughly every this-many world units travelled. */
