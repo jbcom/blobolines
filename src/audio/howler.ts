@@ -187,12 +187,14 @@ let unduckTimer: ReturnType<typeof setTimeout> | null = null;
 export function duckMusic(ms = 700): void {
   if (!music || muted) return;
   const full = vol.music;
-  music.fade(music.volume(), full * 0.25, 120); // fast dip
+  const bed = music; // capture identity — a stop/restart swaps `music` to a different Howl
+  bed.fade(bed.volume(), full * 0.25, 120); // fast dip
   if (unduckTimer) clearTimeout(unduckTimer);
   unduckTimer = setTimeout(() => {
-    // Only restore if music is still the same live bed (a stop/restart clears it).
-    if (music && !muted) music.fade(music.volume(), full, ms);
     unduckTimer = null;
+    // Restore ONLY if the same bed is still the live music (not a stop, not a restarted bed) —
+    // otherwise we'd yank the volume of a freshly-started track.
+    if (music === bed && !muted) bed.fade(bed.volume(), full, ms);
   }, 180);
 }
 

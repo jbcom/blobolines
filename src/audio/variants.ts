@@ -19,8 +19,13 @@ export function createVariantPicker(
   return {
     next(): number {
       if (count <= 1) return 0;
-      // Pick from the (count-1) indices excluding `last`, then map back — guarantees no repeat
-      // in O(1) without a reject loop.
+      // First call (last < 0): pick freely from all `count` indices so index 0 isn't excluded.
+      // After that: pick from the (count-1) indices excluding `last`, then map around it —
+      // guarantees no immediate repeat in O(1) (no reject loop) with a uniform pick.
+      if (last < 0) {
+        last = Math.floor(rand() * count);
+        return last;
+      }
       let i = Math.floor(rand() * (count - 1));
       if (i >= last) i += 1;
       last = i;

@@ -21,6 +21,12 @@ describe("createVariantPicker", () => {
     }
   });
 
+  it("can return index 0 on the FIRST call (no first-pick bias away from 0)", () => {
+    // rand→0 picks the lowest available; the first call must be free to return 0.
+    expect(createVariantPicker(2, () => 0).next()).toBe(0);
+    expect(createVariantPicker(5, () => 0).next()).toBe(0);
+  });
+
   it("can reach every index over many draws", () => {
     let seed = 0.123;
     const rand = () => {
