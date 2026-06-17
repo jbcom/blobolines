@@ -39,6 +39,8 @@ interface BlobActorProps {
   body?: boolean;
 }
 
+const HERO_CSG_REBUILD_DT = 1 / 18;
+
 function HeroGooBody({
   material,
   radius,
@@ -51,14 +53,15 @@ function HeroGooBody({
   impact: number;
 }) {
   const meshRef = useRef<Mesh>(null);
+  const lastCsgBuild = useRef(-Infinity);
 
   const csg = useMemo(() => {
     const evaluator = new Evaluator();
     evaluator.attributes = ["position", "normal"];
     evaluator.useGroups = false;
 
-    const blobBrush = new Brush(new SphereGeometry(radius, 48, 32));
-    const tmpLobe = new SphereGeometry(1, 28, 20);
+    const blobBrush = new Brush(new SphereGeometry(radius, 32, 22));
+    const tmpLobe = new SphereGeometry(1, 18, 14);
     const lobeGeo = mergeVertices(tmpLobe);
     tmpLobe.dispose();
     const lobeBrushes = Array.from({ length: 3 }, () => new Brush(lobeGeo));
@@ -81,6 +84,10 @@ function HeroGooBody({
     const mesh = meshRef.current;
     if (!mesh) return;
 
+    const time = state.clock.elapsedTime;
+    if (time - lastCsgBuild.current < HERO_CSG_REBUILD_DT) return;
+    lastCsgBuild.current = time;
+
     const { evaluator, blobBrush, lobeBrushes, ping, pong } = csg;
     blobBrush.position.set(0, 0, 0);
     blobBrush.updateMatrixWorld();
@@ -98,7 +105,6 @@ function HeroGooBody({
       return out;
     };
 
-    const time = state.clock.elapsedTime;
     const idleSeconds = time + 2.8;
     const excitement = 0.28 + Math.sin(time * 1.35) * 0.12 + impact * 0.45;
     const lobes = bodyLobes({

@@ -386,13 +386,16 @@ function ensureReachable(
       accepted.push({ sourceType, proof, weight });
     }
     if (accepted.length === 0) return null;
-    let pick = rng.next() * accepted.reduce((sum, candidate) => sum + candidate.weight, 0);
-    let chosen = accepted[accepted.length - 1] ?? accepted[0];
-    for (const candidate of accepted) {
-      pick -= candidate.weight;
-      if (pick <= 0) {
-        chosen = candidate;
-        break;
+    const totalWeight = accepted.reduce((sum, candidate) => sum + Math.max(0, candidate.weight), 0);
+    let chosen = accepted[0];
+    if (totalWeight > 0) {
+      let pick = rng.next() * totalWeight;
+      for (const candidate of accepted) {
+        pick -= Math.max(0, candidate.weight);
+        if (pick <= 0) {
+          chosen = candidate;
+          break;
+        }
       }
     }
     applySourceMechanic(prev, chosen.sourceType, p, profile);

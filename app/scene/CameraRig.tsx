@@ -215,10 +215,10 @@ export function CameraRig({ active }: { active: boolean }) {
         camera.position.z += (lookZ + offZ - camera.position.z) * k;
         camera.lookAt(lookX, lookY, lookZ);
         camera.updateMatrixWorld();
-        const rect = state.gl.domElement.getBoundingClientRect();
+        const { width, height, top, left } = state.size;
         screenPoint.current.set(diag.position[0], diag.position[1], diag.position[2]).project(cam);
-        const screenX = rect.left + ((screenPoint.current.x + 1) * rect.width) / 2;
-        const screenY = rect.top + ((1 - screenPoint.current.y) * rect.height) / 2;
+        const screenX = left + ((screenPoint.current.x + 1) * width) / 2;
+        const screenY = top + ((1 - screenPoint.current.y) * height) / 2;
         const distance = camera.position.distanceTo(screenPoint.current.set(...diag.position));
         setBlobScreenTarget({
           x: screenX,
@@ -258,10 +258,10 @@ export function CameraRig({ active }: { active: boolean }) {
       // route window so the immediate and next trampolines are both in-frame before launch.
       camera.lookAt(lookX, lookY, lookZ);
       camera.updateMatrixWorld();
-      const rect = state.gl.domElement.getBoundingClientRect();
+      const { width, height, top, left } = state.size;
       screenPoint.current.set(diag.position[0], diag.position[1], diag.position[2]).project(cam);
-      const screenX = rect.left + ((screenPoint.current.x + 1) * rect.width) / 2;
-      const screenY = rect.top + ((1 - screenPoint.current.y) * rect.height) / 2;
+      const screenX = left + ((screenPoint.current.x + 1) * width) / 2;
+      const screenY = top + ((1 - screenPoint.current.y) * height) / 2;
       const distance = camera.position.distanceTo(screenPoint.current.set(...diag.position));
       setBlobScreenTarget({
         x: screenX,

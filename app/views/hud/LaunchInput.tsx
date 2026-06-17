@@ -227,7 +227,24 @@ export function LaunchInput() {
   };
 
   const onPointerCancel = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!pointers.current.has(e.pointerId)) return;
+    e.preventDefault();
     pointers.current.delete(e.pointerId);
+    if (pointers.current.size === 1) {
+      const remaining = activePointer();
+      if (remaining) {
+        gesture.current = {
+          mode: "view",
+          startX: remaining.x,
+          startY: remaining.y,
+          lastX: remaining.x,
+          lastY: remaining.y,
+          moved: false,
+          pinchDistance: 1,
+          pinchZoom: getViewControls().zoom,
+        };
+      }
+    }
     setAim(null);
     setAirSteer(0, 0);
     setCharge(0);
