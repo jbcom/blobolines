@@ -10,8 +10,8 @@ test the pure parts.
 
 | Dir | Owns |
 |-----|------|
-| `materials/` | Custom drei `shaderMaterial`s: `GooMaterial` (the wet goo-shaded sphere — squash + vertex wobble for the menu hero blob) and `MetaballGooMaterial` (the raymarched smin-metaball isosurface for the in-game blob, with combo-flame `u_heat` and surface-tension `u_wobble`). |
-| `goo/` | `packMetaballField` — packs the blob body + live droplets into the **world-space** metaball uniform arrays the raymarch shader reads. |
+| `materials/` | Custom drei `shaderMaterial`s: `GooMaterial` — the ONE wet goo skin, shared by both the menu hero (BlobActor, plain sphere) and the in-game blob (GooCsg, three-bvh-csg merged mesh). Vertex deform modes (`uWobble` travelling jiggle, `uSag` wet sag, `uLobe`/`uLobeDir` asymmetric bulge) keep it gooey; a tight wet specular + fresnel rim shade it. (The old raymarched `MetaballGooMaterial` was removed when the merged-mesh CSG path replaced it; menu↔play now share one material, so there is no shader divergence to unify.) |
+| `goo/` | `selectMerges` (merge.ts) — picks which nearby droplets the CSG path unions into the blob body each frame (by distance/weight), bounded by `goo.csg.maxMerges`. |
 | `vfx/` | `droplets.ts` (pure splash / launch-burst / trail spawn + gravity step), `splat.ts` (Canvas2D goo-splat decal painter). |
 
 ## Gotchas (learned the hard way)

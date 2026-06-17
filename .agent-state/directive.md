@@ -385,7 +385,11 @@ game — touch/drag is primary; keyboard is a minor desktop-only secondary, don'
 - [x] ACESFilmic toneMapping + outputColorSpace on Canvas gl; drop the manual soft-clamp hack in metaballGoo. (soft-clamp gone with metaballGoo's deletion; CSG goo uses GooMaterial)
 - [x] Wire biome fog into the scene (biomeSkyAt.fog is computed but unused) — fogExp2 by altitude, hides far cutoff.
 - [x] Fix camera far plane vs world scale (far:200 clips dome@150 + biomes to 1400m); attach dome to camera or push far.
-- [ ] Unify the two divergent goo shaders (menu GooMaterial vs in-game MetaballGoo) — shared wet/lighting GLSL so the blob matches menu↔play.
+- [x] Unify the goo shaders — ALREADY UNIFIED: MetaballGooMaterial (the raymarched in-game
+      shader) was removed when the three-bvh-csg merged-mesh path replaced it, so menu (BlobActor)
+      and in-game (GooCsg) now share the ONE GooMaterial — there is no divergence left. Verified
+      no MetaballGoo references remain in code; fixed the stale src/render/README that still
+      described two materials + the removed packMetaballField.
 - [ ] Biome-reactive goo lighting: feed biome key color + darkening as uniforms (blob warm at ground, cool/moody in space).
 - [ ] Goo refraction: sample backbuffer along normal×fresnel so the blob bends what's behind it (marquee jelly upgrade).
 - [ ] Thickness-based inner glow (Beer-Lambert) in the raymarch — deeper goo more saturated.
