@@ -67,9 +67,8 @@ const BY_TIER: Record<QualityTier, QualitySettings> = { low: LOW, medium: MEDIUM
  *  medium, phone → medium (phones with a coarse pointer are mid-tier by default; a sustained
  *  low FPS drops them to low at runtime). */
 export function tierForDevice(device: DeviceClass): QualityTier {
-  if (device === "desktop") return "high";
-  if (device === "tablet") return "medium";
-  return "medium";
+  // Desktop starts high; tablet + phone start medium (a sustained low FPS drops them at runtime).
+  return device === "desktop" ? "high" : "medium";
 }
 
 /**

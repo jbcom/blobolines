@@ -569,7 +569,10 @@ game — touch/drag is primary; keyboard is a minor desktop-only secondary, don'
       sweep plays a different pitch — a hand-played sparkle run instead of one repeated blip.
       (A dedicated magnet "sweep" LOOP while active would need a looped sample — deferred to the
       audio-sourcing pass; the per-gem variation is the high-value win.)
-- [ ] Near-miss whoosh when passing a pad close at speed without landing.
+- [x] Near-miss whoosh: while descending fast (v.y<-8), PlayerBlob scans the bounded retained-
+      pad tail for a pad whose top level the blob crossed THIS frame just OUTSIDE its footprint
+      (lateral in [half+0.4, half+2.5]) — a "phew, almost" brush — and plays a soft whoosh once
+      per pad (nearMissed set, cleared on run start). Cheap: descending-only, tail-only, debounced.
 - [ ] Three music tracks swapped by phase+altitude (menu / in-game / high-space) with crossfade.
 - [ ] Expand ambient beds per biome band (forest/wind/strong-wind/space/snow/magic) off biomeSkyAt.
 - [ ] UI sounds (hover/click/confirm/cancel/popup/coin) wired to the shadcn overlay.

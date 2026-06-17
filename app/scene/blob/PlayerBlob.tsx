@@ -63,6 +63,10 @@ export function PlayerBlob() {
   const ensureHeight = useWorldStore((s) => s.ensureHeight);
   const { splash, launchBurst, trail, reset: resetDroplets, get: getDroplets } = useDroplets();
   const maxY = useRef(0);
+  /** Last blob Y seen, to detect descending pad-level crossings for the near-miss whoosh. */
+  const prevY = useRef(0);
+  /** Pad ids we've already whooshed past, so one near-miss fires at most once per pad. */
+  const nearMissed = useRef<Set<number>>(new Set());
   /** Highest pad the blob has actually landed on — death is measured below THIS, not the
    *  airborne apex (a tall launch arcs >DEATH_FALL_DISTANCE above its own pad and would
    *  otherwise self-destruct on the way back down to the very pad it left). */
@@ -95,6 +99,8 @@ export function PlayerBlob() {
     body.setLinvel({ x: 0, y: 0, z: 0 }, true);
     maxY.current = 3;
     safeY.current = 3;
+    prevY.current = 3;
+    nearMissed.current.clear();
     lastEnsureY.current = 3;
     dead.current = false;
     resetPowerups();
@@ -194,6 +200,30 @@ export function PlayerBlob() {
       const inv = 1 / speed;
       trail([p.x, p.y, p.z], [v.x * inv, v.y * inv, v.z * inv], speed);
     }
+
+    // NEAR-MISS whoosh: when descending fast past a pad's level but JUST missing it laterally
+    // (close enough to feel the brush, far enough not to land), play a whoosh — a "phew, almost"
+    // beat. Cheap: only the bounded retained-pad tail is scanned, only while descending fast,
+    // and each pad fires at most once (nearMissed set). Skipped when slow/ascending.
+    if (v.y < -8) {
+      for (const pad of useWorldStore.getState().trampolines) {
+        if (nearMissed.current.has(pad.id)) continue;
+        // Did the blob cross this pad's top level THIS frame on the way down?
+        const padTop = pad.position[1] + 0.5;
+        if (prevY.current > padTop && p.y <= padTop) {
+          const dx = p.x - pad.position[0];
+          const dz = p.z - pad.position[2];
+          const lateral = Math.hypot(dx, dz);
+          const half = Math.max(pad.width, pad.depth) * 0.5;
+          // Near band: just outside the pad footprint (would-have-missed) but within ~2.5u.
+          if (lateral > half + 0.4 && lateral < half + 2.5) {
+            nearMissed.current.add(pad.id);
+            playLaunch(0.45); // a soft whoosh (reuses the launch sample at low charge)
+          }
+        }
+      }
+    }
+    prevY.current = p.y;
 
     // Keep the blob inside the lateral play bounds.
     if (Math.abs(p.x) > WORLD_BOUND_XZ || Math.abs(p.z) > WORLD_BOUND_XZ) {

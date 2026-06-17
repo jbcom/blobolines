@@ -100,7 +100,7 @@ function playSfx(id: SfxId, opts?: { rate?: number; volume?: number }): void {
   // Howler's play() can return undefined on a malformed/zero-length sample; @types/howler
   // types it as number, so guard before per-play rate/volume (they'd silently NOOP otherwise).
   if (playId == null) return;
-  if (opts?.rate && opts.rate !== 1) h.rate(opts.rate, playId);
+  if (opts?.rate != null && opts.rate !== 1) h.rate(opts.rate, playId);
   h.volume(vol.sfx * sfxVolume * (opts?.volume ?? 1), playId);
 }
 

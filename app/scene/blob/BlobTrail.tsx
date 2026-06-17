@@ -26,6 +26,15 @@ const SAMPLES = 24; // ribbon segments (positions kept)
 const WIDTH = 0.55; // half-width at the head
 const MIN_SPEED = 7; // below this the trail retracts
 
+// Per-frame scratch — module-level (the component never runs two instances; matches the sibling
+// VFX components' pattern) so the frame loop allocates nothing.
+const tmpA = new Vector3();
+const tmpDir = new Vector3();
+const tmpSide = new Vector3();
+const toCam = new Vector3();
+const headCol = new Color();
+const flame = new Color(hex(palette.goo.flame));
+
 interface BlobTrailProps {
   skin: BlobSkin;
 }
@@ -60,13 +69,6 @@ export function BlobTrail({ skin }: BlobTrailProps) {
   // Release the per-mount BufferGeometry on unmount (the trail remounts each run via the
   // `playing &&` gate; R3F does NOT auto-dispose a useMemo'd geometry passed as a prop).
   useEffect(() => () => geo.dispose(), [geo]);
-
-  const tmpA = useMemo(() => new Vector3(), []);
-  const tmpDir = useMemo(() => new Vector3(), []);
-  const tmpSide = useMemo(() => new Vector3(), []);
-  const toCam = useMemo(() => new Vector3(), []);
-  const headCol = useMemo(() => new Color(), []);
-  const flame = useMemo(() => new Color(hex(palette.goo.flame)), []);
 
   useFrame(() => {
     const mesh = meshRef.current;

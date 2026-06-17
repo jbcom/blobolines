@@ -69,7 +69,7 @@ export function FreeDroplets({ skin, getDroplets }: FreeDropletsProps) {
       const dz = d.position[2] - bz;
       if (dx * dx + dy * dy + dz * dz < FREE_DIST2) continue;
       const r = d.radius * (0.4 + 0.6 * lifeLeft);
-      tmpPos.set(d.position[0], d.position[1], d.position[2]);
+      tmpPos.fromArray(d.position);
       tmpScale.setScalar(r);
       tmpMat.compose(tmpPos, tmpQuat, tmpScale);
       mesh.setMatrixAt(n, tmpMat);
