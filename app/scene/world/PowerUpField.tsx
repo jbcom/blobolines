@@ -28,30 +28,40 @@ const FLASH_LIFE = 0.3; // seconds the collect flash plays
 export function PowerUpField() {
   const groupRef = useRef<Group>(null);
   const powerups = useWorldStore((s) => s.powerups);
-  /** index → seconds-since-collected, drives the collect flash before the group hides. A
-   *  power-up in this map has been collected; the live-list loop keeps updating it only until
-   *  the flash finishes, then drops it — so this map is also the "already taken" guard (an
-   *  index in here never re-runs the pickup test, because the flash branch returns first). */
+  // The reset effect MUST key on `seed`, NOT `powerups`: ensureHeight() replaces the powerups
+  // array on every tower extension (~10m of climb), so a `[powerups]`-keyed reset would wipe
+  // the taken-guard + rebuild the live list on every extension — defeating the live-list perf
+  // win AND letting a collected power-up be re-collected. `seed` only changes on a true new run.
+  const seed = useWorldStore((s) => s.seed);
+  /** index → seconds-since-collected, drives the collect flash before the group hides. */
   const flashing = useRef<Map<number, number>>(new Map());
+  /** Indices already collected — the durable "already taken" guard. Persists across tower
+   *  extensions (only cleared on a true run reset), so a power-up the blob passes near again
+   *  (e.g. after a canted lateral throw or a fall) can't re-fire its buff. */
+  const collected = useRef<Set<number>>(new Set());
   /** Indices still worth updating each frame (uncollected, or collected-and-still-flashing).
    *  Once a power-up's flash finishes it's permanently hidden and dropped from this list, so
-   *  the per-frame loop never re-touches a long run's worth of dead pickups (no Set lookup, no
-   *  distance calc for hidden ones). Rebuilt only when the source list changes; entries are
-   *  spliced out as they die. */
+   *  the per-frame loop never re-touches a long run's worth of dead pickups (no distance calc
+   *  for hidden ones). Grown by appending the new tail as the tower extends; spliced as entries
+   *  die; rebuilt only on a true reset. */
   const live = useRef<number[]>([]);
   /** How many power-up indices the live list has already absorbed — so the append-only tower
    *  extension only adds the genuinely-new tail each frame. */
   const syncedLen = useRef(0);
   const camera = useThree((s) => s.camera);
 
-  // A world reset swaps the `powerups` array identity; clear the flash map so a new power-up
-  // reusing an old index isn't treated as already-taken, and reseed the live-index list to
-  // every current power-up.
+  // A true run reset (new seed) starts a fresh tower: clear the flash + collected guards and
+  // reseed the live-index list. Tower EXTENSIONS (same seed, more powerups) are handled in the
+  // frame loop by appending only the new tail — they must NOT wipe these guards.
+  // `seed` is the intentional reset trigger (the body only touches refs, so biome can't see it
+  // matters — but re-running on a seed change is exactly the point).
+  // biome-ignore lint/correctness/useExhaustiveDependencies: seed is the reset trigger
   useEffect(() => {
     flashing.current.clear();
-    live.current = powerups.map((_, i) => i);
-    syncedLen.current = powerups.length;
-  }, [powerups]);
+    collected.current.clear();
+    live.current = [];
+    syncedLen.current = 0;
+  }, [seed]);
 
   useFrame((state, delta) => {
     const g = groupRef.current;
@@ -131,7 +141,10 @@ export function PowerUpField() {
         auraMat.opacity = 0.18 + 0.22 * pulse + 0.4 * near;
       }
 
-      if (d2 <= PICKUP_R2) {
+      // Collect on contact — guarded by the durable `collected` set so a power-up can only ever
+      // fire its buff ONCE, even if the blob passes near its position again on a later pass.
+      if (d2 <= PICKUP_R2 && !collected.current.has(i)) {
+        collected.current.add(i);
         flashing.current.set(i, 0); // start the collect flash (stays live until it finishes)
         activatePowerup(p.type);
         playPowerup();

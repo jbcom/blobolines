@@ -719,12 +719,18 @@ permeability (permeable one-way pads rejected by owner).
 - [x] BUG fixed: worldStore.reset derives the next seed via LCG from the previous (was performance.now) — deterministic/replayable; explicit seed still honored. Tested.
 ### Quality tier (biggest mobile gap)
 - [ ] Runtime quality-tier system (low/med/high) in store.settings → DPR, raymarch steps, postfx passes, shadows, AA, pool/particle counts. Expose in SettingsModal.
-- [ ] Make raymarchSteps a uniform (u_maxSteps loop bound), not a compile-time #define, so tiers scale without rebuild.
+- [x] Make raymarchSteps a uniform (u_maxSteps loop bound)… OBSOLETE — there is no raymarch
+      shader. The metaball raymarch goo was replaced by the three-bvh-csg merged-mesh goo
+      (GooCsg), which has no step-count uniform. Nothing to do. (Verified 2026-06-16.)
 - [ ] Drive Canvas dpr from tier (mid/low → [1,1.5]); gate antialias off on mid/low.
 - [ ] Gate PostFX passes by tier (strip bloom + chromatic on low); gate shadows off low/mid + set explicit shadow-mapSize.
 ### Hot-path / alloc
-- [ ] packMetaballField: write into caller-owned scratch buffers each frame instead of allocating Vec3[]+number[] (the one real per-frame GC offender).
-- [ ] GooField: set palette colors on change only, not every frame.
+- [x] packMetaballField: write into caller-owned scratch buffers… OBSOLETE — packMetaballField
+      was removed when the goo moved to three-bvh-csg (see also the materials note above). No
+      Vec3[]/number[] per-frame alloc remains from it. (Verified 2026-06-16.)
+- [x] GooField: set palette colors on change only… OBSOLETE — there is no GooField component;
+      the goo is GooCsg (mesh CSG), which already sets skin/rim colors only on a skin change
+      (a useEffect), not per frame. (Verified 2026-06-16.)
 - [ ] BlobEyes: cache lid/pupil/tear refs instead of per-frame traverse()+startsWith.
 - [x] PowerUpField: skip collected entries (live-only list), no distance calc for hidden. The
       frame loop now iterates a maintained live-index array (uncollected, or collected-and-
@@ -732,8 +738,13 @@ permeability (permeable one-way pads rejected by owner).
       finishes, so a long run's worth of dead pickups is never re-touched (no Set lookup, no
       distance calc). New tower powerups append to the tail; browser fixture proves collection
       still fires.
-- [ ] BiomeProps: early-out the star pass on opacity<0.01 like clouds.
-- [ ] metaball fieldNormal: forward-difference (4 evals) instead of central (6) to cut normal cost ~33%.
+- [x] BiomeProps: early-out the star pass on opacity<0.01 like clouds. ALREADY DONE — the star
+      pass guards `star.visible = op > 0.01` and only runs the per-instance update + matrix
+      upload `if (star.visible)`, mirroring the cloud pass. (Motes deliberately have no early-out:
+      they're atmosphere present in every band. Verified 2026-06-16.)
+- [x] metaball fieldNormal: forward-difference… OBSOLETE — no metaball field / fieldNormal
+      exists; CSG goo gets its normals from the merged BufferGeometry, not a field-gradient
+      eval. Nothing to optimize here. (Verified 2026-06-16.)
 - [ ] Instance/share trampoline geometry+materials (per-type), keep only splat texture per-pad; 64px splat on mobile.
 ### Dead code / deps
 These were flagged "dead" in an earlier pass but are NOT — they were wired in
