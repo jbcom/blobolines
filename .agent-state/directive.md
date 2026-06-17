@@ -455,7 +455,12 @@ game — touch/drag is primary; keyboard is a minor desktop-only secondary, don'
       blob nears (within ~14u), drawing the eye toward the pickup. On collect, the halo BLOOMS
       bright + scales out over 0.3s (the model hides) before the group vanishes — a satisfying
       grab flash. Browser fixture renders a power-up + aura in WebGL.
-- [ ] Per-biome particle ambience (petals ground, ice/wind stratosphere, nebula dust space) — extend BiomeProps.
+- [x] Per-biome particle ambience: BiomeProps gained a drifting MOTES layer (36 instanced
+      particles) that's always present and recolors by altitude — warm petals at the ground →
+      icy-white wind motes in the stratosphere → nebula violet dust in space (eased across band
+      crossings). They drift sideways + bob and wrap into the scroll column like the clouds/stars.
+      Joins the existing clouds (sky) + stars (space) strata. Verified in-game (no errors, scene
+      healthy).
 - [x] Per-biome color grade + bloom in PostFX: bloom intensity (0.28→0.78), saturation
       (0.08→0.20) and contrast (0.06→0.20) now ramp with the blob's altitude (ground→space over
       ~700m), driven imperatively off the diagnostics bridge onto the effect refs — warm + soft

@@ -1,9 +1,9 @@
 import { useFrame } from "@react-three/fiber";
 import { useMemo, useRef } from "react";
-import { type InstancedMesh, Matrix4, Quaternion, Vector3 } from "three";
+import { Color, type InstancedMesh, Matrix4, Quaternion, Vector3 } from "three";
 import { createRng } from "@/core/math";
 import { getBlobDiagnostics } from "@/state";
-import { hex, palette } from "@/styles/tokens";
+import { hex, mixHex, palette } from "@/styles/tokens";
 
 /**
  * Biome strata decor: soft clouds in the lower/sky bands and twinkling stars high up in
@@ -14,11 +14,21 @@ import { hex, palette } from "@/styles/tokens";
  */
 const CLOUD_COUNT = 14;
 const STAR_COUNT = 60;
+const MOTE_COUNT = 36;
 const COLUMN = 90; // vertical span of placed decor, recentred on the blob
 const tmpPos = new Vector3();
 const tmpQuat = new Quaternion();
 const tmpScale = new Vector3();
 const tmpMat = new Matrix4();
+const tmpColor = new Color();
+
+/** Drifting ambient mote color by altitude: warm petals at the ground → icy white in the
+ *  stratosphere → nebula violet in space. */
+function moteColor(h: number): string {
+  if (h < 200) return mixHex(palette.goo.flame, palette.cream, 0.4); // warm petal
+  if (h < 650) return palette.cream; // icy white wind motes
+  return mixHex(palette.tramp.violet, palette.cream, 0.35); // nebula dust
+}
 
 function layerOpacity(height: number, lo: number, hi: number): number {
   // Triangular fade: 0 outside [lo,hi], 1 in the middle.
@@ -40,6 +50,7 @@ function wrapY(yFrac: number, h: number): number {
 export function BiomeProps() {
   const cloudRef = useRef<InstancedMesh>(null);
   const starRef = useRef<InstancedMesh>(null);
+  const moteRef = useRef<InstancedMesh>(null);
 
   // Deterministic offsets for each instance (placement within the column).
   const clouds = useMemo(() => {
@@ -60,6 +71,17 @@ export function BiomeProps() {
       yFrac: rng.next(),
       s: rng.range(0.08, 0.22),
       tw: rng.range(0, Math.PI * 2),
+    }));
+  }, []);
+  const motes = useMemo(() => {
+    const rng = createRng(37);
+    return Array.from({ length: MOTE_COUNT }, () => ({
+      x: rng.range(-18, 18),
+      z: rng.range(-22, 6),
+      yFrac: rng.next(),
+      s: rng.range(0.05, 0.16),
+      driftX: rng.range(0.3, 0.9) * rng.sign(),
+      phase: rng.range(0, Math.PI * 2),
     }));
   }, []);
 
@@ -106,6 +128,27 @@ export function BiomeProps() {
         star.instanceMatrix.needsUpdate = true;
       }
     }
+
+    // Drifting ambient MOTES — always present (every band has atmosphere), recoloring by
+    // altitude (warm petals low → icy wind motes mid → nebula dust high) and gently drifting
+    // sideways + bobbing. Wrapped into the column like the others so they scroll with the climb.
+    const mote = moteRef.current;
+    if (mote) {
+      const m = mote.material as unknown as { color: Color; opacity: number };
+      m.color.lerp(tmpColor.set(moteColor(h)), 0.05); // ease the recolor across band crossings
+      m.opacity = 0.5;
+      motes.forEach((mo, i) => {
+        tmpPos.set(
+          mo.x + Math.sin(t * 0.5 + mo.phase) * 2 + t * mo.driftX * 0.4,
+          wrapY(mo.yFrac, h) + Math.sin(t * 0.7 + mo.phase) * 1.5,
+          mo.z,
+        );
+        tmpScale.setScalar(mo.s);
+        tmpMat.compose(tmpPos, tmpQuat, tmpScale);
+        mote.setMatrixAt(i, tmpMat);
+      });
+      mote.instanceMatrix.needsUpdate = true;
+    }
   });
 
   return (
@@ -127,6 +170,15 @@ export function BiomeProps() {
       <instancedMesh ref={starRef} args={[undefined, undefined, STAR_COUNT]} frustumCulled={false}>
         <sphereGeometry args={[1, 6, 6]} />
         <meshBasicMaterial color={hex(palette.cream)} transparent opacity={0} depthWrite={false} />
+      </instancedMesh>
+      <instancedMesh ref={moteRef} args={[undefined, undefined, MOTE_COUNT]} frustumCulled={false}>
+        <sphereGeometry args={[1, 6, 6]} />
+        <meshBasicMaterial
+          color={hex(palette.cream)}
+          transparent
+          opacity={0.5}
+          depthWrite={false}
+        />
       </instancedMesh>
     </>
   );
