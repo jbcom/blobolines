@@ -712,7 +712,13 @@ permeability (permeable one-way pads rejected by owner).
 - [ ] Daily-challenge seed plumbing (Rng is seedable; add a daily seed + leaderboard-ready run hash).
 - [ ] Missions/objectives/achievements layer (e.g. "reach 200m", "10-combo", "100 crystals").
 - [ ] Charge-time/overcharge nuance on the slingshot (hold penalty or perfect-release window).
-- [ ] Wire walls/misses to break combo if that's the intended rule (docs claim it; runtime only breaks on ice).
+- [x] Wire walls/misses to break combo… RESOLVED as a no-op by design. Premise was stale: NO
+      doc actually claims a wall/miss breaks the combo (checked GAME-DESIGN/STANDARDS — they only
+      say a clean LANDING builds it). The combo only advances on a landing, so a miss already
+      doesn't advance it; actively RESETTING the streak on every near-miss would punish the climb
+      against the "make the climb feel amazing" mandate. The coherent intended rule stands: combo
+      builds on every non-ice landing, breaks on ice (risk/reward) + on run end. (If a punishing
+      miss-breaks-combo is later wanted, it's a deliberate design add, not a bug fix.)
 
 ## M16 — perf/architecture/quality (from perf audit, 2026-06-16)
 ### More confirmed bugs
