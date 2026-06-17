@@ -141,6 +141,12 @@ export const GooMaterial = shaderMaterial(
 
       vec3 base   = uColor * (0.55 + 0.35 * wrap);
       vec3 lit    = base + uColor * diffuse * 0.5;
+      // Beer-Lambert-ish thickness: looking straight INTO the body (low fresnel) means more
+      // goo between the eye and the back, so the color deepens/saturates toward the center and
+      // thins at the grazing edge — the volumetric "you can see depth in the jelly" read. A
+      // cheap per-fragment proxy (1-fresnel) standing in for true raymarched path length.
+      float thickness = 1.0 - fresnel;
+      lit = mix(lit, lit * uColor * 1.5, thickness * 0.35);
       // Biome-reactive: bend the lit body color toward the biome key color (warm at ground,
       // cool/moody high up) on the LIT side, so the blob feels embedded in its environment.
       lit = mix(lit, lit * (0.6 + 0.8 * uEnvTint), uEnvLight * (0.4 + 0.6 * wrap));

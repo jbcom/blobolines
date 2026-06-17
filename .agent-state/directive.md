@@ -397,7 +397,11 @@ game — touch/drag is primary; keyboard is a minor desktop-only secondary, don'
       uEnvLight=0 (no biome). Verified in-game (resting puddle renders with the tint, no errors);
       uniform unit test updated.
 - [ ] Goo refraction: sample backbuffer along normal×fresnel so the blob bends what's behind it (marquee jelly upgrade).
-- [ ] Thickness-based inner glow (Beer-Lambert) in the raymarch — deeper goo more saturated.
+- [x] Thickness-based saturation (Beer-Lambert) — adapted to the CSG path (the raymarch it
+      originally referenced was removed): GooMaterial deepens/saturates the body color toward the
+      center (low fresnel = looking through more goo = "thicker") and thins it at the grazing
+      edge, using (1-fresnel) as a cheap per-fragment path-length proxy. Reads as volumetric
+      "depth in the jelly". Verified live (menu blob center now richer than the edge).
 - [ ] Fake caustics / moving light dapple cast under the goo on the pad.
 - [x] Render the free droplets: FreeDroplets — an instanced wet-sphere mesh (MeshStandardMaterial,
       glossy, skin-colored) rendering the flung goo droplets so a splash/launch visibly throws
