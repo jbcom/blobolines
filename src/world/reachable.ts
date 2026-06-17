@@ -317,7 +317,6 @@ export function solveGoldenPath(
     }
     return (
       proofs
-        .slice()
         .sort((x, y) => y.landingPrecision - x.landingPrecision || x.launchSpeed - y.launchSpeed)
         .at(0) ?? null
     );

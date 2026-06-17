@@ -490,8 +490,8 @@ function ensureReachable(
   };
   addGap(gap);
   addGap(predictedLandingGap(prev, pad, profile));
-  for (let k = 0; k <= 1.0001; k += 0.08) {
-    addGap(minLegalLateral + (maxLegalGap - minLegalLateral) * k);
+  for (let i = 0; i <= 12; i++) {
+    addGap(minLegalLateral + (maxLegalGap - minLegalLateral) * (i / 12));
   }
   gapCandidates.sort((a, b) => Math.abs(a - gap) - Math.abs(b - gap));
   for (const candidateGap of gapCandidates) {
