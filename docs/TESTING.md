@@ -14,7 +14,9 @@ Three layers, each catching a different class of bug. All run in CI on every PR.
 Pure logic: deterministic RNG/clock/springs, engine loop, world generator, golden-path
 parabola proofs, launch/combo/collect math, ECS traits, design tokens. Fast, no GPU.
 Determinism is explicitly tested (same seed → same sequence; fixed-timestep reproducibility).
-Lives next to the code in `__tests__/`.
+Lives next to the code in `__tests__/`. `app/scene/blob/__tests__/TrajectoryPreview.test.ts`
+also locks the difficulty-gated aim-assist ladder: endpoint reticles below Blobmare,
+arc-only Blobmare, no parabola on Ultra Blobmare and up.
 
 ## Browser fixtures — `pnpm test:browser` (Vitest browser mode, real Chromium + WebGL)
 
@@ -24,9 +26,7 @@ Render regressions that only a real GPU context catches:
 - `app/scene/blob/__tests__/GooCsg.fixture.test.tsx` — merged CSG goo body renders and
   survives rest/deform/refraction paths
 - `app/scene/world/__tests__/GoldenRoutePreview.fixture.test.tsx` — solid red route-proof
-  parabola renders from stored golden-path samples
-- `app/scene/world/__tests__/LandingTargetMarker.fixture.test.tsx` — the live golden-path
-  bullseye paints at the certified next landing point
+  parabola renders from stored golden-path samples for the dev harness
 - `app/views/hud/__tests__/LaunchInput.browser.test.tsx` — launch surface, keyboard
   steering, and air-steer reticle behavior
 - `app/views/hud/__tests__/NextPadRadar.browser.test.tsx` — next-target direction,
@@ -45,7 +45,14 @@ fixture root to avoid cross-test flakiness.
 `e2e/playable.spec.ts` is the **"is it playable?" gate**: open `?dev`, start a run,
 launch the blob, assert the altimeter climbs off zero. This single flow proves Physics
 mounted, the body simulates, the launch impulse applied, and the height-chase updates —
-end to end. It passes against both `pnpm dev` and the production preview build.
+end to end.
+
+`e2e/route-proof.spec.ts` is the **"is the dev-only route visibly proven?" gate**:
+it drives the real DEV route-proof sequence, waits for the eight timed JSON+PNG captures,
+asserts Easy generated three proof variants per pair, proves every landing is inside the
+target trampoline footprint, and pixel-checks each PNG for the solid red parabola/impact
+overlay. This keeps the visual proof harness honest without showing that answer key during
+normal play.
 
 ## Dev harness (manual + tooling)
 

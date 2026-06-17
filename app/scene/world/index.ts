@@ -5,7 +5,6 @@ export { BlobFollowLight } from "./BlobFollowLight";
 export { BlobShadow } from "./BlobShadow";
 export { CrystalField } from "./CrystalField";
 export { GoldenRoutePreview } from "./GoldenRoutePreview";
-export { LandingTargetMarker } from "./LandingTargetMarker";
 export { LaunchRing } from "./LaunchRing";
 export { Lighting } from "./Lighting";
 export { PowerUpField } from "./PowerUpField";

@@ -1,7 +1,7 @@
 import { useFrame } from "@react-three/fiber";
 import { useEffect, useRef } from "react";
 import type { InstancedMesh } from "three";
-import { Color, Matrix4, Quaternion, Vector3 } from "three";
+import { AdditiveBlending, Color, DoubleSide, Matrix4, Quaternion, Vector3 } from "three";
 import { playChime } from "@/audio";
 import { world as worldCfg } from "@/config";
 import type { CrystalTier } from "@/core/types";
@@ -40,6 +40,7 @@ const TIER_COLOR: Record<CrystalTier, Color> = {
 
 export function CrystalField() {
   const meshRef = useRef<InstancedMesh>(null);
+  const haloRef = useRef<InstancedMesh>(null);
   const crystals = useWorldStore((s) => s.crystals);
   const addCrystals = useGameStore((s) => s.addCrystals);
   const collected = useRef<Set<number>>(new Set());
@@ -63,7 +64,8 @@ export function CrystalField() {
 
   useFrame((state, delta) => {
     const mesh = meshRef.current;
-    if (!mesh) return;
+    const halo = haloRef.current;
+    if (!mesh || !halo) return;
 
     // Append-only sync: add position + tier for newly generated crystals as the tower extends,
     // WITHOUT rebuilding the array (rebuilding would discard any in-place magnet moves).
@@ -106,6 +108,11 @@ export function CrystalField() {
         // Flash bright then fade toward black so it reads as a burst of light dissolving.
         tmpColor.copy(TIER_COLOR[tier[i]]).multiplyScalar((1 - f) * 2.4);
         mesh.setColorAt(visible, tmpColor);
+        tmpQuat.copy(state.camera.quaternion);
+        tmpScale.setScalar(pop * 1.45);
+        tmpMat.compose(tmpObj, tmpQuat, tmpScale);
+        halo.setMatrixAt(visible, tmpMat);
+        halo.setColorAt(visible, tmpColor);
         visible++;
         continue;
       }
@@ -133,11 +140,19 @@ export function CrystalField() {
       const glint = 0.85 + 0.35 * tw + 0.5 * tw ** 8; // soft pulse + sharp sparkle spike
       tmpColor.copy(TIER_COLOR[tier[i]]).multiplyScalar(glint);
       mesh.setColorAt(visible, tmpColor);
+      tmpQuat.copy(state.camera.quaternion);
+      tmpScale.setScalar(s * (1.05 + Math.max(0, tw) * 0.16));
+      tmpMat.compose(tmpObj, tmpQuat, tmpScale);
+      halo.setMatrixAt(visible, tmpMat);
+      halo.setColorAt(visible, tmpColor);
       visible++;
     }
     mesh.count = visible;
+    halo.count = visible;
     mesh.instanceMatrix.needsUpdate = true;
+    halo.instanceMatrix.needsUpdate = true;
     if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
+    if (halo.instanceColor) halo.instanceColor.needsUpdate = true;
 
     if (gathered > 0) {
       // Score-doubler: each gem collected while the buff is active is worth double (rounded so
@@ -148,12 +163,42 @@ export function CrystalField() {
   });
 
   return (
-    <instancedMesh ref={meshRef} args={[undefined, undefined, MAX_CRYSTALS]} frustumCulled={false}>
-      <octahedronGeometry args={[0.45, 0]} />
-      {/* Per-instance setColorAt tints these gems; the color we write each frame carries a
-          TWINKLE (a brightness pulse, phase-offset per gem) baked in. toneMapped off so the
-          bright pulse peaks read as a sparkle glint instead of being tonemapped flat. */}
-      <meshStandardMaterial color="#ffffff" roughness={0.15} metalness={0.4} toneMapped={false} />
-    </instancedMesh>
+    <group>
+      <instancedMesh
+        ref={haloRef}
+        args={[undefined, undefined, MAX_CRYSTALS]}
+        frustumCulled={false}
+        renderOrder={21}
+      >
+        <ringGeometry args={[0.56, 0.86, 40]} />
+        <meshBasicMaterial
+          color={hex(palette.goo.wet)}
+          transparent
+          opacity={0.34}
+          depthWrite={false}
+          depthTest={false}
+          side={DoubleSide}
+          blending={AdditiveBlending}
+          toneMapped={false}
+        />
+      </instancedMesh>
+      <instancedMesh
+        ref={meshRef}
+        args={[undefined, undefined, MAX_CRYSTALS]}
+        frustumCulled={false}
+        renderOrder={22}
+      >
+        <octahedronGeometry args={[0.45, 0]} />
+        {/* Per-instance setColorAt tints these gems; the color we write each frame carries a
+            TWINKLE (a brightness pulse, phase-offset per gem) baked in. toneMapped off so the
+            bright pulse peaks read as a sparkle glint instead of being tonemapped flat. */}
+        <meshStandardMaterial
+          color={hex(palette.goo.wet)}
+          roughness={0.15}
+          metalness={0.4}
+          toneMapped={false}
+        />
+      </instancedMesh>
+    </group>
   );
 }

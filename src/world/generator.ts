@@ -347,8 +347,9 @@ function widenForHumanMargin(
 
 /**
  * Make `pad` reachable from `prev`, mutating `prev` (cant) and/or returning an adjusted pad,
- * then attaching a `goldenPath` proof to `prev`. The proof is a passive, visible parabola
- * sampled in world space; no hidden air-steer budget is required for the certified route.
+ * then attaching a `goldenPath` proof to `prev`. The proof is a passive parabola
+ * sampled in world space for diagnostics/dev evidence; no hidden air-steer budget is required
+ * for the certified route.
  */
 function ensureReachable(
   prev: TrampolineSpec,
@@ -408,7 +409,7 @@ function ensureReachable(
     return pad;
   }
 
-  // Still short: pull the pad toward prev until the visible parabola is certified, but NEVER
+  // Still short: pull the pad toward prev until the dev-proof parabola is certified, but NEVER
   // below MIN_SUCCESSOR_LATERAL. A directly-overhead successor is readable only to the math, not
   // to the player, so it is not a legal termination case.
   const dx = pad.position[0] - px;

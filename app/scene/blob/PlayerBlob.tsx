@@ -43,6 +43,7 @@ import {
   getAim,
   getAirSteer,
   isPowerupActive,
+  isRouteProofSequenceActive,
   reportLaunchBurst,
   reportRouteLandingFeedback,
   reportSplat,
@@ -492,7 +493,7 @@ export function PlayerBlob() {
     // Death: fire exactly once (guard against firing every frame while still falling). A held
     // SHIELD absorbs the fatal fall instead — consume it, fling the blob back up to its safe
     // pad, and keep the run alive (a one-shot second life).
-    if (!dead.current && fallDepth > DEATH_FALL_DISTANCE) {
+    if (!dead.current && fallDepth > DEATH_FALL_DISTANCE && !isRouteProofSequenceActive()) {
       if (consumeShield()) {
         body.wakeUp();
         body.setTranslation({ x: p.x, y: safeY.current + 2, z: p.z }, true);

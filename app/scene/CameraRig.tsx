@@ -147,6 +147,7 @@ function proofFocus(
   const dz = to.position[2] - from.position[2];
   const h = Math.hypot(dx, dz) || 1;
   return {
+    pairIndex: target.pairIndex,
     look: [
       (from.position[0] + to.position[0] + mid[0]) / 3,
       (from.position[1] + to.position[1] + proof.apex[1]) / 3,
@@ -166,6 +167,9 @@ export function CameraRig({ active }: { active: boolean }) {
   const camera = useThree((s) => s.camera);
   const screenPoint = useRef(new Vector3());
   const t = useRef(0);
+  const lookTarget = useRef(new Vector3(0, 1.75, 0));
+  const wasActive = useRef(false);
+  const proofPair = useRef<number | null>(null);
   /** Decaying camera-shake amplitude, spiked on a hard landing. */
   const shake = useRef(0);
   /** Last impact level seen, to detect a fresh landing (squash dips below 1). */
@@ -184,6 +188,18 @@ export function CameraRig({ active }: { active: boolean }) {
       const speed = diag.speed;
       const pads = useWorldStore.getState().trampolines;
       const view = getViewControls();
+      const smoothLookTarget = (target: readonly [number, number, number], tau: number) => {
+        const look = lookTarget.current;
+        if (!wasActive.current) {
+          look.set(target[0], target[1], target[2]);
+          return look;
+        }
+        const lookK = damp(dt, tau);
+        look.x += (target[0] - look.x) * lookK;
+        look.y += (target[1] - look.y) * lookK;
+        look.z += (target[2] - look.z) * lookK;
+        return look;
+      };
 
       // Detect a fresh impact (squash drops) → kick the shake.
       const impact = 1 - diag.squash; // 0..~0.3
@@ -206,14 +222,26 @@ export function CameraRig({ active }: { active: boolean }) {
 
       const activeProof = proofFocus(getRouteProofTarget(), pads);
       if (activeProof) {
-        const [lookX, lookY, lookZ] = activeProof.look;
+        const firstFrameForPair = proofPair.current !== activeProof.pairIndex;
+        if (firstFrameForPair) {
+          proofPair.current = activeProof.pairIndex;
+          lookTarget.current.set(...activeProof.look);
+        }
+        const look = firstFrameForPair
+          ? lookTarget.current
+          : smoothLookTarget(activeProof.look, 0.22);
+        wasActive.current = true;
         const [routeX, routeZ] = activeProof.direction;
         const [offX, offY, offZ] = cameraOrbitOffset([routeX, routeZ], 19, 20, view);
         const k = damp(dt, 0.18);
-        camera.position.x += (lookX + offX - camera.position.x) * k;
-        camera.position.y += (lookY + offY - camera.position.y) * k;
-        camera.position.z += (lookZ + offZ - camera.position.z) * k;
-        camera.lookAt(lookX, lookY, lookZ);
+        if (firstFrameForPair) {
+          camera.position.set(look.x + offX, look.y + offY, look.z + offZ);
+        } else {
+          camera.position.x += (look.x + offX - camera.position.x) * k;
+          camera.position.y += (look.y + offY - camera.position.y) * k;
+          camera.position.z += (look.z + offZ - camera.position.z) * k;
+        }
+        camera.lookAt(look.x, look.y, look.z);
         camera.updateMatrixWorld();
         const { width, height, top, left } = state.size;
         screenPoint.current.set(diag.position[0], diag.position[1], diag.position[2]).project(cam);
@@ -231,8 +259,11 @@ export function CameraRig({ active }: { active: boolean }) {
         });
         return;
       }
+      proofPair.current = null;
 
       const [lookX, lookY, lookZ] = cameraLookTarget(diag.position, diag.groundY, speed, pads);
+      const look = smoothLookTarget([lookX, lookY, lookZ], 0.34);
+      wasActive.current = true;
 
       // Top-down/isometric playing-field view: stage the camera ABOVE the route and a little
       // behind its lateral direction. Looking down into the field keeps the blob, current pad,
@@ -246,7 +277,7 @@ export function CameraRig({ active }: { active: boolean }) {
 
       const k = damp(dt, 0.16);
       camera.position.x += (bx + offX - camera.position.x) * k;
-      camera.position.y += (lookY + offY - camera.position.y) * k;
+      camera.position.y += (look.y + offY - camera.position.y) * k;
       camera.position.z += (bz + offZ - camera.position.z) * k;
 
       // Impact shake (decays in ~0.12s) — small, juicy, never disorienting.
@@ -256,7 +287,7 @@ export function CameraRig({ active }: { active: boolean }) {
 
       // Look at the blob in flight, but while resting/slowly aiming bias across the certified
       // route window so the immediate and next trampolines are both in-frame before launch.
-      camera.lookAt(lookX, lookY, lookZ);
+      camera.lookAt(look.x, look.y, look.z);
       camera.updateMatrixWorld();
       const { width, height, top, left } = state.size;
       screenPoint.current.set(diag.position[0], diag.position[1], diag.position[2]).project(cam);
@@ -271,6 +302,9 @@ export function CameraRig({ active }: { active: boolean }) {
     } else {
       // Menu: clear the launch warp + FOV back to base (so re-entering a run starts unwarped),
       // and reset the launch tracker so the first in-run launch is detected fresh.
+      wasActive.current = false;
+      proofPair.current = null;
+      lookTarget.current.set(0, 1.75, 0);
       warp.current = 0;
       lastVy.current = 0;
       if (cam.fov !== BASE_FOV) {
@@ -285,7 +319,7 @@ export function CameraRig({ active }: { active: boolean }) {
       const RADIUS = 9;
       camera.position.x = Math.sin(a) * RADIUS;
       camera.position.z = Math.cos(a) * RADIUS;
-      camera.position.y = 2.7 + Math.sin(t.current * 0.4) * 0.45;
+      camera.position.y = 2.7;
       camera.lookAt(0, 1.75, 0);
     }
   });

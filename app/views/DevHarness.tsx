@@ -8,6 +8,7 @@ import {
   requestLaunch,
   routeProfile,
   setAim,
+  setRouteProofSequenceActive,
   setRouteProofTarget,
   useGameStore,
   useWorldStore,
@@ -137,28 +138,33 @@ export function DevHarness() {
       startRun();
       await sleep(900);
     }
-    const pairCount = Math.min(8, useWorldStore.getState().trampolines.length - 1);
-    for (let i = 0; i < pairCount; i++) {
-      setRouteProofTarget({ pairIndex: i });
-      await sleep(700);
-      const w = useWorldStore.getState();
-      const from = w.trampolines[i];
-      const to = w.trampolines[i + 1];
-      const proof = from?.goldenPath;
-      const label = `route-proof-${String(i).padStart(2, "0")}-${from?.type ?? "none"}-to-${to?.type ?? "none"}`;
-      void post("/__diagnostics", {
-        label,
-        pairIndex: i,
-        from,
-        to,
-        proof,
-        snapshot: envSnapshot(),
-      });
-      captureCanvas(label);
-      await sleep(560);
+    setRouteProofSequenceActive(true);
+    try {
+      const pairCount = Math.min(8, useWorldStore.getState().trampolines.length - 1);
+      for (let i = 0; i < pairCount; i++) {
+        setRouteProofTarget({ pairIndex: i });
+        await sleep(700);
+        const w = useWorldStore.getState();
+        const from = w.trampolines[i];
+        const to = w.trampolines[i + 1];
+        const proof = from?.goldenPath;
+        const label = `route-proof-${String(i).padStart(2, "0")}-${from?.type ?? "none"}-to-${to?.type ?? "none"}`;
+        void post("/__diagnostics", {
+          label,
+          pairIndex: i,
+          from,
+          to,
+          proof,
+          snapshot: envSnapshot(),
+        });
+        captureCanvas(label);
+        await sleep(560);
+      }
+      await sleep(260);
+    } finally {
+      setRouteProofTarget(null);
+      setRouteProofSequenceActive(false);
     }
-    await sleep(260);
-    setRouteProofTarget(null);
   };
 
   return (

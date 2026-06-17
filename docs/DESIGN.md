@@ -26,13 +26,13 @@ The single source of truth is `src/styles/tokens.css` (CSS vars) mirrored by
 - **Sky/atmosphere:** cloud light `#eefaff`, cheerful blue `#8fd7ff`, daylight depth `#42a8f5`; honey sun `#ffd36b`; cream light `#f3efd6`
 - **Goo:** mango splash `#ff7a3d`, warm fresnel rim `#ffe3a6`, wet sheen `#ffffff`, combo flame `#ffb238`
 - **Eyes:** sclera `#f8fbff`, bezel `#14110f`, pupil `#0a0a0c`, glint `#ffffff`, warm tear `#ffd0a6`
-- **UI surface:** dark cocoa glass; cream text; mango/berry/gold accents + danger
+- **UI surface:** deep berry-plum glass `#2a1024` / `#3a1630`; cream text; mango/berry/gold accents + danger
 
 Some CSS variable names retain historical ids such as `--blob-blue` and `--tramp-blue`
 for Tailwind class compatibility, but those tokens now carry warm foreground values. The
 sky is intentionally bright blue daylight for foreground/background separation, warmed by
 honey sun and peach fog. Do not introduce cool base colors for the starter blob or core
-play objects.
+play objects, and do not return the UI shell to brown-on-brown chrome.
 
 ### Type
 

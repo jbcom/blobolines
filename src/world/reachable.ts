@@ -149,7 +149,8 @@ function uniqueSpeeds(speeds: readonly (number | null | undefined)[]): number[] 
  * Can a launch off `a` reach `b`? `speed` is the rebound launch speed, `g` gravity magnitude,
  * `tiltRad` the canted tilt, `airSteerAccel` the lateral acceleration the player can apply
  * mid-air. This remains available for balance experiments, but the shipped golden path uses
- * solveGoldenPath() instead so the certified route can be drawn as a true parabola.
+ * solveGoldenPath() instead so the dev harness can prove the certified route as a true
+ * parabola.
  *
  * Returns true if the ballistic arc clears B's height AND, by the time it descends back to
  * that height, the launch's lateral reach PLUS the air-steer budget covers the lateral gap to B
@@ -195,7 +196,7 @@ function trajectoryPoint(origin: Vec3, velocity: Vec3, g: number, t: number): Ve
 }
 
 const SAMPLE_COUNT = 24;
-const PAD_SURFACE_Y = 0.72;
+export const PAD_SURFACE_Y = 0.72;
 
 /**
  * Construct the actual passive golden-path parabola from `a` to `b`, or null if the launch
@@ -281,8 +282,8 @@ const TILT = trampCfg.cantedTiltRad;
 
 /**
  * Golden-path predicate: can the blob get from pad `a` to pad `b` under the shipped launch
- * speed, gravity, and canted tilt as a passive visible parabola? The generator attaches that
- * full proof to every source pad.
+ * speed, gravity, and canted tilt as a passive parabola? The generator attaches that full
+ * proof to every source pad for seed verification and dev proof rendering.
  */
 export function reaches(a: TrampolineSpec, b: TrampolineSpec): boolean {
   return solveGoldenPath(a, b) !== null;

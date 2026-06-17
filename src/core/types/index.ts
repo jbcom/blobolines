@@ -53,8 +53,9 @@ export interface CrystalSpec {
 }
 
 /** Certified launch route from one trampoline to its successor. The world generator attaches
- *  this to the SOURCE pad after proving the shipped launch tuning produces a visible
- *  ballistic arc that lands inside the successor footprint. */
+ *  this to the SOURCE pad after proving the shipped launch tuning produces a ballistic arc
+ *  that lands inside the successor footprint; the dev harness can visualize it, but live play
+ *  does not reveal it as the answer path. */
 export interface GoldenPathVariant {
   launchSpeed: number;
   flightTime: number;
@@ -83,7 +84,7 @@ export interface GoldenPathProof {
   landing: Vec3;
   /** Non-negative margin between the ballistic landing miss and the successor half-footprint. */
   clearance: number;
-  /** World-space samples along the visible parabola, for dev proof rendering/screenshots. */
+  /** World-space samples along the certified parabola, for dev proof rendering/screenshots. */
   samples: Vec3[];
   /** Whether the generator had to promote the source pad from flat to canted. */
   requiredCant: boolean;
