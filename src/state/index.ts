@@ -1,8 +1,11 @@
 export {
+  difficultyRank,
   effectiveRouteDifficulty,
   nextRouteStep,
   type RouteDifficultyProfile,
+  type RouteDifficultyProgress,
   type RouteStep,
+  routeDifficultyProgress,
   routeProfile,
   TARGET_ABOVE_GROUND,
 } from "@/world";

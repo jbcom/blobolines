@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { showsAimEndpointReticle, showsAimParabola, solveAimEndpoint } from "../TrajectoryPreview";
+import {
+  aimAssistDifficulty,
+  showsAimEndpointReticle,
+  showsAimParabola,
+  solveAimEndpoint,
+} from "../TrajectoryPreview";
 
 describe("TrajectoryPreview aim assistance", () => {
   it("shows endpoint reticles only before Blobmare", () => {
@@ -18,6 +23,13 @@ describe("TrajectoryPreview aim assistance", () => {
     expect(showsAimParabola("blobmare")).toBe(true);
     expect(showsAimParabola("ultraBlobmare")).toBe(false);
     expect(showsAimParabola("oneWrongMove")).toBe(false);
+  });
+
+  it("uses the active progressed difficulty for aim assistance", () => {
+    expect(aimAssistDifficulty("ready", 60, 80)).toBe("ready");
+    expect(aimAssistDifficulty("ready", 580, 590)).toBe("medium");
+    expect(aimAssistDifficulty("ready", 1600, 1700)).toBe("hard");
+    expect(aimAssistDifficulty("ready", 100, 5800)).toBe("oneWrongMove");
   });
 
   it("places the aim endpoint on the descending crossing of the target height", () => {

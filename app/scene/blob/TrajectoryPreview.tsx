@@ -5,7 +5,13 @@ import { AdditiveBlending, DoubleSide, Matrix4, Quaternion, Vector3 } from "thre
 import type { Vec3, WorldDifficulty } from "@/core/types";
 import { launchVelocity } from "@/sim/launch";
 import { GRAVITY } from "@/sim/physics";
-import { getAim, getBlobDiagnostics, useGameStore, useWorldStore } from "@/state";
+import {
+  effectiveRouteDifficulty,
+  getAim,
+  getBlobDiagnostics,
+  useGameStore,
+  useWorldStore,
+} from "@/state";
 import { hex, palette } from "@/styles/tokens";
 import { nextRouteStep, PAD_SURFACE_Y } from "@/world";
 
@@ -36,6 +42,15 @@ export function showsAimEndpointReticle(difficulty: WorldDifficulty): boolean {
 
 export function showsAimParabola(difficulty: WorldDifficulty): boolean {
   return difficulty !== "ultraBlobmare" && difficulty !== "oneWrongMove";
+}
+
+export function aimAssistDifficulty(
+  startingDifficulty: WorldDifficulty,
+  routeSourceY: number | null | undefined,
+  runHeight: number,
+): WorldDifficulty {
+  const routeY = routeSourceY ?? 0;
+  return effectiveRouteDifficulty(startingDifficulty, Math.max(0, routeY, runHeight));
 }
 
 export function solveAimEndpoint(
@@ -90,7 +105,13 @@ export function TrajectoryPreview() {
     const world = useWorldStore.getState();
     const combo = game.run.combo;
     const v = launchVelocity(aim.dir, aim.charge, "standard", combo);
-    if (!showsAimParabola(world.difficulty)) {
+    const step = nextRouteStep(diag.groundY, world.trampolines);
+    const activeDifficulty = aimAssistDifficulty(
+      world.difficulty,
+      step?.source?.position[1] ?? diag.groundY,
+      game.run.height,
+    );
+    if (!showsAimParabola(activeDifficulty)) {
       mesh.count = 0;
       mesh.instanceMatrix.needsUpdate = true;
       reticle.visible = false;
@@ -98,9 +119,8 @@ export function TrajectoryPreview() {
       return;
     }
 
-    const step = nextRouteStep(diag.groundY, world.trampolines);
     const endpoint =
-      step && showsAimEndpointReticle(world.difficulty)
+      step && showsAimEndpointReticle(activeDifficulty)
         ? solveAimEndpoint(diag.position, v, step.target.position[1] + PAD_SURFACE_Y, GRAVITY[1])
         : null;
 
@@ -120,7 +140,7 @@ export function TrajectoryPreview() {
       mesh.instanceMatrix.needsUpdate = true;
 
       const pulse = 1 + Math.sin(state.clock.elapsedTime * 6.5) * 0.08;
-      const base = world.difficulty === "ready" ? 0.9 : world.difficulty === "medium" ? 0.75 : 0.62;
+      const base = activeDifficulty === "ready" ? 0.9 : activeDifficulty === "medium" ? 0.75 : 0.62;
       reticle.position.set(...endpoint.position);
       halo.position.copy(reticle.position);
       reticle.scale.setScalar(base * pulse);

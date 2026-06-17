@@ -6,6 +6,7 @@ import {
   getRouteProofTarget,
   type LaunchRequest,
   requestLaunch,
+  routeDifficultyProgress,
   routeProfile,
   setAim,
   setRouteProofSequenceActive,
@@ -51,9 +52,10 @@ export function DevHarness() {
   };
 
   /** Snapshot of the whole environment + blob, for before/after diagnostics. */
-  const envSnapshot = () => {
+  const envSnapshot = (routeHeight = useGameStore.getState().run.height) => {
     const g = useGameStore.getState();
     const w = useWorldStore.getState();
+    const difficultyProgress = routeDifficultyProgress(w.difficulty, Math.max(0, routeHeight));
     return {
       phase: g.phase,
       run: g.run,
@@ -62,8 +64,13 @@ export function DevHarness() {
       trampolineCount: w.trampolines.length,
       highestGeneratedY: w.highestY,
       seedPhrase: w.seedPhrase,
-      routeDifficulty: w.difficulty,
-      proofVariants: routeProfile(w.difficulty).proofVariants,
+      startingRouteDifficulty: w.difficulty,
+      routeDifficulty: difficultyProgress.current,
+      activeRouteDifficulty: difficultyProgress.current,
+      nextRouteDifficulty: difficultyProgress.next,
+      metersToNextRouteDifficulty: difficultyProgress.metersToNext,
+      routeDifficultyProgress: difficultyProgress.progress,
+      proofVariants: routeProfile(difficultyProgress.current).proofVariants,
       routeProof: getRouteProofTarget(),
       blob: getBlobDiagnostics(),
     };
@@ -155,7 +162,7 @@ export function DevHarness() {
           from,
           to,
           proof,
-          snapshot: envSnapshot(),
+          snapshot: envSnapshot(from?.position[1] ?? 0),
         });
         captureCanvas(label);
         await sleep(560);
