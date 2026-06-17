@@ -497,12 +497,13 @@ game — touch/drag is primary; keyboard is a minor desktop-only secondary, don'
       the effects take their grade via PROPS (changing only on a band crossing) — no refs. The
       live per-frame value (chromatic-aberration offset) still uses the safe mutate-Vector2-prop
       pattern. Verified the game runs cleanly through the grade now.
-- [x] Wet-shaded splat decals: the accumulating goo-splat decal on the membrane is now a
-      MeshPhysicalMaterial (low roughness + slight metalness + clearcoat sheen) instead of flat
-      meshBasicMaterial, so the goo smear catches the scene light + reads wet like the membrane
-      it sits on (the Canvas2D splat texture's alpha is still the mask). Trampoline fixture green.
-      (A true normal/height map would need baking per-splat — the clearcoat sheen delivers the
-      wet read without that cost.)
+- [x] Wet-shaded splat decals: the accumulating goo-splat decal on the membrane is now a lit
+      MeshStandardMaterial (low roughness + slight metalness) instead of flat meshBasicMaterial,
+      so the goo smear catches the scene light + reads wet (the Canvas2D splat alpha is the mask).
+      Deliberately Standard, NOT Physical/clearcoat: the decal is ~coplanar with the clearcoated
+      membrane, so a 2nd clearcoat lobe would stack into an over-bright patch + add a costly extra
+      Physical shader per pad (review caught this) — Standard's spec gives the wet read without
+      either. Trampoline fixture green.
 - [x] Distinct pad silhouette per type: new PadTypeDecor renders a per-type cue on the membrane
       — super a glowing wireframe FRAME (treasure), booster upward CHEVRONS (flings higher), ice
       a frosty TRANSLUCENT slab (transmission), fragile radiating CRACK lines, wobbler an off-
