@@ -77,11 +77,28 @@ export function BlobEyes({ expression, radius, live = false }: BlobEyesProps) {
     // opening (blink/squint/wide) is applied only to the lid meshes (sclera + bezel).
     g.scale.setScalar(shape.scale * radius);
 
+    // Pupil DART: the pupils glance toward the blob's travel direction, so the eyes track
+    // where it's heading (a strong life cue). Only meaningful with live velocity; the menu
+    // hero (no live diag) keeps centered pupils. Clamped to stay within the sclera.
+    let dartX = 0;
+    let dartY = 0;
+    if (live) {
+      const [vx, vy] = getBlobDiagnostics().velocity;
+      const mag = Math.hypot(vx, vy);
+      if (mag > 1) {
+        dartX = (vx / mag) * 0.05;
+        dartY = (vy / mag) * 0.05;
+      }
+    }
+
     const tearing = shape.tear > 0;
     g.traverse((o) => {
       if (o.name.startsWith("lid-")) o.scale.set(1, shape.openY, 1);
-      else if (o.name.startsWith("pupil-")) o.scale.setScalar(shape.pupil);
-      else if (o.name.startsWith("tear-")) o.visible = tearing;
+      else if (o.name.startsWith("pupil-")) {
+        o.scale.setScalar(shape.pupil);
+        // Dart from the pupil's base local position (0,0,0.18 inside its parent eye group).
+        o.position.set(dartX, dartY, 0.18);
+      } else if (o.name.startsWith("tear-")) o.visible = tearing;
     });
   });
 

@@ -496,7 +496,12 @@ game — touch/drag is primary; keyboard is a minor desktop-only secondary, don'
       MeshPhysicalMaterial clearcoat+sheen may need shader pre-warm if mobile hitches appear —
       bounded by the render window for now.)
 - [ ] Biome environment geometry per stratum (parallax hills/islands/satellites), altitude-windowed (BiomeGeometry).
-- [ ] Expressive eyes: lit glossy sclera + tracking glint, lid/eyebrow shaping per expression, pupil dart toward velocity.
+- [x] Expressive eyes: pupils now DART toward the blob's travel direction (live velocity), so
+      the eyes track where it's heading — a strong life cue (clamped within the sclera; menu hero
+      stays centered). The eyes already had a glossy sclera + glint highlight and per-expression
+      lid shaping (openY blink/squint/wide via eyeShape) + spontaneous blink + tear droplet, so
+      this completes the expressive-eyes intent. (Eyebrows would need new geometry — the lid
+      openY + mouth curve already carry the per-expression read.)
 - [ ] Quality-tier system (src/render/quality.ts): scale raymarch steps, pool sizes, DOF/god-rays/bloom by device/FPS — gate the heavy effects above.
 - [ ] Selective (emissive-channel) bloom instead of global luminance threshold — only goo hotspots/flame/crystals/powerups glow.
 - [x] Perpetual idle jiggle: a small constant uWobble floor (GooCsg IDLE_WOBBLE=0.12, BlobActor
