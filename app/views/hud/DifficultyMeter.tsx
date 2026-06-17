@@ -32,10 +32,7 @@ export function DifficultyMeter() {
         </span>
       </div>
       <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-bg/70" aria-hidden>
-        <div
-          className="h-full rounded-full bg-tramp-gold transition-[width] duration-[var(--dur-base)] ease-[var(--ease-out-soft)]"
-          style={{ width: `${progressPct}%` }}
-        />
+        <div className="h-full rounded-full bg-tramp-gold" style={{ width: `${progressPct}%` }} />
       </div>
       <div
         className="mt-1 truncate text-[10px] font-bold uppercase tracking-[0.1em] text-fg-muted"

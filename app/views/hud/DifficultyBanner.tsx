@@ -4,8 +4,8 @@ import { duckMusic, playMilestone } from "@/audio";
 import type { WorldDifficulty } from "@/core/types";
 import {
   difficultyRank,
+  effectiveRouteDifficulty,
   flash,
-  routeDifficultyProgress,
   routeProfile,
   useGameStore,
   useWorldStore,
@@ -19,9 +19,8 @@ function shoutLabel(difficulty: WorldDifficulty): string {
 
 export function DifficultyBanner() {
   const phase = useGameStore((s) => s.phase);
-  const height = useGameStore((s) => Math.max(0, s.run.height));
   const startingDifficulty = useWorldStore((s) => s.difficulty);
-  const current = routeDifficultyProgress(startingDifficulty, height).current;
+  const current = useGameStore((s) => effectiveRouteDifficulty(startingDifficulty, s.run.height));
   const last = useRef<WorldDifficulty>(current);
   const [shown, setShown] = useState<WorldDifficulty | null>(null);
 
