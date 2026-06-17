@@ -28,6 +28,7 @@ import {
   useGameStore,
   useWorldStore,
 } from "@/state";
+import { FreeDroplets } from "./FreeDroplets";
 import { GooCsg } from "./GooCsg";
 import { useDroplets } from "./useDroplets";
 
@@ -308,6 +309,9 @@ export function PlayerBlob() {
           NOT as a physics child — it merges the blob with the live splash droplets into
           one continuous CSG mesh (real goo, not a ball). */}
       <GooCsg skin={skin} blobRadius={BLOB.radius} getDroplets={getDroplets} />
+      {/* Flung goo droplets that have arced away from the body (the ones GooCsg didn't merge)
+          shown as instanced wet spheres, so a splash visibly throws goo that falls. */}
+      <FreeDroplets skin={skin} getDroplets={getDroplets} />
     </>
   );
 }

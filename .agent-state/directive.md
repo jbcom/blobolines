@@ -399,7 +399,12 @@ game — touch/drag is primary; keyboard is a minor desktop-only secondary, don'
 - [ ] Goo refraction: sample backbuffer along normal×fresnel so the blob bends what's behind it (marquee jelly upgrade).
 - [ ] Thickness-based inner glow (Beer-Lambert) in the raymarch — deeper goo more saturated.
 - [ ] Fake caustics / moving light dapple cast under the goo on the pad.
-- [ ] Render the free (separated) droplets — currently culled from the field and shown nowhere; instanced wet spheres so flung goo arcs+falls.
+- [x] Render the free droplets: FreeDroplets — an instanced wet-sphere mesh (MeshStandardMaterial,
+      glossy, skin-colored) rendering the flung goo droplets so a splash/launch visibly throws
+      goo that arcs + falls. Each scales by its remaining life (shrink + dissolve). GooCsg still
+      merges the nearest few into the body (those are subsumed by the larger mass, so rendering
+      all of them reads correct + avoids fragile mirroring of the merge selection). Mounted in
+      PlayerBlob off the same droplet pool. Browser fixture renders flung droplets in WebGL.
 - [ ] Controlled drip/stretch strands (teardrop necks) that thin then snap over ~0.2s — the signature WoG look (re-tune smin per-droplet stretch weight).
 - [x] Launch burst VFX: LaunchRing — an additive expanding+fading ring blooms at the pad on
       slingshot release (the in-world "pop"), pooled (4 slots, no per-frame alloc), driven off a
