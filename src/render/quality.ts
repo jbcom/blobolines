@@ -22,14 +22,22 @@ export interface QualitySettings {
   dof: boolean;
   /** Volumetric god-ray pass (the sun sprite always shows; this is the shaft pass). */
   godRays: boolean;
-  /** Bloom strength multiplier (0 disables; renderers scale their base bloom by this). */
+  /** Bloom strength multiplier (0 = drop the pass entirely; renderers scale base bloom by this). */
   bloom: number;
+  /** Chromatic-aberration pass (a cheap-but-not-free fringe; dropped on low). */
+  chroma: boolean;
   /** Ambient-occlusion pass. */
   ao: boolean;
   /** Max simultaneous goo droplets / VFX pool size. */
   maxDroplets: number;
   /** CSG blob sphere segments (geometry density of the merged goo body). */
   blobSegments: number;
+  /** Upper bound for the Canvas device-pixel-ratio (the renderer caps DPR at this). High-DPI
+   *  phones pay quadratic fill cost, so mid/low clamp lower than a desktop. */
+  maxDpr: number;
+  /** MSAA on the default framebuffer (the Canvas antialias flag). Off on mid/low — bloom +
+   *  the postfx grade hide most edge crawl, and MSAA is a real mobile fill cost. */
+  antialias: boolean;
 }
 
 const LOW: QualitySettings = {
@@ -37,10 +45,13 @@ const LOW: QualitySettings = {
   refraction: false,
   dof: false,
   godRays: false,
-  bloom: 0.6,
+  bloom: 0, // dropped entirely on low (strip the pass, not just soften it)
+  chroma: false, // no chromatic-aberration fringe on low
   ao: false,
   maxDroplets: 18,
   blobSegments: 24,
+  maxDpr: 1.5,
+  antialias: false,
 };
 
 const MEDIUM: QualitySettings = {
@@ -49,9 +60,12 @@ const MEDIUM: QualitySettings = {
   dof: false,
   godRays: false,
   bloom: 1,
+  chroma: true,
   ao: true,
   maxDroplets: 32,
   blobSegments: 32,
+  maxDpr: 1.5,
+  antialias: false,
 };
 
 const HIGH: QualitySettings = {
@@ -60,9 +74,12 @@ const HIGH: QualitySettings = {
   dof: true,
   godRays: true,
   bloom: 1,
+  chroma: true,
   ao: true,
   maxDroplets: 40,
   blobSegments: 40,
+  maxDpr: 2,
+  antialias: true,
 };
 
 const BY_TIER: Record<QualityTier, QualitySettings> = { low: LOW, medium: MEDIUM, high: HIGH };

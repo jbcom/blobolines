@@ -68,22 +68,28 @@ export function PostFX({ playing }: { playing: boolean }) {
     // (crystal twinkle spikes, flame-tinted goo, additive powerup auras + rings) — not merely
     // bright diffuse surfaces like the lit sky. An emissive-channel-selective glow without the
     // fragile SelectiveBloom Selection wiring (which fought the EffectComposer reconciler).
-    <Bloom
-      key="bloom"
-      intensity={(0.4 + grade * 0.5) * quality.bloom}
-      luminanceThreshold={1.0}
-      luminanceSmoothing={0.2}
-      mipmapBlur
-    />,
+    // Bloom dropped entirely when the tier zeroes it (low) — strip the pass, not just soften.
+    quality.bloom > 0 ? (
+      <Bloom
+        key="bloom"
+        intensity={(0.4 + grade * 0.5) * quality.bloom}
+        luminanceThreshold={1.0}
+        luminanceSmoothing={0.2}
+        mipmapBlur
+      />
+    ) : null,
     <HueSaturation key="hue" saturation={0.08 + grade * 0.12} />,
     <BrightnessContrast key="bc" brightness={0.02} contrast={0.06 + grade * 0.14} />,
-    <ChromaticAberration
-      key="ca"
-      blendFunction={BlendFunction.NORMAL}
-      offset={chroma.current}
-      radialModulation={false}
-      modulationOffset={0}
-    />,
+    // Chromatic aberration is a cheap-but-not-free fringe — dropped on low.
+    quality.chroma ? (
+      <ChromaticAberration
+        key="ca"
+        blendFunction={BlendFunction.NORMAL}
+        offset={chroma.current}
+        radialModulation={false}
+        modulationOffset={0}
+      />
+    ) : null,
     <Vignette key="vig" eskil={false} offset={0.25} darkness={0.45} />,
     // Depth-of-field — HIGH-tier AND in-game only (NOT the menu, where the blob is the hero and
     // must stay sharp). Focus sits at the blob's mid-distance with a long focal range so only

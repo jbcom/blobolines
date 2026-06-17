@@ -751,8 +751,14 @@ ahead overall, but these concrete affordances regressed:
 - [x] Make raymarchSteps a uniform (u_maxSteps loop bound)… OBSOLETE — there is no raymarch
       shader. The metaball raymarch goo was replaced by the three-bvh-csg merged-mesh goo
       (GooCsg), which has no step-count uniform. Nothing to do. (Verified 2026-06-16.)
-- [ ] Drive Canvas dpr from tier (mid/low → [1,1.5]); gate antialias off on mid/low.
-- [ ] Gate PostFX passes by tier (strip bloom + chromatic on low); gate shadows off low/mid + set explicit shadow-mapSize.
+- [x] Drive Canvas dpr from tier (mid/low → [1,1.5]); gate antialias off on mid/low. QualitySettings
+      gained maxDpr (high 2, mid/low 1.5) + antialias (high only); Game reads getQuality() and sets
+      the Canvas dpr cap + gl.antialias from the tier.
+- [x] Gate PostFX passes by tier: bloom is now DROPPED on low (bloom:0 → pass removed from the
+      composer, not just softened) and chromatic-aberration is dropped on low (new chroma flag);
+      AO/DOF/godRays already tier-gated. PostFX browser fixture renders both the full (high) and
+      stripped (low) composer without crashing. (No runtime shadows in the scene — the lighting is
+      unshadowed by design — so there's no shadow-map to gate; noted instead of a no-op.)
 ### Hot-path / alloc
 - [x] packMetaballField: write into caller-owned scratch buffers… OBSOLETE — packMetaballField
       was removed when the goo moved to three-bvh-csg (see also the materials note above). No

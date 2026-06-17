@@ -48,6 +48,27 @@ describe("quality tiers", () => {
     expect(resolveQuality("tablet", 0).tier).toBe("medium");
   });
 
+  it("low strips bloom + chromatic + MSAA and clamps DPR; high keeps them", () => {
+    const low = resolveQuality("phone", 20); // → low
+    expect(low.tier).toBe("low");
+    expect(low.bloom).toBe(0); // bloom pass dropped entirely
+    expect(low.chroma).toBe(false); // chromatic-aberration pass dropped
+    expect(low.antialias).toBe(false); // no MSAA
+    expect(low.maxDpr).toBeLessThanOrEqual(1.5);
+
+    const high = resolveQuality("desktop");
+    expect(high.bloom).toBeGreaterThan(0);
+    expect(high.chroma).toBe(true);
+    expect(high.antialias).toBe(true);
+    expect(high.maxDpr).toBe(2);
+  });
+
+  it("DPR cap never decreases as the tier increases", () => {
+    expect(resolveQuality("phone", 20).maxDpr).toBeLessThanOrEqual(
+      resolveQuality("desktop").maxDpr,
+    );
+  });
+
   it("pool sizes + segments scale up with tier", () => {
     expect(resolveQuality("phone", 20).maxDroplets).toBeLessThan(
       resolveQuality("desktop").maxDroplets,
