@@ -847,7 +847,10 @@ says KEEP + WIRE these deliberate-architecture deps, never cut. Verified call si
       splash; nothing plays until the AudioContext unlocks on the first PLAY gesture. Unit test
       asserts all SFX are constructed, none playing, idempotent; the LoadingScreen browser test
       smoke-covers the side-effect.
-- [ ] Re-encode theme.mp3 smaller (~96kbps mono / shorter loop) and/or lazy-load post-interaction.
+- [x] Re-encode theme.mp3 smaller: 185kbps stereo (4.3 MB, w/ embedded cover art) → 96kbps mono,
+      audio-only, metadata stripped = 2.2 MB (−48%) via ffmpeg. Same track, just a lighter bed
+      (mono is fine for background music). Lazy-load-post-interaction is already satisfied — the
+      music Howl is constructed in startMusic() on the PLAY click (a user gesture), not at boot.
 ### Bundle/build
 - [x] Lazy-load heavy modals (Manual/BlobCustomizer/Settings). All three are now React.lazy
       chunks (named→default mapped) mounted only when opened (Suspense fallback null), so their
