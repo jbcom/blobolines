@@ -28,17 +28,29 @@ const FLASH_LIFE = 0.3; // seconds the collect flash plays
 export function PowerUpField() {
   const groupRef = useRef<Group>(null);
   const powerups = useWorldStore((s) => s.powerups);
-  const collected = useRef<Set<number>>(new Set());
-  /** index → seconds-since-collected, drives the collect flash before the group hides. */
+  /** index → seconds-since-collected, drives the collect flash before the group hides. A
+   *  power-up in this map has been collected; the live-list loop keeps updating it only until
+   *  the flash finishes, then drops it — so this map is also the "already taken" guard (an
+   *  index in here never re-runs the pickup test, because the flash branch returns first). */
   const flashing = useRef<Map<number, number>>(new Map());
+  /** Indices still worth updating each frame (uncollected, or collected-and-still-flashing).
+   *  Once a power-up's flash finishes it's permanently hidden and dropped from this list, so
+   *  the per-frame loop never re-touches a long run's worth of dead pickups (no Set lookup, no
+   *  distance calc for hidden ones). Rebuilt only when the source list changes; entries are
+   *  spliced out as they die. */
+  const live = useRef<number[]>([]);
+  /** How many power-up indices the live list has already absorbed — so the append-only tower
+   *  extension only adds the genuinely-new tail each frame. */
+  const syncedLen = useRef(0);
   const camera = useThree((s) => s.camera);
 
-  // A world reset swaps the `powerups` array identity; clear the collected set so a new
-  // power-up reusing an old index isn't immediately hidden as already-taken.
-  // biome-ignore lint/correctness/useExhaustiveDependencies: reset keyed on array identity
+  // A world reset swaps the `powerups` array identity; clear the flash map so a new power-up
+  // reusing an old index isn't treated as already-taken, and reseed the live-index list to
+  // every current power-up.
   useEffect(() => {
-    collected.current.clear();
     flashing.current.clear();
+    live.current = powerups.map((_, i) => i);
+    syncedLen.current = powerups.length;
   }, [powerups]);
 
   useFrame((state, delta) => {
@@ -48,9 +60,22 @@ export function PowerUpField() {
     const t = state.clock.elapsedTime;
     const dt = Math.min(delta, 1 / 30);
 
-    g.children.forEach((child, i) => {
+    // The tower extends mid-run (powerups is append-only), so absorb any indices added since
+    // the last sync into the live list — they start life as active pickups.
+    const liveList = live.current;
+    for (let i = syncedLen.current; i < powerups.length; i++) liveList.push(i);
+    syncedLen.current = powerups.length;
+
+    // Iterate ONLY live indices (uncollected, or collected-and-still-flashing). Walk back-to-
+    // front so a dead entry can be spliced out in place without shifting unvisited indices.
+    for (let k = liveList.length - 1; k >= 0; k--) {
+      const i = liveList[k];
+      const child = g.children[i];
       const p = powerups[i];
-      if (!p) return;
+      if (!child || !p) {
+        liveList.splice(k, 1);
+        continue;
+      }
       // Aura is the FIRST child (a plain mesh that mounts synchronously, so its index is
       // stable); the model is the Suspense-wrapped subtree after it (fallback OR GLB — index 1
       // either way). Ordering aura-first avoids the Suspense swap shifting the indices.
@@ -58,14 +83,16 @@ export function PowerUpField() {
       const auraMat = aura?.material as MeshBasicMaterial | undefined;
       const model = child.children[1];
 
-      // Collect flash: a quick bright aura bloom + the model hides, then the whole group goes.
+      // Collect flash: a quick bright aura bloom + the model hides, then the whole group goes
+      // and the index is dropped from the live list (never touched again).
       const flashAge = flashing.current.get(i);
       if (flashAge !== undefined) {
         const na = flashAge + dt;
         if (na >= FLASH_LIFE) {
           flashing.current.delete(i);
           child.visible = false;
-          return;
+          liveList.splice(k, 1); // fully dead — stop updating it
+          continue;
         }
         flashing.current.set(i, na);
         const f = na / FLASH_LIFE;
@@ -77,11 +104,7 @@ export function PowerUpField() {
           aura.scale.set(s, s, s);
           auraMat.opacity = (1 - f) * 0.9;
         }
-        return;
-      }
-      if (collected.current.has(i)) {
-        child.visible = false;
-        return;
+        continue;
       }
 
       child.position.set(
@@ -109,12 +132,11 @@ export function PowerUpField() {
       }
 
       if (d2 <= PICKUP_R2) {
-        collected.current.add(i);
-        flashing.current.set(i, 0); // start the collect flash
+        flashing.current.set(i, 0); // start the collect flash (stays live until it finishes)
         activatePowerup(p.type);
         playPowerup();
       }
-    });
+    }
   });
 
   return (

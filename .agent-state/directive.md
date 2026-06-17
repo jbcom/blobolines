@@ -721,7 +721,12 @@ permeability (permeable one-way pads rejected by owner).
 - [ ] packMetaballField: write into caller-owned scratch buffers each frame instead of allocating Vec3[]+number[] (the one real per-frame GC offender).
 - [ ] GooField: set palette colors on change only, not every frame.
 - [ ] BlobEyes: cache lid/pupil/tear refs instead of per-frame traverse()+startsWith.
-- [ ] PowerUpField: skip collected entries (live-only list), no distance calc for hidden.
+- [x] PowerUpField: skip collected entries (live-only list), no distance calc for hidden. The
+      frame loop now iterates a maintained live-index array (uncollected, or collected-and-
+      still-flashing) instead of every child; entries are spliced out when their collect flash
+      finishes, so a long run's worth of dead pickups is never re-touched (no Set lookup, no
+      distance calc). New tower powerups append to the tail; browser fixture proves collection
+      still fires.
 - [ ] BiomeProps: early-out the star pass on opacity<0.01 like clouds.
 - [ ] metaball fieldNormal: forward-difference (4 evals) instead of central (6) to cut normal cost ~33%.
 - [ ] Instance/share trampoline geometry+materials (per-type), keep only splat texture per-pad; 64px splat on mobile.

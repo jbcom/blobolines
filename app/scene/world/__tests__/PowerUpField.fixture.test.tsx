@@ -1,11 +1,12 @@
 import { FixtureStage } from "@app/fixtures";
 import { afterEach, expect, test, vi } from "vitest";
 import { render } from "vitest-browser-react";
-import { setBlobDiagnostics, useWorldStore } from "@/state";
+import { isPowerupActive, resetPowerups, setBlobDiagnostics, useWorldStore } from "@/state";
 import { PowerUpField } from "../PowerUpField";
 
 afterEach(() => {
   useWorldStore.setState({ powerups: [] });
+  resetPowerups();
 });
 
 // Visual fixture: a power-up renders with its attract aura halo (additive billboard) in WebGL.
@@ -155,4 +156,33 @@ test("PowerUpField renders the model-less multi-bounce gem", async () => {
     },
     { timeout: 6000, interval: 60 },
   );
+});
+
+// The live-index frame loop must still COLLECT: with the blob sitting on a power-up, the
+// pickup test fires (activatePowerup), so the buff turns active. Guards the perf refactor that
+// switched from iterating every child to iterating only the live-index list.
+test("PowerUpField collects a power-up the blob is sitting on", async () => {
+  useWorldStore.setState({ powerups: [{ position: [0, 0, 0], type: "magnet" }] });
+  setBlobDiagnostics({
+    position: [0, 0, 0], // dead on the power-up → inside the pickup radius
+    velocity: [0, 0, 0],
+    speed: 0,
+    airborne: true,
+    expression: "idle",
+    squash: 1,
+    maxHeight: 0,
+    groundY: 0,
+  });
+
+  await render(
+    <FixtureStage testId="collect-fixture" cameraDistance={5}>
+      <ambientLight intensity={1} />
+      <PowerUpField />
+    </FixtureStage>,
+  );
+
+  await vi.waitFor(() => expect(isPowerupActive("magnet")).toBe(true), {
+    timeout: 6000,
+    interval: 60,
+  });
 });
