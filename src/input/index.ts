@@ -1,10 +1,12 @@
 export {
   type AimResult,
-  computeAim,
   computeAirSteer,
-  DEFAULT_SLINGSHOT,
+  computeHoldCharge,
+  computeRouteAim,
+  DEFAULT_HOLD_CHARGE,
   DEFAULT_STEER,
+  type HoldChargeConfig,
   keyboardSteer,
-  type SlingshotConfig,
+  ROUTE_AIM_Z_SCALE,
   type SteerConfig,
 } from "./intents";

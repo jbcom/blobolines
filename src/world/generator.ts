@@ -10,6 +10,7 @@ import type {
   Vec3,
   WorldDifficulty,
 } from "@/core/types";
+import { computeRouteAim } from "@/input";
 import { GRAVITY } from "@/sim/physics";
 import { pickCrystalTier } from "./crystalTier";
 import {
@@ -18,7 +19,12 @@ import {
   routeCantAngle,
   routeProfile,
 } from "./difficulty";
-import { CLIMB_SPEED, solveFlatLaunchProofs, solveGoldenPath } from "./reachable";
+import {
+  CLIMB_SPEED,
+  launchSpeedForCharge,
+  solveFlatLaunchProofs,
+  solveGoldenPath,
+} from "./reachable";
 
 export interface PowerUpSpec {
   position: Vec3;
@@ -154,6 +160,7 @@ function constrainRouteTurn(
 
 function proofToVariant(proof: GoldenPathProof): GoldenPathVariant {
   return {
+    launchCharge: proof.launchCharge,
     launchSpeed: proof.launchSpeed,
     flightTime: proof.flightTime,
     apex: proof.apex,
@@ -355,12 +362,40 @@ function predictedLandingGap(
   return Math.max(minDescendingGap, lateral * speed * t);
 }
 
+function preferredChargeLandingGap(
+  prev: TrampolineSpec,
+  target: TrampolineSpec,
+  profile: RouteDifficultyProfile,
+): number {
+  const [ux, uz] = aim2(prev, target);
+  const normal = computeRouteAim(ux, uz, profile.preferredCharge);
+  const speed = launchSpeedForCharge(profile.preferredCharge);
+  const dy = target.position[1] - prev.position[1];
+  const vy = normal[1] * speed;
+  if (vy * vy < 2 * G * dy) return 0;
+  const t = Math.max(0, (vy + Math.sqrt(Math.max(0, vy * vy - 2 * G * dy))) / G);
+  return Math.hypot(normal[0], normal[2]) * speed * t;
+}
+
+function chargeFit(proof: GoldenPathProof, profile: RouteDifficultyProfile): number {
+  const tolerance = Math.max(0.01, profile.chargeTolerance);
+  return clamp(1 - Math.abs(proof.launchCharge - profile.preferredCharge) / tolerance, 0, 1);
+}
+
+function proofScore(proof: GoldenPathProof, profile: RouteDifficultyProfile): number {
+  const charge = chargeFit(proof, profile);
+  const precision = clamp(proof.landingPrecision, 0, 1);
+  const weight = clamp(profile.chargeWeight, 0, 1);
+  return precision * (1 - weight) + charge * weight;
+}
+
 function proofAccepted(
   proof: GoldenPathProof | null,
   profile: RouteDifficultyProfile,
 ): proof is GoldenPathProof {
   if (!proof) return false;
   return (
+    chargeFit(proof, profile) >= profile.minChargeFit &&
     proof.apex[1] > proof.landing[1] + 0.2 &&
     proof.lipClearance >= profile.minLipClearance &&
     proof.lipClearanceRatio >= profile.minLipClearanceRatio &&
@@ -370,27 +405,32 @@ function proofAccepted(
 
 function selectVariantProofs(
   proofs: readonly GoldenPathProof[],
+  profile: RouteDifficultyProfile,
   count: number,
 ): GoldenPathProof[] | null {
   if (proofs.length < count) return null;
-  const byPrecision = [...proofs].sort(
-    (a, b) => b.landingPrecision - a.landingPrecision || a.launchSpeed - b.launchSpeed,
+  const byScore = [...proofs].sort(
+    (a, b) =>
+      proofScore(b, profile) - proofScore(a, profile) ||
+      b.landingPrecision - a.landingPrecision ||
+      Math.abs(a.launchCharge - profile.preferredCharge) -
+        Math.abs(b.launchCharge - profile.preferredCharge),
   );
-  const primary = byPrecision[0];
+  const primary = byScore[0];
   if (!primary) return null;
   if (count <= 1) return [primary];
 
-  const sorted = [...proofs].sort((a, b) => a.launchSpeed - b.launchSpeed);
+  const sorted = [...proofs].sort((a, b) => a.launchCharge - b.launchCharge);
   const anchors = [0, Math.floor((sorted.length - 1) * 0.5), sorted.length - 1];
   const picked: GoldenPathProof[] = [primary];
   const tryPick = (candidate: GoldenPathProof | undefined) => {
     if (!candidate || picked.length >= count) return;
-    if (picked.some((p) => Math.abs(p.launchSpeed - candidate.launchSpeed) < 0.35)) return;
+    if (picked.some((p) => Math.abs(p.launchCharge - candidate.launchCharge) < 0.02)) return;
     picked.push(candidate);
   };
 
   for (const anchor of anchors) tryPick(sorted[anchor]);
-  for (const proof of byPrecision) tryPick(proof);
+  for (const proof of byScore) tryPick(proof);
   return picked.length >= count ? picked.slice(0, count) : null;
 }
 
@@ -403,7 +443,7 @@ function proofWithVariants(
     const accepted = solveFlatLaunchProofs(prev, target, undefined, false).filter((proof) =>
       proofAccepted(proof, profile),
     );
-    const selected = selectVariantProofs(accepted, profile.proofVariants);
+    const selected = selectVariantProofs(accepted, profile, profile.proofVariants);
     if (!selected) return null;
     const materialized = selected
       .map((proof) =>
@@ -416,15 +456,14 @@ function proofWithVariants(
   }
   if (prev.type !== "canted" && prev.type !== "moving" && prev.type !== "wobbler") return null;
 
-  const primary = solveGoldenPath(
-    prev,
-    target,
-    undefined,
-    undefined,
-    undefined,
-    prev.type === "canted",
-  );
-  if (!proofAccepted(primary, profile)) return null;
+  const proofCandidates = [
+    solveGoldenPath(prev, target, launchSpeedForCharge(profile.preferredCharge)),
+    solveGoldenPath(prev, target),
+  ].filter((proof): proof is GoldenPathProof => proofAccepted(proof, profile));
+  const primary = proofCandidates.sort(
+    (a, b) => proofScore(b, profile) - proofScore(a, profile),
+  )[0];
+  if (!primary) return null;
   const variants = [proofToVariant(primary)];
   for (const multiplier of variantMultipliers(profile).slice(1)) {
     if (variants.length >= profile.proofVariants) break;
@@ -515,7 +554,11 @@ function ensureReachable(
       ) {
         weight *= 0.55;
       }
-      accepted.push({ sourceType, proof, weight });
+      accepted.push({
+        sourceType,
+        proof,
+        weight: weight * Math.max(0.08, proofScore(proof, profile)),
+      });
     }
     if (accepted.length === 0) return null;
     const totalWeight = accepted.reduce((sum, candidate) => sum + Math.max(0, candidate.weight), 0);
@@ -574,6 +617,7 @@ function ensureReachable(
     if (gapCandidates.every((g) => Math.abs(g - bounded) > 0.05)) gapCandidates.push(bounded);
   };
   addGap(gap);
+  addGap(preferredChargeLandingGap(prev, pad, profile));
   addGap(predictedLandingGap(prev, pad, profile));
   for (let i = 0; i <= 12; i++) {
     addGap(minLegalLateral + (maxLegalGap - minLegalLateral) * (i / 12));
@@ -630,7 +674,57 @@ function ensureReachable(
     [px + dirX * fallbackGap, fallbackY, pz + dirZ * fallbackGap],
   );
   result = widenForHumanMargin(prev, result, profile);
-  const proof = proveAt(result);
+  let proof = proveAt(result);
+  if (!proof) {
+    const sourceStep = result.position[1] - prev.position[1];
+    const minStepY = prev.position[1] < STARTER_GUIDE_Y ? STARTER_MIN_STEP_Y : 5.8;
+    const rescueSteps = [
+      sourceStep,
+      sourceStep * 0.85,
+      sourceStep * 0.7,
+      sourceStep * 0.55,
+      minStepY,
+    ]
+      .map((step) => clamp(step, minStepY, Math.max(minStepY, MAX_GOLDEN_STEP_Y)))
+      .filter((step, i, xs) => i === 0 || Math.abs(step - xs[i - 1]) > 0.05);
+    const rescueGaps = [fallbackGap, minLegalLateral, (minLegalLateral + fallbackMaxGap) / 2];
+    for (let i = 0; i <= 6; i++) {
+      const gap = minLegalLateral + (fallbackMaxGap - minLegalLateral) * (i / 6);
+      if (rescueGaps.every((g) => Math.abs(g - gap) > 0.05)) rescueGaps.push(gap);
+    }
+    const rescueFootprints = [
+      profile.minFootprint,
+      profile.minFootprint * 1.25,
+      profile.minFootprint * 1.5,
+      profile.minFootprint * 1.85,
+    ];
+
+    rescueLoop: for (const step of rescueSteps) {
+      const y = prev.position[1] + step;
+      for (const rescueGap of rescueGaps) {
+        for (const footprint of rescueFootprints) {
+          const candidate = widenForHumanMargin(
+            prev,
+            withPosition(
+              {
+                ...pad,
+                width: Math.max(pad.width, footprint),
+                depth: Math.max(pad.depth, footprint),
+              },
+              [px + dirX * rescueGap, y, pz + dirZ * rescueGap],
+            ),
+            profile,
+          );
+          proof = proveAt(candidate);
+          if (proof) {
+            result = candidate;
+            break rescueLoop;
+          }
+        }
+      }
+    }
+  }
+
   if (!proof) {
     const finalGap = Math.hypot(
       result.position[0] - prev.position[0],

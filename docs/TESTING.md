@@ -15,11 +15,9 @@ Pure logic: deterministic RNG/clock/springs, engine loop, world generator, golde
 parabola proofs, launch/combo/collect math, ECS traits, design tokens. Fast, no GPU.
 Determinism is explicitly tested (same seed → same sequence; fixed-timestep reproducibility).
 Lives next to the code in `__tests__/`. `app/scene/blob/__tests__/TrajectoryPreview.test.ts`
-also locks the difficulty-gated aim-assist ladder: endpoint reticles below Blobmare,
-arc-only Blobmare, no parabola on Ultra Blobmare and up, and the active-tier progression rule
-that prevents an Easy-starting run from keeping Easy aim hints after it graduates.
+locks the always-visible route parabola and endpoint reticle across every active tier.
 `src/sim/blob/__tests__/blob.test.ts` locks the first-pad idle rule: visual impatience can
-accumulate before player control, while auto-launch is still gated until after real input.
+accumulate before player control, while waiting on a pad never launches for the player.
 
 ## Browser fixtures — `pnpm test:browser` (Vitest browser mode, real Chromium + WebGL)
 

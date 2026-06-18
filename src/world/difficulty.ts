@@ -3,6 +3,15 @@ import type { TrampType, WorldDifficulty } from "@/core/types";
 export interface RouteDifficultyProfile {
   difficulty: WorldDifficulty;
   label: string;
+  /** Charge band the generator prefers while placing the certified next-hop parabola. */
+  preferredCharge: number;
+  /** Accepted charge-fit falloff radius; smaller means more exact release timing. */
+  chargeTolerance: number;
+  /** How much proof selection prioritizes charge fit over pure landing precision. */
+  chargeWeight: number;
+  /** Minimum charge-fit required before a proof can certify the placement. Keep 0 unless the
+   *  geometry generator has a constructive fallback for that exact band. */
+  minChargeFit: number;
   minLipClearance: number;
   minLipClearanceRatio: number;
   minLandingPrecision: number;
@@ -65,6 +74,10 @@ export const ROUTE_PROFILES: Record<WorldDifficulty, RouteDifficultyProfile> = {
   ready: {
     difficulty: "ready",
     label: "Easy",
+    preferredCharge: 0.55,
+    chargeTolerance: 0.5,
+    chargeWeight: 0.18,
+    minChargeFit: 0,
     minLipClearance: 1.25,
     minLipClearanceRatio: 0.34,
     minLandingPrecision: 0.34,
@@ -90,6 +103,10 @@ export const ROUTE_PROFILES: Record<WorldDifficulty, RouteDifficultyProfile> = {
   medium: {
     difficulty: "medium",
     label: "Medium",
+    preferredCharge: 0.65,
+    chargeTolerance: 0.35,
+    chargeWeight: 0.3,
+    minChargeFit: 0,
     minLipClearance: 0.95,
     minLipClearanceRatio: 0.26,
     minLandingPrecision: 0.26,
@@ -115,6 +132,10 @@ export const ROUTE_PROFILES: Record<WorldDifficulty, RouteDifficultyProfile> = {
   hard: {
     difficulty: "hard",
     label: "Hard",
+    preferredCharge: 0.75,
+    chargeTolerance: 0.25,
+    chargeWeight: 0.45,
+    minChargeFit: 0,
     minLipClearance: 0.7,
     minLipClearanceRatio: 0.19,
     minLandingPrecision: 0.2,
@@ -140,6 +161,10 @@ export const ROUTE_PROFILES: Record<WorldDifficulty, RouteDifficultyProfile> = {
   blobmare: {
     difficulty: "blobmare",
     label: "Blobmare",
+    preferredCharge: 0.875,
+    chargeTolerance: 0.16,
+    chargeWeight: 0.65,
+    minChargeFit: 0,
     minLipClearance: 0.45,
     minLipClearanceRatio: 0.12,
     minLandingPrecision: 0.13,
@@ -165,6 +190,10 @@ export const ROUTE_PROFILES: Record<WorldDifficulty, RouteDifficultyProfile> = {
   ultraBlobmare: {
     difficulty: "ultraBlobmare",
     label: "Ultra Blobmare",
+    preferredCharge: 0.925,
+    chargeTolerance: 0.1,
+    chargeWeight: 0.78,
+    minChargeFit: 0,
     minLipClearance: 0.24,
     minLipClearanceRatio: 0.07,
     minLandingPrecision: 0.08,
@@ -190,6 +219,10 @@ export const ROUTE_PROFILES: Record<WorldDifficulty, RouteDifficultyProfile> = {
   oneWrongMove: {
     difficulty: "oneWrongMove",
     label: "One Wrong Move",
+    preferredCharge: 0.955,
+    chargeTolerance: 0.055,
+    chargeWeight: 0.92,
+    minChargeFit: 0,
     minLipClearance: 0.14,
     minLipClearanceRatio: 0.04,
     minLandingPrecision: 0.05,

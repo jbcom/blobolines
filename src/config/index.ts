@@ -31,7 +31,6 @@ export const physics = physicsCfg as {
     ccd: boolean;
   };
   starterBlobY: number;
-  autoLaunchDelay: number;
   deathFallDistance: number;
   worldBoundXZ: number;
   maxImpactSpeed: number;

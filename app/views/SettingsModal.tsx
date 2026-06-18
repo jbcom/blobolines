@@ -26,7 +26,7 @@ const QUALITY_OPTIONS: { value: GameSettings["qualityPref"]; label: string }[] =
 ];
 
 /**
- * Settings — volumes, music/haptics/reduce-motion toggles, slingshot sensitivity, and a
+ * Settings — volumes, music/haptics/reduce-motion toggles, charge speed, and a
  * (confirmed) reset-progress action. Writes to the persisted game store (Capacitor
  * Preferences) and pushes audio changes to the engine.
  */
@@ -118,16 +118,16 @@ export function SettingsModal({
           }}
         />
 
-        <Row label="Slingshot sensitivity" value={`${settings.slingshotSensitivity.toFixed(1)}×`}>
+        <Row label="Charge speed" value={`${settings.chargeSensitivity.toFixed(1)}×`}>
           <Slider
-            aria-label="Slingshot sensitivity"
+            aria-label="Charge speed"
             min={0.5}
             max={2}
             step={0.1}
-            value={[settings.slingshotSensitivity]}
-            onValueChange={([v]) => update({ slingshotSensitivity: v })}
+            value={[settings.chargeSensitivity]}
+            onValueChange={([v]) => update({ chargeSensitivity: v })}
           />
-          <SensitivityPreview sensitivity={settings.slingshotSensitivity} />
+          <SensitivityPreview sensitivity={settings.chargeSensitivity} />
         </Row>
 
         {/* Haptics only on touch devices (a pointer-only desktop can't vibrate). When on,

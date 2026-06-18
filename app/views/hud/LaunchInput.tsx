@@ -1,8 +1,9 @@
 import { useKeyboardSteer } from "@app/hooks";
 import { AnimatePresence, motion, useMotionValue, useReducedMotion, useSpring } from "motion/react";
-import { useEffect, useRef, useState } from "react";
-import { computeAim, computeAirSteer } from "@/input";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { computeAirSteer, computeHoldCharge, computeRouteAim } from "@/input";
 import { isPerfectRelease } from "@/sim/launch";
+import type { LaunchRequest } from "@/state";
 import {
   bounceChargesLeft,
   getBlobDiagnostics,
@@ -16,10 +17,14 @@ import {
   setBlobScreenTarget,
   setViewZoom,
   useGameStore,
+  useWorldStore,
   zoomView,
 } from "@/state";
+import { nextRouteStep } from "@/world";
 
 type GestureMode = "game" | "view" | "pinch";
+const FULL_CHARGE_SECONDS = 1.15;
+const TAP_CHARGE = 0.22;
 
 interface PointerInfo {
   x: number;
@@ -28,12 +33,13 @@ interface PointerInfo {
 
 /**
  * Full-screen input surface (PLAYING only). Dual-mode:
- *  - blob resting on a pad → drag back to aim + charge the slingshot, release to launch.
+ *  - blob resting on a pad → hold on Blobby to charge the certified next-hop thrust, release
+ *    to launch. Dragging is no longer required for the core Easy route.
  *  - blob airborne → drag to steer mid-air (X/Z), released → steering stops.
  * Pointer-events on so it captures drags above the canvas; the canvas renders beneath.
  */
 export function LaunchInput() {
-  const sensitivity = useGameStore((s) => s.settings.slingshotSensitivity);
+  const sensitivity = useGameStore((s) => s.settings.chargeSensitivity);
   // Desktop keyboard air-steering (WASD/arrows) — the secondary control alongside the primary
   // touch/mouse drag below. Mounted here so all input lives in one PLAYING-scoped place.
   useKeyboardSteer();
@@ -47,10 +53,13 @@ export function LaunchInput() {
     startY: 0,
     lastX: 0,
     lastY: 0,
+    startTime: 0,
     moved: false,
     pinchDistance: 1,
     pinchZoom: 1,
   });
+  const chargingRef = useRef(false);
+  const [charging, setCharging] = useState(false);
   const reticleOriginX = useMotionValue(0);
   const reticleOriginY = useMotionValue(0);
   const reticleOffsetX = useMotionValue(-14);
@@ -70,6 +79,75 @@ export function LaunchInput() {
   useEffect(() => {
     setBlobScreenTarget({ x: Number.NaN, y: Number.NaN, radius: 76 });
   }, []);
+
+  const routeLaunchDirection = useCallback((charge: number): LaunchRequest["dir"] => {
+    const diag = getBlobDiagnostics();
+    const world = useWorldStore.getState();
+    const step = nextRouteStep(diag.groundY, world.trampolines);
+    if (step?.target) {
+      const source = step.source?.position ?? diag.position;
+      if (!step.proof || step.proof.sourceMode === "flat") {
+        return computeRouteAim(
+          step.target.position[0] - source[0],
+          step.target.position[2] - source[2],
+          charge,
+        );
+      }
+    }
+    const proofNormal = step?.proof?.launchNormal;
+    if (proofNormal) {
+      const len = Math.hypot(proofNormal[0], proofNormal[1], proofNormal[2]) || 1;
+      return [proofNormal[0] / len, proofNormal[1] / len, proofNormal[2] / len];
+    }
+    if (step?.target) {
+      const dx = step.target.position[0] - diag.position[0];
+      const dz = step.target.position[2] - diag.position[2];
+      const h = Math.hypot(dx, dz);
+      if (h > 0.05) {
+        const lateral = Math.min(0.82, h / 9);
+        const y = 1.22;
+        const len = Math.hypot(lateral, y) || 1;
+        return [(dx / h) * (lateral / len), y / len, (dz / h) * (lateral / len)];
+      }
+    }
+    return [0, 1, 0];
+  }, []);
+
+  const currentRouteCharge = useCallback(
+    (timeStamp: number, releasing = false) => {
+      const held = Math.max(0, (timeStamp - gesture.current.startTime) / 1000);
+      const charge = computeHoldCharge(held, {
+        fullChargeSeconds: FULL_CHARGE_SECONDS,
+        tapCharge: TAP_CHARGE,
+        sensitivity,
+      });
+      return releasing && charge === 0 ? TAP_CHARGE : charge;
+    },
+    [sensitivity],
+  );
+
+  const publishRouteCharge = useCallback(
+    (timeStamp: number, releasing = false): LaunchRequest => {
+      const charge = currentRouteCharge(timeStamp, releasing);
+      const req = { dir: routeLaunchDirection(charge), charge };
+      setCharge(req.charge);
+      setAim(req.charge > 0.02 ? req : null);
+      return req;
+    },
+    [currentRouteCharge, routeLaunchDirection],
+  );
+
+  useEffect(() => {
+    if (!charging) return;
+    let raf = 0;
+    const tick = (now: number) => {
+      if (!chargingRef.current) return;
+      publishRouteCharge(now);
+      raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [charging, publishRouteCharge]);
 
   const showAirReticle = (originX: number, originY: number, offsetX: number, offsetY: number) => {
     reticleOriginX.set(originX);
@@ -97,7 +175,13 @@ export function LaunchInput() {
     return Math.max(1, Math.hypot(a.x - b.x, a.y - b.y));
   };
 
-  const updateGameGesture = (x: number, y: number, down: boolean, last: boolean) => {
+  const updateGameGesture = (
+    x: number,
+    y: number,
+    down: boolean,
+    last: boolean,
+    timeStamp: number,
+  ) => {
     const mx = x - gesture.current.startX;
     const my = y - gesture.current.startY;
     if (Math.hypot(mx, my) > 4) gesture.current.moved = true;
@@ -133,13 +217,22 @@ export function LaunchInput() {
     }
 
     hideAirReticle();
-    // Slingshot on a pad: charge while dragging, launch on release.
-    const aim = computeAim(mx, my, { maxDragDist: 140, sensitivity });
-    setCharge(down ? aim.strength : 0);
-    // Publish the live aim so the in-scene trajectory preview shows where it'll go.
-    setAim(down && aim.strength > 0.05 ? { dir: aim.dir, charge: aim.strength } : null);
-    if (last && aim.strength > 0.12) {
-      requestLaunch({ dir: aim.dir, charge: aim.strength });
+    // Grounded launch: hold-to-charge along the certified next-hop parabola. Direction is
+    // route-derived; dragging on Blobby no longer changes aim.
+    if (down) {
+      chargingRef.current = true;
+      setCharging(true);
+      publishRouteCharge(timeStamp);
+      return;
+    }
+
+    chargingRef.current = false;
+    setCharging(false);
+    const req = publishRouteCharge(timeStamp, true);
+    setAim(null);
+    setCharge(0);
+    if (last && req.charge > 0.05) {
+      requestLaunch(req);
     }
   };
 
@@ -147,11 +240,15 @@ export function LaunchInput() {
     e.preventDefault();
     e.currentTarget.setPointerCapture(e.pointerId);
     pointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    const now = performance.now();
     if (pointers.current.size >= 2) {
       gesture.current.mode = "pinch";
       gesture.current.pinchDistance = pointerDistance();
       gesture.current.pinchZoom = getViewControls().zoom;
+      chargingRef.current = false;
+      setCharging(false);
       setAim(null);
+      setCharge(0);
       setAirSteer(0, 0);
       hideAirReticle();
       return;
@@ -164,11 +261,12 @@ export function LaunchInput() {
       startY: e.clientY,
       lastX: e.clientX,
       lastY: e.clientY,
+      startTime: now,
       moved: false,
       pinchDistance: 1,
       pinchZoom: getViewControls().zoom,
     };
-    if (mode === "game") updateGameGesture(e.clientX, e.clientY, true, false);
+    if (mode === "game") updateGameGesture(e.clientX, e.clientY, true, false, now);
   };
 
   const onPointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
@@ -198,15 +296,16 @@ export function LaunchInput() {
       return;
     }
 
-    updateGameGesture(e.clientX, e.clientY, true, false);
+    updateGameGesture(e.clientX, e.clientY, true, false, performance.now());
   };
 
   const onPointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
     const pointer = pointers.current.get(e.pointerId);
     if (!pointer) return;
     e.preventDefault();
+    const now = performance.now();
     if (gesture.current.mode === "game") {
-      updateGameGesture(e.clientX, e.clientY, false, true);
+      updateGameGesture(e.clientX, e.clientY, false, true, now);
     }
     pointers.current.delete(e.pointerId);
     if (pointers.current.size === 1) {
@@ -218,6 +317,7 @@ export function LaunchInput() {
           startY: remaining.y,
           lastX: remaining.x,
           lastY: remaining.y,
+          startTime: now,
           moved: false,
           pinchDistance: 1,
           pinchZoom: getViewControls().zoom,
@@ -229,6 +329,7 @@ export function LaunchInput() {
   const onPointerCancel = (e: React.PointerEvent<HTMLDivElement>) => {
     if (!pointers.current.has(e.pointerId)) return;
     e.preventDefault();
+    const now = performance.now();
     pointers.current.delete(e.pointerId);
     if (pointers.current.size === 1) {
       const remaining = activePointer();
@@ -239,6 +340,7 @@ export function LaunchInput() {
           startY: remaining.y,
           lastX: remaining.x,
           lastY: remaining.y,
+          startTime: now,
           moved: false,
           pinchDistance: 1,
           pinchZoom: getViewControls().zoom,
@@ -248,6 +350,8 @@ export function LaunchInput() {
     setAim(null);
     setAirSteer(0, 0);
     setCharge(0);
+    chargingRef.current = false;
+    setCharging(false);
     hideAirReticle();
   };
 
@@ -268,7 +372,7 @@ export function LaunchInput() {
       onPointerCancel={onPointerCancel}
       onWheel={onWheel}
       role="application"
-      aria-label="Launch area — drag back to aim on the blob and release to fling; drag off the blob to rotate the view; pinch or wheel to zoom"
+      aria-label="Launch area — hold on the blob to charge and release to fling; drag off the blob to rotate the view; pinch or wheel to zoom"
       className="pointer-events-auto absolute inset-0 touch-none"
     >
       {/* Edge glow that ignites as the charge nears max — the screen itself tenses up. */}

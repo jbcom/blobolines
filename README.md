@@ -6,7 +6,7 @@
 
 <p align="center">
   Bounce a squishy gel blob up endless gooey trampolines — a World-of-Goo-flavored
-  vertical-launch physics arcade game. Slingshot off springy pads, steer in mid-air,
+  vertical-launch physics arcade game. Hold to charge springy pads, steer in mid-air,
   and leave big colorful splats all the way up.
 </p>
 
@@ -20,8 +20,8 @@
 ## What it is
 
 A vertical climber built around **gooey, deformable blobs** and **springy
-trampolines**. Drag back on a trampoline to charge a slingshot launch, release to fly,
-and drag in the air to steer in full 3D. Land clean bounces to build a combo, grab
+trampolines**. Hold on Blobby to charge the next springy launch, release to fly, and
+drag in the air to steer in full 3D. Land clean bounces to build a combo, grab
 crystals and power-ups, and climb as high as you can — while your blob squashes,
 stretches, blinks, and splatters along the way.
 

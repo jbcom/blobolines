@@ -28,9 +28,7 @@ test("SettingsModal controls have accessible names", async () => {
   // The three independent mix buses each get a slider.
   await expect.element(screen.getByRole("slider", { name: "Music volume" })).toBeInTheDocument();
   await expect.element(screen.getByRole("slider", { name: "Ambience volume" })).toBeInTheDocument();
-  await expect
-    .element(screen.getByRole("slider", { name: "Slingshot sensitivity" }))
-    .toBeInTheDocument();
+  await expect.element(screen.getByRole("slider", { name: "Charge speed" })).toBeInTheDocument();
   await expect.element(screen.getByRole("switch", { name: "Music" })).toBeInTheDocument();
   await expect.element(screen.getByRole("switch", { name: "Reduce motion" })).toBeInTheDocument();
   // Haptics switch is intentionally gated to touch devices, so it's not asserted here.

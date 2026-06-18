@@ -23,7 +23,6 @@ import { MAX_COMBO } from "@/sim/combo";
 import { downdraftAt, windAt } from "@/sim/hazard";
 import { isPerfectRelease, launchVelocity } from "@/sim/launch";
 import {
-  AUTO_LAUNCH_DELAY,
   BLOB,
   DEATH_FALL_DISTANCE,
   MAX_IMPACT_SPEED,
@@ -97,8 +96,8 @@ export function PlayerBlob() {
   const impact = useRef(0);
   /** Countdown to the next near-death heartbeat haptic (shrinks as death nears). */
   const dangerBeat = useRef(0);
-  /** Seconds the blob has rested idle (not airborne, not being aimed) — auto-launches straight
-   *  up once it passes AUTO_LAUNCH_DELAY so the run never stalls if the player just sits there. */
+  /** Seconds the blob has rested idle (not airborne, not being aimed). Drives only expression
+   *  impatience; launch remains entirely player-controlled. */
   const idle = useRef(0);
   /** Recent happy energy from a strong/accurate bounce; drives idle burble + face. */
   const excitement = useRef(0);
@@ -194,8 +193,8 @@ export function PlayerBlob() {
       playLaunch(0.6);
     }
 
-    // Trampoline auto-bounce: landing on a pad pops the blob back up (the springy core
-    // of "trampolines") and builds the clean-bounce combo. A charged slingshot drag adds
+    // Trampoline rebound: landing on a pad pops the blob back up (the springy core
+    // of "trampolines") and builds the clean-bounce combo. A charged hold-release adds
     // extra power on top via consumeLaunch below.
     const bounce = consumeRebound();
     if (bounce) {
@@ -248,7 +247,7 @@ export function PlayerBlob() {
       playLaunch(req.charge);
       // Kick a downward goo burst off the pad as the blob pops.
       launchBurst([p.x, p.y - BLOB.radius, p.z], req.charge);
-      // Expanding launch RING at the pad — the in-world "pop" that sells the slingshot release.
+      // Expanding launch RING at the pad — the in-world "pop" that sells the hold-release.
       reportLaunchBurst({
         position: [p.x, p.y - BLOB.radius, p.z],
         charge: req.charge,
@@ -283,13 +282,9 @@ export function PlayerBlob() {
     }
 
     // PAD-IDLE: count visual idle time whenever Blobby is settled and not being aimed, including
-    // the first launch wait, so eyes/mouth/goo can get impatient. Auto-launch is still gated until
-    // the player has already made a real control input; the first move belongs to the player.
-    // Uses real time so a slow-mo buff doesn't stretch the patience window.
-    // Re-read the LIVE vertical velocity here, not the stale top-of-frame `airborne`: a launch /
-    // rebound / thruster / mid-air-bounce earlier this frame may have just set a big vy, and the
-    // auto-launch must NOT overwrite that with its gentle kick. (`airborne` was snapshotted before
-    // those impulse branches ran.)
+    // the first launch wait, so eyes/mouth/goo can get impatient. Uses real time so a slow-mo buff
+    // doesn't stretch the patience window. This never launches; release input is the only grounded
+    // launch trigger.
     const liveVy = body.linvel().y;
     const liveAim = getAim();
     const idleStep = stepIdlePatience({
@@ -297,22 +292,8 @@ export function PlayerBlob() {
       dt: realDt,
       resting: Math.abs(liveVy) <= 0.5,
       aiming: Boolean(liveAim),
-      playerControlStarted: playerControlStarted.current,
-      autoLaunchDelay: AUTO_LAUNCH_DELAY,
     });
     idle.current = idleStep.idleSeconds;
-    if (idleStep.shouldAutoLaunch) {
-      body.wakeUp();
-      const lv = launchVelocity([0, 1, 0], 0.35, "standard", useGameStore.getState().run.combo);
-      body.setLinvel({ x: lv[0], y: lv[1], z: lv[2] }, true);
-      playLaunch(0.35);
-      launchBurst([p.x, p.y - BLOB.radius, p.z], 0.35);
-      reportLaunchBurst({
-        position: [p.x, p.y - BLOB.radius, p.z],
-        charge: 0.35,
-        kind: "launch",
-      });
-    }
 
     // Wet goo trail: while flying fast, shed a lagging droplet wake behind the blob.
     // Distance-throttled inside useDroplets so the spacing is frame-rate independent.

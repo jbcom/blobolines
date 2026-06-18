@@ -299,7 +299,7 @@ export function Trampoline({
           // forever, never settled into a resting puddle, and the clean-combo ran away as
           // each jitter re-fired this sensor). Below a settle threshold the pad does NOT
           // rebound — the goo comes to rest. Standard pads are slightly springy (>1) so a
-          // clean drop sustains the climb; the player's slingshot adds the real energy.
+          // clean drop sustains the climb; the player's hold-release adds the real energy.
           // `super` bonus pads guarantee a big mega-launch regardless of how gently you
           // land (the treat); all others scale with impact and can settle.
           const reboundSpeed =

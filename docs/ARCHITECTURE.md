@@ -38,7 +38,7 @@ public surface; modules stay small and single-responsibility — no monolithic s
 | `src/sim/physics` | ✓ | Rapier config, collision categories, spring/depress math (pure where possible) |
 | `src/sim/blob` | ✓ | blob state: squash/stretch springs, expression state machine (eyes), velocity model |
 | `src/sim/trampoline` | ✓ | trampoline spring + tilt model, type behaviors (standard/booster/moving/fragile) |
-| `src/sim/launch` | ✓ | slingshot aim→velocity, combo/multiplier, 3D air-steer model |
+| `src/sim/launch` | ✓ | route charge→velocity, combo/multiplier, 3D air-steer model |
 | `src/world` | ✓ | seeded procedural vertical generator, route difficulty profiles, certified golden-path parabolas |
 | `src/ecs` | ✓ | koota world + traits (Transform/Velocity/Blob/Trampoline/Crystal/PowerUp/Particle); the queryable entity model |
 | `src/engine` | ✓ | fixed-timestep accumulator (`advance`/`createStepLoop`) — deterministic sim stepping |

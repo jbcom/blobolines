@@ -1,14 +1,14 @@
 import { Button, Dialog } from "@app/components/ui";
-import { Magnet, MoveVertical, Rocket, Target } from "lucide-react";
+import { Magnet, MoveVertical, Rocket, TimerReset } from "lucide-react";
 
 /**
  * Mechanics manual — how to play. Reachable from the title; reuses the Dialog primitive.
  */
 const ENTRIES = [
   {
-    icon: Target,
-    title: "Slingshot launch",
-    body: "Drag back on a pad to aim + charge, release to fling the blob up.",
+    icon: TimerReset,
+    title: "Charge launch",
+    body: "Hold on Blobby to fill the route arc, then release to fling along the parabola.",
   },
   {
     icon: MoveVertical,

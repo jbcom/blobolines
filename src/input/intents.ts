@@ -1,8 +1,8 @@
 /**
  * Input intent model — pure, framework-agnostic math that turns raw drag/keyboard
  * input into game intents. Two control modes:
- *   - SLINGSHOT (blob locked on a trampoline): drag back to aim + charge, release to
- *     launch. Drag vector → aim direction + [0,1] strength.
+ *   - ROUTE CHARGE (blob locked on a trampoline): hold on the blob to charge the certified
+ *     next-hop thrust, release to launch. Time held → [0,1] strength.
  *   - AIR-STEER (blob airborne): drag anywhere → a 3D steering force on the X/Z plane.
  * The React layer (app/hooks/useInput) feeds pixel deltas here; this file has no DOM.
  */
@@ -14,42 +14,58 @@ export interface AimResult {
   strength: number;
 }
 
-export interface SlingshotConfig {
-  /** Pixels of drag for full strength (before sensitivity). */
-  maxDragDist: number;
-  /** Player sensitivity multiplier. */
+export interface HoldChargeConfig {
+  /** Seconds held for full charge at sensitivity 1. */
+  fullChargeSeconds: number;
+  /** Minimum useful launch on a quick tap/release. */
+  tapCharge: number;
+  /** Player sensitivity multiplier; higher charges faster. */
   sensitivity: number;
 }
 
-export const DEFAULT_SLINGSHOT: SlingshotConfig = {
-  maxDragDist: 140,
+export const DEFAULT_HOLD_CHARGE: HoldChargeConfig = {
+  fullChargeSeconds: 1.15,
+  tapCharge: 0.22,
   sensitivity: 1,
 };
 
+export const ROUTE_AIM_Z_SCALE = 1.25;
+
+/** Hold-to-charge thrust: a quick tap still produces a small route-aligned pop, while holding
+ *  reaches full charge on a readable cadence. */
+export function computeHoldCharge(
+  heldSeconds: number,
+  config: HoldChargeConfig = DEFAULT_HOLD_CHARGE,
+): number {
+  const seconds = Math.max(0, heldSeconds);
+  const rate = Math.max(0.1, config.sensitivity);
+  const full = Math.max(0.2, config.fullChargeSeconds / rate);
+  const ramp = Math.min(1, seconds / full);
+  if (ramp <= 0) return 0;
+  return Math.max(Math.min(1, config.tapCharge), ramp);
+}
+
 /**
- * Slingshot aim: drag vector (dx,dy) in screen pixels → launch dir + strength.
- * Pull DOWN-RIGHT launches UP-LEFT (drag opposite to launch, like a slingshot).
- * Screen Y maps to world Z (depth); launch always carries strong +Y for the climb.
+ * Route-bearing launch direction for flat sources. This is intentionally the same
+ * charge-shaped parabola direction used by the world verifier: no swipe aim, but charge still
+ * changes the vertical/lateral angle the player must hit.
  */
-export function computeAim(
-  dx: number,
-  dy: number,
-  config: SlingshotConfig = DEFAULT_SLINGSHOT,
-): AimResult {
-  const dist = Math.hypot(dx, dy);
-  const strength = Math.min(1, (dist / config.maxDragDist) * config.sensitivity);
-
-  // Heading on the XZ plane from the (negated) drag; bias Y up so launches climb.
-  const angleXZ = Math.atan2(-dx, -dy * 1.2);
-  let x = Math.sin(angleXZ) * strength;
-  const y = 0.35 + strength * 1.62;
-  let z = Math.cos(angleXZ) * strength * 1.25;
-
-  // Normalize to a unit direction.
+export function computeRouteAim(
+  deltaX: number,
+  deltaZ: number,
+  charge: number,
+): readonly [number, number, number] {
+  const h = Math.hypot(deltaX, deltaZ);
+  if (h < 1e-6) return [0, 1, 0];
+  const ux = deltaX / h;
+  const uz = deltaZ / h;
+  const c = Math.max(0, Math.min(1, charge));
+  const angle = Math.atan2(ROUTE_AIM_Z_SCALE * ux, uz);
+  const x = Math.sin(angle) * c;
+  const y = 0.35 + c * 1.62;
+  const z = Math.cos(angle) * c * ROUTE_AIM_Z_SCALE;
   const len = Math.hypot(x, y, z) || 1;
-  x /= len;
-  z /= len;
-  return { dir: [x, y / len, z], strength };
+  return [x / len, y / len, z / len];
 }
 
 export interface SteerConfig {

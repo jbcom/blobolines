@@ -1,39 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { computeAim, computeAirSteer, keyboardSteer } from "../intents";
-
-describe("computeAim (slingshot)", () => {
-  it("strength scales with drag distance and clamps at 1", () => {
-    expect(computeAim(0, 0).strength).toBe(0);
-    expect(computeAim(70, 0).strength).toBeCloseTo(0.5, 5);
-    expect(computeAim(140, 0).strength).toBe(1);
-    expect(computeAim(400, 0).strength).toBe(1);
-  });
-
-  it("applies sensitivity", () => {
-    expect(computeAim(70, 0, { maxDragDist: 140, sensitivity: 2 }).strength).toBe(1);
-  });
-
-  it("always launches upward (positive Y)", () => {
-    for (const [dx, dy] of [
-      [0, 100],
-      [100, 0],
-      [-80, -60],
-      [50, -120],
-    ]) {
-      expect(computeAim(dx, dy).dir[1]).toBeGreaterThan(0);
-    }
-  });
-
-  it("returns a unit-length direction", () => {
-    const { dir } = computeAim(120, -40);
-    expect(Math.hypot(dir[0], dir[1], dir[2])).toBeCloseTo(1, 5);
-  });
-
-  it("pulling right launches left (slingshot inversion on X)", () => {
-    expect(computeAim(100, 0).dir[0]).toBeLessThan(0);
-    expect(computeAim(-100, 0).dir[0]).toBeGreaterThan(0);
-  });
-});
+import { computeAirSteer, computeHoldCharge, computeRouteAim, keyboardSteer } from "../intents";
 
 describe("computeAirSteer", () => {
   it("is zero inside the deadzone", () => {
@@ -76,6 +42,44 @@ describe("computeAirSteer", () => {
   it("linear responseCurve reproduces a straight ramp", () => {
     const cfg = { maxSteerDist: 90, deadzone: 0, maxAirAccel: 15, responseCurve: 1 };
     expect(Math.hypot(...computeAirSteer(45, 0, cfg))).toBeCloseTo(7.5, 5);
+  });
+});
+
+describe("computeHoldCharge", () => {
+  it("starts empty until the player actually holds or taps", () => {
+    expect(computeHoldCharge(0)).toBe(0);
+  });
+
+  it("turns a quick tap into a small route thrust", () => {
+    expect(computeHoldCharge(0.03)).toBeCloseTo(0.22, 5);
+  });
+
+  it("ramps to full charge over the hold window", () => {
+    expect(computeHoldCharge(0.575)).toBeCloseTo(0.5, 5);
+    expect(computeHoldCharge(1.15)).toBe(1);
+    expect(computeHoldCharge(10)).toBe(1);
+  });
+
+  it("uses sensitivity as charge rate", () => {
+    expect(
+      computeHoldCharge(0.575, { fullChargeSeconds: 1.15, tapCharge: 0.22, sensitivity: 2 }),
+    ).toBe(1);
+  });
+});
+
+describe("computeRouteAim", () => {
+  it("points toward the next pad bearing without swipe input", () => {
+    expect(computeRouteAim(5, 0, 0.8)[0]).toBeGreaterThan(0);
+    expect(computeRouteAim(-5, 0, 0.8)[0]).toBeLessThan(0);
+    expect(computeRouteAim(0, 5, 0.8)[2]).toBeGreaterThan(0);
+  });
+
+  it("keeps low charge more vertical and high charge more lateral", () => {
+    const low = computeRouteAim(5, 0, 0.25);
+    const high = computeRouteAim(5, 0, 0.9);
+    expect(low[1]).toBeGreaterThan(high[1]);
+    expect(Math.abs(high[0])).toBeGreaterThan(Math.abs(low[0]));
+    expect(Math.hypot(...high)).toBeCloseTo(1, 5);
   });
 });
 

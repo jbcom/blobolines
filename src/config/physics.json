@@ -8,7 +8,6 @@
     "ccd": true
   },
   "starterBlobY": 1.46,
-  "autoLaunchDelay": 5.0,
   "deathFallDistance": 24,
   "worldBoundXZ": 35,
   "maxImpactSpeed": 28

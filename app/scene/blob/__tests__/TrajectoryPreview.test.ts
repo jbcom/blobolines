@@ -7,22 +7,22 @@ import {
 } from "../TrajectoryPreview";
 
 describe("TrajectoryPreview aim assistance", () => {
-  it("shows endpoint reticles only before Blobmare", () => {
+  it("keeps endpoint reticles at every difficulty", () => {
     expect(showsAimEndpointReticle("ready")).toBe(true);
     expect(showsAimEndpointReticle("medium")).toBe(true);
     expect(showsAimEndpointReticle("hard")).toBe(true);
-    expect(showsAimEndpointReticle("blobmare")).toBe(false);
-    expect(showsAimEndpointReticle("ultraBlobmare")).toBe(false);
-    expect(showsAimEndpointReticle("oneWrongMove")).toBe(false);
+    expect(showsAimEndpointReticle("blobmare")).toBe(true);
+    expect(showsAimEndpointReticle("ultraBlobmare")).toBe(true);
+    expect(showsAimEndpointReticle("oneWrongMove")).toBe(true);
   });
 
-  it("removes the parabola overlay for Ultra Blobmare and One Wrong Move", () => {
+  it("keeps the parabola overlay at every difficulty", () => {
     expect(showsAimParabola("ready")).toBe(true);
     expect(showsAimParabola("medium")).toBe(true);
     expect(showsAimParabola("hard")).toBe(true);
     expect(showsAimParabola("blobmare")).toBe(true);
-    expect(showsAimParabola("ultraBlobmare")).toBe(false);
-    expect(showsAimParabola("oneWrongMove")).toBe(false);
+    expect(showsAimParabola("ultraBlobmare")).toBe(true);
+    expect(showsAimParabola("oneWrongMove")).toBe(true);
   });
 
   it("uses the active progressed difficulty for aim assistance", () => {

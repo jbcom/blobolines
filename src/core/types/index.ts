@@ -57,6 +57,8 @@ export interface CrystalSpec {
  *  that lands inside the successor footprint; the dev harness can visualize it, but live play
  *  does not reveal it as the answer path. */
 export interface GoldenPathVariant {
+  /** Hold-release charge [0,1] that produces this certified variant. */
+  launchCharge: number;
   launchSpeed: number;
   flightTime: number;
   apex: Vec3;
@@ -76,6 +78,8 @@ export interface GoldenPathProof {
   launchNormal: Vec3;
   /** Launch speed used by the proof. */
   launchSpeed: number;
+  /** Hold-release charge [0,1] that produces this certified proof. */
+  launchCharge: number;
   /** Seconds from launch to the first crossing of the successor pad's height. */
   flightTime: number;
   /** Highest point reached by the certified parabola. */
@@ -114,7 +118,7 @@ export interface PlayerProgress {
   crystals: number;
   skin: BlobSkin;
   unlockedSkins: BlobSkin[];
-  /** Has the player seen the first-run drag-to-launch coachmark? Set true on first launch. */
+  /** Has the player seen the first-run hold-to-launch coachmark? Set true on first launch. */
   tutorialSeen: boolean;
   /** Ids of unlocked achievements (src/sim/achievements). Persisted; keyed by id so adding or
    *  reordering achievements never disturbs existing unlocks. */
@@ -131,7 +135,8 @@ export interface GameSettings {
   /** Ambient bed bus volume [0,1]. */
   ambientVolume: number;
   musicEnabled: boolean;
-  slingshotSensitivity: number;
+  /** Charge fill speed multiplier for hold-release launches. */
+  chargeSensitivity: number;
   haptics: boolean;
   /** Force reduced motion in-app (on top of the OS preference). */
   reducedMotion: boolean;

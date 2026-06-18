@@ -1,6 +1,6 @@
 /**
  * Input bridge — a tiny imperative channel from the DOM/keyboard input layer to the
- * physics blob. The overlay stores the latest launch (dir + charge) on slingshot
+ * physics blob. The overlay stores the latest launch (dir + charge) on hold-release
  * release (last-write-wins, consumed once next frame); the air-steer force is a
  * continuous X/Z value the blob reads each frame while airborne. Avoids threading refs
  * through the React tree while keeping UI and physics decoupled.
@@ -27,7 +27,7 @@ export function consumeLaunch(): LaunchRequest | null {
   return r;
 }
 
-/** Live AIM preview while charging the slingshot (dir + charge), or null when not aiming.
+/** Live AIM preview while charging the route launch (dir + charge), or null when not aiming.
  *  Read each frame by the in-scene trajectory preview so the player sees where they'll go
  *  BEFORE releasing so targeting feedback is visible while charging. */
 let aim: LaunchRequest | null = null;
@@ -64,7 +64,7 @@ export function consumeSplats(): SplatBurst[] {
 }
 
 /** A ground-ring "pop" event: an expanding ring blooms at the pad. `kind` "launch" is the
- *  slingshot release pop (blue, blooms from small); "land" is the impact ring on touchdown
+ *  hold-release launch pop (blue, blooms from small); "land" is the impact ring on touchdown
  *  (gold, sized by impact). `charge` [0,1] scales the ring's size + brightness. Reported by
  *  the blob, drained by the LaunchRing VFX. */
 export type GroundRingKind = "launch" | "land";

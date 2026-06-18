@@ -11,7 +11,7 @@ and physics (Rapier) read from / drive these functions; they never live here.
 |-----|------|
 | `blob/` | Squash-stretch from velocity/impact (`speedStretch`, `impactSquash`, `combineScale`) and the eye-expression FSM (`classifyExpression`). |
 | `trampoline/` | Spring depress/tilt model (`stepTramp`, `impactTargets`), rebound multipliers per pad type. |
-| `launch/` | `launchVelocity` — slingshot charge + direction + combo → launch velocity. |
+| `launch/` | `launchVelocity` — route charge + direction + combo → launch velocity. |
 | `collect/` | Crystal magnet pull + collection radius. |
 | `combo/` | Clean-bounce streak / multiplier rules. |
 | `physics/` | Tuning **constants** (`GRAVITY`, `BLOB`, `MAX_IMPACT_SPEED`, `DEATH_FALL_DISTANCE`, `WORLD_BOUND_XZ`) — the single source of truth shared by sim + Rapier setup. |
