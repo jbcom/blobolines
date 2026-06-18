@@ -141,14 +141,10 @@ function RouteGate({ gate }: { gate: RouteGateSpec }) {
             />
           </mesh>
         ))}
-        {barOffsets.slice(0, 2).map((offset) => (
+        {barOffsets.slice(0, 2).map((offset, i) => (
           <mesh
             key={`h-${offset}`}
-            position={[
-              0,
-              (slicer ? (offset < 0 ? -0.78 : 0.78) : offset * 0.68) * gate.radius,
-              0.05,
-            ]}
+            position={[0, (slicer ? (i === 0 ? -0.78 : 0.78) : offset * 0.68) * gate.radius, 0.05]}
             rotation={[0, 0, Math.PI / 2]}
             material={horizontalBarMat}
           >

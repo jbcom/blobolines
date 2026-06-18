@@ -103,6 +103,7 @@ export function SplitBlobEchoes({ skin }: { skin: BlobSkin }) {
       const life = Math.max(0, 1 - t / fragment.life);
       if (life <= 0) {
         fragment.active = false;
+        fragment.age = Number.POSITIVE_INFINITY;
         group.visible = false;
         continue;
       }

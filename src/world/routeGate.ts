@@ -125,7 +125,9 @@ export function createRouteGateForProof(
       ? 0
       : wrap01(openCenter - (idealReleaseDelay + sampleFlightTime) / tuning.period);
   const fragmentCount =
-    kind === "slicer" ? 3 + Math.floor(hash01(target.id, source.id, routeIndex) * 3) : undefined;
+    kind === "slicer"
+      ? 3 + clamp(Math.floor(hash01(target.id, source.id, routeIndex) * 3), 0, 2)
+      : undefined;
 
   return {
     id: `${kind}-${routeIndex}-${source.id.toFixed(3)}-${target.id.toFixed(3)}`,
