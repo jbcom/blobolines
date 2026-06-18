@@ -1,4 +1,4 @@
-import { useFrame, useThree } from "@react-three/fiber";
+import { useFrame } from "@react-three/fiber";
 import { useEffect, useRef } from "react";
 import type { Group, Object3D } from "three";
 import { Vector3 } from "three";
@@ -61,7 +61,6 @@ function Eye({ side }: { side: 1 | -1 }) {
 
 export function BlobEyes({ expression, radius, live = false }: BlobEyesProps) {
   const groupRef = useRef<Group>(null);
-  const camera = useThree((s) => s.camera);
   const timer = useRef(0);
   const blobNdc = useRef(new Vector3());
   const targetNdc = useRef(new Vector3());
@@ -89,7 +88,7 @@ export function BlobEyes({ expression, radius, live = false }: BlobEyesProps) {
     parts.current = { lids, pupils, tears };
   }, []);
 
-  useFrame((_, dt) => {
+  useFrame((state, dt) => {
     const g = groupRef.current;
     if (!g) return;
     timer.current += dt;
@@ -120,8 +119,8 @@ export function BlobEyes({ expression, radius, live = false }: BlobEyesProps) {
     let dartX = 0;
     let dartY = 0;
     if (focus && diag) {
-      blobNdc.current.set(...diag.position).project(camera);
-      targetNdc.current.set(...focus.position).project(camera);
+      blobNdc.current.set(...diag.position).project(state.camera);
+      targetNdc.current.set(...focus.position).project(state.camera);
       if (
         Number.isFinite(blobNdc.current.x) &&
         Number.isFinite(blobNdc.current.y) &&

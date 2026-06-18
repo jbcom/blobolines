@@ -271,6 +271,8 @@ export function LaunchInput() {
         setAim(null);
         return;
       }
+      gesture.current.lastX = x;
+      gesture.current.lastY = y;
       chargingRef.current = true;
       setCharging(true);
       const req = publishRouteCharge(timeStamp, false, y, tap);
@@ -485,7 +487,7 @@ export function LaunchInput() {
       {charge > 0 && (
         <div
           className="absolute left-1/2 flex -translate-x-1/2 flex-col items-center gap-1"
-          style={{ bottom: "calc(var(--safe-bottom) + 2.75rem)" }}
+          style={{ bottom: "calc(var(--safe-bottom, 0px) + 2.75rem)" }}
           role="progressbar"
           aria-label="Launch power"
           aria-valuemin={0}
