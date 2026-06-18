@@ -53,6 +53,7 @@ export function AchievementsModal({
   const formatDate = (dateStr: string) => {
     try {
       const d = new Date(dateStr);
+      if (Number.isNaN(d.getTime())) return dateStr;
       return d.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
     } catch {
       return dateStr;
@@ -184,7 +185,7 @@ export function AchievementsModal({
 
                   return (
                     <div
-                      key={score.date}
+                      key={`${score.date}-${score.score}-${score.height}`}
                       className="group flex flex-col rounded-xl border border-border/40 bg-surface/30 p-3 hover:border-border/80 transition-all duration-200"
                     >
                       {/* Top Row: Rank & Score */}

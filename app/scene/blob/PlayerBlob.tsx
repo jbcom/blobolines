@@ -150,21 +150,17 @@ export function PlayerBlob() {
     });
   }, [resetDroplets]);
 
-  const stepPowerups = (
-    realDt: number,
-    v: { x: number; y: number; z: number },
-    body: RapierRigidBody,
-  ) => {
+  const stepPowerups = (realDt: number, body: RapierRigidBody) => {
     if (tickPowerups(realDt).length > 0) playPowerdown();
     if (isPowerupActive("thruster")) {
       body.wakeUp();
-      body.setLinvel({ x: v.x, y: 34, z: v.z }, true);
+      const liveV = body.linvel();
+      body.setLinvel({ x: liveV.x, y: 34, z: liveV.z }, true);
     }
   };
 
   const stepHazards = (
     p: { x: number; y: number; z: number },
-    v: { x: number; y: number; z: number },
     dt: number,
     time: number,
     body: RapierRigidBody,
@@ -173,9 +169,10 @@ export function PlayerBlob() {
     if (sx !== 0 || sz !== 0) playerControlStarted.current = true;
     const [wx, wz] = windAt(p.y, time);
     const down = downdraftAt(p.y, time);
+    const liveV = body.linvel();
     if (sx !== 0 || sz !== 0 || wx !== 0 || wz !== 0 || down !== 0) {
       body.setLinvel(
-        { x: v.x + (sx + wx) * dt, y: v.y - down * dt, z: v.z + (sz + wz) * dt },
+        { x: liveV.x + (sx + wx) * dt, y: liveV.y - down * dt, z: liveV.z + (sz + wz) * dt },
         true,
       );
     }
@@ -294,7 +291,7 @@ export function PlayerBlob() {
     let v = body.linvel();
     let airborne = Math.abs(v.y) > 0.5;
 
-    stepPowerups(realDt, v, body);
+    stepPowerups(realDt, body);
 
     if (consumeMidAirBounce() && consumeBounceCharge()) {
       playerControlStarted.current = true;
@@ -410,7 +407,7 @@ export function PlayerBlob() {
         flash("blue", req.charge);
       }
     } else if (airborne) {
-      stepHazards(p, v, dt, state.clock.elapsedTime, body);
+      stepHazards(p, dt, state.clock.elapsedTime, body);
     }
 
     p = body.translation();
