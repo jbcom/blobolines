@@ -175,7 +175,7 @@ first launch, but every grounded launch belongs to a player hold-release.
 | `BLOB.radius` | `0.85` | Blob collider radius |
 | `BLOB.ccd` | `true` | Continuous collision (anti-tunnel at launch speed) |
 | `BLOB.linearDamping` | `0.05` | Light drag |
-| `DEATH_FALL_DISTANCE` | `24` | Fall this far below max height → game over |
+| `DEATH_FALL_DISTANCE` | `24` | Fall this far below the last caught cloud → game over |
 | `WORLD_BOUND_XZ` | `35` | Lateral bounds (blob bounces off) |
 | `MAX_IMPACT_SPEED` | `28` | Impact speed → full squash/squint |
 | `FIXED_DT` (engine) | `1/60` | Fixed sim timestep |

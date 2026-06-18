@@ -30,8 +30,6 @@ interface TrampolineProps {
   type: TrampType;
   /** Lateral route direction for canted clouds. */
   cant?: readonly [number, number];
-  /** Optional per-cloud cant strength in radians. */
-  cantAngleRad?: number;
   /** Unit [x,z] drift rail direction for moving clouds. */
   moveAxis?: readonly [number, number];
   /** Called when Blobby catches the cloud, with impact speed + relative hit point. */

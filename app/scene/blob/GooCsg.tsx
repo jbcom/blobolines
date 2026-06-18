@@ -196,8 +196,11 @@ export function GooCsg({ skin, blobRadius, getDroplets }: GooCsgProps) {
     const [vx, vy, vz] = diag.velocity;
     const settled = diag.airborne ? 0 : 1 - Math.min(diag.speed / blobCfg.puddle.settleSpeed, 1);
     const cloudCling = Math.min(1, Math.max(0, diag.cloudAdherence?.strength ?? 0));
+    // Cloud relX/relZ arrive normalized to the pad half-footprint [-0.5, 0.5]; expand to the
+    // full deform range so off-center catches visibly tug the puddle toward that side.
     const cloudRelX = Math.min(1, Math.max(-1, (diag.cloudAdherence?.relX ?? 0) * 2));
     const cloudRelZ = Math.min(1, Math.max(-1, (diag.cloudAdherence?.relZ ?? 0) * 2));
+    // Keep cloud cling just shy of fully grounded so the coated puddle still breathes/jiggles.
     const clingSettled = Math.max(settled, cloudCling * 0.95);
     const aim = getAim();
     const idleSeconds = diag.idleSeconds ?? 0;
