@@ -61,6 +61,7 @@ export function DevHarness() {
       run: g.run,
       skin: g.progress.skin,
       bestHeight: g.progress.bestHeight,
+      cloudPadCount: w.trampolines.length,
       trampolineCount: w.trampolines.length,
       highestGeneratedY: w.highestY,
       seedPhrase: w.seedPhrase,

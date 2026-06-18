@@ -11,7 +11,7 @@ domain: context
 
 The game is **playable and live** at https://jonbogaty.com/blobolines/
 (jbcom.github.io/blobolines/ redirects there). Loop: hold-charge launch → climb (altimeter)
-→ trampoline auto-bounce + clean-bounce combo → 3D mid-air steering → fall → game over →
+→ cloud catch/adherence + clean-catch combo → 3D mid-air steering → fall → game over →
 replay. Rapier 3D physics, deterministic seeded sim, design-token system, shadcn+Motion
 UI, persistence, CI/CD (incl. Android debug APK), e2e "is it playable" gate.
 
@@ -26,8 +26,8 @@ UI, persistence, CI/CD (incl. Android debug APK), e2e "is it playable" gate.
 - **Post-processing** — N8AO, bloom, grade, vignette, and speed-reactive chromatic. ✅
 - **Crystals + power-ups** — instanced crystals, magnet/thruster/shield/slowmo/doubler/
   multi-bounce pickups, HUD badges, and 3D models/fallbacks. ✅
-- **Pad behaviors** — standard, booster, moving, fragile, super, ice, canted, and wobbler
-  pads with reachability guarantees. ✅
+- **Cloud behaviors** — standard, booster, drifting, fragile, super, slick, canted, and wobbler
+  cloud pads with reachability guarantees. ✅
 
 ## Next
 

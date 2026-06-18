@@ -50,7 +50,7 @@ describe("seed route verifier", () => {
     expect(b.failures).toEqual([]);
   });
 
-  it("can verify One Wrong Move precision seeds", () => {
+  it("can verify Ultimate Blobmare precision seeds", () => {
     const report = verifySeedRoute({
       seed: "one-path-precision",
       difficulty: "oneWrongMove",
@@ -58,7 +58,7 @@ describe("seed route verifier", () => {
     });
 
     expect(report.ok).toBe(true);
-    expect(report.difficultyLabel).toBe("One Wrong Move");
+    expect(report.difficultyLabel).toBe("Ultimate Blobmare");
     expect(report.minRequiredProofVariants).toBe(1);
     expect(report.maxRequiredProofVariants).toBe(1);
     expect(report.requiredProofVariants).toBe(1);

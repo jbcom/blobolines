@@ -20,7 +20,9 @@ export {
 export {
   type BlobFaceFocusTarget,
   type BlobSplitEvent,
+  type CloudAdherenceRequest,
   consumeBlobSplits,
+  consumeCloudAdherence,
   consumeImpact,
   consumeLanding,
   consumeLaunch,
@@ -39,6 +41,7 @@ export {
   type ReboundRequest,
   type RouteGateHitEvent,
   reportBlobSplit,
+  reportCloudAdherence,
   reportImpact,
   reportLanding,
   reportLaunchBurst,

@@ -35,13 +35,15 @@ test("updates when the run crosses into the next effective difficulty", async ()
   await expect.element(screen.getByText("660m to Hard")).toBeInTheDocument();
 });
 
-test("marks the final cadence when the run reaches One Wrong Move", async () => {
+test("marks the final cadence when the run reaches Ultimate Blobmare", async () => {
   useWorldStore.getState().reset("difficulty-meter-final", "oneWrongMove");
   const screen = await render(<DifficultyMeter />);
 
-  await expect.element(screen.getByText("One Wrong Move")).toBeInTheDocument();
+  await expect.element(screen.getByText("Ultimate Blobmare")).toBeInTheDocument();
   await expect.element(screen.getByText("Final cadence")).toBeInTheDocument();
   expect(
-    screen.getByRole("img", { name: /Current difficulty One Wrong Move, final cadence/ }).element(),
+    screen
+      .getByRole("img", { name: /Current difficulty Ultimate Blobmare, final cadence/ })
+      .element(),
   ).toBeTruthy();
 });

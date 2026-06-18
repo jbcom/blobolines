@@ -3,7 +3,7 @@
   "private": true,
   "version": "0.1.7",
   "type": "module",
-  "description": "Bounce a squishy gel blob up endless gooey trampolines — a World-of-Goo-flavored vertical-launch physics arcade game.",
+  "description": "Launch a squishy gel blob through endless soft cloud pads — a World-of-Goo-flavored vertical-launch physics arcade game.",
   "license": "MIT",
   "author": "Jon Bogaty <jonbogaty@gmail.com>",
   "homepage": "https://jbcom.github.io/blobolines/",

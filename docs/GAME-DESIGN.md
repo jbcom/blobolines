@@ -1,6 +1,6 @@
 ---
 title: Game Design
-updated: 2026-06-17
+updated: 2026-06-18
 status: current
 domain: product
 ---
@@ -9,20 +9,20 @@ domain: product
 
 ## The fantasy
 
-You are a gooey gel blob. Bounce up an endless tower of springy trampolines and get
-**as high as you can**. Every bounce squishes you, every launch stretches you, and you
-splat colorfully when you land. The higher you climb the harder it gets — smaller pads,
-trickier types, longer falls.
+You are a gooey gel blob. Launch through an endless tower of soft cloud pads and get
+**as high as you can**. Every cloud catch squishes you into a happy puddle, every launch
+stretches you into a missile, and you splat colorfully when you land. The higher you climb
+the harder it gets — smaller clouds, faster layers, trickier cloud types, longer falls.
 
 ## Core loop
 
-1. The blob rests on a trampoline.
+1. The blob rests in a cloud pad.
 2. **Hold on Blobby** to charge the route launch (a power meter fills); **release** to fly.
 3. In the air, **drag** to steer in 3D (left/right = world X, forward/back = world Z).
-4. Land on a higher trampoline — it **auto-bounces** you (springy), and a clean landing
-   builds your **combo** multiplier, which boosts launch power.
+4. Descend into a higher cloud — it adheres to Blobby, lets him puddle into the puff, and
+   clean catches build your **combo** multiplier, which boosts launch power.
 5. Climb. The **altimeter** tracks your height; the **next-pad radar** points toward the
-   next intended trampoline in 3D space; your **best height** persists.
+   next intended cloud in 3D space; your **best height** persists.
 6. Fall too far below the highest pad you reached → **game over** → replay.
 
 The whole game serves making that climb feel amazing: juicy goo, squash-stretch,
@@ -31,23 +31,23 @@ expressive eyes, splats.
 ## Spatial awareness
 
 The tower is a 3D climb, so the camera, HUD, and generator share a strict spatial contract:
-the immediate trampoline and the next trampoline after it must be visible from the launch
-state, and consecutive pads may never collapse into a directly-overhead column. The HUD gives
+the immediate cloud and the next cloud after it must be visible from the launch
+state, and consecutive clouds may never collapse into a directly-overhead column. The HUD gives
 players a compact **next-pad radar** while a run is active. It uses the last landed pad as the
-progression floor and points toward the next generated trampoline above it, showing:
+progression floor and points toward the next generated cloud above it, showing:
 
 - lateral direction (`forward`, `back`, `left`, `right`, or a diagonal)
 - vertical gap in metres, including negative values when the blob has arced above the target
 - horizontal distance in metres
 
 This keeps the player oriented without flattening the 3D space into an auto-aim lane: the
-blob still has to be steered onto the actual trampoline.
+blob still has to be steered into the actual cloud catch volume.
 
-Every consecutive trampoline pair also has a stored **golden path proof** on the source pad:
+Every consecutive cloud pair also has a stored **golden path proof** on the source cloud:
 a calculated passive parabola with launch normal, source mode (`flat`, `moving`, `canted`, or
 `wobbler`), flight time, apex, descending-impact landing point, absolute lip clearance,
 landing precision percentile, compressed-arc score, and world-space samples. The final sample
-is the impact point on the successor trampoline; an ascending height crossing is not a valid
+is the impact point inside the successor cloud; an ascending height crossing is not a valid
 route proof. The dev harness renders these proof samples as a solid red parabola plus a red
 impact circle, then captures a timed PNG/JSON sequence for inspection.
 
@@ -60,7 +60,7 @@ turn angle between consecutive route bearings: an arc can be mathematically reac
 be rejected if it asks the player to reverse direction too sharply for the active difficulty.
 The variant count is an exact active-difficulty target, not only a lower bound: Easy stores
 exactly three accepted launch variants per step, Medium exactly two, and Hard, Blobmare, Ultra
-Blobmare, and One Wrong Move exactly one, with increasingly small lip, precision, footprint,
+Blobmare, and Ultimate Blobmare exactly one, with increasingly small lip, precision, footprint,
 turn-angle, charge fit, and compression margins. Flat-to-flat, flat-to-slider, slider-to-canted,
 canted-to-canted, wobbler recovery, and compressed parabolas are all valid when the verifier
 proves the route under the active profile. The long-run goal is Tetris-like cadence: every
@@ -72,7 +72,7 @@ that would happen from the current charge. Easy mode means larger footprints, mo
 trajectory variants, wider lips, and slower cadence; expert modes tighten charge/angle
 precision instead of removing the readable route instrument. Player-facing guidance comes from:
 
-- camera framing that keeps the current, immediate, and following trampolines readable
+- camera framing that keeps the current, immediate, and following clouds readable
 - the next-pad radar, which gives direction/distance without naming the exact catch point
 - a live aim preview while charging: every difficulty shows the dotted launch arc plus a
   pulsing endpoint reticle at the descending height crossing
@@ -84,33 +84,39 @@ precision instead of removing the readable route instrument. Player-facing guida
 The solid red parabola and red impact circle are dev-harness evidence only. They prove the
 seed and generator, but they are not mounted as normal player HUD.
 
-## Trampoline types
+## Cloud Pad Types
 
 | Type | Color (token) | Behavior |
 |------|---------------|----------|
-| standard | `tramp.blue` (warm coral) | Reliable bounce (rebound ×1.12) |
-| booster | `tramp.orange` | Big rebound (×1.8) |
-| moving | `tramp.gold` | Glides along a generated route axis — timing matters |
-| fragile | `tramp.green` | Disintegrates shortly after impact |
-| super | `tramp.violet` | Guaranteed mega-launch reward |
-| ice | `tramp.ice` | Big rebound, slippery, breaks clean combo |
-| wobbler | `tramp.violet` | Tips toward off-center hits |
-| canted | `tramp.orange` | Certified tilted bounce toward the next pad |
+| standard | `cloud.puff` | Reliable soft catch and launch |
+| booster | `cloud.gold` | Strong upward pop after catch |
+| moving | `cloud.gold` | Drifts along a generated route axis — timing matters |
+| fragile | `cloud.blush` | Wispy puff breaks apart shortly after catch |
+| super | `cloud.gold` | Guaranteed mega-launch reward |
+| ice | `cloud.glow` | Slick, big rebound, breaks clean combo |
+| wobbler | `cloud.storm` | Unstable puff tilts toward off-center catches |
+| canted | `cloud.warm` | Certified angled cloud catch toward the next cloud |
+
+Cloud pads are not solid platforms. Blobby can pass upward through the underside, then once he
+is descending inside the cloud footprint the cloud applies adherence: horizontal velocity is
+damped, vertical fall is softened, and the goo body settles into a smiling puddle that coats the
+top of the puff. Holding charge makes that puddle cling and bead toward the route direction;
+release detaches it into a stretched missile shape.
 
 ## Route gates
 
 Expert profiles can add obstacles directly onto the certified path instead of changing the
 meaning of the launch tool:
 
-- **Phase portals** unlock in Ultra Blobmare and One Wrong Move. They are vertical warm-light
+- **Phase portals** unlock in Ultra Blobmare and Ultimate Blobmare. They are vertical warm-light
   gates anchored to a stored golden-path sample, pulse open/closed on a deterministic cadence,
   and knock Blobby off-route when touched while closed.
 - **Slicers** unlock in Blobmare. They are vertical wire gates, like a warm egg-slicer frame,
   anchored to a stored golden-path sample. The hidden proof still runs all the way to the next
-  trampoline, but the live aim guide and dev red proof stop at the slicer so the player must
+  cloud, but the live aim guide and dev red proof stop at the slicer so the player must
   route the remaining cut after passing through it. Touching a slicer splits Blobby into three
   to five visible goo fragments that follow certified post-cut lanes. One survivor lane is
-  guaranteed to stay inside the next trampoline footprint, and the main body inherits that
+  guaranteed to stay inside the next cloud footprint, and the main body inherits that
   survivor exit velocity so the cut behaves like a route mechanic instead of pure decoration.
 - The generator only emits a gate when the source/target pair already has a valid proof; the
   metadata stores the source pad, target pad, proof sample index, live radius, and gate-specific
@@ -128,20 +134,20 @@ under the altimeter so the player can read the current cadence and distance to t
 transition. Guidance stays visible across tiers: expert modes tighten charge, angle,
 footprint, and gate timing instead of hiding the route instrument. The Easy opener is seeded
 and proof-gated rather than fixed, but the opening guide forces readable same-side stepping
-pads, forgiving footprints, visible lateral separation, compact vertical spacing, and early
+clouds, forgiving footprints, visible lateral separation, compact vertical spacing, and early
 canted/wobbler route mechanics so the player is not asked to solve a tool-assisted
 flat-to-flat stack. Sliders are withheld during the Easy profile and unlock once the
-effective route difficulty has progressed beyond Easy. Pads still shrink with altitude
+effective route difficulty has progressed beyond Easy. Clouds still shrink with altitude
 (difficulty curve), while each effective difficulty profile sets its own lip-clearance,
 landing-precision, cant-angle, footprint scale, shape variety, proof-variant count,
 turn-angle budget, compressed-arc rules, and expert route-gate cadence.
 
-Visually, trampolines are not platform slabs: each pad renders as a round raised frame with
-radial laces and a suspended jelly membrane. Impacts depress and tilt only the membrane, so
-the bounce surface reads as elastic trampoline material rather than a moving block. The low
-biome uses cheerful blue daylight, honey sunlight, and peach fog behind mango, berry, gold,
-and cocoa foreground objects for clear foreground/background separation without returning to
-the old neon-cyberpunk look or collapsing into orange-on-orange.
+Visually, cloud pads are blobs in a different blob: lumpy warm puffs shaded with the same wet
+goo material language as Blobby, not square platforms or rubber hoops. Impacts compress the
+cloud, catch splats stain the puff, and each type gets a silhouette cue from its cloud behavior.
+The low biome uses cheerful blue daylight, honey sunlight, and peach fog behind mango, berry,
+gold, and cocoa foreground objects for clear foreground/background separation without returning
+to the old neon-cyberpunk look or collapsing into orange-on-orange.
 
 ## Blob expression (the eyes)
 
@@ -151,7 +157,7 @@ motion and launch charge:
 | State | Trigger |
 |-------|---------|
 | idle / blink | resting / periodic; first-pad waiting still counts as visual idle time |
-| impatient burble | lingering on a pad without aiming; goo lobes perk/twitch and face opens |
+| impatient burble | lingering in a cloud without aiming; goo lobes perk/twitch and face opens |
 | charge anticipation | route charge held; eyes widen/dart, mouth opens |
 | aim bead | charged route launch; goo body forms a leading lobe toward the launch vector |
 | squint | hard impact (landing) |
@@ -177,8 +183,9 @@ first launch, but every grounded launch belongs to a player hold-release.
 Launch power (`src/sim/launch`): `dir × (BASE_POWER 14 + charge × 17.5) × rebound(type)
 × comboMultiplier`. Combo multiplier: `1 + (streak−1) × 0.15`, streak capped at 8.
 
-Trampoline spring (`src/sim/trampoline`): depress + tilt via the `-k·x − c·v` damped
-spring (stiffness 170 / damping 26 for depress; 150 / 22 for tilt), springing back.
+Cloud catch spring (`src/sim/trampoline`, compatibility name): depress + tilt via the
+`-k·x − c·v` damped spring (stiffness 170 / damping 26 for depress; 150 / 22 for tilt),
+springing back.
 
 ## Determinism
 

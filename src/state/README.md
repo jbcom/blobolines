@@ -8,10 +8,10 @@ the 60fps render/physics loop talk to React without re-rendering every frame.
 | File | Owns |
 |------|------|
 | `store.ts` | `useGameStore` (zustand) — phase (menu/playing/gameover), settings, progress (best height, crystals, unlocked skins), and the live `run` (height/crystals/combo). The UI subscribes here. |
-| `worldStore.ts` | `useWorldStore` — the generated tower (trampolines/crystals/powerups) and `ensureHeight` to extend it as the blob climbs. Pads carry a stable `id`. |
+| `worldStore.ts` | `useWorldStore` — the generated tower (cloud pads/crystals/powerups) and `ensureHeight` to extend it as the blob climbs. Pads carry a stable `id`. |
 | `persistence.ts` | Capacitor **Preferences** read/write of progress + settings (`hydrateStore`, `attachPersistence`). Not localStorage. |
 | `diagnostics.ts` | `getBlobDiagnostics` / `setBlobDiagnostics` — a plain mutable object the physics loop writes each frame and the visual components read, so the blob's position/velocity/expression never flow through React state. |
-| `launchBridge.ts` | `requestLaunch`/`consumeLaunch`, `setAirSteer`/`getAirSteer`, `reportImpact`/`consumeImpact`, `reportRebound`/`consumeRebound` — one-shot mailboxes between input/trampolines and the blob's frame loop. |
+| `launchBridge.ts` | `requestLaunch`/`consumeLaunch`, `setAirSteer`/`getAirSteer`, `reportImpact`/`consumeImpact`, `reportCloudAdherence`/`consumeCloudAdherence`, `reportRebound`/`consumeRebound` — one-shot mailboxes between input/cloud pads and the blob's frame loop. |
 | `powerupBridge.ts` | `activatePowerup`/`tickPowerups`/`isPowerupActive`/`resetPowerups` — power-up timers ticked at frame cadence, off the React tree. |
 
 ## The bridge pattern (why it exists)

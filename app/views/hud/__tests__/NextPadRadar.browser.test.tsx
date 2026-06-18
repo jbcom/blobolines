@@ -102,7 +102,7 @@ test("NextPadRadar renders live direction, vertical gap, and horizontal distance
       expect(radar.element().textContent).toContain("forward right");
       expect(radar.element().textContent).toContain("+7m");
       expect(radar.element().textContent).toContain("5m");
-      expect(radar.element().getAttribute("aria-label")).toContain("Next trampoline forward right");
+      expect(radar.element().getAttribute("aria-label")).toContain("Next cloud forward right");
     },
     { timeout: 2000, interval: 40 },
   );
@@ -118,7 +118,7 @@ test("NextPadRadar hides when no pad is above the progression floor", async () =
   await vi.waitFor(
     () => {
       expect(radar.element().style.opacity).toBe("0");
-      expect(radar.element().getAttribute("aria-label")).toBe("No next trampoline target");
+      expect(radar.element().getAttribute("aria-label")).toBe("No next cloud target");
     },
     { timeout: 2000, interval: 40 },
   );

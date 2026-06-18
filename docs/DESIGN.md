@@ -9,7 +9,7 @@ domain: creative
 
 The visual identity is grounded in the hero cover art
 (`public/assets/images/hero-cover.png`): squishy gel blobs with big expressive eyes,
-round springy colored trampolines, a dreamy painterly cloud-and-ruins sky. Soft, juicy,
+soft lumpy cloud pads, a dreamy painterly cloud-and-ruins sky. Soft, juicy,
 gooey — **not** neon-cyberpunk (the early prototype's look was deliberately dropped).
 
 ## Tokens
@@ -22,7 +22,7 @@ The single source of truth is `src/styles/tokens.css` (CSS vars) mirrored by
 ### Palette
 
 - **Blobs (skins):** Mango `#ff7a3d` (starter), Berry `#ff4f7b`, Honey `#ffd95a`, Cocoa `#5a2418`
-- **Trampolines:** coral `#ff6f61`, gold `#f2c14e`, orange `#f08a3c`, marigold `#f7a72e`, berry `#ff5ab3`, honey `#ffe7a3`
+- **Cloud pads:** warm puff `#fff7d6`, honey `#ffe6a3`, blush `#ffb6a3`, gold `#ffd66b`, storm mauve `#9a6a8f`, wet white `#ffffff`
 - **Sky/atmosphere:** cloud light `#eefaff`, cheerful blue `#8fd7ff`, daylight depth `#42a8f5`; honey sun `#ffd36b`; cream light `#f3efd6`
 - **Goo:** mango splash `#ff7a3d`, warm fresnel rim `#ffe3a6`, wet sheen `#ffffff`, combo flame `#ffb238`
 - **Eyes:** sclera `#f8fbff`, bezel `#14110f`, pupil `#0a0a0c`, glint `#ffffff`, warm tear `#ffd0a6`

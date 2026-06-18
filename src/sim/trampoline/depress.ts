@@ -3,9 +3,9 @@ import { type SpringState, stepSpring } from "@/core/math";
 import type { TrampType } from "@/core/types";
 
 /**
- * Trampoline depression + tilt model (pure). On impact the pad pushes DOWN (depress)
+ * Cloud catch depression + tilt model (pure). On impact the cloud squashes DOWN (depress)
  * and tilts toward the hit point, then springs back using the `-k·x - c·v` spring that
- * drives the game feel. Drives both the visual mesh and the launch boost. Type behaviors differ:
+ * drives the game feel. Drives both the visual cloud and the launch boost. Type behaviors differ:
  *   standard — reliable bounce
  *   booster  — extra rebound (1.8×)
  *   moving   — slides sideways (handled in the entity system, not here)
@@ -26,7 +26,7 @@ export function createTrampState(): TrampState {
   };
 }
 
-// Spring + rebound tuning is data-driven from src/config/trampoline.json.
+// Spring + rebound tuning is data-driven from src/config/trampoline.json (compat name).
 const DEPRESS_SPRING = trampCfg.depressSpring;
 const TILT_SPRING = trampCfg.tiltSpring;
 
@@ -59,8 +59,8 @@ export function impactTargets(
 }
 
 /**
- * Advance the trampoline springs one step toward the given targets. Returns the new
- * state; the caller applies it to the mesh (y offset + rotation).
+ * Advance the cloud-catch springs one step toward the given targets. Returns the new
+ * state; the caller applies it to the cloud body (y offset + rotation).
  */
 export function stepTramp(
   state: TrampState,

@@ -32,6 +32,7 @@ import {
 import { goldenPathLandingBonus, goldenPathLandingQuality } from "@/sim/score";
 import {
   consumeBounceCharge,
+  consumeCloudAdherence,
   consumeImpact,
   consumeLanding,
   consumeLaunch,
@@ -168,9 +169,9 @@ export function PlayerBlob() {
     // slow-mo time dilation so the gameplay force integrations slow in lockstep with the world.
     const realDt = Math.min(rawDt, 0.1);
     const dt = realDt * timeScale();
-    const p = body.translation();
-    const v = body.linvel();
-    const airborne = Math.abs(v.y) > 0.5;
+    let p = body.translation();
+    let v = body.linvel();
+    let airborne = Math.abs(v.y) > 0.5;
 
     // Power-up timers tick down; the hyper-thrust holds a strong upward velocity while
     // active (smashing the blob skyward), overriding gravity for its duration. A power-down
@@ -240,9 +241,38 @@ export function PlayerBlob() {
       }
     }
 
-    // Trampoline rebound: landing on a pad pops the blob back up (the springy core
-    // of "trampolines") and builds the clean-bounce combo. A charged hold-release adds
-    // extra power on top via consumeLaunch below.
+    const adherence = consumeCloudAdherence();
+    if (adherence) {
+      body.wakeUp();
+      const live = body.linvel();
+      const pos = body.translation();
+      const k = Math.min(0.55, 0.18 + adherence.strength * 0.34);
+      const settleY = pos.y + (adherence.settleY - pos.y) * k;
+      body.setTranslation(
+        {
+          x: pos.x + (adherence.position[0] - pos.x) * 0.018 * adherence.strength,
+          y: settleY,
+          z: pos.z + (adherence.position[2] - pos.z) * 0.018 * adherence.strength,
+        },
+        true,
+      );
+      body.setLinvel(
+        {
+          x: live.x * (1 - 0.34 * adherence.strength),
+          y: live.y > 1.5 ? live.y : live.y * (1 - 0.82 * adherence.strength),
+          z: live.z * (1 - 0.34 * adherence.strength),
+        },
+        true,
+      );
+      impact.current = Math.max(impact.current, 0.08 * adherence.strength);
+      excitement.current = Math.max(excitement.current, 0.2 * adherence.strength);
+      p = body.translation();
+      v = body.linvel();
+      airborne = Math.abs(v.y) > 0.5;
+    }
+
+    // Cloud-pad rebound: a strong cloud catch pops Blobby back up; a soft catch is handled by
+    // cloud adherence above, leaving him nestled in the cloud until the player charges launch.
     const bounce = consumeRebound();
     if (bounce) {
       body.wakeUp();

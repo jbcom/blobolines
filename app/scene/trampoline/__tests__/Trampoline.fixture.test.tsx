@@ -4,11 +4,10 @@ import { expect, test, vi } from "vitest";
 import { render } from "vitest-browser-react";
 import { Trampoline } from "../Trampoline";
 
-// Visual fixture: a trampoline (springy pad + glossy membrane + goo-splat decal plane)
-// renders painted pixels in a real WebGL context. Regression guard that the decal mesh +
-// CanvasTexture material compile and the pad draws (it needs a <Physics> provider for its
-// Rapier body, like the in-game scene).
-test("Trampoline renders the pad with its splat-decal surface", async () => {
+// Visual fixture: a cloud pad (lumpy goo-cloud body + splat decal plane) renders painted pixels
+// in a real WebGL context. Regression guard that the GooMaterial cloud body and CanvasTexture
+// decal compile and draw.
+test("Trampoline compatibility component renders a cloud pad with its splat surface", async () => {
   const screen = await render(
     <FixtureStage testId="tramp-fixture" cameraDistance={10}>
       <Physics paused gravity={[0, -22, 0]}>
@@ -32,8 +31,8 @@ test("Trampoline renders the pad with its splat-decal surface", async () => {
   );
 });
 
-// A canted pad (tilted membrane that redirects the bounce laterally) compiles + draws.
-test("canted Trampoline renders its tilted pad", async () => {
+// A canted cloud (angled route cue that redirects the catch laterally) compiles + draws.
+test("canted Trampoline compatibility component renders its angled cloud", async () => {
   const screen = await render(
     <FixtureStage testId="canted-fixture" cameraDistance={10}>
       <Physics paused gravity={[0, -22, 0]}>

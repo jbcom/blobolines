@@ -19,6 +19,13 @@
   --tramp-violet: #ff5ab3;
   --tramp-ice: #ffe7a3;
 
+  --cloud-puff: #fff7d6;
+  --cloud-warm: #ffe6a3;
+  --cloud-blush: #ffb6a3;
+  --cloud-gold: #ffd66b;
+  --cloud-storm: #9a6a8f;
+  --cloud-glow: #ffffff;
+
   /* ---- Atmosphere: painterly sky/background ---- */
   --sky-top: #eefaff; /* bright cloud light */
   --sky-mid: #8fd7ff; /* cheerful blue playfield backdrop */
