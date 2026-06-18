@@ -279,7 +279,7 @@ export function Trampoline({
     });
 
     if (!hit) {
-      if (diag.velocity[1] > 0.2) caught.current = false;
+      caught.current = false;
       return;
     }
 
