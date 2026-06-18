@@ -7,7 +7,7 @@ import { ADDITION, Brush, Evaluator } from "three-bvh-csg";
 import type { BlobSkin, EyeExpression } from "@/core/types";
 import { bodyLobes } from "@/render/goo";
 import { GooMaterial } from "@/render/materials";
-import { combineScale, impactSquash, speedStretch } from "@/sim/blob";
+import { combineScale, heroIdleBurble, impactSquash, speedStretch } from "@/sim/blob";
 import { getBlobDiagnostics } from "@/state";
 import { palette } from "@/styles/tokens";
 import { BlobEyes } from "./BlobEyes";
@@ -40,6 +40,10 @@ interface BlobActorProps {
 }
 
 const HERO_CSG_REBUILD_DT = 1 / 18;
+
+function idleBurbleAmount(velocity: readonly [number, number, number], impact: number): number {
+  return Math.max(0, 1 - Math.hypot(...velocity) / 10) * (1 - Math.min(1, impact));
+}
 
 function HeroGooBody({
   material,
@@ -105,8 +109,10 @@ function HeroGooBody({
       return out;
     };
 
-    const idleSeconds = time + 2.8;
-    const excitement = 0.28 + Math.sin(time * 1.35) * 0.12 + impact * 0.45;
+    const idle = heroIdleBurble(time, idleBurbleAmount(velocity, impact));
+    const idleSeconds = idle.idleSeconds;
+    const excitement =
+      Math.max(idle.excitement, 0.28 + Math.sin(time * 1.35) * 0.12) + impact * 0.45;
     const lobes = bodyLobes({
       time,
       settled: 1,
@@ -180,11 +186,21 @@ export function BlobActor({
     const stretch = speedStretch(vel[0], vel[1], vel[2]);
     const squash = impactSquash(imp);
     const s = combineScale(stretch, squash);
+    const idleAmount = live ? 0 : idleBurbleAmount(velocity, impact);
+    const idle = heroIdleBurble(state.clock.elapsedTime, idleAmount);
+    const target = live
+      ? s
+      : {
+          x: s.x * idle.scale.x,
+          y: s.y * idle.scale.y,
+          z: s.z * idle.scale.z,
+        };
     // Smooth toward the target deformation so it springs rather than snaps.
     const k = 1 - Math.exp(-dt / 0.06);
-    g.scale.x += (s.x - g.scale.x) * k;
-    g.scale.y += (s.y - g.scale.y) * k;
-    g.scale.z += (s.z - g.scale.z) * k;
+    g.scale.x += (target.x - g.scale.x) * k;
+    g.scale.y += (target.y - g.scale.y) * k;
+    g.scale.z += (target.z - g.scale.z) * k;
+    g.position.y += ((live ? 0 : idle.offsetY) - g.position.y) * k;
 
     // Surface-tension wobble: a fresh impact pumps the envelope up (toward the impact
     // amount), then it decays so the goo skin ripples and settles like a water balloon. A small
@@ -201,8 +217,8 @@ export function BlobActor({
     // them here (this BlobActor instance is the menu hero; guarding keeps the contract clean).
     if (!live) {
       const t = state.clock.elapsedTime;
-      material.uniforms.uSag.value = 0.16;
-      material.uniforms.uLobe.value = 0.14 + 0.05 * Math.sin(t * 0.7);
+      material.uniforms.uSag.value = idle.sag;
+      material.uniforms.uLobe.value = idle.lobe + 0.04 * Math.sin(t * 0.7);
       (material.uniforms.uLobeDir.value as Vector3).set(
         Math.cos(t * 0.5),
         Math.sin(t * 0.31) * 0.4,

@@ -4,6 +4,7 @@ import {
   combineScale,
   eyeShape,
   faceFocusDartFromNdc,
+  heroIdleBurble,
   impactSquash,
   mouthShape,
   speedStretch,
@@ -189,5 +190,26 @@ describe("stepIdlePatience", () => {
         aiming: true,
       }),
     ).toEqual({ idleSeconds: 0 });
+  });
+});
+
+describe("heroIdleBurble", () => {
+  it("cycles the menu hero from a flat puddle into a perky blob", () => {
+    const flat = heroIdleBurble(0);
+    const perky = heroIdleBurble(1.45);
+
+    expect(flat.scale.y).toBeLessThan(0.9);
+    expect(flat.scale.x).toBeGreaterThan(1.15);
+    expect(perky.scale.y).toBeGreaterThan(1.25);
+    expect(perky.scale.x).toBeLessThan(flat.scale.x);
+    expect(perky.offsetY).toBeGreaterThan(flat.offsetY);
+  });
+
+  it("scales to zero for fixtures that need a neutral pose", () => {
+    const neutral = heroIdleBurble(1.45, 0);
+
+    expect(neutral.scale).toEqual({ x: 1, y: 1, z: 1 });
+    expect(neutral.offsetY).toBe(0);
+    expect(neutral.excitement).toBe(0);
   });
 });
