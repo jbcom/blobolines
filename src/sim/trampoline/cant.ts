@@ -2,9 +2,9 @@ import { trampoline as trampCfg } from "@/config";
 import type { Vec3 } from "@/core/types";
 
 /**
- * Canted-pad geometry (pure). A canted trampoline tilts toward a lateral `cant` direction
- * [x,z], so its surface normal leans off straight-up — the bounce launches along that
- * normal and the blob is thrown sideways-and-up toward the next pad (the navigability
+ * Canted-cloud geometry (pure). A canted cloud catch tilts toward a lateral `cant` direction
+ * [x,z], so its launch normal leans off straight-up — the rebound launches along that
+ * normal and the blob is thrown sideways-and-up toward the next cloud (the navigability
  * building block; the world generator aims `cant` at the intended next pad).
  */
 

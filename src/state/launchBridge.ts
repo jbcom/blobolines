@@ -216,6 +216,32 @@ export function consumeLanding(): LandingEvent | null {
   return event;
 }
 
+/** A soft cloud-pad adherence request. Unlike the old solid platform collider, cloud pads let
+ *  Blobby pass upward through their underside, then apply a gentle settle only after the body is
+ *  descending inside the cloud skin. The blob physics loop consumes this to damp velocity and
+ *  hold Blobby nestled on the cloud without adding a hard floor. */
+export interface CloudAdherenceRequest {
+  padId: number;
+  type: string;
+  position: readonly [number, number, number];
+  settleY: number;
+  relX: number;
+  relZ: number;
+  strength: number;
+}
+
+let cloudAdherence: CloudAdherenceRequest | null = null;
+
+export function reportCloudAdherence(req: CloudAdherenceRequest): void {
+  if (!cloudAdherence || req.strength > cloudAdherence.strength) cloudAdherence = req;
+}
+
+export function consumeCloudAdherence(): CloudAdherenceRequest | null {
+  const req = cloudAdherence;
+  cloudAdherence = null;
+  return req;
+}
+
 /** A pending trampoline rebound: the rebound speed to bounce the blob at, the pad type
  *  (for combo/scoring), and the pad's surface NORMAL — the launch direction. A flat pad's
  *  normal is straight up [0,1,0]; a canted pad's normal tilts, redirecting the bounce
@@ -252,6 +278,7 @@ export function resetBridges(): void {
   blobFaceFocus = null;
   routeGateHit = null;
   splitQueue = [];
+  cloudAdherence = null;
   rebound = null;
   splatQueue = [];
   launchBurstQueue = [];

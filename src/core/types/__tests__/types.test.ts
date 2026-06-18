@@ -82,7 +82,7 @@ describe("domain types", () => {
     expect(snap.expression).toBe("wide");
   });
 
-  it("TrampolineSpec can represent a booster trampoline", () => {
+  it("TrampolineSpec can represent a booster cloud pad", () => {
     const t: TrampolineSpec = {
       id: 5,
       position: [2, 5, 0],

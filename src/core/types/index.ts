@@ -37,7 +37,7 @@ export type PowerUpType = (typeof POWERUP_TYPES)[number];
 export type CrystalTier = "common" | "rare" | "radiant";
 
 /** Route-generation difficulty. Higher difficulties allow more precision flat arcs; lower
- *  difficulties bias the tower toward readable trampoline mechanics. */
+ *  difficulties bias the tower toward larger, slower, readable cloud catches. */
 export type WorldDifficulty =
   | "ready"
   | "medium"
@@ -52,10 +52,10 @@ export interface CrystalSpec {
   tier: CrystalTier;
 }
 
-/** Certified launch route from one trampoline to its successor. The world generator attaches
+/** Certified launch route from one cloud pad to its successor. The world generator attaches
  *  this to the SOURCE pad after proving the shipped launch tuning produces a ballistic arc
- *  that lands inside the successor footprint; the dev harness can visualize it, but live play
- *  does not reveal it as the answer path. */
+ *  that descends inside the successor footprint; the dev harness can visualize it, but live
+ *  play does not reveal it as the answer path. */
 export interface GoldenPathVariant {
   /** Hold-release charge [0,1] that produces this certified variant. */
   launchCharge: number;
@@ -117,7 +117,7 @@ export interface RouteGateSpec {
   fragmentCount?: number;
   /** Slicer-only: lateral spread impulse for the visible split fragments. */
   splitSpread?: number;
-  /** Slicer-only: certified post-cut lanes from the gate to the target trampoline. */
+  /** Slicer-only: certified post-cut lanes from the gate to the target cloud. */
   fragmentLanes?: SlicerFragmentLane[];
 }
 
@@ -203,14 +203,15 @@ export interface GameSettings {
 export interface BlobSnapshot {
   position: Vec3;
   velocity: Vec3;
-  /** 0 = resting on a trampoline, 1 = airborne. */
+  /** 0 = resting in a cloud pad, 1 = airborne. */
   airborne: boolean;
   expression: EyeExpression;
   /** Squash factor along the impact normal, 1 = round. */
   squash: number;
 }
 
-/** Trampoline descriptor used by world-gen and factories. */
+/** Cloud-pad descriptor used by world-gen and factories.
+ *  Kept as TrampolineSpec while older systems migrate off the previous mechanic name. */
 export interface TrampolineSpec {
   /** Stable unique id (the pad's generation Y, which strictly increases up the tower).
    *  Used as the React key so the render window can prune low pads without remounting. */

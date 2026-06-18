@@ -18,7 +18,7 @@ export function windowedPads(pads: readonly TrampolineSpec[], centerY: number): 
 }
 
 /**
- * Renders the generated tower of trampolines from the world store as a BOUNDED sliding
+ * Renders the generated tower of cloud pads from the world store as a BOUNDED sliding
  * window around the blob — pads far below (already fallen past) and far above (not yet
  * reached) are culled so the live pad count stays flat no matter how high you climb.
  * This keeps the per-frame render + Rapier-body + splat-canvas cost constant over a long

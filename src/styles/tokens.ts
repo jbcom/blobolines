@@ -20,6 +20,14 @@ export const palette = {
     violet: "#ff5ab3",
     ice: "#ffe7a3",
   },
+  cloud: {
+    puff: "#fff7d6",
+    warm: "#ffe6a3",
+    blush: "#ffb6a3",
+    gold: "#ffd66b",
+    storm: "#9a6a8f",
+    glow: "#ffffff",
+  },
   sky: {
     // Cheerful daylight: blue enough to separate the playfield from mango/berry foregrounds,
     // warmed by honey sun + peach fog so it never reads sterile.
@@ -79,8 +87,9 @@ export const blobSkinColor: Record<BlobSkin, string> = {
   ink: palette.blob.ink,
 };
 
-/** Trampoline gameplay types → token color. `super` = bonus mega-launch; `ice` = very
- *  bouncy but slippery (breaks the clean-combo). */
+/** Cloud-pad gameplay types. Kept as TrampType for compatibility with older world-store and
+ *  proof code while the product model pivots from rigid trampolines to soft cloud pads.
+ *  `super` = bonus mega-launch; `ice` = slick/high-rebound cloud that breaks clean combo. */
 export type TrampType =
   | "standard"
   | "booster"
@@ -90,6 +99,7 @@ export type TrampType =
   | "ice"
   | "canted"
   | "wobbler";
+export type CloudPadType = TrampType;
 
 export const trampColor: Record<TrampType, string> = {
   standard: palette.tramp.blue,

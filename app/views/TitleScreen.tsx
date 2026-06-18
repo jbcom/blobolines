@@ -22,12 +22,12 @@ const SettingsModal = lazy(() =>
 );
 
 const DIFFICULTY_TONE: Record<WorldDifficulty, string> = {
-  ready: "Easy routes with generous landing lips and forgiving proof variance.",
-  medium: "More canted chains and compressed arcs without precision flat stacks.",
-  hard: "Occasional flat precision arcs with tighter route margins.",
-  blobmare: "Sharper mechanics, slicer gates, and thin landing windows.",
-  ultraBlobmare: "Tool-assisted-feeling routes with very tight proof margins.",
-  oneWrongMove: "Starts at one-path precision and stays there.",
+  ready: "Big soft clouds, slow layers, and three forgiving route variants.",
+  medium: "Drifting clouds and tighter cloud catches without precision stacks.",
+  hard: "Wispy wobblers and faster cloud layers with sharper charge timing.",
+  blobmare: "Storm splitters, thin catch windows, and quick cloud decisions.",
+  ultraBlobmare: "Tiny cloud catches with very tight proof margins.",
+  oneWrongMove: "Ultimate one-path cloud precision from the first launch.",
 };
 
 /**
@@ -114,7 +114,7 @@ export function TitleScreen() {
           Blobolines
         </motion.h1>
         <p className="mt-1 max-w-xs font-ui text-base text-fg-muted">
-          Bounce a gooey blob as high as you can up endless springy trampolines.
+          Launch a gooey blob through endless soft cloud pads.
         </p>
       </div>
 

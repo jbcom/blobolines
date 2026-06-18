@@ -37,14 +37,15 @@ public surface; modules stay small and single-responsibility — no monolithic s
 | `src/config` | ✓ | all tunables as per-domain JSON + typed barrel (physics/blob/launch/trampoline/collect/goo/world/biomes/audio) |
 | `src/sim/physics` | ✓ | Rapier config, collision categories, spring/depress math (pure where possible) |
 | `src/sim/blob` | ✓ | blob state: squash/stretch springs, expression state machine (eyes), velocity model |
-| `src/sim/trampoline` | ✓ | trampoline spring + tilt model, type behaviors (standard/booster/moving/fragile) |
+| `src/sim/cloudPad` | ✓ | pass-through cloud catch/adherence tests and footprint math |
+| `src/sim/trampoline` | ✓ | compatibility package for cloud catch spring + tilt model, type behaviors (standard/booster/moving/fragile) |
 | `src/sim/launch` | ✓ | route charge→velocity, combo/multiplier, 3D air-steer model |
 | `src/world` | ✓ | seeded procedural vertical generator, route difficulty profiles, certified golden-path parabolas |
 | `src/ecs` | ✓ | koota world + traits (Transform/Velocity/Blob/Trampoline/Crystal/PowerUp/Particle); the queryable entity model |
 | `src/engine` | ✓ | fixed-timestep accumulator (`advance`/`createStepLoop`) — deterministic sim stepping |
-| `src/factories` | ✓ | spawn blob (+ future trampoline/crystal/powerup) entities into the ECS world |
+| `src/factories` | ✓ | spawn blob (+ future cloud/crystal/powerup) entities into the ECS world |
 | `src/audio` | ✓ | Howler.js engine playing the itch.io sample library (config/audio.json); music/ambient/sfx channels |
-| `src/render/materials` | ✓ | wet goo material (GooMaterial), eye materials, trampoline material |
+| `src/render/materials` | ✓ | wet goo material (GooMaterial), eye materials, cloud-pad material reuse |
 | `src/render/goo` | ✓ | CSG merge selection (`selectMerges`) and intrinsic body lobes feeding the three-bvh-csg goo union |
 | `src/render/vfx` | ✓ | goo splash/launch/trail droplet kinematics, splat |
 | `src/state` | ✓ | game store (menu/playing/gameover), settings, persistence bridge |
@@ -59,7 +60,7 @@ public surface; modules stay small and single-responsibility — no monolithic s
 |---------|--------|----------------|
 | `app/scene` | ✓ | composes small scene components inside `<Canvas>` |
 | `app/scene/blob` | ✓ | `<PlayerBlob>` (Rapier body + ECS entity), `<GooCsg>` (three-bvh-csg merged goo), `<BlobActor>` (menu hero), `<BlobEyes>`, `<SplatChunks>`, `<TrajectoryPreview>` |
-| `app/scene/trampoline` | ✓ | `<Trampoline>`, `<TrampolineField>` |
+| `app/scene/trampoline` | ✓ | cloud-pad renderer behind compatibility `<Trampoline>`, `<TrampolineField>` imports |
 | `app/scene/world` | ✓ | `<SkyDome>`, `<Lighting>`, `<BiomeProps>`, `<BlobFollowLight>`, `<CrystalField>`, `<PowerUpField>`, `<GoldenRoutePreview>` |
 | `app/scene/postfx` | ✓ | `<PostFX>` (N8AO ambient occlusion, bloom, vignette, speed-reactive chromatic) |
 | `app/views` | ✓ | DOM overlay: `<HudOverlay>`, `<MainMenu>`, `<GameOver>`, modals |
@@ -74,7 +75,7 @@ input (gesture/keyboard) → intents → src/state
               │
    app/hooks/useGameLoop → engine.tick(dt)  (fixed timestep accumulator)
               │                     │
-              │             sim: blob springs, trampoline depress, launch,
+              │             sim: blob springs, cloud catch depress, launch,
               │             world-gen, collision (Rapier), expression FSM
               │                     │
 

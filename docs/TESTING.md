@@ -60,7 +60,7 @@ end to end.
 `e2e/route-proof.spec.ts` is the **"is the dev-only route visibly proven?" gate**:
 it drives the real DEV route-proof sequence, waits for the eight timed JSON+PNG captures,
 asserts the opening Easy proof sequence generated exactly three proof variants per pair,
-proves every landing is inside the target trampoline footprint, and pixel-checks each PNG for
+proves every landing is inside the target cloud footprint, and pixel-checks each PNG for
 the solid red parabola/impact overlay. This keeps the visual proof harness honest without
 showing that answer key during normal play.
 
@@ -72,7 +72,7 @@ gitignored `artifacts/` dir via Vite middleware (`scripts/capturePlugin.ts`). Us
 inspect or screenshot gameplay states without timing anything by hand.
 
 The harness also has **route proof sequence**: it steps through the first consecutive
-trampoline pairs, enables the solid red golden-path parabola for each pair, and writes
+cloud pairs, enables the solid red golden-path parabola for each pair, and writes
 `artifacts/route-proof-XX-*.png` plus matching JSON. Those JSON files include the source
 pad, target pad, source mode, launch normal, samples, flight time, apex, landing, lip
 clearance, landing precision, compressed-arc score, starting difficulty, active difficulty,

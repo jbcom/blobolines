@@ -5,8 +5,8 @@
 <h1 align="center">Blobolines</h1>
 
 <p align="center">
-  Bounce a squishy gel blob up endless gooey trampolines — a World-of-Goo-flavored
-  vertical-launch physics arcade game. Hold to charge springy pads, steer in mid-air,
+  Launch a squishy gel blob through endless soft cloud pads — a World-of-Goo-flavored
+  vertical-launch physics arcade game. Hold to charge cloud catches, steer in mid-air,
   and leave big colorful splats all the way up.
 </p>
 
@@ -19,9 +19,9 @@
 
 ## What it is
 
-A vertical climber built around **gooey, deformable blobs** and **springy
-trampolines**. Hold on Blobby to charge the next springy launch, release to fly, and
-drag in the air to steer in full 3D. Land clean bounces to build a combo, grab
+A vertical climber built around **gooey, deformable blobs** and **soft cloud
+catches**. Hold on Blobby to charge the next launch, release to fly, and
+drag in the air to steer in full 3D. Land clean cloud catches to build a combo, grab
 crystals and power-ups, and climb as high as you can — while your blob squashes,
 stretches, blinks, and splatters along the way.
 

@@ -62,7 +62,7 @@ function meters(n: number): string {
 }
 
 /**
- * Compact spatial-awareness readout for the next trampoline. It reads the per-frame
+ * Compact spatial-awareness readout for the next cloud pad. It reads the per-frame
  * diagnostics bridge and world store from a rAF loop, then writes DOM text/styles
  * imperatively so the radar can update smoothly without React re-rendering every frame.
  */
@@ -89,12 +89,12 @@ export function NextPadRadar() {
       if (root) {
         if (!guidance) {
           root.style.opacity = "0";
-          root.setAttribute("aria-label", "No next trampoline target");
+          root.setAttribute("aria-label", "No next cloud target");
         } else {
           root.style.opacity = "1";
           root.setAttribute(
             "aria-label",
-            `Next trampoline ${guidance.direction}, ${meters(guidance.dy)} vertical, ${Math.round(
+            `Next cloud ${guidance.direction}, ${meters(guidance.dy)} vertical, ${Math.round(
               guidance.horizontal,
             )} meters away`,
           );
@@ -125,7 +125,7 @@ export function NextPadRadar() {
       ref={rootRef}
       data-testid="next-pad-radar"
       role="img"
-      aria-label="Next trampoline target"
+      aria-label="Next cloud target"
       className="pointer-events-none flex min-w-40 items-center gap-3 rounded-xl border border-border bg-surface px-3 py-2 text-cream shadow-[var(--shadow-sm)] backdrop-blur-md transition-opacity duration-150"
       style={{ opacity: 0 }}
     >
@@ -138,7 +138,7 @@ export function NextPadRadar() {
       </span>
       <span className="flex min-w-0 flex-col">
         <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-fg-subtle">
-          Next pad
+          Next cloud
         </span>
         <span className="flex items-baseline gap-2">
           <span ref={directionRef} className="font-display text-base font-bold leading-none" />

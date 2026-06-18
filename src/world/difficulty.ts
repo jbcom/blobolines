@@ -218,7 +218,7 @@ export const ROUTE_PROFILES: Record<WorldDifficulty, RouteDifficultyProfile> = {
   },
   oneWrongMove: {
     difficulty: "oneWrongMove",
-    label: "One Wrong Move",
+    label: "Ultimate Blobmare",
     preferredCharge: 0.955,
     chargeTolerance: 0.055,
     chargeWeight: 0.92,
