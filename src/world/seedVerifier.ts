@@ -1,8 +1,14 @@
 import { createRng, type SeedInput } from "@/core/math";
-import type { GoldenPathProof, TrampolineSpec, WorldDifficulty } from "@/core/types";
-import { effectiveRouteDifficulty, ROUTE_DIFFICULTIES, routeProfile } from "./difficulty";
+import type { GoldenPathProof, RouteGateSpec, TrampolineSpec, WorldDifficulty } from "@/core/types";
+import {
+  difficultyRank,
+  effectiveRouteDifficulty,
+  ROUTE_DIFFICULTIES,
+  routeProfile,
+} from "./difficulty";
 import { generateUpTo, starterPad } from "./generator";
 import { solveGoldenPath } from "./reachable";
+import { phasePortalOpen } from "./routeGate";
 
 export interface SeedRouteVerificationOptions {
   seed: SeedInput;
@@ -32,6 +38,8 @@ export interface SeedRouteVerification {
   requiredProofVariants: number;
   minProofVariants: number;
   maxProofVariants: number;
+  routeGateCount: number;
+  phasePortalCount: number;
   minLateralGap: number;
   minLipClearance: number;
   minLandingPrecision: number;
@@ -83,6 +91,16 @@ function variantLandingMiss(
   );
 }
 
+function gateSampleDelta(gate: RouteGateSpec, proof: GoldenPathProof): number {
+  const sample = proof.samples[gate.sampleIndex];
+  if (!sample) return Number.POSITIVE_INFINITY;
+  return Math.hypot(
+    sample[0] - gate.position[0],
+    sample[1] - gate.position[1],
+    sample[2] - gate.position[2],
+  );
+}
+
 function expectedSourceMode(source: TrampolineSpec): GoldenPathProof["sourceMode"] | null {
   if (source.type === "standard") return "flat";
   if (source.type === "canted") return "canted";
@@ -131,6 +149,8 @@ export function verifySeedRoute({
   let maxProofVariants = 0;
   let minRequiredProofVariants = Number.POSITIVE_INFINITY;
   let maxRequiredProofVariants = 0;
+  let routeGateCount = 0;
+  let phasePortalCount = 0;
 
   for (let i = 0; i < pads.length - 1; i++) {
     const source = pads[i];
@@ -234,6 +254,34 @@ export function verifySeedRoute({
       }
     }
 
+    const gate = proof.routeGate;
+    if (gate) {
+      routeGateCount++;
+      if (gate.kind === "phasePortal") phasePortalCount++;
+      if (difficultyRank(activeProfile.difficulty) < difficultyRank("ultraBlobmare")) {
+        addFailure(failures, i, source, target, "route gate appeared before Ultra Blobmare");
+      }
+      if (gate.sourcePadId !== source.id || gate.targetPadId !== target.id) {
+        addFailure(failures, i, source, target, "route gate points at the wrong pad pair");
+      }
+      if (gate.sampleIndex < 0 || gate.sampleIndex >= proof.samples.length) {
+        addFailure(failures, i, source, target, "route gate sample index is outside the proof");
+      } else if (gateSampleDelta(gate, proof) > EPS) {
+        addFailure(failures, i, source, target, "route gate is not anchored to a proof sample");
+      }
+      if (
+        gate.radius <= 0 ||
+        gate.period <= 0 ||
+        gate.openFraction <= 0 ||
+        gate.openFraction >= 1
+      ) {
+        addFailure(failures, i, source, target, "route gate timing or radius is invalid");
+      }
+      if (!phasePortalOpen(gate, gate.idealReleaseDelay + gate.flightTime)) {
+        addFailure(failures, i, source, target, "route gate has no certified open timing");
+      }
+    }
+
     const replayed = solveGoldenPath(
       source,
       target,
@@ -270,6 +318,8 @@ export function verifySeedRoute({
     requiredProofVariants: maxRequiredProofVariants,
     minProofVariants: Number.isFinite(minProofVariants) ? minProofVariants : 0,
     maxProofVariants,
+    routeGateCount,
+    phasePortalCount,
     minLateralGap: Number.isFinite(minLateralGap) ? minLateralGap : 0,
     minLipClearance: Number.isFinite(minLipClearance) ? minLipClearance : 0,
     minLandingPrecision: Number.isFinite(minLandingPrecision) ? minLandingPrecision : 0,

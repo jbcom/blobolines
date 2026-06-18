@@ -3,6 +3,7 @@ import { createRng } from "@/core/math";
 import { effectiveRouteDifficulty, routeDifficultyProgress, routeProfile } from "../difficulty";
 import { generateUpTo, starterPad } from "../generator";
 import { reaches } from "../reachable";
+import { phasePortalOpen } from "../routeGate";
 import { verifySeedRoute } from "../seedVerifier";
 
 function lateralGap(a: readonly [number, number, number], b: readonly [number, number, number]) {
@@ -192,6 +193,35 @@ describe("world generator", () => {
     }
     // Over a tall tower at least one should appear.
     expect(chunk.powerups.length).toBeGreaterThan(0);
+  });
+
+  it("does not place route gates before Ultra Blobmare", () => {
+    const start = starterPad();
+    const chunk = generateUpTo(createRng("no-early-gates"), 0, 2100, start, "ready");
+    const gates = [start, ...chunk.trampolines].flatMap((pad) =>
+      pad.goldenPath?.routeGate ? [pad.goldenPath.routeGate] : [],
+    );
+
+    expect(gates).toHaveLength(0);
+  });
+
+  it("places phase portals on certified samples in expert route profiles", () => {
+    const start = starterPad();
+    const chunk = generateUpTo(createRng("phase-portal-path"), 0, 220, start, "ultraBlobmare");
+    const pads = [start, ...chunk.trampolines];
+    const gates = pads.flatMap((pad) =>
+      pad.goldenPath?.routeGate ? [pad.goldenPath.routeGate] : [],
+    );
+
+    expect(gates.length).toBeGreaterThan(0);
+    for (const gate of gates) {
+      const source = pads.find((pad) => pad.id === gate.sourcePadId);
+      const proof = source?.goldenPath;
+      expect(gate.kind).toBe("phasePortal");
+      expect(proof?.toPadId).toBe(gate.targetPadId);
+      expect(proof?.samples[gate.sampleIndex]).toEqual(gate.position);
+      expect(phasePortalOpen(gate, gate.idealReleaseDelay + gate.flightTime)).toBe(true);
+    }
   });
 
   it("every generated crystal carries a valid rarity tier + position", () => {

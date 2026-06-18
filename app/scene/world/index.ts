@@ -8,4 +8,5 @@ export { GoldenRoutePreview } from "./GoldenRoutePreview";
 export { LaunchRing } from "./LaunchRing";
 export { Lighting } from "./Lighting";
 export { PowerUpField } from "./PowerUpField";
+export { RouteGateField } from "./RouteGateField";
 export { SkyDome } from "./SkyDome";

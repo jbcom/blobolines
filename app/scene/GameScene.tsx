@@ -24,6 +24,7 @@ import {
   LaunchRing,
   Lighting,
   PowerUpField,
+  RouteGateField,
   SkyDome,
 } from "./world";
 
@@ -72,6 +73,7 @@ export function GameScene() {
       {playing && <BlobCaustic skin={skin} />}
       {playing && <CrystalField />}
       {playing && <PowerUpField />}
+      {playing && <RouteGateField />}
       {playing && <LaunchRing />}
       {playing && <BlobTrail skin={skin} />}
       {playing && <TrajectoryPreview />}

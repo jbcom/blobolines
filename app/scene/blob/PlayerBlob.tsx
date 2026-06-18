@@ -37,6 +37,7 @@ import {
   consumeLaunch,
   consumeMidAirBounce,
   consumeRebound,
+  consumeRouteGateHit,
   consumeShield,
   flash,
   getAim,
@@ -191,6 +192,27 @@ export function PlayerBlob() {
       reportLaunchBurst({ position: [p.x, p.y - BLOB.radius, p.z], charge: 0.6, kind: "launch" });
       flash("blue", 0.6);
       playLaunch(0.6);
+    }
+
+    const gateHit = consumeRouteGateHit();
+    if (gateHit) {
+      playerControlStarted.current = true;
+      body.wakeUp();
+      const live = body.linvel();
+      body.setLinvel(
+        {
+          x: -live.x * 0.28,
+          y: Math.min(live.y * 0.25, 3),
+          z: -live.z * 0.28,
+        },
+        true,
+      );
+      impact.current = Math.max(impact.current, 0.7 * gateHit.strength);
+      excitement.current = Math.max(excitement.current, 0.2);
+      flash("red", Math.min(1, gateHit.strength));
+      reportSplat({ position: gateHit.position, strength: Math.min(1, gateHit.strength) });
+      playThump(Math.min(1, gateHit.strength));
+      playSplat();
     }
 
     // Trampoline rebound: landing on a pad pops the blob back up (the springy core

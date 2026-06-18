@@ -27,6 +27,25 @@ export function consumeLaunch(): LaunchRequest | null {
   return r;
 }
 
+export interface RouteGateHitEvent {
+  gateId: string;
+  kind: "phasePortal";
+  position: readonly [number, number, number];
+  strength: number;
+}
+
+let routeGateHit: RouteGateHitEvent | null = null;
+
+export function reportRouteGateHit(event: RouteGateHitEvent): void {
+  routeGateHit = event;
+}
+
+export function consumeRouteGateHit(): RouteGateHitEvent | null {
+  const event = routeGateHit;
+  routeGateHit = null;
+  return event;
+}
+
 /** Live AIM preview while charging the route launch (dir + charge), or null when not aiming.
  *  Read each frame by the in-scene trajectory preview so the player sees where they'll go
  *  BEFORE releasing so targeting feedback is visible while charging. */
@@ -183,6 +202,7 @@ export function consumeRebound(): ReboundRequest | null {
 export function resetBridges(): void {
   pending = null;
   aim = null;
+  routeGateHit = null;
   rebound = null;
   splatQueue = [];
   launchBurstQueue = [];

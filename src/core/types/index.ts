@@ -71,6 +71,37 @@ export interface GoldenPathVariant {
   arcCompression: number;
 }
 
+export type RouteGateKind = "phasePortal";
+
+/** A route obstacle anchored to a certified golden path. Gates are generated from proof
+ *  samples, so seed verification can prove they are placed on the playable route instead of
+ *  floating as decorative hazards. */
+export interface RouteGateSpec {
+  id: string;
+  kind: RouteGateKind;
+  sourcePadId: number;
+  targetPadId: number;
+  routeIndex: number;
+  /** Index into the source proof's world-space sample array. */
+  sampleIndex: number;
+  /** World-space obstacle center. */
+  position: Vec3;
+  /** Horizontal unit vector the vertical gate faces along. */
+  normal: Vec3;
+  /** Contact radius in metres. */
+  radius: number;
+  /** Seconds per open/closed cycle. */
+  period: number;
+  /** 0..1 share of the period where the gate is passable. */
+  openFraction: number;
+  /** Normalized cycle offset. */
+  phaseOffset: number;
+  /** Seconds after launch when the certified path reaches this gate sample. */
+  flightTime: number;
+  /** Deterministic fair-release wait that lands the proof inside an open window. */
+  idealReleaseDelay: number;
+}
+
 export interface GoldenPathProof {
   /** Successor pad id this proof lands on. */
   toPadId: number;
@@ -107,6 +138,8 @@ export interface GoldenPathProof {
   /** Accepted launch-speed variants that still hit the successor impact zone. Includes the
    *  primary golden path as item 0. Easy stores three, Medium two, harder modes one. */
   variants?: GoldenPathVariant[];
+  /** Optional route obstacle placed directly on this certified proof. */
+  routeGate?: RouteGateSpec;
 }
 
 /** Persistent player progress. */
