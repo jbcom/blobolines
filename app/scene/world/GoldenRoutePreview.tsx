@@ -121,7 +121,8 @@ export function GoldenRoutePreview() {
     mesh.visible = true;
     for (let i = 0; i < MAX_FRAGMENT_LANES; i++) {
       const fragment = fragmentRefs.current[i];
-      if (fragment) fragment.visible = Boolean(gate?.fragmentLanes?.[i]);
+      const lane = gate?.fragmentLanes?.[i];
+      if (fragment) fragment.visible = Boolean(lane && lane.samples.length >= MIN_POINTS);
     }
     if (gate) {
       impactNormal.current.set(...gate.normal).normalize();
