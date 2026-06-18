@@ -208,8 +208,15 @@ export function PlayerBlob() {
           count: gateHit.fragmentCount ?? 3,
           spread: gateHit.splitSpread ?? 3,
           strength: gateHit.strength,
+          fragmentLanes: gateHit.fragmentLanes,
         });
-        body.setLinvel({ x: live.x * 0.9, y: live.y * 0.88, z: live.z * 0.9 }, true);
+        const survivor = gateHit.fragmentLanes?.find((lane) => lane.survivor);
+        if (survivor) {
+          const [x, y, z] = survivor.exitVelocity;
+          body.setLinvel({ x, y, z }, true);
+        } else {
+          body.setLinvel({ x: live.x * 0.9, y: live.y * 0.88, z: live.z * 0.9 }, true);
+        }
         impact.current = Math.max(impact.current, 0.38 * gateHit.strength);
         excitement.current = Math.max(excitement.current, 0.65);
         flash("gold", Math.min(1, gateHit.strength));

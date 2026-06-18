@@ -73,6 +73,19 @@ export interface GoldenPathVariant {
 
 export type RouteGateKind = "phasePortal" | "slicer";
 
+/** One certified visual/mechanical lane produced by a slicer cut. The survivor lane is the
+ *  fragment that remains eligible to continue the playable route; other lanes are readable
+ *  split echoes that prove the cut has breadth without becoming impossible. */
+export interface SlicerFragmentLane {
+  index: number;
+  survivor: boolean;
+  samples: Vec3[];
+  landing: Vec3;
+  landingPrecision: number;
+  exitVelocity: Vec3;
+  duration: number;
+}
+
 /** A route obstacle anchored to a certified golden path. Gates are generated from proof
  *  samples, so seed verification can prove they are placed on the playable route instead of
  *  floating as decorative hazards. */
@@ -104,6 +117,8 @@ export interface RouteGateSpec {
   fragmentCount?: number;
   /** Slicer-only: lateral spread impulse for the visible split fragments. */
   splitSpread?: number;
+  /** Slicer-only: certified post-cut lanes from the gate to the target trampoline. */
+  fragmentLanes?: SlicerFragmentLane[];
 }
 
 export interface GoldenPathProof {

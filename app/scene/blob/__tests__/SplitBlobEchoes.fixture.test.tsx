@@ -16,6 +16,34 @@ test("SplitBlobEchoes renders visible split Blobby fragments", async () => {
     count: 5,
     spread: 2.8,
     strength: 0.9,
+    fragmentLanes: [
+      {
+        index: 0,
+        survivor: true,
+        samples: [
+          [0, 0, 0],
+          [0.2, 0.5, 0],
+          [0.4, 1.0, 0],
+        ],
+        landing: [0.4, 1.0, 0],
+        landingPrecision: 1,
+        exitVelocity: [2, 5, 0],
+        duration: 0.8,
+      },
+      {
+        index: 1,
+        survivor: false,
+        samples: [
+          [0, 0, 0],
+          [-0.5, 0.4, 0],
+          [-0.9, 0.8, 0],
+        ],
+        landing: [-0.9, 0.8, 0],
+        landingPrecision: 0.75,
+        exitVelocity: [-3, 4, 0],
+        duration: 0.8,
+      },
+    ],
   });
 
   const screen = await render(

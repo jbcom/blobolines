@@ -2,6 +2,7 @@ import type {
   GoldenPathProof,
   RouteGateKind,
   RouteGateSpec,
+  SlicerFragmentLane,
   TrampolineSpec,
   Vec3,
   WorldDifficulty,
@@ -59,6 +60,74 @@ function gateNormal(source: TrampolineSpec, target: TrampolineSpec): Vec3 {
   const dz = target.position[2] - source.position[2];
   const m = Math.hypot(dx, dz);
   return m < 1e-6 ? [0, 0, 1] : [dx / m, 0, dz / m];
+}
+
+function lateralAxis(normal: Vec3): Vec3 {
+  const x = -normal[2];
+  const z = normal[0];
+  const m = Math.hypot(x, z);
+  return m < 1e-6 ? [1, 0, 0] : [x / m, 0, z / m];
+}
+
+function offsetSample(sample: Vec3, axis: Vec3, offset: number): Vec3 {
+  return [sample[0] + axis[0] * offset, sample[1], sample[2] + axis[2] * offset];
+}
+
+function fragmentOffsetSlot(index: number): number {
+  if (index === 0) return 0;
+  const magnitude = Math.ceil(index / 2);
+  return index % 2 === 1 ? -magnitude : magnitude;
+}
+
+function createSlicerFragmentLanes(
+  proof: GoldenPathProof,
+  target: TrampolineSpec,
+  gateSampleIndex: number,
+  fragmentCount: number,
+  normal: Vec3,
+  spread: number,
+  gateFlightTime: number,
+): SlicerFragmentLane[] {
+  const remainder = proof.samples.slice(gateSampleIndex);
+  if (remainder.length < 2) return [];
+  const axis = lateralAxis(normal);
+  const laneDuration = Math.max(0.1, proof.flightTime - gateFlightTime);
+  const stepTime = proof.flightTime / Math.max(1, proof.samples.length - 1);
+  const halfFoot = Math.max(target.width, target.depth) * 0.5;
+  const lanes: SlicerFragmentLane[] = [];
+
+  for (let index = 0; index < fragmentCount; index++) {
+    const slot = fragmentOffsetSlot(index);
+    const landingOffset = slot === 0 ? 0 : slot * spread * 0.12;
+    const peakOffset = slot === 0 ? 0 : slot * spread * 0.32;
+    const samples = remainder.map((sample, sampleIndex) => {
+      const u = sampleIndex / Math.max(1, remainder.length - 1);
+      const fan = Math.sin(Math.PI * u) * peakOffset + u * landingOffset;
+      return offsetSample(sample, axis, fan);
+    });
+    const landing = samples.at(-1) ?? proof.landing;
+    const miss = Math.hypot(landing[0] - target.position[0], landing[2] - target.position[2]);
+    const landingPrecision = halfFoot > 0 ? clamp(1 - miss / halfFoot, 0, 1) : 1;
+    const next = samples[1] ?? landing;
+    const first = samples[0] ?? proof.samples[gateSampleIndex] ?? proof.landing;
+    const exitVelocity: Vec3 = [
+      (next[0] - first[0]) / Math.max(0.001, stepTime),
+      (next[1] - first[1]) / Math.max(0.001, stepTime),
+      (next[2] - first[2]) / Math.max(0.001, stepTime),
+    ];
+
+    lanes.push({
+      index,
+      survivor: slot === 0,
+      samples,
+      landing,
+      landingPrecision,
+      exitVelocity,
+      duration: laneDuration,
+    });
+  }
+
+  return lanes;
 }
 
 export function routeGatePhase(gate: RouteGateSpec, elapsedSeconds: number): number {
@@ -128,6 +197,19 @@ export function createRouteGateForProof(
     kind === "slicer"
       ? 3 + clamp(Math.floor(hash01(target.id, source.id, routeIndex) * 3), 0, 2)
       : undefined;
+  const normal = gateNormal(source, target);
+  const fragmentLanes =
+    kind === "slicer" && fragmentCount
+      ? createSlicerFragmentLanes(
+          proof,
+          target,
+          sampleIndex,
+          fragmentCount,
+          normal,
+          tuning.splitSpread ?? 0,
+          sampleFlightTime,
+        )
+      : undefined;
 
   return {
     id: `${kind}-${routeIndex}-${source.id.toFixed(3)}-${target.id.toFixed(3)}`,
@@ -137,7 +219,7 @@ export function createRouteGateForProof(
     routeIndex,
     sampleIndex,
     position: sample,
-    normal: gateNormal(source, target),
+    normal,
     radius: tuning.radius,
     period: tuning.period,
     openFraction: tuning.openFraction,
@@ -146,5 +228,6 @@ export function createRouteGateForProof(
     idealReleaseDelay,
     fragmentCount,
     splitSpread: tuning.splitSpread,
+    fragmentLanes,
   };
 }

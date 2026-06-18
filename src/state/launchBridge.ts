@@ -6,7 +6,7 @@
  * through the React tree while keeping UI and physics decoupled.
  */
 
-import type { RouteGateKind } from "@/core/types";
+import type { RouteGateKind, SlicerFragmentLane } from "@/core/types";
 import { clearRouteLandingFeedback } from "./routeFeedbackBridge";
 import { setRouteProofTarget } from "./routeProofBridge";
 
@@ -37,6 +37,7 @@ export interface RouteGateHitEvent {
   strength: number;
   fragmentCount?: number;
   splitSpread?: number;
+  fragmentLanes?: readonly SlicerFragmentLane[];
 }
 
 let routeGateHit: RouteGateHitEvent | null = null;
@@ -58,6 +59,7 @@ export interface BlobSplitEvent {
   count: number;
   spread: number;
   strength: number;
+  fragmentLanes?: readonly SlicerFragmentLane[];
 }
 
 let splitQueue: BlobSplitEvent[] = [];

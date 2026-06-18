@@ -95,6 +95,7 @@ function RouteGate({ gate }: { gate: RouteGateSpec }) {
       strength: 0.9,
       fragmentCount: gate.fragmentCount,
       splitSpread: gate.splitSpread,
+      fragmentLanes: gate.fragmentLanes,
     });
   });
 
