@@ -1,6 +1,6 @@
 import { useFrame } from "@react-three/fiber";
-import { useMemo, useRef } from "react";
-import { AdditiveBlending, DoubleSide, type Group, type Mesh, type MeshBasicMaterial } from "three";
+import { useEffect, useMemo, useRef } from "react";
+import { AdditiveBlending, DoubleSide, type Group, MeshBasicMaterial } from "three";
 import type { RouteGateSpec } from "@/core/types";
 import { BLOB } from "@/sim/physics";
 import { getBlobDiagnostics, reportRouteGateHit, useWorldStore } from "@/state";
@@ -11,9 +11,37 @@ function RouteGate({ gate }: { gate: RouteGateSpec }) {
   const groupRef = useRef<Group>(null);
   const coreMatRef = useRef<MeshBasicMaterial>(null);
   const ringMatRef = useRef<MeshBasicMaterial>(null);
-  const barsRef = useRef<Group>(null);
   const armed = useRef(true);
   const rotationY = Math.atan2(gate.normal[0], gate.normal[2]);
+  const verticalBarMat = useMemo(
+    () =>
+      new MeshBasicMaterial({
+        color: palette.danger,
+        transparent: true,
+        opacity: 0.45,
+        blending: AdditiveBlending,
+        depthWrite: false,
+      }),
+    [],
+  );
+  const horizontalBarMat = useMemo(
+    () =>
+      new MeshBasicMaterial({
+        color: palette.tramp.orange,
+        transparent: true,
+        opacity: 0.4,
+        blending: AdditiveBlending,
+        depthWrite: false,
+      }),
+    [],
+  );
+
+  useEffect(() => {
+    return () => {
+      verticalBarMat.dispose();
+      horizontalBarMat.dispose();
+    };
+  }, [horizontalBarMat, verticalBarMat]);
 
   useFrame((state) => {
     const t = state.clock.elapsedTime;
@@ -37,11 +65,9 @@ function RouteGate({ gate }: { gate: RouteGateSpec }) {
     if (ringMatRef.current) {
       ringMatRef.current.opacity = open ? 0.55 + openPulse * 0.3 : 0.72 + closedPulse * 0.18;
     }
-    barsRef.current?.traverse((child) => {
-      const mesh = child as Mesh;
-      const mat = mesh.material as MeshBasicMaterial | undefined;
-      if (mat) mat.opacity = open ? 0.05 : 0.34 + closedPulse * 0.42;
-    });
+    const barOpacity = open ? 0.05 : 0.34 + closedPulse * 0.42;
+    verticalBarMat.opacity = barOpacity;
+    horizontalBarMat.opacity = barOpacity;
 
     const blob = getBlobDiagnostics();
     const dx = blob.position[0] - gate.position[0];
@@ -49,8 +75,12 @@ function RouteGate({ gate }: { gate: RouteGateSpec }) {
     const dz = blob.position[2] - gate.position[2];
     const d2 = dx * dx + dy * dy + dz * dz;
     const hitRadius = gate.radius + BLOB.radius * 0.55;
-    if (d2 > hitRadius * hitRadius * 2.4 || open || !blob.airborne) {
+    if (d2 > hitRadius * hitRadius * 2.4 || !blob.airborne) {
       armed.current = true;
+      return;
+    }
+    if (open) {
+      if (d2 <= hitRadius * hitRadius) armed.current = false;
       return;
     }
     if (!armed.current || d2 > hitRadius * hitRadius) return;
@@ -94,17 +124,14 @@ function RouteGate({ gate }: { gate: RouteGateSpec }) {
           depthWrite={false}
         />
       </mesh>
-      <group ref={barsRef}>
+      <group>
         {barOffsets.map((offset) => (
-          <mesh key={`v-${offset}`} position={[offset * gate.radius, 0, 0.045]}>
+          <mesh
+            key={`v-${offset}`}
+            position={[offset * gate.radius, 0, 0.045]}
+            material={verticalBarMat}
+          >
             <boxGeometry args={[0.055, gate.radius * 1.55, 0.05]} />
-            <meshBasicMaterial
-              color={palette.danger}
-              transparent
-              opacity={0.45}
-              blending={AdditiveBlending}
-              depthWrite={false}
-            />
           </mesh>
         ))}
         {barOffsets.slice(0, 2).map((offset) => (
@@ -112,15 +139,9 @@ function RouteGate({ gate }: { gate: RouteGateSpec }) {
             key={`h-${offset}`}
             position={[0, offset * gate.radius * 0.68, 0.05]}
             rotation={[0, 0, Math.PI / 2]}
+            material={horizontalBarMat}
           >
             <boxGeometry args={[0.05, gate.radius * 1.45, 0.05]} />
-            <meshBasicMaterial
-              color={palette.tramp.orange}
-              transparent
-              opacity={0.4}
-              blending={AdditiveBlending}
-              depthWrite={false}
-            />
           </mesh>
         ))}
       </group>

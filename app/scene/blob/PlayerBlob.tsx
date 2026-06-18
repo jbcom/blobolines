@@ -202,7 +202,7 @@ export function PlayerBlob() {
       body.setLinvel(
         {
           x: -live.x * 0.28,
-          y: Math.min(live.y * 0.25, 3),
+          y: Math.min(live.y * 0.25, 0),
           z: -live.z * 0.28,
         },
         true,

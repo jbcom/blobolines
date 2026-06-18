@@ -14,7 +14,7 @@ function clamp(n: number, min: number, max: number): number {
 }
 
 function wrap01(n: number): number {
-  return ((n % 1) + 1) % 1;
+  return n - Math.floor(n);
 }
 
 function hash01(a: number, b: number, c: number): number {
@@ -77,6 +77,8 @@ export function createRouteGateForProof(
   if (!shouldGenerateRouteGate(source, profile)) return null;
   const tuning = gateTuning(profile.difficulty);
   if (!tuning || proof.samples.length <= MIN_GATE_SAMPLE_INDEX + 2) return null;
+  const sampleDivisor = proof.samples.length - 1;
+  if (sampleDivisor <= 0) return null;
 
   const routeIndex = source.routeIndex ?? 0;
   const travelFraction = 0.44 + hash01(source.id, target.id, routeIndex) * 0.18;
@@ -88,7 +90,7 @@ export function createRouteGateForProof(
   const sample = proof.samples[sampleIndex];
   if (!sample) return null;
 
-  const sampleFlightTime = proof.flightTime * (sampleIndex / (proof.samples.length - 1));
+  const sampleFlightTime = proof.flightTime * (sampleIndex / sampleDivisor);
   const idealReleaseDelay =
     profile.difficulty === "oneWrongMove"
       ? 0.12 + hash01(target.id, source.id, routeIndex) * 0.28

@@ -119,3 +119,33 @@ test("RouteGateField reports a hit when the blob enters a closed portal", async 
     { timeout: 6000, interval: 60 },
   );
 });
+
+test("RouteGateField does not report a hit when an open portal closes around the blob", async () => {
+  const gate = {
+    ...fixtureGate(),
+    id: "open-then-closed-gate",
+    period: 1,
+    openFraction: 0.7,
+    phaseOffset: 0,
+  };
+  useWorldStore.setState({ trampolines: [padWithGate(gate)] });
+  setBlobDiagnostics({
+    position: gate.position,
+    velocity: [0, 0, 0],
+    speed: 0,
+    airborne: true,
+    expression: "idle",
+    squash: 1,
+    maxHeight: 0,
+    groundY: 0,
+  });
+
+  await render(
+    <FixtureStage testId="route-gate-open-fixture" cameraDistance={5}>
+      <RouteGateField />
+    </FixtureStage>,
+  );
+
+  await new Promise((r) => setTimeout(r, 950));
+  expect(consumeRouteGateHit()).toBeNull();
+});
