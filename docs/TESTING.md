@@ -29,6 +29,8 @@ Render regressions that only a real GPU context catches:
   the charged aim-direction bead
 - `app/scene/world/__tests__/GoldenRoutePreview.fixture.test.tsx` — solid red route-proof
   parabola renders from stored golden-path samples for the dev harness
+- `app/scene/world/__tests__/RouteGateField.fixture.test.tsx` — proof-anchored phase
+  portals render in WebGL and closed portals report a gameplay hit
 - `app/views/hud/__tests__/LaunchInput.browser.test.tsx` — launch surface, keyboard
   steering, and air-steer reticle behavior
 - `app/views/hud/__tests__/NextPadRadar.browser.test.tsx` — next-target direction,
@@ -74,7 +76,8 @@ next transition, exact active proof variant count, and the visible seed phrase n
 replay the tower. The CLI seed verifier reports the same upper/lower contract as
 `actual-min-actual-max/required-min-required-max`; for example a short Easy opening can
 report `3-3/3-3`, while a longer Easy-starting route that has progressed into Medium can
-report `2-3/2-3`.
+report `2-3/2-3`. It also reports route-gate counts and fails any phase portal that is not
+anchored to a proof sample or cannot be crossed during a deterministic open timing.
 
 ## Coverage gates
 

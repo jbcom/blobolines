@@ -25,6 +25,7 @@ import {
   solveFlatLaunchProofs,
   solveGoldenPath,
 } from "./reachable";
+import { createRouteGateForProof } from "./routeGate";
 
 export interface PowerUpSpec {
   position: Vec3;
@@ -525,8 +526,9 @@ function ensureReachable(
   rng: Rng,
 ): TrampolineSpec {
   const [px, , pz] = prev.position;
-  const attachProof = (proof: GoldenPathProof) => {
-    prev.goldenPath = proof;
+  const attachProof = (proof: GoldenPathProof, target: TrampolineSpec) => {
+    const routeGate = createRouteGateForProof(prev, target, proof, profile);
+    prev.goldenPath = routeGate ? { ...proof, routeGate } : proof;
   };
   const sourceCandidates =
     (prev.routeIndex ?? -1) === 0
@@ -579,7 +581,7 @@ function ensureReachable(
 
   const initial = proveAt(pad);
   if (initial) {
-    attachProof(initial);
+    attachProof(initial, pad);
     return pad;
   }
 
@@ -605,7 +607,7 @@ function ensureReachable(
     );
     const proof = proveAt(result);
     if (proof) {
-      attachProof(proof);
+      attachProof(proof, result);
       return result;
     }
   }
@@ -631,7 +633,7 @@ function ensureReachable(
     );
     const proof = proveAt(result);
     if (proof) {
-      attachProof(proof);
+      attachProof(proof, result);
       return result;
     }
   }
@@ -647,7 +649,7 @@ function ensureReachable(
     );
     const proof = proveAt(result);
     if (proof) {
-      attachProof(proof);
+      attachProof(proof, result);
       return result;
     }
   }
@@ -734,7 +736,7 @@ function ensureReachable(
       `Unable to certify golden path ${prev.type}->${result.type} from y=${prev.position[1].toFixed(2)} to y=${result.position[1].toFixed(2)} gap=${finalGap.toFixed(2)} footprint=${Math.max(result.width, result.depth).toFixed(2)} route=${prev.routeIndex ?? "?"} angle=${prev.cantAngleRad?.toFixed(2) ?? "flat"}`,
     );
   }
-  attachProof(proof);
+  attachProof(proof, result);
   return result;
 }
 
