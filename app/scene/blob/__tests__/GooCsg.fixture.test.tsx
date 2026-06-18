@@ -178,6 +178,53 @@ test("GooCsg renders a settled, sagging+lobed goo puddle at rest", async () => {
   );
 });
 
+// Cloud catch is its own visual state: Blobby should coat/sink into the puff instead of reading
+// as an ordinary idle ball. This fixture keeps the cloud-adherence diagnostics wired through
+// the full CSG + goo-material path.
+test("GooCsg renders a cloud-clinging coated puddle", async () => {
+  setBlobDiagnostics({
+    position: [0, 0, 0],
+    velocity: [0, -0.35, 0],
+    speed: 0.35,
+    airborne: false,
+    expression: "idle",
+    squash: 1,
+    maxHeight: 0,
+    groundY: 0,
+    idleSeconds: 0,
+    excitement: 0.25,
+    cloudAdherence: {
+      padId: 7,
+      type: "standard",
+      position: [0, -0.35, 0],
+      relX: 0.24,
+      relZ: -0.16,
+      strength: 0.92,
+    },
+  });
+
+  const screen = await render(
+    <FixtureStage testId="goocsg-cloud-cling-fixture" cameraDistance={5}>
+      <ambientLight intensity={1} />
+      <GooCsg skin="slime" blobRadius={0.85} getDroplets={() => []} />
+    </FixtureStage>,
+  );
+
+  await expect.element(screen.getByTestId("goocsg-cloud-cling-fixture")).toBeInTheDocument();
+  await new Promise((r) => setTimeout(r, 220));
+
+  await vi.waitFor(
+    () => {
+      const canvas = document
+        .querySelector('[data-testid="goocsg-cloud-cling-fixture"]')
+        ?.querySelector("canvas");
+      if (!canvas) throw new Error("canvas not mounted");
+      expect(canvas.toDataURL("image/png").length).toBeGreaterThan(4000);
+    },
+    { timeout: 6000, interval: 60 },
+  );
+});
+
 // First-pad waiting is a character moment: visual idle time accumulates before any player
 // launch, so the live CSG body should still render the impatient burble/perk path.
 test("GooCsg renders first-pad idle impatience burble", async () => {

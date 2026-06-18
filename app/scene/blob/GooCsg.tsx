@@ -195,6 +195,10 @@ export function GooCsg({ skin, blobRadius, getDroplets }: GooCsgProps) {
     const [bx, by, bz] = diag.position;
     const [vx, vy, vz] = diag.velocity;
     const settled = diag.airborne ? 0 : 1 - Math.min(diag.speed / blobCfg.puddle.settleSpeed, 1);
+    const cloudCling = Math.min(1, Math.max(0, diag.cloudAdherence?.strength ?? 0));
+    const cloudRelX = Math.min(1, Math.max(-1, (diag.cloudAdherence?.relX ?? 0) * 2));
+    const cloudRelZ = Math.min(1, Math.max(-1, (diag.cloudAdherence?.relZ ?? 0) * 2));
+    const clingSettled = Math.max(settled, cloudCling * 0.95);
     const aim = getAim();
     const idleSeconds = diag.idleSeconds ?? 0;
     const excitement = diag.excitement ?? 0;
@@ -249,13 +253,15 @@ export function GooCsg({ skin, blobRadius, getDroplets }: GooCsgProps) {
     // perfect ball, even before splash droplets exist. These are real CSG unions.
     const lobes = bodyLobes({
       time: state.clock.elapsedTime,
-      settled,
+      settled: clingSettled,
       velocity: [vx, vy, vz],
       radius: blobRadius,
       aimCharge: aim?.charge ?? 0,
       aimDirection: aim?.dir ?? null,
       idleSeconds,
       excitement,
+      cloudAdherence: cloudCling,
+      cloudOffset: [cloudRelX, cloudRelZ],
     });
     for (let i = 0; i < lobes.length; i++) {
       const lobe = lobes[i];
@@ -329,7 +335,10 @@ export function GooCsg({ skin, blobRadius, getDroplets }: GooCsgProps) {
     // Perpetual idle jiggle: a small constant wobble floor so the goo surface is ALWAYS subtly
     // alive (breathing/shimmering), never a perfectly still surface even when the body itself
     // is at rest — the impact spike rides on top of it.
-    material.uniforms.uWobble.value = Math.min(1.4, Math.max(IDLE_WOBBLE, wobble.current));
+    material.uniforms.uWobble.value = Math.min(
+      1.4,
+      Math.max(IDLE_WOBBLE + cloudCling * 0.1, wobble.current + cloudCling * 0.08),
+    );
 
     // Impact direction = where the goo is moving (the ripple travels FROM the contact, i.e.
     // along the motion at the moment of impact). Falls back to straight-down while resting.
@@ -353,32 +362,37 @@ export function GooCsg({ skin, blobRadius, getDroplets }: GooCsgProps) {
     // breathe so Blobby is never a perfectly static ball even standing still.
     // WET SAG eases in as Blobby settles (a resting glob hangs/bulges under its weight); the
     // ASYMMETRIC lobe is always a little present (never a clean sphere) and grows when settled.
-    damp(modes.current, "sag", settled, 0.18, dt);
-    damp(modes.current, "lobe", 0.25 + settled * 0.4, 0.3, dt);
+    damp(modes.current, "sag", clingSettled, 0.18, dt);
+    damp(modes.current, "lobe", 0.25 + clingSettled * 0.4 + cloudCling * 0.18, 0.3, dt);
     material.uniforms.uSag.value = modes.current.sag;
     material.uniforms.uLobe.value = modes.current.lobe;
 
-    if (settled > 0.01) {
+    if (clingSettled > 0.01) {
       const [px, py, pz] = blobCfg.puddle.scale;
       const impatience = Math.min(1, Math.max(0, (idleSeconds - 2.2) / 3.2));
       const breathe =
         Math.sin(state.clock.elapsedTime * (1.8 + impatience * 1.2)) *
         (0.06 + excitement * 0.08) *
-        settled;
+        clingSettled;
       const perky = Math.max(excitement, impatience * 0.45);
+      const coatSpreadX = cloudCling * (0.16 + Math.abs(cloudRelX) * 0.08);
+      const coatSpreadZ = cloudCling * (0.16 + Math.abs(cloudRelZ) * 0.08);
       target = {
-        x: target.x + (px - target.x) * settled + breathe - perky * 0.08,
-        y: target.y + (py + perky * 0.22 - target.y) * settled - breathe * 0.35,
-        z: target.z + (pz - target.z) * settled + breathe - perky * 0.08,
+        x: target.x + (px + coatSpreadX - target.x) * clingSettled + breathe - perky * 0.08,
+        y:
+          target.y +
+          (py - cloudCling * 0.1 + perky * 0.22 - target.y) * clingSettled -
+          breathe * 0.35,
+        z: target.z + (pz + coatSpreadZ - target.z) * clingSettled + breathe - perky * 0.08,
       };
     }
     // Charging the route launch: the resting puddle gathers up toward the route direction.
     if (aim && !diag.airborne) {
       const g = Math.min(aim.charge, 1);
       target = {
-        x: target.x * (1 - g * 0.22),
-        y: target.y * (1 + g * 0.45),
-        z: target.z * (1 - g * 0.22),
+        x: target.x * (1 - g * (0.22 + cloudCling * 0.12)),
+        y: target.y * (1 + g * (0.45 + cloudCling * 0.22)),
+        z: target.z * (1 - g * (0.22 + cloudCling * 0.12)),
       };
     }
     // Frame-rate-independent critically-damped spring toward the target deform (maath).
@@ -389,7 +403,8 @@ export function GooCsg({ skin, blobRadius, getDroplets }: GooCsgProps) {
     // Position + squash the whole goo group at the blob. A squashed puddle (deform.y<1)
     // drops its center so it sits ON the pad instead of hovering a radius up.
     const squash = Math.min(1, deform.current.y);
-    group.position.set(bx, by - blobRadius * (1 - squash), bz);
+    const clingSink = blobRadius * cloudCling * (0.1 - (aim?.charge ?? 0) * 0.04);
+    group.position.set(bx, by - blobRadius * (1 - squash) - clingSink, bz);
     group.scale.set(deform.current.x, deform.current.y, deform.current.z);
     // Directional LEAN: tilt the whole body toward its horizontal travel (a fluid body leans
     // into motion, never a rigid upright ball). Spring the tilt so it lags + overshoots a

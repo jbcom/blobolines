@@ -23,7 +23,7 @@ the harder it gets — smaller clouds, faster layers, trickier cloud types, long
    clean catches build your **combo** multiplier, which boosts launch power.
 5. Climb. The **altimeter** tracks your height; the **next-pad radar** points toward the
    next intended cloud in 3D space; your **best height** persists.
-6. Fall too far below the highest pad you reached → **game over** → replay.
+6. Fall too far below the last cloud you caught → **game over** → replay.
 
 The whole game serves making that climb feel amazing: juicy goo, squash-stretch,
 expressive eyes, splats.
@@ -88,12 +88,12 @@ seed and generator, but they are not mounted as normal player HUD.
 
 | Type | Color (token) | Behavior |
 |------|---------------|----------|
-| standard | `cloud.puff` | Reliable soft catch and launch |
-| booster | `cloud.gold` | Strong upward pop after catch |
+| standard | `cloud.puff` | Reliable soft catch and player-charged launch |
+| booster | `cloud.gold` | Warm high-energy catch cue; launch still belongs to the player |
 | moving | `cloud.gold` | Drifts along a generated route axis — timing matters |
 | fragile | `cloud.blush` | Wispy puff breaks apart shortly after catch |
-| super | `cloud.gold` | Guaranteed mega-launch reward |
-| ice | `cloud.glow` | Slick, big rebound, breaks clean combo |
+| super | `cloud.gold` | Big reward-cloud cue; no automatic launch |
+| ice | `cloud.glow` | Slick catch that breaks clean combo |
 | wobbler | `cloud.storm` | Unstable puff tilts toward off-center catches |
 | canted | `cloud.warm` | Certified angled cloud catch toward the next cloud |
 
@@ -180,8 +180,10 @@ first launch, but every grounded launch belongs to a player hold-release.
 | `MAX_IMPACT_SPEED` | `28` | Impact speed → full squash/squint |
 | `FIXED_DT` (engine) | `1/60` | Fixed sim timestep |
 
-Launch power (`src/sim/launch`): `dir × (BASE_POWER 14 + charge × 17.5) × rebound(type)
-× comboMultiplier`. Combo multiplier: `1 + (streak−1) × 0.15`, streak capped at 8.
+Launch power (`src/sim/launch`): `dir × (BASE_POWER 14 + charge × 17.5) ×
+launchMultiplier × comboMultiplier`. Combo multiplier: `1 + (streak−1) × 0.15`,
+streak capped at 8. Cloud catches adhere and score; they do not auto-bounce into the
+next launch.
 
 Cloud catch spring (`src/sim/trampoline`, compatibility name): depress + tilt via the
 `-k·x − c·v` damped spring (stiffness 170 / damping 26 for depress; 150 / 22 for tilt),

@@ -13,7 +13,7 @@ import { getRouteProofTarget, useWorldStore } from "@/state";
 import { palette } from "@/styles/tokens";
 
 const MIN_POINTS = 2;
-const RADIUS = 0.045;
+const RADIUS = 0.07;
 const FRAGMENT_RADIUS = 0.032;
 const MAX_FRAGMENT_LANES = 5;
 const RING_NORMAL = new Vector3(0, 0, 1);
@@ -139,7 +139,12 @@ export function GoldenRoutePreview() {
     <group renderOrder={50}>
       <mesh ref={meshRef} frustumCulled={false} renderOrder={50} visible={false}>
         <bufferGeometry />
-        <meshBasicMaterial color={palette.danger} depthTest={false} depthWrite={false} />
+        <meshBasicMaterial
+          color={palette.danger}
+          depthTest={false}
+          depthWrite={false}
+          toneMapped={false}
+        />
       </mesh>
       {Array.from({ length: MAX_FRAGMENT_LANES }, (_, i) => (
         <mesh
@@ -177,6 +182,7 @@ export function GoldenRoutePreview() {
           opacity={0.82}
           depthTest={false}
           depthWrite={false}
+          toneMapped={false}
           side={DoubleSide}
           blending={AdditiveBlending}
         />

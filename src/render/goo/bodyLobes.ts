@@ -9,6 +9,8 @@ export interface BodyLobeInput {
   aimDirection?: Vec3 | null;
   idleSeconds: number;
   excitement: number;
+  cloudAdherence?: number;
+  cloudOffset?: readonly [x: number, z: number] | null;
 }
 
 export interface BodyLobe {
@@ -33,10 +35,14 @@ export function bodyLobes({
   aimDirection,
   idleSeconds,
   excitement,
+  cloudAdherence = 0,
+  cloudOffset = null,
 }: BodyLobeInput): BodyLobe[] {
   const settle = clamp01(settled);
   const charge = clamp01(aimCharge);
   const excited = clamp01(excitement);
+  const cling = clamp01(cloudAdherence);
+  const [cloudX, cloudZ] = cloudOffset ?? [0, 0];
   const [vx, vy, vz] = velocity;
   const h = Math.hypot(vx, vz);
   const aimH = aimDirection ? Math.hypot(aimDirection[0], aimDirection[2]) : 0;
@@ -60,14 +66,20 @@ export function bodyLobes({
   return [
     {
       position: [
-        Math.cos(time * 0.7) * radius * (0.52 + impatientPulse * 0.08),
-        -radius * (0.22 + settle * 0.14 - excited * 0.06 - impatientPulse * 0.08),
-        Math.sin(time * 0.52) * radius * (0.42 + impatientPulse * 0.08),
+        Math.cos(time * 0.7) * radius * (0.52 + impatientPulse * 0.08) +
+          cloudX * radius * 0.16 * cling,
+        -radius * (0.22 + settle * 0.14 + cling * 0.12 - excited * 0.06 - impatientPulse * 0.08),
+        Math.sin(time * 0.52) * radius * (0.42 + impatientPulse * 0.08) +
+          cloudZ * radius * 0.16 * cling,
       ],
       scale: [
-        radius * (0.56 + settle * 0.16 + breathe + impatientPulse * 0.05),
-        radius * (0.36 + settle * 0.08 + excited * 0.1 + impatientPulse * 0.16),
-        radius * (0.52 + settle * 0.16 - breathe * 0.5 + impatientPulse * 0.04),
+        radius * (0.56 + settle * 0.16 + cling * 0.16 + breathe + impatientPulse * 0.05),
+        radius *
+          Math.max(
+            0.24,
+            0.36 + settle * 0.08 - cling * 0.08 + excited * 0.1 + impatientPulse * 0.16,
+          ),
+        radius * (0.52 + settle * 0.16 + cling * 0.16 - breathe * 0.5 + impatientPulse * 0.04),
       ],
     },
     {
@@ -84,15 +96,20 @@ export function bodyLobes({
     },
     {
       position: [
-        dirX * radius * (0.78 + aimReach + excited * 0.12 + impatience * 0.12),
+        dirX *
+          radius *
+          (0.78 + aimReach + charge * cling * 0.18 + excited * 0.12 + impatience * 0.12),
         radius *
           (0.14 +
             charge * 0.08 +
             aimLift * 0.38 +
+            charge * cling * 0.14 +
             excited * 0.16 +
             impatientPulse * 0.22 -
             burble * 0.5),
-        dirZ * radius * (0.78 + aimReach + excited * 0.12 + impatience * 0.12),
+        dirZ *
+          radius *
+          (0.78 + aimReach + charge * cling * 0.18 + excited * 0.12 + impatience * 0.12),
       ],
       scale: [
         radius *
