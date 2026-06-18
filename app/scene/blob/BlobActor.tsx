@@ -41,6 +41,10 @@ interface BlobActorProps {
 
 const HERO_CSG_REBUILD_DT = 1 / 18;
 
+function idleBurbleAmount(velocity: readonly [number, number, number], impact: number): number {
+  return Math.max(0, 1 - Math.hypot(...velocity) / 10) * (1 - Math.min(1, impact));
+}
+
 function HeroGooBody({
   material,
   radius,
@@ -105,7 +109,7 @@ function HeroGooBody({
       return out;
     };
 
-    const idle = heroIdleBurble(time);
+    const idle = heroIdleBurble(time, idleBurbleAmount(velocity, impact));
     const idleSeconds = idle.idleSeconds;
     const excitement =
       Math.max(idle.excitement, 0.28 + Math.sin(time * 1.35) * 0.12) + impact * 0.45;
@@ -182,9 +186,7 @@ export function BlobActor({
     const stretch = speedStretch(vel[0], vel[1], vel[2]);
     const squash = impactSquash(imp);
     const s = combineScale(stretch, squash);
-    const idleAmount = live
-      ? 0
-      : Math.max(0, 1 - Math.hypot(...velocity) / 10) * (1 - Math.min(1, impact));
+    const idleAmount = live ? 0 : idleBurbleAmount(velocity, impact);
     const idle = heroIdleBurble(state.clock.elapsedTime, idleAmount);
     const target = live
       ? s
