@@ -11,6 +11,7 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src"),
       "@app": path.resolve(__dirname, "./app"),
     },
+    dedupe: ["three"],
   },
   test: {
     globals: true,
