@@ -23,7 +23,7 @@ fun game.
 
 ## Architecture (see docs/ARCHITECTURE.md)
 
-- `src/` = engine, deterministic sim, ECS, factories, math/RNG facade, audio, render
+- `src/` = engine, deterministic sim, math/RNG facade, audio, render
   materials/vfx/goo, state, content. Each subpackage has a barrel `index.ts`.
 - `app/` = React entry, R3F `<Canvas>` scene (`app/scene/**`), DOM UI overlay
   (`app/views/**`, shadcn + Motion).

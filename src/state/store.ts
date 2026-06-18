@@ -7,7 +7,7 @@ import { palette } from "@/styles/tokens";
 
 /**
  * The app/UI state bridge. The DOM overlay (shadcn) reads/writes here; the R3F scene
- * reads it too. Per-frame entity data lives in the koota ECS world, NOT here — this
+ * reads it too. Per-frame entity data lives in the physics simulation and diagnostics bridge, NOT here — this
  * store holds phase, settings, progress, and run-summary values that change at human
  * (not frame) cadence. UI never touches three objects; it goes through this store.
  * Progress + settings persist via Capacitor Preferences (see persistence.ts).

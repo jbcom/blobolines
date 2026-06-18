@@ -1,1 +1,0 @@
-export { spawnBlob } from "./blob";

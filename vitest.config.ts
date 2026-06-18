@@ -28,7 +28,6 @@ export default defineConfig({
         "src/sim/**/*.ts",
         "src/engine/**/*.ts",
         "src/systems/**/*.ts",
-        "src/factories/**/*.ts",
         "src/lib/**/*.ts",
       ],
     },
