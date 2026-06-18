@@ -13,6 +13,7 @@ function RouteGate({ gate }: { gate: RouteGateSpec }) {
   const ringMatRef = useRef<MeshBasicMaterial>(null);
   const armed = useRef(true);
   const rotationY = Math.atan2(gate.normal[0], gate.normal[2]);
+  const slicer = gate.kind === "slicer";
   const verticalBarMat = useMemo(
     () =>
       new MeshBasicMaterial({
@@ -45,8 +46,8 @@ function RouteGate({ gate }: { gate: RouteGateSpec }) {
 
   useFrame((state) => {
     const t = state.clock.elapsedTime;
-    const open = phasePortalOpen(gate, t);
-    const phase = routeGatePhase(gate, t);
+    const open = gate.kind === "phasePortal" ? phasePortalOpen(gate, t) : false;
+    const phase = gate.kind === "phasePortal" ? routeGatePhase(gate, t) : 1;
     const openCenter = gate.openFraction * 0.5;
     const openPulse = open
       ? 1 - Math.min(1, Math.abs(phase - openCenter) / Math.max(0.001, openCenter))
@@ -60,12 +61,12 @@ function RouteGate({ gate }: { gate: RouteGateSpec }) {
       group.rotation.z = Math.sin(t * 1.7 + gate.routeIndex) * 0.025;
     }
     if (coreMatRef.current) {
-      coreMatRef.current.opacity = open ? 0.16 + openPulse * 0.2 : 0.045;
+      coreMatRef.current.opacity = slicer ? 0.035 : open ? 0.16 + openPulse * 0.2 : 0.045;
     }
     if (ringMatRef.current) {
       ringMatRef.current.opacity = open ? 0.55 + openPulse * 0.3 : 0.72 + closedPulse * 0.18;
     }
-    const barOpacity = open ? 0.05 : 0.34 + closedPulse * 0.42;
+    const barOpacity = slicer ? 0.68 + closedPulse * 0.18 : open ? 0.05 : 0.34 + closedPulse * 0.42;
     verticalBarMat.opacity = barOpacity;
     horizontalBarMat.opacity = barOpacity;
 
@@ -79,7 +80,7 @@ function RouteGate({ gate }: { gate: RouteGateSpec }) {
       armed.current = true;
       return;
     }
-    if (open) {
+    if (gate.kind === "phasePortal" && open) {
       if (d2 <= hitRadius * hitRadius) armed.current = false;
       return;
     }
@@ -89,11 +90,15 @@ function RouteGate({ gate }: { gate: RouteGateSpec }) {
       gateId: gate.id,
       kind: gate.kind,
       position: gate.position,
+      velocity: blob.velocity,
+      normal: gate.normal,
       strength: 0.9,
+      fragmentCount: gate.fragmentCount,
+      splitSpread: gate.splitSpread,
     });
   });
 
-  const barOffsets = [-0.48, 0, 0.48];
+  const barOffsets = slicer ? [-0.68, -0.4, -0.13, 0.13, 0.4, 0.68] : [-0.48, 0, 0.48];
 
   return (
     <group
@@ -101,7 +106,7 @@ function RouteGate({ gate }: { gate: RouteGateSpec }) {
       position={[gate.position[0], gate.position[1], gate.position[2]]}
       rotation={[0, rotationY, 0]}
     >
-      <mesh>
+      <mesh visible={!slicer}>
         <circleGeometry args={[gate.radius * 0.92, 48]} />
         <meshBasicMaterial
           ref={coreMatRef}
@@ -131,17 +136,25 @@ function RouteGate({ gate }: { gate: RouteGateSpec }) {
             position={[offset * gate.radius, 0, 0.045]}
             material={verticalBarMat}
           >
-            <boxGeometry args={[0.055, gate.radius * 1.55, 0.05]} />
+            <boxGeometry
+              args={[slicer ? 0.035 : 0.055, gate.radius * (slicer ? 1.92 : 1.55), 0.05]}
+            />
           </mesh>
         ))}
         {barOffsets.slice(0, 2).map((offset) => (
           <mesh
             key={`h-${offset}`}
-            position={[0, offset * gate.radius * 0.68, 0.05]}
+            position={[
+              0,
+              (slicer ? (offset < 0 ? -0.78 : 0.78) : offset * 0.68) * gate.radius,
+              0.05,
+            ]}
             rotation={[0, 0, Math.PI / 2]}
             material={horizontalBarMat}
           >
-            <boxGeometry args={[0.05, gate.radius * 1.45, 0.05]} />
+            <boxGeometry
+              args={[slicer ? 0.065 : 0.05, gate.radius * (slicer ? 1.75 : 1.45), 0.05]}
+            />
           </mesh>
         ))}
       </group>

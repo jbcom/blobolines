@@ -6,6 +6,7 @@
  * through the React tree while keeping UI and physics decoupled.
  */
 
+import type { RouteGateKind } from "@/core/types";
 import { clearRouteLandingFeedback } from "./routeFeedbackBridge";
 import { setRouteProofTarget } from "./routeProofBridge";
 
@@ -29,9 +30,13 @@ export function consumeLaunch(): LaunchRequest | null {
 
 export interface RouteGateHitEvent {
   gateId: string;
-  kind: "phasePortal";
+  kind: RouteGateKind;
   position: readonly [number, number, number];
+  velocity: readonly [number, number, number];
+  normal: readonly [number, number, number];
   strength: number;
+  fragmentCount?: number;
+  splitSpread?: number;
 }
 
 let routeGateHit: RouteGateHitEvent | null = null;
@@ -44,6 +49,29 @@ export function consumeRouteGateHit(): RouteGateHitEvent | null {
   const event = routeGateHit;
   routeGateHit = null;
   return event;
+}
+
+export interface BlobSplitEvent {
+  position: readonly [number, number, number];
+  velocity: readonly [number, number, number];
+  normal: readonly [number, number, number];
+  count: number;
+  spread: number;
+  strength: number;
+}
+
+let splitQueue: BlobSplitEvent[] = [];
+
+export function reportBlobSplit(event: BlobSplitEvent): void {
+  splitQueue.push(event);
+  if (splitQueue.length > 4) splitQueue = splitQueue.slice(-4);
+}
+
+export function consumeBlobSplits(): BlobSplitEvent[] {
+  if (splitQueue.length === 0) return splitQueue;
+  const out = splitQueue;
+  splitQueue = [];
+  return out;
 }
 
 /** Live AIM preview while charging the route launch (dir + charge), or null when not aiming.
@@ -203,6 +231,7 @@ export function resetBridges(): void {
   pending = null;
   aim = null;
   routeGateHit = null;
+  splitQueue = [];
   rebound = null;
   splatQueue = [];
   launchBurstQueue = [];

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   aimAssistDifficulty,
+  aimEndpointTargetY,
   showsAimEndpointReticle,
   showsAimParabola,
   solveAimEndpoint,
@@ -40,5 +41,54 @@ describe("TrajectoryPreview aim assistance", () => {
     expect(endpoint?.position[0]).toBeGreaterThan(0);
     expect(endpoint?.position[2]).toBeLessThan(0);
     expect(endpoint?.time).toBeGreaterThan(15 / 22);
+  });
+
+  it("cuts the aim endpoint to the slicer height when the route has a slicer gate", () => {
+    expect(
+      aimEndpointTargetY({
+        source: null,
+        target: { id: 2, position: [0, 10, 0], width: 5, depth: 5, type: "standard" },
+        proof: {
+          toPadId: 2,
+          launchNormal: [0, 1, 0],
+          launchSpeed: 20,
+          launchCharge: 0.8,
+          flightTime: 1,
+          apex: [0, 12, 0],
+          landing: [0, 10, 0],
+          clearance: 1,
+          samples: [
+            [0, 0, 0],
+            [0, 6, 0],
+            [0, 10, 0],
+          ],
+          requiredCant: false,
+          sourceMode: "flat",
+          launchAngleRad: 0,
+          landingPrecision: 1,
+          lipClearance: 1,
+          lipClearanceRatio: 0.2,
+          arcCompression: 0,
+          routeGate: {
+            id: "slicer-test",
+            kind: "slicer",
+            sourcePadId: 1,
+            targetPadId: 2,
+            routeIndex: 6,
+            sampleIndex: 1,
+            position: [0, 6, 0],
+            normal: [0, 0, 1],
+            radius: 1.5,
+            period: 0,
+            openFraction: 0,
+            phaseOffset: 0,
+            flightTime: 0.5,
+            idealReleaseDelay: 0,
+            fragmentCount: 4,
+            splitSpread: 3,
+          },
+        },
+      }),
+    ).toBe(6);
   });
 });

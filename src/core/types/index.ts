@@ -71,7 +71,7 @@ export interface GoldenPathVariant {
   arcCompression: number;
 }
 
-export type RouteGateKind = "phasePortal";
+export type RouteGateKind = "phasePortal" | "slicer";
 
 /** A route obstacle anchored to a certified golden path. Gates are generated from proof
  *  samples, so seed verification can prove they are placed on the playable route instead of
@@ -100,6 +100,10 @@ export interface RouteGateSpec {
   flightTime: number;
   /** Deterministic fair-release wait that lands the proof inside an open window. */
   idealReleaseDelay: number;
+  /** Slicer-only: how many visible Blobby fragments fan out when the gate cuts through. */
+  fragmentCount?: number;
+  /** Slicer-only: lateral spread impulse for the visible split fragments. */
+  splitSpread?: number;
 }
 
 export interface GoldenPathProof {
