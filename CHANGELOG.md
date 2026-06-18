@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.1.7](https://github.com/jbcom/blobolines/compare/blobolines-v0.1.6...blobolines-v0.1.7) (2026-06-18)
+
+
+### Features
+
+* add certified phase portal route gates ([409e5ce](https://github.com/jbcom/blobolines/commit/409e5ce2f1db18e4eb9233d05b136f8d130d66b0))
+* add proof-backed slicer split gates ([799a0e0](https://github.com/jbcom/blobolines/commit/799a0e0b993f446b980d8aac913a749e7b7a19e4))
+* animate first-pad blobby impatience ([#40](https://github.com/jbcom/blobolines/issues/40)) ([b429bed](https://github.com/jbcom/blobolines/commit/b429bedb38acf06d4510977a427b07a67097eda1))
+
 ## [0.1.6](https://github.com/jbcom/blobolines/compare/blobolines-v0.1.5...blobolines-v0.1.6) (2026-06-17)
 
 
