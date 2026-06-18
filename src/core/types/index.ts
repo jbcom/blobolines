@@ -161,6 +161,16 @@ export interface GoldenPathProof {
   routeGate?: RouteGateSpec;
 }
 
+export interface HighScoreEntry {
+  score: number;
+  height: number;
+  crystals: number;
+  maxCombo: number;
+  date: string;
+  seedPhrase: string;
+  difficulty: string;
+}
+
 /** Persistent player progress. */
 export interface PlayerProgress {
   bestHeight: number;
@@ -175,6 +185,8 @@ export interface PlayerProgress {
   /** Ids of unlocked achievements (src/sim/achievements). Persisted; keyed by id so adding or
    *  reordering achievements never disturbs existing unlocks. */
   unlockedAchievements: string[];
+  /** Local high scores of the player's top 5 climbs of all time. */
+  highScores?: HighScoreEntry[];
 }
 
 /** User-tunable settings. */

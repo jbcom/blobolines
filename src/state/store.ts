@@ -1,9 +1,16 @@
 import { create } from "zustand";
 import { world as worldCfg } from "@/config";
-import type { BlobSkin, GamePhase, GameSettings, PlayerProgress } from "@/core/types";
+import type {
+  BlobSkin,
+  GamePhase,
+  GameSettings,
+  HighScoreEntry,
+  PlayerProgress,
+} from "@/core/types";
 import { type AchievementStats, newlyUnlocked } from "@/sim/achievements";
 import { computeScore } from "@/sim/score";
 import { palette } from "@/styles/tokens";
+import { useWorldStore } from "./worldStore";
 
 /**
  * The app/UI state bridge. The DOM overlay (shadcn) reads/writes here; the R3F scene
@@ -80,6 +87,7 @@ export const DEFAULT_PROGRESS: PlayerProgress = {
   unlockedSkins: ["blue"],
   tutorialSeen: false,
   unlockedAchievements: [],
+  highScores: [],
 };
 
 const EMPTY_RUN: RunStats = {
@@ -148,12 +156,29 @@ export const useGameStore = create<GameState>((set) => ({
         stylePoints: s.run.stylePoints,
       });
       const scoreDelta = Math.max(0, runScore - s.progress.bestScore);
+
+      const worldState = useWorldStore.getState();
+      const newEntry: HighScoreEntry = {
+        score: runScore,
+        height: h,
+        crystals: s.run.crystals,
+        maxCombo: s.run.maxCombo,
+        date: new Date().toISOString(),
+        seedPhrase: worldState.seedPhrase,
+        difficulty: worldState.difficulty,
+      };
+
+      const updatedScores = [...(s.progress.highScores || []), newEntry]
+        .sort((a, b) => b.score - a.score)
+        .slice(0, 5);
+
       return {
         run: { ...s.run, recordDelta, score: runScore, scoreDelta },
         progress: {
           ...s.progress,
           bestHeight: Math.max(s.progress.bestHeight, h),
           bestScore: Math.max(s.progress.bestScore, runScore),
+          highScores: updatedScores,
         },
       };
     }),

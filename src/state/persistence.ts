@@ -24,7 +24,17 @@ const KEY_SETTINGS = "blobolines.settings";
 
 const blobSkinSchema = z.enum(["blue", "slime", "ghost", "ink"]);
 
-const playerProgressSchema = z.object({
+const highScoreEntrySchema = z.object({
+  score: z.number().catch(0),
+  height: z.number().catch(0),
+  crystals: z.number().catch(0),
+  maxCombo: z.number().catch(0),
+  date: z.string().catch(() => new Date().toISOString()),
+  seedPhrase: z.string().catch(""),
+  difficulty: z.string().catch("ready"),
+});
+
+export const playerProgressSchema = z.object({
   bestHeight: z.number().catch(0),
   bestScore: z.number().catch(0),
   crystals: z.number().catch(0),
@@ -32,6 +42,7 @@ const playerProgressSchema = z.object({
   unlockedSkins: z.array(blobSkinSchema).catch(["blue"]),
   tutorialSeen: z.boolean().catch(false),
   unlockedAchievements: z.array(z.string()).catch([]),
+  highScores: z.array(highScoreEntrySchema).catch([]),
 });
 
 const persistedSettingsSchema = z.object({
