@@ -78,8 +78,8 @@ export function ScreenFlash() {
     <div
       ref={ref}
       aria-hidden
-      className="pointer-events-none absolute inset-0"
-      style={{ zIndex: "var(--z-flash)" as unknown as number, opacity: 0 }}
+      className="pointer-events-none absolute inset-0 z-flash"
+      style={{ opacity: 0 }}
     />
   );
 }

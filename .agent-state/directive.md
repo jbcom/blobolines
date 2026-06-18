@@ -57,28 +57,28 @@ dispatch reviewers if warranted, mark [x], next.
 - [x] R1.2 Fix all Critical (P0) findings (No Critical findings found)
 
 ### R2 Remediation — High (P1)
-- [ ] R2.1 Fix TEST-H1 / DEV-H1: Integrate Playwright E2E tests into GitHub Actions CI pipeline and optimize with browser caching
-- [ ] R2.2 Fix AR-H1 / DOC-H1: Cleanly remove vestigial Koota ECS and reconcile all code, config, tests, and documentation
-- [ ] R2.3 Fix PERF-H2: Refactor monolithic per-frame loop in `PlayerBlob.tsx` into clean helper concern steps
-- [ ] R2.4 Fix PERF-H1: Optimize `GooCsg.tsx` CSG chain, reduce BufferGeometry allocations/GC churn, and add geometry leak tests
+- [x] R2.1 Fix TEST-H1 / DEV-H1: Integrate Playwright E2E tests into GitHub Actions CI pipeline and optimize with browser caching
+- [x] R2.2 Fix AR-H1 / DOC-H1: Cleanly remove vestigial Koota ECS and reconcile all code, config, tests, and documentation
+- [x] R2.3 Fix PERF-H2: Refactor monolithic per-frame loop in `PlayerBlob.tsx` into clean helper concern steps
+- [x] R2.4 Fix PERF-H1: Optimize `GooCsg.tsx` CSG chain, reduce BufferGeometry allocations/GC churn, and add geometry leak tests
 
 ### R3 Remediation — Medium/Low (clean fixes only)
-- [ ] R3.1 Fix LANG-M1: Deduplicate Three.js imports in Vitest configurations to prevent prototype clashing
-- [ ] R3.2 Fix SEC-M1: Add robust meta CSP security headers on GitHub Pages deploy
-- [ ] R3.3 Fix CQ-M1: Move hardcoded gameplay-tuning magic numbers in `PlayerBlob` to config
-- [ ] R3.4 Fix CQ-M2: Consolidate duplicated combo-heat formulas under a single helper
-- [ ] R3.5 Fix CQ-M3: Convert repetitive unsafe `zIndex` castings to clean tailwind classes
-- [ ] R3.6 Fix CQ-M4: Secure `three-bvh-csg` hash clearing with an explicit GooCsg fixture test
-- [ ] R3.7 Fix AR-M1: Clean up non-existent `src/systems/**` glob in `.claude/gates.json`
-- [ ] R3.8 Fix SEC-L1: Gate `?dev` parameter DevHarness mounting on `import.meta.env.DEV` to prevent production cheating
-- [ ] R3.9 Fix SEC-L3: Harden local storage deserialization with Zod schema validation
-- [ ] R3.10 Fix other Low/Clean findings (CQ-L1, CQ-L2, CQ-L3, CQ-L4, PERF-M1, PERF-M2, DOC-L1)
+- [x] R3.1 Fix LANG-M1: Deduplicate Three.js imports in Vitest configurations to prevent prototype clashing
+- [x] R3.2 Fix SEC-M1: Add robust meta CSP security headers on GitHub Pages deploy
+- [x] R3.3 Fix CQ-M1: Move hardcoded gameplay-tuning magic numbers in `PlayerBlob` to config
+- [x] R3.4 Fix CQ-M2: Consolidate duplicated combo-heat formulas under a single helper
+- [x] R3.5 Fix CQ-M3: Convert repetitive unsafe `zIndex` castings to clean tailwind classes
+- [x] R3.6 Fix CQ-M4: Secure `three-bvh-csg` hash clearing with an explicit GooCsg fixture test
+- [x] R3.7 Fix AR-M1: Clean up non-existent `src/systems/**` glob in `.claude/gates.json`
+- [x] R3.8 Fix SEC-L1: Gate `?dev` parameter DevHarness mounting on `import.meta.env.DEV` to prevent production cheating
+- [x] R3.9 Fix SEC-L3: Harden local storage deserialization with Zod schema validation
+- [x] R3.10 Fix other Low/Clean findings (CQ-L1, CQ-L2, CQ-L3, CQ-L4, PERF-M1, PERF-M2, DOC-L1)
 
 ### R4 Close-out
-- [ ] R4.1 Full verification: pnpm typecheck && pnpm lint && pnpm test (+ test:browser where render/UI touched) && pnpm test:e2e
-- [ ] R4.2 Verify the app RUNS (dev server + screenshot read)
-- [ ] R4.3 Update docs/CHANGELOG for any behavior/architecture changes made during remediation
-- [ ] R4.4 Open the PR once green; address remote feedback; resolve threads; squash-merge
+- [x] R4.1 Full verification: pnpm typecheck && pnpm lint && pnpm test (+ test:browser where render/UI touched) && pnpm test:e2e
+- [x] R4.2 Verify the app RUNS (dev server + screenshot read)
+- [x] R4.3 Update docs/CHANGELOG for any behavior/architecture changes made during remediation
+- [x] R4.4 Open the PR once green; address remote feedback; resolve threads; squash-merge
 
 ## Notes
 - The R1/R2/R3 items are derived directly from the Phase 5 consolidated audit report (`05-final-report.md`).

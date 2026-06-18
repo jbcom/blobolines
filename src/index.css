@@ -44,6 +44,13 @@
 
   --ease-bounce: var(--ease-bounce);
   --ease-out-soft: var(--ease-out-soft);
+
+  --z-canvas: var(--z-canvas);
+  --z-hud: var(--z-hud);
+  --z-overlay: var(--z-overlay);
+  --z-modal: var(--z-modal);
+  --z-flash: var(--z-flash);
+  --z-loader: var(--z-loader);
 }
 
 html,

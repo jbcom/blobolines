@@ -21,24 +21,24 @@ Remediation focus centers on **three major areas**:
 
 | ID | Component | Severity | Description | Status |
 |---|---|---|---|---|
-| **PERF-H1** | Rendering (`GooCsg.tsx`) | **High (P1)** | Real-time CSG union & geometry disposal creates heavy GC churn | `[ ]` |
-| **PERF-H2** | Simulation (`PlayerBlob.tsx`) | **High (P1)** | Monolithic, ~300-line monolithic `useFrame` hot-loop | `[ ]` |
-| **AR-H1** | Architecture / ECS | **High (P1)** | Koota ECS is vestigial (write-only); dead deliberate library | `[ ]` |
-| **TEST-H1** | CI/CD / DevOps | **High (P1)** | Playwright E2E tests are completely omitted from CI runs | `[ ]` |
-| **SEC-M1** | Security / Pages | **Medium (P2)** | No Content Security Policy (CSP) headers on GitHub Pages | `[ ]` |
-| **LANG-M1** | Framework / Vitest | **Medium (P2)** | Multiple Three.js instances imported in Vitest runners | `[ ]` |
-| **CQ-M1** | Config / Physics | **Medium (P2)** | Gameplay-tuning magic numbers hardcoded in `PlayerBlob` | `[ ]` |
-| **CQ-M2** | Math / Visuals | **Medium (P2)** | Duplicated "combo heat" formulas across frame components | `[ ]` |
-| **CQ-M3** | Style / Layout | **Medium (P2)** | Unsafe repetitive `zIndex` castings in views | `[ ]` |
-| **CQ-M4** | CSG / Tests | **Medium (P2)** | CSG depends on private `_hash` clear without guarding test | `[ ]` |
-| **AR-M1** | CI / Gates | **Medium (P2)** | Dead `.claude/gates.json` path glob on non-existent directory | `[ ]` |
-| **AR-M2** | State / Docs | **Medium (P2)** | State fragmented across 5 channels with no partition rules | `[ ]` |
-| **SEC-L1** | Security / Views | **Low (P3)** | Dev harness query parameter `?dev` enabled in production | `[ ]` |
-| **SEC-L3** | Security / Storage | **Low (P3)** | Persisted game state deserialized without schema validation | `[ ]` |
-| **CQ-L1** | Types / Generator | **Low (P3)** | Unsafe cast-away-readonly mutations on DraftPad | `[ ]` |
-| **CQ-L2** | Code / Generator | **Low (P3)** | 6-deep nested ternary in powerup generation | `[ ]` |
-| **CQ-L3** | Sim / Physics | **Low (P3)** | `runHeightFromWorldY` closure hardcoded in R3F view | `[ ]` |
-| **CQ-L4** | Architecture / Views | **Low (P3)** | Monolithic 338-line `GameOver.tsx` component | `[ ]` |
+| **PERF-H1** | Rendering (`GooCsg.tsx`) | **High (P1)** | Real-time CSG union & geometry disposal creates heavy GC churn | `[x]` |
+| **PERF-H2** | Simulation (`PlayerBlob.tsx`) | **High (P1)** | Monolithic, ~300-line monolithic `useFrame` hot-loop | `[x]` |
+| **AR-H1** | Architecture / ECS | **High (P1)** | Koota ECS is vestigial (write-only); dead deliberate library | `[x]` |
+| **TEST-H1** | CI/CD / DevOps | **High (P1)** | Playwright E2E tests are completely omitted from CI runs | `[x]` |
+| **SEC-M1** | Security / Pages | **Medium (P2)** | No Content Security Policy (CSP) headers on GitHub Pages | `[x]` |
+| **LANG-M1** | Framework / Vitest | **Medium (P2)** | Multiple Three.js instances imported in Vitest runners | `[x]` |
+| **CQ-M1** | Config / Physics | **Medium (P2)** | Gameplay-tuning magic numbers hardcoded in `PlayerBlob` | `[x]` |
+| **CQ-M2** | Math / Visuals | **Medium (P2)** | Duplicated "combo heat" formulas across frame components | `[x]` |
+| **CQ-M3** | Style / Layout | **Medium (P2)** | Unsafe repetitive `zIndex` castings in views | `[x]` |
+| **CQ-M4** | CSG / Tests | **Medium (P2)** | CSG depends on private `_hash` clear without guarding test | `[x]` |
+| **AR-M1** | CI / Gates | **Medium (P2)** | Dead `.claude/gates.json` path glob on non-existent directory | `[x]` |
+| **AR-M2** | State / Docs | **Medium (P2)** | State fragmented across 5 channels with no partition rules | `[x]` |
+| **SEC-L1** | Security / Views | **Low (P3)** | Dev harness query parameter `?dev` enabled in production | `[x]` |
+| **SEC-L3** | Security / Storage | **Low (P3)** | Persisted game state deserialized without schema validation | `[x]` |
+| **CQ-L1** | Types / Generator | **Low (P3)** | Unsafe cast-away-readonly mutations on DraftPad | `[x]` |
+| **CQ-L2** | Code / Generator | **Low (P3)** | 6-deep nested ternary in powerup generation | `[x]` |
+| **CQ-L3** | Sim / Physics | **Low (P3)** | `runHeightFromWorldY` closure hardcoded in R3F view | `[x]` |
+| **CQ-L4** | Architecture / Views | **Low (P3)** | Monolithic 338-line `GameOver.tsx` component | `[x]` |
 
 ---
 
