@@ -24,9 +24,7 @@ import {
  * altitude, set skin, and force game-over.
  */
 
-const isDev =
-  import.meta.env.DEV ||
-  (typeof location !== "undefined" && new URLSearchParams(location.search).has("dev"));
+const isDev = import.meta.env.DEV;
 
 const SKINS: BlobSkin[] = ["blue", "slime", "ghost", "ink"];
 

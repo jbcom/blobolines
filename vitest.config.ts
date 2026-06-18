@@ -11,6 +11,7 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src"),
       "@app": path.resolve(__dirname, "./app"),
     },
+    dedupe: ["three"],
   },
   test: {
     globals: true,
@@ -27,7 +28,6 @@ export default defineConfig({
         "src/sim/**/*.ts",
         "src/engine/**/*.ts",
         "src/systems/**/*.ts",
-        "src/factories/**/*.ts",
         "src/lib/**/*.ts",
       ],
     },

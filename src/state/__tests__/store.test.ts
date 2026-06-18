@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it } from "vitest";
+import { playerProgressSchema } from "../persistence";
 import {
   DEFAULT_PROGRESS,
   DEFAULT_SETTINGS,
@@ -166,5 +167,97 @@ describe("useGameStore", () => {
   it("equippedSkinColor returns token hex", () => {
     const color = equippedSkinColor(useGameStore.getState());
     expect(color).toMatch(/^#[0-9a-fA-F]{6}$/);
+  });
+
+  describe("Leaderboard (High Scores)", () => {
+    it("initializes with an empty highScores list", () => {
+      expect(useGameStore.getState().progress.highScores).toEqual([]);
+    });
+
+    it("appends new runs on commitBestHeight and sorts descending by composite score", () => {
+      const s = useGameStore.getState();
+
+      // Simulate run 1: low score
+      s.resetRun();
+      s.commitBestHeight(100);
+
+      // Simulate run 2: higher score
+      s.resetRun();
+      s.commitBestHeight(250);
+
+      // Simulate run 3: shorter but high combo & crystals -> higher score
+      s.resetRun();
+      s.addCrystals(50);
+      s.setRun({ maxCombo: 10 });
+      s.commitBestHeight(80);
+
+      const scores = useGameStore.getState().progress.highScores ?? [];
+      expect(scores.length).toBe(3);
+
+      // Check that they are sorted descending by score
+      expect(scores[0].score).toBeGreaterThanOrEqual(scores[1].score);
+      expect(scores[1].score).toBeGreaterThanOrEqual(scores[2].score);
+    });
+
+    it("truncates the leaderboard to exactly the top 5 runs of all time", () => {
+      const s = useGameStore.getState();
+
+      // Record 7 runs with increasing heights (hence increasing scores)
+      for (let i = 1; i <= 7; i++) {
+        s.resetRun();
+        s.commitBestHeight(i * 50);
+      }
+
+      const scores = useGameStore.getState().progress.highScores ?? [];
+      expect(scores).toHaveLength(5);
+
+      // Top score should be from the 7th run (350m)
+      expect(scores[0].height).toBe(350);
+      // Lowest of the top 5 should be from the 3rd run (150m), meaning 1st (50) and 2nd (100) were dropped
+      expect(scores[4].height).toBe(150);
+    });
+
+    it("successfully falls back to empty array when highScores is absent from parsed progress", () => {
+      const legacySave = {
+        bestHeight: 120,
+        bestScore: 1200,
+        crystals: 45,
+        skin: "blue",
+        unlockedSkins: ["blue", "slime"],
+        tutorialSeen: true,
+        unlockedAchievements: ["height-100"],
+      };
+
+      const parsed = playerProgressSchema.safeParse(legacySave);
+      expect(parsed.success).toBe(true);
+      if (parsed.success) {
+        expect(parsed.data.highScores).toEqual([]);
+        expect(parsed.data.bestHeight).toBe(120);
+      }
+    });
+
+    it("recovers gracefully from individual corrupted high score entry keys", () => {
+      const corruptSave = {
+        bestHeight: 100,
+        highScores: [
+          {
+            score: "this-is-not-a-number", // corrupted
+            height: 100,
+            crystals: 5,
+            maxCombo: 2,
+            date: "2026-06-18",
+            seedPhrase: "some-seed",
+            difficulty: "ready",
+          },
+        ],
+      };
+
+      const parsed = playerProgressSchema.safeParse(corruptSave);
+      expect(parsed.success).toBe(true);
+      if (parsed.success) {
+        expect(parsed.data.highScores).toHaveLength(1);
+        expect(parsed.data.highScores?.[0].score).toBe(0); // catches corrupt score and falls back to 0
+      }
+    });
   });
 });

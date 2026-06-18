@@ -1,7 +1,5 @@
-import { WorldProvider } from "koota/react";
 import { MotionConfig } from "motion/react";
 import { Suspense, useEffect } from "react";
-import { gameWorld } from "@/ecs/world";
 import { applyDeviceScale } from "@/platform";
 import { applyQuality, setQualityPref } from "@/render/qualityBridge";
 import { attachPersistence, hydrateStore, useGameStore } from "@/state";
@@ -41,11 +39,9 @@ export function App() {
   return (
     <ErrorBoundary source="App">
       <MotionConfig reducedMotion={reducedMotion ? "always" : "user"}>
-        <WorldProvider world={gameWorld}>
-          <Suspense fallback={<LoadingScreen />}>
-            <Game />
-          </Suspense>
-        </WorldProvider>
+        <Suspense fallback={<LoadingScreen />}>
+          <Game />
+        </Suspense>
       </MotionConfig>
     </ErrorBoundary>
   );

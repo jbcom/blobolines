@@ -41,9 +41,7 @@ public surface; modules stay small and single-responsibility — no monolithic s
 | `src/sim/trampoline` | ✓ | compatibility package for cloud catch spring + tilt model, type behaviors (standard/booster/moving/fragile) |
 | `src/sim/launch` | ✓ | route charge→velocity, combo/multiplier, 3D air-steer model |
 | `src/world` | ✓ | seeded procedural vertical generator, route difficulty profiles, certified golden-path parabolas |
-| `src/ecs` | ✓ | koota world + traits (Transform/Velocity/Blob/Trampoline/Crystal/PowerUp/Particle); the queryable entity model |
 | `src/engine` | ✓ | fixed-timestep accumulator (`advance`/`createStepLoop`) — deterministic sim stepping |
-| `src/factories` | ✓ | spawn blob (+ future cloud/crystal/powerup) entities into the ECS world |
 | `src/audio` | ✓ | Howler.js engine playing the itch.io sample library (config/audio.json); music/ambient/sfx channels |
 | `src/render/materials` | ✓ | wet goo material (GooMaterial), eye materials, cloud-pad material reuse |
 | `src/render/goo` | ✓ | CSG merge selection (`selectMerges`) and intrinsic body lobes feeding the three-bvh-csg goo union |
@@ -59,7 +57,7 @@ public surface; modules stay small and single-responsibility — no monolithic s
 | Package | Barrel | Responsibility |
 |---------|--------|----------------|
 | `app/scene` | ✓ | composes small scene components inside `<Canvas>` |
-| `app/scene/blob` | ✓ | `<PlayerBlob>` (Rapier body + ECS entity), `<GooCsg>` (three-bvh-csg merged goo), `<BlobActor>` (menu hero), `<BlobEyes>`, `<SplatChunks>`, `<TrajectoryPreview>` |
+| `app/scene/blob` | ✓ | `<PlayerBlob>` (Rapier body + diagnostics bridge), `<GooCsg>` (three-bvh-csg merged goo), `<BlobActor>` (menu hero), `<BlobEyes>`, `<SplatChunks>`, `<TrajectoryPreview>` |
 | `app/scene/trampoline` | ✓ | cloud-pad renderer behind compatibility `<Trampoline>`, `<TrampolineField>` imports |
 | `app/scene/world` | ✓ | `<SkyDome>`, `<Lighting>`, `<BiomeProps>`, `<BlobFollowLight>`, `<CrystalField>`, `<PowerUpField>`, `<GoldenRoutePreview>` |
 | `app/scene/postfx` | ✓ | `<PostFX>` (N8AO ambient occlusion, bloom, vignette, speed-reactive chromatic) |
@@ -80,14 +78,14 @@ input (gesture/keyboard) → intents → src/state
               │                     │
 
               ▼                     ▼
-   app/scene/* read ECS/state → render meshes, goo material, eyes, vfx, postfx
+   app/scene/* read state via diagnostics bridge → render meshes, goo material, eyes, vfx, postfx
    app/views/* read state via bridge → HUD/menus (shadcn + motion), haptics
 ```
 
 ## Determinism & testing
 
 - Same seed phrase → same world & sim. `createRng(seed)` + clock facade make sim replayable.
-- Unit tests (happy-dom): sim/engine/factories/world/launch math.
+- Unit tests (happy-dom): sim/engine/world/launch math.
 - Browser fixture tests (Chromium + WebGL): scene components render + screenshot.
 - Audio tests: before-init no-op contract (Howler).
 

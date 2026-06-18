@@ -25,7 +25,7 @@ shipped to GitHub Pages (web) and Android (Capacitor).
 
 ## Architecture (mirror arcade-cabinet dialect)
 
-- `src/` = engine, deterministic sim, ECS (koota), factories, math/RNG facade, audio, shaders, content/tuning.
+- `src/` = engine, deterministic sim, math/RNG facade, audio, shaders, content/tuning.
 - `app/` = React entry, R3F `<Canvas>` views/scene, post-processing, and the shadcn DOM UI overlay (HUD/menus/modals) positioned absolutely over the canvas.
 - **Determinism:** `src/sim/**` & `src/engine/**` are pure (no DOM, no `Math.random()` — use `createRng(seed)`; no `performance.now()` — use the engine clock facade). Enforced by `.claude/gates.json` ban_patterns.
 - **Renderer↔UI bridge:** UI never touches three objects except via the documented store/bridge.

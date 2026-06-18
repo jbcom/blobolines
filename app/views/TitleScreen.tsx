@@ -1,5 +1,14 @@
 import { Button, buttonVariants, Dialog } from "@app/components/ui";
-import { CalendarDays, Gauge, HelpCircle, Palette, Play, Settings, Shuffle } from "lucide-react";
+import {
+  CalendarDays,
+  Gauge,
+  HelpCircle,
+  Palette,
+  Play,
+  Settings,
+  Shuffle,
+  Trophy,
+} from "lucide-react";
 import { motion, useReducedMotion } from "motion/react";
 import { lazy, Suspense, useEffect, useState } from "react";
 import { initAudio, startMenuMusic, startMusic } from "@/audio";
@@ -10,11 +19,14 @@ import { dailySeedPhrase } from "@/sim/daily";
 import { useGameStore, useWorldStore } from "@/state";
 import { ROUTE_DIFFICULTIES, ROUTE_PROFILES } from "@/world";
 
-// The three menu modals are lazy-loaded — none is needed for the first paint (the menu CTA), so
+// The menu modals are lazy-loaded — none is needed for the first paint (the menu CTA), so
 // their code (+ the customizer's 3D preview, the manual's content) is split into its own chunk
 // fetched only when the player opens one. Named exports → mapped to default for React.lazy.
 const BlobCustomizer = lazy(() =>
   import("./BlobCustomizer").then((m) => ({ default: m.BlobCustomizer })),
+);
+const AchievementsModal = lazy(() =>
+  import("./AchievementsModal").then((m) => ({ default: m.AchievementsModal })),
 );
 const ManualModal = lazy(() => import("./ManualModal").then((m) => ({ default: m.ManualModal })));
 const SettingsModal = lazy(() =>
@@ -43,6 +55,7 @@ export function TitleScreen() {
   const best = useGameStore((s) => s.progress.bestHeight);
   const reduced = useReducedMotion();
   const [customizing, setCustomizing] = useState(false);
+  const [achievementsOpen, setAchievementsOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [manualOpen, setManualOpen] = useState(false);
   const [newGameOpen, setNewGameOpen] = useState(false);
@@ -156,6 +169,13 @@ export function TitleScreen() {
         </button>
         <button
           type="button"
+          onClick={() => setAchievementsOpen(true)}
+          className="-my-2 flex min-h-11 items-center gap-2 py-2 font-ui text-sm font-semibold text-fg-muted hover:text-cream"
+        >
+          <Trophy className="size-4" aria-hidden /> Achievements
+        </button>
+        <button
+          type="button"
           onClick={() => setSettingsOpen(true)}
           className="-my-2 flex min-h-11 items-center gap-2 py-2 font-ui text-sm font-semibold text-fg-muted hover:text-cream"
         >
@@ -180,6 +200,9 @@ export function TitleScreen() {
           modals' code isn't loaded until the player actually opens one. */}
       <Suspense fallback={null}>
         {customizing && <BlobCustomizer open={customizing} onOpenChange={setCustomizing} />}
+        {achievementsOpen && (
+          <AchievementsModal open={achievementsOpen} onOpenChange={setAchievementsOpen} />
+        )}
         {settingsOpen && <SettingsModal open={settingsOpen} onOpenChange={setSettingsOpen} />}
         {manualOpen && <ManualModal open={manualOpen} onOpenChange={setManualOpen} />}
       </Suspense>
