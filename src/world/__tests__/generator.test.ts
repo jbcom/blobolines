@@ -288,7 +288,7 @@ describe("world generator", () => {
         expect(
           lateral,
           `seed ${seed}: opening pad #${i} collapsed into a near-overhead stack`,
-        ).toBeGreaterThanOrEqual(5.5);
+        ).toBeGreaterThanOrEqual(10.5);
         expect(
           lateral,
           `seed ${seed}: opening pad #${i} is too far off the starter line`,
@@ -296,7 +296,7 @@ describe("world generator", () => {
         expect(
           Math.min(current.width, current.depth),
           `seed ${seed}: opening pad #${i} should be forgivingly large`,
-        ).toBeGreaterThanOrEqual(9);
+        ).toBeGreaterThanOrEqual(9.4);
         expect(reaches(previous, current), `seed ${seed}: opening pad #${i} is stranded`).toBe(
           true,
         );

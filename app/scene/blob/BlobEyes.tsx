@@ -118,6 +118,7 @@ export function BlobEyes({ expression, radius, live = false }: BlobEyesProps) {
     // hero (no live diag) keeps centered pupils. Clamped to stay within the sclera.
     let dartX = 0;
     let dartY = 0;
+    let hasFocusDart = false;
     if (focus && diag) {
       blobNdc.current.set(...diag.position).project(state.camera);
       targetNdc.current.set(...focus.position).project(state.camera);
@@ -134,20 +135,24 @@ export function BlobEyes({ expression, radius, live = false }: BlobEyesProps) {
         );
         dartX = fx;
         dartY = fy;
+        hasFocusDart = true;
       }
-    } else if (aim) {
-      dartX = aim.dir[0] * 0.07;
-      dartY = (aim.dir[1] - 0.65) * 0.08;
-    } else if (diag) {
-      const [vx, vy] = diag.velocity;
-      const mag = Math.hypot(vx, vy);
-      if (mag > 1) {
-        dartX = (vx / mag) * 0.06;
-        dartY = (vy / mag) * 0.06;
+    }
+    if (!hasFocusDart) {
+      if (aim) {
+        dartX = aim.dir[0] * 0.07;
+        dartY = (aim.dir[1] - 0.65) * 0.08;
+      } else if (diag) {
+        const [vx, vy] = diag.velocity;
+        const mag = Math.hypot(vx, vy);
+        if (mag > 1) {
+          dartX = (vx / mag) * 0.06;
+          dartY = (vy / mag) * 0.06;
+        }
+      } else {
+        dartX = Math.sin(timer.current * 0.9) * 0.025;
+        dartY = Math.sin(timer.current * 1.2 + 0.7) * 0.018;
       }
-    } else {
-      dartX = Math.sin(timer.current * 0.9) * 0.025;
-      dartY = Math.sin(timer.current * 1.2 + 0.7) * 0.018;
     }
 
     const tearing = shape.tear > 0;

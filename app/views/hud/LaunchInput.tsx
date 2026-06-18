@@ -230,6 +230,8 @@ export function LaunchInput() {
   ) => {
     const mx = x - gesture.current.startX;
     const my = y - gesture.current.startY;
+    gesture.current.lastX = x;
+    gesture.current.lastY = y;
     if (Math.hypot(mx, my) > 4) gesture.current.moved = true;
     const tap = !gesture.current.moved;
     const airborne = getBlobDiagnostics().airborne;
@@ -271,8 +273,6 @@ export function LaunchInput() {
         setAim(null);
         return;
       }
-      gesture.current.lastX = x;
-      gesture.current.lastY = y;
       chargingRef.current = true;
       setCharging(true);
       const req = publishRouteCharge(timeStamp, false, y, tap);
