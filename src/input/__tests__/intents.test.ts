@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { computeAirSteer, computeHoldCharge, computeRouteAim, keyboardSteer } from "../intents";
+import {
+  computeAirSteer,
+  computeGroundedRouteCharge,
+  computeHoldCharge,
+  computeRouteAim,
+  keyboardSteer,
+} from "../intents";
 
 describe("computeAirSteer", () => {
   it("is zero inside the deadzone", () => {
@@ -64,6 +70,77 @@ describe("computeHoldCharge", () => {
     expect(
       computeHoldCharge(0.575, { fullChargeSeconds: 1.15, tapCharge: 0.22, sensitivity: 2 }),
     ).toBe(1);
+  });
+});
+
+describe("computeGroundedRouteCharge", () => {
+  const cfg = {
+    fullChargeSeconds: 1,
+    tapCharge: 0.22,
+    sensitivity: 1,
+    autoDischargeSeconds: 0.5,
+    dragDischargePx: 100,
+    cancelDragPx: 80,
+  };
+
+  it("ramps like hold charge before full power", () => {
+    const result = computeGroundedRouteCharge(
+      { heldSeconds: 0.5, dragY: 0, releasing: false, tapEligible: false, wasCharged: false },
+      cfg,
+    );
+
+    expect(result.charge).toBeCloseTo(0.5, 5);
+    expect(result.cancelled).toBe(false);
+  });
+
+  it("discharges back to zero after the player overholds max charge", () => {
+    const result = computeGroundedRouteCharge(
+      { heldSeconds: 1.5, dragY: 0, releasing: false, tapEligible: false, wasCharged: true },
+      cfg,
+    );
+
+    expect(result.charge).toBe(0);
+    expect(result.discharged).toBe(true);
+  });
+
+  it("lets the held finger scrub charge back down without cancelling", () => {
+    const result = computeGroundedRouteCharge(
+      { heldSeconds: 0.9, dragY: 45, releasing: false, tapEligible: false, wasCharged: true },
+      cfg,
+    );
+
+    expect(result.charge).toBeCloseTo(0.45, 5);
+    expect(result.scrubbed).toBe(true);
+    expect(result.cancelled).toBe(false);
+  });
+
+  it("cancels when the held finger is pulled below the blob", () => {
+    const result = computeGroundedRouteCharge(
+      { heldSeconds: 0.4, dragY: 90, releasing: false, tapEligible: false, wasCharged: true },
+      cfg,
+    );
+
+    expect(result.charge).toBe(0);
+    expect(result.cancelled).toBe(true);
+  });
+
+  it("keeps quick tap release as a small route pop", () => {
+    const result = computeGroundedRouteCharge(
+      { heldSeconds: 0, dragY: 0, releasing: true, tapEligible: true, wasCharged: false },
+      cfg,
+    );
+
+    expect(result.charge).toBeCloseTo(0.22, 5);
+  });
+
+  it("does not turn a fully discharged hold into a tap launch on release", () => {
+    const result = computeGroundedRouteCharge(
+      { heldSeconds: 1.6, dragY: 0, releasing: true, tapEligible: true, wasCharged: true },
+      cfg,
+    );
+
+    expect(result.charge).toBe(0);
+    expect(result.discharged).toBe(true);
   });
 });
 

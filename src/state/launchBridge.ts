@@ -6,7 +6,7 @@
  * through the React tree while keeping UI and physics decoupled.
  */
 
-import type { RouteGateKind, SlicerFragmentLane } from "@/core/types";
+import type { RouteGateKind, SlicerFragmentLane, Vec3 } from "@/core/types";
 import { clearRouteLandingFeedback } from "./routeFeedbackBridge";
 import { setRouteProofTarget } from "./routeProofBridge";
 
@@ -83,10 +83,27 @@ let aim: LaunchRequest | null = null;
 
 export function setAim(req: LaunchRequest | null): void {
   aim = req;
+  if (!req) blobFaceFocus = null;
 }
 
 export function getAim(): LaunchRequest | null {
   return aim;
+}
+
+export interface BlobFaceFocusTarget {
+  kind: "routeEndpoint" | "slicer";
+  position: Vec3;
+  intensity: number;
+}
+
+let blobFaceFocus: BlobFaceFocusTarget | null = null;
+
+export function setBlobFaceFocusTarget(target: BlobFaceFocusTarget | null): void {
+  blobFaceFocus = target;
+}
+
+export function getBlobFaceFocusTarget(): BlobFaceFocusTarget | null {
+  return blobFaceFocus;
 }
 
 /** Splat-burst events: a hard landing flings real physics goo chunks from a point. The
@@ -232,6 +249,7 @@ export function consumeRebound(): ReboundRequest | null {
 export function resetBridges(): void {
   pending = null;
   aim = null;
+  blobFaceFocus = null;
   routeGateHit = null;
   splitQueue = [];
   rebound = null;

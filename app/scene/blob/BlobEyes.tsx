@@ -1,9 +1,10 @@
-import { useFrame } from "@react-three/fiber";
+import { useFrame, useThree } from "@react-three/fiber";
 import { useEffect, useRef } from "react";
 import type { Group, Object3D } from "three";
+import { Vector3 } from "three";
 import type { EyeExpression } from "@/core/types";
-import { eyeShape } from "@/sim/blob";
-import { getAim, getBlobDiagnostics } from "@/state";
+import { eyeShape, faceFocusDartFromNdc } from "@/sim/blob";
+import { getAim, getBlobDiagnostics, getBlobFaceFocusTarget } from "@/state";
 import { palette } from "@/styles/tokens";
 import { BlobMouth } from "./BlobMouth";
 
@@ -60,7 +61,10 @@ function Eye({ side }: { side: 1 | -1 }) {
 
 export function BlobEyes({ expression, radius, live = false }: BlobEyesProps) {
   const groupRef = useRef<Group>(null);
+  const camera = useThree((s) => s.camera);
   const timer = useRef(0);
+  const blobNdc = useRef(new Vector3());
+  const targetNdc = useRef(new Vector3());
   // Cached animated nodes, bucketed ONCE on mount (a single traverse) instead of traversing +
   // string-matching every frame. The frame loop then iterates these arrays directly.
   const parts = useRef<{ lids: Object3D[]; pupils: Object3D[]; tears: Object3D[] }>({
@@ -96,6 +100,7 @@ export function BlobEyes({ expression, radius, live = false }: BlobEyesProps) {
 
     const diag = live ? getBlobDiagnostics() : null;
     const aim = live ? getAim() : null;
+    const focus = live ? getBlobFaceFocusTarget() : null;
     const expr = diag?.expression ?? expression;
     const shape = eyeShape(expr, blink);
     const aimCharge = aim?.charge ?? 0;
@@ -114,7 +119,24 @@ export function BlobEyes({ expression, radius, live = false }: BlobEyesProps) {
     // hero (no live diag) keeps centered pupils. Clamped to stay within the sclera.
     let dartX = 0;
     let dartY = 0;
-    if (aim) {
+    if (focus && diag) {
+      blobNdc.current.set(...diag.position).project(camera);
+      targetNdc.current.set(...focus.position).project(camera);
+      if (
+        Number.isFinite(blobNdc.current.x) &&
+        Number.isFinite(blobNdc.current.y) &&
+        Number.isFinite(targetNdc.current.x) &&
+        Number.isFinite(targetNdc.current.y)
+      ) {
+        const [fx, fy] = faceFocusDartFromNdc(
+          [blobNdc.current.x, blobNdc.current.y],
+          [targetNdc.current.x, targetNdc.current.y],
+          focus.intensity,
+        );
+        dartX = fx;
+        dartY = fy;
+      }
+    } else if (aim) {
       dartX = aim.dir[0] * 0.07;
       dartY = (aim.dir[1] - 0.65) * 0.08;
     } else if (diag) {

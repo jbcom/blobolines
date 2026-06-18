@@ -29,6 +29,40 @@ export const DEFAULT_HOLD_CHARGE: HoldChargeConfig = {
   sensitivity: 1,
 };
 
+export interface GroundedRouteChargeConfig extends HoldChargeConfig {
+  /** Seconds after reaching full charge before the charge drains back to zero. */
+  autoDischargeSeconds: number;
+  /** Downward pixels from the original touch that scrub one full charge worth of power. */
+  dragDischargePx: number;
+  /** Downward pixels from the original touch that cancel the launch entirely. */
+  cancelDragPx: number;
+}
+
+export interface GroundedRouteChargeInput {
+  heldSeconds: number;
+  /** Positive = finger moved down-screen from the initial blob touch. */
+  dragY: number;
+  releasing: boolean;
+  /** True only for a no-drag tap release; used to preserve the quick-pop affordance. */
+  tapEligible: boolean;
+  /** Whether this gesture has already carried visible launch charge. */
+  wasCharged: boolean;
+}
+
+export interface GroundedRouteChargeResult {
+  charge: number;
+  cancelled: boolean;
+  discharged: boolean;
+  scrubbed: boolean;
+}
+
+export const DEFAULT_GROUNDED_ROUTE_CHARGE: GroundedRouteChargeConfig = {
+  ...DEFAULT_HOLD_CHARGE,
+  autoDischargeSeconds: 0.95,
+  dragDischargePx: 165,
+  cancelDragPx: 118,
+};
+
 export const ROUTE_AIM_Z_SCALE = 1.25;
 
 /** Hold-to-charge thrust: a quick tap still produces a small route-aligned pop, while holding
@@ -43,6 +77,53 @@ export function computeHoldCharge(
   const ramp = Math.min(1, seconds / full);
   if (ramp <= 0) return 0;
   return Math.max(Math.min(1, config.tapCharge), ramp);
+}
+
+function effectiveFullChargeSeconds(config: HoldChargeConfig): number {
+  const rate = Math.max(0.1, config.sensitivity);
+  return Math.max(0.2, config.fullChargeSeconds / rate);
+}
+
+/**
+ * Grounded route charge control for the live hold gesture.
+ *
+ * Time raises charge, holding past max drains it back down, and dragging the same held finger
+ * down-screen scrubs/cancels the pending launch. The return value is intentionally small so
+ * React can publish it each frame without owning the timing math.
+ */
+export function computeGroundedRouteCharge(
+  input: GroundedRouteChargeInput,
+  config: GroundedRouteChargeConfig = DEFAULT_GROUNDED_ROUTE_CHARGE,
+): GroundedRouteChargeResult {
+  const dragY = Number.isFinite(input.dragY) ? input.dragY : 0;
+  const cancelDrag = Math.max(20, config.cancelDragPx);
+  if (dragY >= cancelDrag) {
+    return { charge: 0, cancelled: true, discharged: false, scrubbed: true };
+  }
+
+  const heldSeconds = Math.max(0, input.heldSeconds);
+  const full = effectiveFullChargeSeconds(config);
+  const drainSeconds = Math.max(0.1, config.autoDischargeSeconds);
+  const overheld = Math.max(0, heldSeconds - full);
+  const timeCharge =
+    overheld > 0
+      ? Math.max(0, 1 - overheld / drainSeconds)
+      : computeHoldCharge(heldSeconds, config);
+  const scrub = Math.max(0, dragY) / Math.max(1, config.dragDischargePx);
+  let charge = Math.max(0, Math.min(1, timeCharge - scrub));
+  const discharged =
+    overheld >= drainSeconds || (input.wasCharged && timeCharge > 0 && charge <= 0);
+
+  if (input.releasing && input.tapEligible && !input.wasCharged && charge <= 0 && !discharged) {
+    charge = Math.min(1, Math.max(0, config.tapCharge));
+  }
+
+  return {
+    charge,
+    cancelled: false,
+    discharged,
+    scrubbed: scrub > 0,
+  };
 }
 
 /**

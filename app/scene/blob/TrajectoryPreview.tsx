@@ -9,6 +9,7 @@ import {
   effectiveRouteDifficulty,
   getAim,
   getBlobDiagnostics,
+  setBlobFaceFocusTarget,
   useGameStore,
   useWorldStore,
 } from "@/state";
@@ -59,6 +60,22 @@ export function aimEndpointTargetY(step: RouteStep | null): number | null {
   return step.target.position[1] + PAD_SURFACE_Y;
 }
 
+export function aimEndpointHitsStep(step: RouteStep | null, endpoint: AimEndpoint | null): boolean {
+  if (!step || !endpoint) return false;
+  const gate = step.proof?.routeGate;
+  if (gate?.kind === "slicer") {
+    return (
+      Math.hypot(
+        endpoint.position[0] - gate.position[0],
+        endpoint.position[2] - gate.position[2],
+      ) <= gate.radius
+    );
+  }
+  const dx = Math.abs(endpoint.position[0] - step.target.position[0]);
+  const dz = Math.abs(endpoint.position[2] - step.target.position[2]);
+  return dx <= step.target.width * 0.5 && dz <= step.target.depth * 0.5;
+}
+
 export function solveAimEndpoint(
   origin: Vec3,
   velocity: Vec3,
@@ -102,6 +119,7 @@ export function TrajectoryPreview() {
       mesh.instanceMatrix.needsUpdate = true;
       reticle.visible = false;
       halo.visible = false;
+      setBlobFaceFocusTarget(null);
       return;
     }
 
@@ -122,6 +140,7 @@ export function TrajectoryPreview() {
       mesh.instanceMatrix.needsUpdate = true;
       reticle.visible = false;
       halo.visible = false;
+      setBlobFaceFocusTarget(null);
       return;
     }
 
@@ -130,10 +149,16 @@ export function TrajectoryPreview() {
       targetY !== null && showsAimEndpointReticle(activeDifficulty)
         ? solveAimEndpoint(diag.position, v, targetY, GRAVITY[1])
         : null;
+    const validEndpoint = aimEndpointHitsStep(step, endpoint) ? endpoint : null;
 
-    if (endpoint) {
+    if (validEndpoint) {
+      setBlobFaceFocusTarget({
+        kind: step?.proof?.routeGate?.kind === "slicer" ? "slicer" : "routeEndpoint",
+        position: validEndpoint.position,
+        intensity: Math.max(0.25, Math.min(1, aim.charge)),
+      });
       for (let shown = 0; shown < DOTS; shown++) {
-        const t = endpoint.time * ((shown + 1) / DOTS);
+        const t = validEndpoint.time * ((shown + 1) / DOTS);
         const x = bx + v[0] * t;
         const y = by + v[1] * t + 0.5 * GRAVITY[1] * t * t;
         const z = bz + v[2] * t;
@@ -148,7 +173,7 @@ export function TrajectoryPreview() {
 
       const pulse = 1 + Math.sin(state.clock.elapsedTime * 6.5) * 0.08;
       const base = activeDifficulty === "ready" ? 0.9 : activeDifficulty === "medium" ? 0.75 : 0.62;
-      reticle.position.set(...endpoint.position);
+      reticle.position.set(...validEndpoint.position);
       halo.position.copy(reticle.position);
       reticle.scale.setScalar(base * pulse);
       halo.scale.setScalar(base * (1.28 + (pulse - 1) * 1.6));
@@ -161,6 +186,7 @@ export function TrajectoryPreview() {
 
     reticle.visible = false;
     halo.visible = false;
+    setBlobFaceFocusTarget(null);
 
     // Plot the ballistic arc p(t) = p0 + v·t + ½·g·t², but place a dot every DOT_SPACING
     // world-units of arc length (not per fixed time) so the line is evenly readable at any

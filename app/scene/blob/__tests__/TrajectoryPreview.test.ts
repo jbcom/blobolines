@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   aimAssistDifficulty,
+  aimEndpointHitsStep,
   aimEndpointTargetY,
   showsAimEndpointReticle,
   showsAimParabola,
@@ -41,6 +42,18 @@ describe("TrajectoryPreview aim assistance", () => {
     expect(endpoint?.position[0]).toBeGreaterThan(0);
     expect(endpoint?.position[2]).toBeLessThan(0);
     expect(endpoint?.time).toBeGreaterThan(15 / 22);
+  });
+
+  it("only treats an endpoint as target-valid when it lands inside the next trampoline", () => {
+    const step = {
+      source: null,
+      target: { id: 2, position: [4, 10, -2], width: 6, depth: 4, type: "standard" as const },
+      proof: null,
+    };
+
+    expect(aimEndpointHitsStep(step, { position: [6.9, 10, -3.9], time: 1 })).toBe(true);
+    expect(aimEndpointHitsStep(step, { position: [7.2, 10, -3.9], time: 1 })).toBe(false);
+    expect(aimEndpointHitsStep(step, { position: [6.9, 10, 0.2], time: 1 })).toBe(false);
   });
 
   it("cuts the aim endpoint to the slicer height when the route has a slicer gate", () => {

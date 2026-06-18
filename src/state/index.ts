@@ -18,6 +18,7 @@ export {
   resetFlash,
 } from "./flashBridge";
 export {
+  type BlobFaceFocusTarget,
   type BlobSplitEvent,
   consumeBlobSplits,
   consumeImpact,
@@ -31,6 +32,7 @@ export {
   type GroundRingKind,
   getAim,
   getAirSteer,
+  getBlobFaceFocusTarget,
   type LandingEvent,
   type LaunchBurstEvent,
   type LaunchRequest,
@@ -49,6 +51,7 @@ export {
   type SplatBurst,
   setAim,
   setAirSteer,
+  setBlobFaceFocusTarget,
 } from "./launchBridge";
 export { attachPersistence, hydrateStore } from "./persistence";
 export {
