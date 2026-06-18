@@ -276,14 +276,14 @@ export function PlayerBlob() {
       );
       impact.current = Math.max(impact.current, 0.08 * adherence.strength);
       excitement.current = Math.max(excitement.current, 0.2 * adherence.strength);
-      cloudCling.current = {
-        padId: adherence.padId,
-        type: adherence.type,
-        position: [adherence.position[0], adherence.position[1], adherence.position[2]],
-        relX: adherence.relX,
-        relZ: adherence.relZ,
-        strength: Math.max(cloudCling.current.strength, adherence.strength),
-      };
+      cloudCling.current.padId = adherence.padId;
+      cloudCling.current.type = adherence.type;
+      cloudCling.current.position[0] = adherence.position[0];
+      cloudCling.current.position[1] = adherence.position[1];
+      cloudCling.current.position[2] = adherence.position[2];
+      cloudCling.current.relX = adherence.relX;
+      cloudCling.current.relZ = adherence.relZ;
+      cloudCling.current.strength = Math.max(cloudCling.current.strength, adherence.strength);
       p = body.translation();
       v = body.linvel();
       airborne = Math.abs(v.y) > 0.5;
@@ -494,7 +494,7 @@ export function PlayerBlob() {
     excitement.current = Math.max(0, excitement.current - dt * 0.65);
     cloudCling.current.strength = Math.max(
       0,
-      cloudCling.current.strength - realDt * (airborne ? 4.8 : 1.2),
+      cloudCling.current.strength - dt * (airborne ? 4.8 : 1.2),
     );
     // Death is fall below the last cloud caught (safeY), not the airborne apex (maxY) —
     // otherwise a big launch kills itself on the way back down to its own cloud.
@@ -536,7 +536,11 @@ export function PlayerBlob() {
           ? {
               padId: cloudCling.current.padId,
               type: cloudCling.current.type,
-              position: cloudCling.current.position,
+              position: [
+                cloudCling.current.position[0],
+                cloudCling.current.position[1],
+                cloudCling.current.position[2],
+              ],
               relX: cloudCling.current.relX,
               relZ: cloudCling.current.relZ,
               strength: cloudCling.current.strength,
