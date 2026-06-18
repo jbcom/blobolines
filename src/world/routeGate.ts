@@ -1,5 +1,6 @@
 import type {
   GoldenPathProof,
+  RouteGateKind,
   RouteGateSpec,
   TrampolineSpec,
   Vec3,
@@ -22,7 +23,14 @@ function hash01(a: number, b: number, c: number): number {
   return n - Math.floor(n);
 }
 
+function gateKind(difficulty: WorldDifficulty): RouteGateKind | null {
+  if (difficulty === "blobmare") return "slicer";
+  if (difficulty === "ultraBlobmare" || difficulty === "oneWrongMove") return "phasePortal";
+  return null;
+}
+
 function gateCadence(difficulty: WorldDifficulty): number | null {
+  if (difficulty === "blobmare") return 6;
   if (difficulty === "ultraBlobmare") return 5;
   if (difficulty === "oneWrongMove") return 3;
   return null;
@@ -30,7 +38,13 @@ function gateCadence(difficulty: WorldDifficulty): number | null {
 
 function gateTuning(
   difficulty: WorldDifficulty,
-): Pick<RouteGateSpec, "period" | "openFraction" | "radius"> | null {
+): Pick<
+  RouteGateSpec,
+  "period" | "openFraction" | "radius" | "fragmentCount" | "splitSpread"
+> | null {
+  if (difficulty === "blobmare") {
+    return { period: 0, openFraction: 0, radius: 1.58, fragmentCount: 3, splitSpread: 3.2 };
+  }
   if (difficulty === "ultraBlobmare") {
     return { period: 2.35, openFraction: 0.42, radius: 1.65 };
   }
@@ -62,7 +76,10 @@ export function shouldGenerateRouteGate(
 ): boolean {
   const routeIndex = source.routeIndex ?? 0;
   const cadence = gateCadence(profile.difficulty);
+  const kind = gateKind(profile.difficulty);
   if (!cadence) return false;
+  if (!kind) return false;
+  if (profile.difficulty === "blobmare" && routeIndex < 5) return false;
   if (profile.difficulty === "ultraBlobmare" && routeIndex < 4) return false;
   if (profile.difficulty === "oneWrongMove" && routeIndex < 2) return false;
   return routeIndex % cadence === 0;
@@ -81,7 +98,12 @@ export function createRouteGateForProof(
   if (sampleDivisor <= 0) return null;
 
   const routeIndex = source.routeIndex ?? 0;
-  const travelFraction = 0.44 + hash01(source.id, target.id, routeIndex) * 0.18;
+  const kind = gateKind(profile.difficulty);
+  if (!kind) return null;
+  const travelFraction =
+    kind === "slicer"
+      ? 0.38 + hash01(source.id, target.id, routeIndex) * 0.16
+      : 0.44 + hash01(source.id, target.id, routeIndex) * 0.18;
   const sampleIndex = clamp(
     Math.round((proof.samples.length - 1) * travelFraction),
     MIN_GATE_SAMPLE_INDEX,
@@ -92,15 +114,24 @@ export function createRouteGateForProof(
 
   const sampleFlightTime = proof.flightTime * (sampleIndex / sampleDivisor);
   const idealReleaseDelay =
-    profile.difficulty === "oneWrongMove"
-      ? 0.12 + hash01(target.id, source.id, routeIndex) * 0.28
-      : 0.2 + hash01(target.id, source.id, routeIndex) * 0.5;
+    kind === "slicer"
+      ? 0
+      : profile.difficulty === "oneWrongMove"
+        ? 0.12 + hash01(target.id, source.id, routeIndex) * 0.28
+        : 0.2 + hash01(target.id, source.id, routeIndex) * 0.5;
   const openCenter = tuning.openFraction * 0.5;
-  const phaseOffset = wrap01(openCenter - (idealReleaseDelay + sampleFlightTime) / tuning.period);
+  const phaseOffset =
+    kind === "slicer"
+      ? 0
+      : wrap01(openCenter - (idealReleaseDelay + sampleFlightTime) / tuning.period);
+  const fragmentCount =
+    kind === "slicer"
+      ? 3 + clamp(Math.floor(hash01(target.id, source.id, routeIndex) * 3), 0, 2)
+      : undefined;
 
   return {
-    id: `gate-${routeIndex}-${source.id.toFixed(3)}-${target.id.toFixed(3)}`,
-    kind: "phasePortal",
+    id: `${kind}-${routeIndex}-${source.id.toFixed(3)}-${target.id.toFixed(3)}`,
+    kind,
     sourcePadId: source.id,
     targetPadId: target.id,
     routeIndex,
@@ -113,5 +144,7 @@ export function createRouteGateForProof(
     phaseOffset,
     flightTime: sampleFlightTime,
     idealReleaseDelay,
+    fragmentCount,
+    splitSpread: tuning.splitSpread,
   };
 }

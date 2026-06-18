@@ -72,4 +72,30 @@ describe("route gates", () => {
 
     expect(created).toBeNull();
   });
+
+  it("creates proof-anchored slicers in Blobmare", () => {
+    const samples: GoldenPathProof["samples"] = [
+      [0, 0, 0],
+      [1, 1, 0],
+      [2, 2, 0],
+      [3, 3, 0],
+      [4, 4, 0],
+      [5, 5, 0],
+      [6, 6, 0],
+      [7, 7, 0],
+      [8, 8, 0],
+    ];
+    const created = createRouteGateForProof(
+      pad(1, 6),
+      pad(2, 7, 8),
+      proof(samples),
+      routeProfile("blobmare"),
+    );
+
+    expect(created?.kind).toBe("slicer");
+    expect(created?.period).toBe(0);
+    expect(created?.fragmentCount).toBeGreaterThanOrEqual(3);
+    expect(created?.fragmentCount).toBeLessThanOrEqual(5);
+    expect(created?.position).toEqual(samples[created?.sampleIndex ?? -1]);
+  });
 });

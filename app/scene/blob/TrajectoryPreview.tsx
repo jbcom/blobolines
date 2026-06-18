@@ -13,7 +13,7 @@ import {
   useWorldStore,
 } from "@/state";
 import { hex, palette } from "@/styles/tokens";
-import { nextRouteStep, PAD_SURFACE_Y } from "@/world";
+import { nextRouteStep, PAD_SURFACE_Y, type RouteStep } from "@/world";
 
 /**
  * Aim/targeting feedback while the player charges. Reads the live aim from the bridge each
@@ -50,6 +50,13 @@ export function aimAssistDifficulty(
 ): WorldDifficulty {
   const routeY = routeSourceY ?? 0;
   return effectiveRouteDifficulty(startingDifficulty, Math.max(0, routeY, runHeight));
+}
+
+export function aimEndpointTargetY(step: RouteStep | null): number | null {
+  if (!step) return null;
+  const gate = step.proof?.routeGate;
+  if (gate?.kind === "slicer") return gate.position[1];
+  return step.target.position[1] + PAD_SURFACE_Y;
 }
 
 export function solveAimEndpoint(
@@ -118,9 +125,10 @@ export function TrajectoryPreview() {
       return;
     }
 
+    const targetY = aimEndpointTargetY(step);
     const endpoint =
-      step && showsAimEndpointReticle(activeDifficulty)
-        ? solveAimEndpoint(diag.position, v, step.target.position[1] + PAD_SURFACE_Y, GRAVITY[1])
+      targetY !== null && showsAimEndpointReticle(activeDifficulty)
+        ? solveAimEndpoint(diag.position, v, targetY, GRAVITY[1])
         : null;
 
     if (endpoint) {

@@ -44,6 +44,7 @@ import {
   getAirSteer,
   isPowerupActive,
   isRouteProofSequenceActive,
+  reportBlobSplit,
   reportLaunchBurst,
   reportRouteLandingFeedback,
   reportSplat,
@@ -199,20 +200,37 @@ export function PlayerBlob() {
       playerControlStarted.current = true;
       body.wakeUp();
       const live = body.linvel();
-      body.setLinvel(
-        {
-          x: -live.x * 0.28,
-          y: Math.min(live.y * 0.25, 0),
-          z: -live.z * 0.28,
-        },
-        true,
-      );
-      impact.current = Math.max(impact.current, 0.7 * gateHit.strength);
-      excitement.current = Math.max(excitement.current, 0.2);
-      flash("red", Math.min(1, gateHit.strength));
-      reportSplat({ position: gateHit.position, strength: Math.min(1, gateHit.strength) });
-      playThump(Math.min(1, gateHit.strength));
-      playSplat();
+      if (gateHit.kind === "slicer") {
+        reportBlobSplit({
+          position: gateHit.position,
+          velocity: [live.x, live.y, live.z],
+          normal: gateHit.normal,
+          count: gateHit.fragmentCount ?? 3,
+          spread: gateHit.splitSpread ?? 3,
+          strength: gateHit.strength,
+        });
+        body.setLinvel({ x: live.x * 0.9, y: live.y * 0.88, z: live.z * 0.9 }, true);
+        impact.current = Math.max(impact.current, 0.38 * gateHit.strength);
+        excitement.current = Math.max(excitement.current, 0.65);
+        flash("gold", Math.min(1, gateHit.strength));
+        reportSplat({ position: gateHit.position, strength: Math.min(0.7, gateHit.strength) });
+        playLaunch(0.45);
+      } else {
+        body.setLinvel(
+          {
+            x: -live.x * 0.28,
+            y: Math.min(live.y * 0.25, 0),
+            z: -live.z * 0.28,
+          },
+          true,
+        );
+        impact.current = Math.max(impact.current, 0.7 * gateHit.strength);
+        excitement.current = Math.max(excitement.current, 0.2);
+        flash("red", Math.min(1, gateHit.strength));
+        reportSplat({ position: gateHit.position, strength: Math.min(1, gateHit.strength) });
+        playThump(Math.min(1, gateHit.strength));
+        playSplat();
+      }
     }
 
     // Trampoline rebound: landing on a pad pops the blob back up (the springy core

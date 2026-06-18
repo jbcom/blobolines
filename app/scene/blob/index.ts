@@ -7,4 +7,5 @@ export { GooCsg } from "./GooCsg";
 export { PhysicsStepDriver } from "./PhysicsStepDriver";
 export { PlayerBlob } from "./PlayerBlob";
 export { SplatChunks } from "./SplatChunks";
+export { SplitBlobEchoes } from "./SplitBlobEchoes";
 export { TrajectoryPreview } from "./TrajectoryPreview";

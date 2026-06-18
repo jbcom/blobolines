@@ -25,7 +25,7 @@ const DIFFICULTY_TONE: Record<WorldDifficulty, string> = {
   ready: "Easy routes with generous landing lips and forgiving proof variance.",
   medium: "More canted chains and compressed arcs without precision flat stacks.",
   hard: "Occasional flat precision arcs with tighter route margins.",
-  blobmare: "Sharper mechanics, cant chains, and thin landing windows.",
+  blobmare: "Sharper mechanics, slicer gates, and thin landing windows.",
   ultraBlobmare: "Tool-assisted-feeling routes with very tight proof margins.",
   oneWrongMove: "Starts at one-path precision and stays there.",
 };

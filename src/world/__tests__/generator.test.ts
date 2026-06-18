@@ -195,16 +195,40 @@ describe("world generator", () => {
     expect(chunk.powerups.length).toBeGreaterThan(0);
   });
 
-  it("does not place route gates before Ultra Blobmare", () => {
+  it("does not place route gates before Blobmare", () => {
     const start = starterPad();
     const chunk = generateUpTo(createRng("no-early-gates"), 0, 2100, start, "ready");
-    const gatesBeforeUltra = [start, ...chunk.trampolines].flatMap((pad) => {
+    const gatesBeforeBlobmare = [start, ...chunk.trampolines].flatMap((pad) => {
       const difficulty = effectiveRouteDifficulty("ready", pad.position[1]);
-      if (difficulty === "ultraBlobmare" || difficulty === "oneWrongMove") return [];
+      if (
+        difficulty === "blobmare" ||
+        difficulty === "ultraBlobmare" ||
+        difficulty === "oneWrongMove"
+      ) {
+        return [];
+      }
       return pad.goldenPath?.routeGate ? [pad.goldenPath.routeGate] : [];
     });
 
-    expect(gatesBeforeUltra).toHaveLength(0);
+    expect(gatesBeforeBlobmare).toHaveLength(0);
+  });
+
+  it("places slicers on certified samples in Blobmare", () => {
+    const start = starterPad();
+    const chunk = generateUpTo(createRng("slicer-path"), 0, 260, start, "blobmare");
+    const pads = [start, ...chunk.trampolines];
+    const gates = pads.flatMap((pad) =>
+      pad.goldenPath?.routeGate ? [pad.goldenPath.routeGate] : [],
+    );
+
+    expect(gates.some((gate) => gate.kind === "slicer")).toBe(true);
+    for (const gate of gates.filter((g) => g.kind === "slicer")) {
+      const source = pads.find((pad) => pad.id === gate.sourcePadId);
+      const proof = source?.goldenPath;
+      expect(proof?.toPadId).toBe(gate.targetPadId);
+      expect(proof?.samples[gate.sampleIndex]).toEqual(gate.position);
+      expect(gate.fragmentCount).toBeGreaterThanOrEqual(3);
+    }
   });
 
   it("places phase portals on certified samples in expert route profiles", () => {

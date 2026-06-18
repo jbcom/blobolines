@@ -8,6 +8,7 @@ import {
   PhysicsStepDriver,
   PlayerBlob,
   SplatChunks,
+  SplitBlobEchoes,
   TrajectoryPreview,
 } from "./blob";
 import { CameraRig } from "./CameraRig";
@@ -76,6 +77,7 @@ export function GameScene() {
       {playing && <RouteGateField />}
       {playing && <LaunchRing />}
       {playing && <BlobTrail skin={skin} />}
+      {playing && <SplitBlobEchoes skin={skin} />}
       {playing && <TrajectoryPreview />}
       {playing && <GoldenRoutePreview />}
 

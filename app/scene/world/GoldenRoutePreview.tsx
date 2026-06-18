@@ -61,9 +61,18 @@ export function GoldenRoutePreview() {
       return;
     }
 
-    const key = `${world.seedPhrase}:${world.seed}:${target.pairIndex}:${from.id}:${proof.toPadId}`;
+    const gate = proof.routeGate?.kind === "slicer" ? proof.routeGate : null;
+    const visibleSamples = gate ? proof.samples.slice(0, gate.sampleIndex + 1) : proof.samples;
+    if (visibleSamples.length < MIN_POINTS) {
+      mesh.visible = false;
+      impact.visible = false;
+      activeKey.current = "";
+      return;
+    }
+
+    const key = `${world.seedPhrase}:${world.seed}:${target.pairIndex}:${from.id}:${proof.toPadId}:${gate?.id ?? "full"}`;
     if (key !== activeKey.current) {
-      const points = proof.samples.map((p) => new Vector3(p[0], p[1], p[2]));
+      const points = visibleSamples.map((p) => new Vector3(p[0], p[1], p[2]));
       const curve = new CatmullRomCurve3(points);
       const next = new TubeGeometry(curve, Math.max(16, points.length * 4), RADIUS, 14, false);
       const previous = mesh.geometry;
@@ -72,8 +81,13 @@ export function GoldenRoutePreview() {
       activeKey.current = key;
     }
     mesh.visible = true;
-    applyPadNormal(impactNormal.current, to);
-    impact.position.set(proof.landing[0], proof.landing[1] + 0.08, proof.landing[2]);
+    if (gate) {
+      impactNormal.current.set(...gate.normal).normalize();
+    } else {
+      applyPadNormal(impactNormal.current, to);
+    }
+    const impactPosition = gate?.position ?? proof.landing;
+    impact.position.set(impactPosition[0], impactPosition[1] + 0.08, impactPosition[2]);
     impact.quaternion.setFromUnitVectors(RING_NORMAL, impactNormal.current);
     impact.visible = true;
   });

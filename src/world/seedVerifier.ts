@@ -40,6 +40,7 @@ export interface SeedRouteVerification {
   maxProofVariants: number;
   routeGateCount: number;
   phasePortalCount: number;
+  slicerCount: number;
   minLateralGap: number;
   minLipClearance: number;
   minLandingPrecision: number;
@@ -151,6 +152,7 @@ export function verifySeedRoute({
   let maxRequiredProofVariants = 0;
   let routeGateCount = 0;
   let phasePortalCount = 0;
+  let slicerCount = 0;
 
   for (let i = 0; i < pads.length - 1; i++) {
     const source = pads[i];
@@ -258,8 +260,18 @@ export function verifySeedRoute({
     if (gate) {
       routeGateCount++;
       if (gate.kind === "phasePortal") phasePortalCount++;
-      if (difficultyRank(activeProfile.difficulty) < difficultyRank("ultraBlobmare")) {
-        addFailure(failures, i, source, target, "route gate appeared before Ultra Blobmare");
+      if (gate.kind === "slicer") slicerCount++;
+      if (
+        gate.kind === "phasePortal" &&
+        difficultyRank(activeProfile.difficulty) < difficultyRank("ultraBlobmare")
+      ) {
+        addFailure(failures, i, source, target, "phase portal appeared before Ultra Blobmare");
+      }
+      if (
+        gate.kind === "slicer" &&
+        difficultyRank(activeProfile.difficulty) < difficultyRank("blobmare")
+      ) {
+        addFailure(failures, i, source, target, "slicer gate appeared before Blobmare");
       }
       if (gate.sourcePadId !== source.id || gate.targetPadId !== target.id) {
         addFailure(failures, i, source, target, "route gate points at the wrong pad pair");
@@ -269,16 +281,24 @@ export function verifySeedRoute({
       } else if (gateSampleDelta(gate, proof) > EPS) {
         addFailure(failures, i, source, target, "route gate is not anchored to a proof sample");
       }
-      if (
-        gate.radius <= 0 ||
-        gate.period <= 0 ||
-        gate.openFraction <= 0 ||
-        gate.openFraction >= 1
-      ) {
-        addFailure(failures, i, source, target, "route gate timing or radius is invalid");
+      if (gate.radius <= 0) {
+        addFailure(failures, i, source, target, "route gate radius is invalid");
       }
-      if (!phasePortalOpen(gate, gate.idealReleaseDelay + gate.flightTime)) {
-        addFailure(failures, i, source, target, "route gate has no certified open timing");
+      if (gate.kind === "phasePortal") {
+        if (gate.period <= 0 || gate.openFraction <= 0 || gate.openFraction >= 1) {
+          addFailure(failures, i, source, target, "phase portal timing is invalid");
+        }
+        if (!phasePortalOpen(gate, gate.idealReleaseDelay + gate.flightTime)) {
+          addFailure(failures, i, source, target, "phase portal has no certified open timing");
+        }
+      }
+      if (gate.kind === "slicer") {
+        if ((gate.fragmentCount ?? 0) < 3 || (gate.fragmentCount ?? 0) > 5) {
+          addFailure(failures, i, source, target, "slicer fragment count is invalid");
+        }
+        if ((gate.splitSpread ?? 0) <= 0) {
+          addFailure(failures, i, source, target, "slicer split spread is invalid");
+        }
       }
     }
 
@@ -320,6 +340,7 @@ export function verifySeedRoute({
     maxProofVariants,
     routeGateCount,
     phasePortalCount,
+    slicerCount,
     minLateralGap: Number.isFinite(minLateralGap) ? minLateralGap : 0,
     minLipClearance: Number.isFinite(minLipClearance) ? minLipClearance : 0,
     minLandingPrecision: Number.isFinite(minLandingPrecision) ? minLandingPrecision : 0,

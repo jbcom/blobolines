@@ -24,6 +24,19 @@ function fixtureGate(): RouteGateSpec {
   };
 }
 
+function fixtureSlicer(): RouteGateSpec {
+  return {
+    ...fixtureGate(),
+    id: "fixture-slicer",
+    kind: "slicer",
+    period: 0,
+    openFraction: 0,
+    phaseOffset: 0,
+    fragmentCount: 4,
+    splitSpread: 3.2,
+  };
+}
+
 function padWithGate(gate = fixtureGate()): TrampolineSpec {
   return {
     id: gate.sourcePadId,
@@ -125,6 +138,38 @@ test("RouteGateField reports a hit when the blob enters a closed portal", async 
   await vi.waitFor(
     () => {
       expect(consumeRouteGateHit()?.gateId).toBe(gate.id);
+    },
+    { timeout: 6000, interval: 60 },
+  );
+});
+
+test("RouteGateField reports split metadata when the blob enters a slicer", async () => {
+  const gate = fixtureSlicer();
+  useWorldStore.setState({ trampolines: [padWithGate(gate)] });
+  setBlobDiagnostics({
+    position: gate.position,
+    velocity: [2, 8, -1],
+    speed: 8.3,
+    airborne: true,
+    expression: "wide",
+    squash: 1,
+    maxHeight: 0,
+    groundY: 0,
+  });
+
+  await render(
+    <FixtureStage testId="route-gate-slicer-fixture" cameraDistance={5}>
+      <RouteGateField />
+    </FixtureStage>,
+  );
+
+  await vi.waitFor(
+    () => {
+      const hit = consumeRouteGateHit();
+      expect(hit?.gateId).toBe(gate.id);
+      expect(hit?.kind).toBe("slicer");
+      expect(hit?.fragmentCount).toBe(4);
+      expect(hit?.velocity).toEqual([2, 8, -1]);
     },
     { timeout: 6000, interval: 60 },
   );

@@ -18,6 +18,8 @@ export {
   resetFlash,
 } from "./flashBridge";
 export {
+  type BlobSplitEvent,
+  consumeBlobSplits,
   consumeImpact,
   consumeLanding,
   consumeLaunch,
@@ -34,6 +36,7 @@ export {
   type LaunchRequest,
   type ReboundRequest,
   type RouteGateHitEvent,
+  reportBlobSplit,
   reportImpact,
   reportLanding,
   reportLaunchBurst,
