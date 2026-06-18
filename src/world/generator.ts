@@ -22,7 +22,6 @@ import {
 import {
   CLIMB_SPEED,
   launchSpeedForCharge,
-  PAD_SURFACE_Y,
   solveFlatLaunchProofs,
   solveGoldenPath,
 } from "./reachable";
@@ -371,7 +370,7 @@ function preferredChargeLandingGap(
   const [ux, uz] = aim2(prev, target);
   const normal = computeRouteAim(ux, uz, profile.preferredCharge);
   const speed = launchSpeedForCharge(profile.preferredCharge);
-  const dy = target.position[1] + PAD_SURFACE_Y - (prev.position[1] + PAD_SURFACE_Y);
+  const dy = target.position[1] - prev.position[1];
   const vy = normal[1] * speed;
   if (vy * vy < 2 * G * dy) return 0;
   const t = Math.max(0, (vy + Math.sqrt(Math.max(0, vy * vy - 2 * G * dy))) / G);

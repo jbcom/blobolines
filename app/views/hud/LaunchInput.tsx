@@ -240,6 +240,7 @@ export function LaunchInput() {
     e.preventDefault();
     e.currentTarget.setPointerCapture(e.pointerId);
     pointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    const now = performance.now();
     if (pointers.current.size >= 2) {
       gesture.current.mode = "pinch";
       gesture.current.pinchDistance = pointerDistance();
@@ -260,12 +261,12 @@ export function LaunchInput() {
       startY: e.clientY,
       lastX: e.clientX,
       lastY: e.clientY,
-      startTime: e.timeStamp,
+      startTime: now,
       moved: false,
       pinchDistance: 1,
       pinchZoom: getViewControls().zoom,
     };
-    if (mode === "game") updateGameGesture(e.clientX, e.clientY, true, false, e.timeStamp);
+    if (mode === "game") updateGameGesture(e.clientX, e.clientY, true, false, now);
   };
 
   const onPointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
@@ -295,15 +296,16 @@ export function LaunchInput() {
       return;
     }
 
-    updateGameGesture(e.clientX, e.clientY, true, false, e.timeStamp);
+    updateGameGesture(e.clientX, e.clientY, true, false, performance.now());
   };
 
   const onPointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
     const pointer = pointers.current.get(e.pointerId);
     if (!pointer) return;
     e.preventDefault();
+    const now = performance.now();
     if (gesture.current.mode === "game") {
-      updateGameGesture(e.clientX, e.clientY, false, true, e.timeStamp);
+      updateGameGesture(e.clientX, e.clientY, false, true, now);
     }
     pointers.current.delete(e.pointerId);
     if (pointers.current.size === 1) {
@@ -315,7 +317,7 @@ export function LaunchInput() {
           startY: remaining.y,
           lastX: remaining.x,
           lastY: remaining.y,
-          startTime: e.timeStamp,
+          startTime: now,
           moved: false,
           pinchDistance: 1,
           pinchZoom: getViewControls().zoom,
@@ -327,6 +329,7 @@ export function LaunchInput() {
   const onPointerCancel = (e: React.PointerEvent<HTMLDivElement>) => {
     if (!pointers.current.has(e.pointerId)) return;
     e.preventDefault();
+    const now = performance.now();
     pointers.current.delete(e.pointerId);
     if (pointers.current.size === 1) {
       const remaining = activePointer();
@@ -337,7 +340,7 @@ export function LaunchInput() {
           startY: remaining.y,
           lastX: remaining.x,
           lastY: remaining.y,
-          startTime: e.timeStamp,
+          startTime: now,
           moved: false,
           pinchDistance: 1,
           pinchZoom: getViewControls().zoom,
