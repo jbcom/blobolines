@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.9](https://github.com/jbcom/blobolines/compare/blobolines-v0.1.8...blobolines-v0.1.9) (2026-06-18)
+
+
+### Bug Fixes
+
+* make cloud catches adhere ([7d2b24d](https://github.com/jbcom/blobolines/commit/7d2b24d5d77dfef32622446af840a0276610bf57))
+
 ## [0.1.8](https://github.com/jbcom/blobolines/compare/blobolines-v0.1.7...blobolines-v0.1.8) (2026-06-18)
 
 
