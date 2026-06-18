@@ -57,6 +57,16 @@ function padWithGate(gate = fixtureGate()): TrampolineSpec {
 
 afterEach(() => {
   useWorldStore.setState({ trampolines: [], seed: 1, seedPhrase: "seed-1", runId: 0 });
+  setBlobDiagnostics({
+    position: [0, -999, 0],
+    velocity: [0, 0, 0],
+    speed: 0,
+    airborne: false,
+    expression: "idle",
+    squash: 1,
+    maxHeight: 0,
+    groundY: 0,
+  });
   resetBridges();
 });
 

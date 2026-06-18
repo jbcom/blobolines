@@ -198,11 +198,13 @@ describe("world generator", () => {
   it("does not place route gates before Ultra Blobmare", () => {
     const start = starterPad();
     const chunk = generateUpTo(createRng("no-early-gates"), 0, 2100, start, "ready");
-    const gates = [start, ...chunk.trampolines].flatMap((pad) =>
-      pad.goldenPath?.routeGate ? [pad.goldenPath.routeGate] : [],
-    );
+    const gatesBeforeUltra = [start, ...chunk.trampolines].flatMap((pad) => {
+      const difficulty = effectiveRouteDifficulty("ready", pad.position[1]);
+      if (difficulty === "ultraBlobmare" || difficulty === "oneWrongMove") return [];
+      return pad.goldenPath?.routeGate ? [pad.goldenPath.routeGate] : [];
+    });
 
-    expect(gates).toHaveLength(0);
+    expect(gatesBeforeUltra).toHaveLength(0);
   });
 
   it("places phase portals on certified samples in expert route profiles", () => {
