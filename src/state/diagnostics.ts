@@ -1,5 +1,14 @@
 import type { EyeExpression, Vec3 } from "@/core/types";
 
+export interface CloudAdherenceDiagnostics {
+  padId: number;
+  type: string;
+  position: Vec3;
+  relX: number;
+  relZ: number;
+  strength: number;
+}
+
 /**
  * Live diagnostics snapshot of the blob + environment. PlayerBlob writes it each frame;
  * the dev harness reads it to dump before/after JSON around a fired event, so we can see
@@ -13,13 +22,14 @@ export interface BlobDiagnostics {
   expression: EyeExpression;
   squash: number;
   maxHeight: number;
-  /** Y of the highest pad the blob has landed on this run — the ground the contact shadow
-   *  rests on (so it sits on the pad below, not at the blob, as the blob arcs up). */
+  /** Y of the last cloud the blob caught — the ground the contact shadow rests on. */
   groundY: number;
   /** Seconds spent settled on a pad without aiming/launching. Drives idle impatience. */
   idleSeconds?: number;
-  /** Recent joy/excitement [0,1] from a strong/accurate bounce. Decays in PlayerBlob. */
+  /** Recent joy/excitement [0,1] from a strong/accurate catch. Decays in PlayerBlob. */
   excitement?: number;
+  /** Soft-cloud contact envelope [0,1]. Drives cloud-coating/puddle/cling visuals. */
+  cloudAdherence?: CloudAdherenceDiagnostics;
 }
 
 let snapshot: BlobDiagnostics = {

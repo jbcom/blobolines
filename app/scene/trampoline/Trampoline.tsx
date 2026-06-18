@@ -10,23 +10,13 @@ import { getQuality } from "@/render/qualityBridge";
 import { createSplatCanvas } from "@/render/vfx";
 import { cloudCatch } from "@/sim/cloudPad";
 import { MAX_IMPACT_SPEED } from "@/sim/physics";
-import {
-  cantNormal,
-  createTrampState,
-  impactTargets,
-  REBOUND_SETTLE_SPEED,
-  reboundMultiplier,
-  SUPER_MIN_REBOUND,
-  stepTramp,
-  type TrampState,
-} from "@/sim/trampoline";
+import { createTrampState, impactTargets, stepTramp, type TrampState } from "@/sim/trampoline";
 import {
   getBlobDiagnostics,
   getRouteProofTarget,
   reportCloudAdherence,
   reportImpact,
   reportLanding,
-  reportRebound,
   useGameStore,
 } from "@/state";
 import { hex, mixHex, palette, trampColor } from "@/styles/tokens";
@@ -40,8 +30,6 @@ interface TrampolineProps {
   type: TrampType;
   /** Lateral route direction for canted clouds. */
   cant?: readonly [number, number];
-  /** Optional per-cloud cant strength in radians. */
-  cantAngleRad?: number;
   /** Unit [x,z] drift rail direction for moving clouds. */
   moveAxis?: readonly [number, number];
   /** Called when Blobby catches the cloud, with impact speed + relative hit point. */
@@ -49,7 +37,6 @@ interface TrampolineProps {
 }
 
 const { movingAmplitude, movingSpeed } = trampCfg;
-const WOBBLER_MAX_TILT = trampCfg.wobblerMaxTiltRad;
 
 const CLOUD_LOBES = [
   { id: "center", position: [0, 0, 0], scale: [0.52, 0.28, 0.38] },
@@ -155,7 +142,8 @@ function CloudTypeWisps({
 /**
  * Cloud pad. The legacy component name is kept while the repo migrates, but this is no longer
  * a rigid trampoline: it is a lumpy goo-cloud sensor. Blobby can pass upward through it; once
- * descending inside the cloud volume, it reports soft adherence and optional rebound.
+ * descending inside the cloud volume, it reports soft adherence so the player can charge the
+ * next launch from the caught state.
  */
 export function Trampoline({
   id,
@@ -165,7 +153,6 @@ export function Trampoline({
   depth,
   type,
   cant,
-  cantAngleRad,
   moveAxis,
   onImpact,
 }: TrampolineProps) {
@@ -174,8 +161,6 @@ export function Trampoline({
   const spring = useRef<TrampState>(createTrampState());
   const target = useRef({ depress: 0, tiltX: 0, tiltZ: 0 });
   const movePhase = useRef((position[0] * 0.37 + position[2] * 0.91) % (Math.PI * 2));
-  const slideVx = useRef(0);
-  const slideVz = useRef(0);
   const caught = useRef(false);
   const lastImpactAt = useRef(-Infinity);
   const breaking = useRef(false);
@@ -183,11 +168,6 @@ export function Trampoline({
   const livePosition = useRef<[number, number, number]>([position[0], position[1], position[2]]);
 
   const color = trampColor[type];
-  const canted = type === "canted" && !!cant;
-  const cantN = useMemo(
-    () => (canted ? cantNormal(cant, cantAngleRad) : null),
-    [canted, cant, cantAngleRad],
-  );
   const sliderAxis = useMemo(() => unit2(moveAxis), [moveAxis]);
 
   const material = useMemo(() => new GooMaterial() as unknown as ShaderMaterial, []);
@@ -235,12 +215,6 @@ export function Trampoline({
       const offset = Math.sin(movePhase.current) * movingAmplitude;
       x += sliderAxis[0] * offset;
       z += sliderAxis[1] * offset;
-      const slideSpeed = Math.cos(movePhase.current) * movingAmplitude * movingSpeed;
-      slideVx.current = sliderAxis[0] * slideSpeed;
-      slideVz.current = sliderAxis[1] * slideSpeed;
-    } else {
-      slideVx.current = 0;
-      slideVz.current = 0;
     }
     livePosition.current = [x, position[1], z];
     root.position.set(x, position[1], z);
@@ -322,29 +296,7 @@ export function Trampoline({
       relZ: hit.relZ,
     });
 
-    const reboundSpeed =
-      type === "super"
-        ? Math.max(hit.speed * reboundMultiplier.super, SUPER_MIN_REBOUND)
-        : hit.speed * reboundMultiplier[type];
-    if (reboundSpeed >= REBOUND_SETTLE_SPEED) {
-      let normal = cantN ?? undefined;
-      const slideSpeed = Math.hypot(slideVx.current, slideVz.current);
-      if (type === "moving" && slideSpeed > 0.5) {
-        const lateral = Math.max(-0.5, Math.min(0.5, slideSpeed / 12));
-        const ux = slideVx.current / slideSpeed;
-        const uz = slideVz.current / slideSpeed;
-        normal = [ux * lateral, Math.sqrt(Math.max(0, 1 - lateral * lateral)), uz * lateral];
-      } else if (type === "wobbler") {
-        const s = Math.sin(WOBBLER_MAX_TILT);
-        const lx = hit.relX * 2 * s;
-        const lz = hit.relZ * 2 * s;
-        const up = Math.sqrt(Math.max(0.01, 1 - lx * lx - lz * lz));
-        const mag = Math.hypot(lx, up, lz) || 1;
-        normal = [lx / mag, up / mag, lz / mag];
-      }
-      reportRebound({ speed: reboundSpeed, type, normal });
-      playBounce(type, Math.min(1, hit.speed / MAX_IMPACT_SPEED));
-    }
+    playBounce(type, Math.min(1, hit.speed / MAX_IMPACT_SPEED));
     if (type === "fragile") breaking.current = true;
     onImpact?.(hit.speed, hit.relX, hit.relZ);
   });

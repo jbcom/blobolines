@@ -31,6 +31,21 @@ describe("cloudCatch", () => {
     expect(hit?.relX).toBeCloseTo(0.125);
   });
 
+  it("catches a descending fallback into a lower cloud", () => {
+    const lowerPad = { ...pad, padPosition: [0, -6, 0] as const };
+
+    const hit = cloudCatch({
+      ...lowerPad,
+      blobPosition: [0.4, -4.9, -0.2],
+      blobVelocity: [1.5, -12, -0.5],
+    });
+
+    expect(hit).not.toBeNull();
+    expect(hit?.speed).toBe(12);
+    expect(hit?.settleY).toBeGreaterThan(lowerPad.padPosition[1]);
+    expect(hit?.strength).toBeGreaterThan(0.4);
+  });
+
   it("rejects misses outside the cloud footprint", () => {
     expect(
       cloudCatch({

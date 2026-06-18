@@ -37,7 +37,6 @@ import {
   consumeLanding,
   consumeLaunch,
   consumeMidAirBounce,
-  consumeRebound,
   consumeRouteGateHit,
   consumeShield,
   flash,
@@ -89,9 +88,9 @@ export function PlayerBlob() {
   const prevY = useRef(0);
   /** Pad ids we've already whooshed past, so one near-miss fires at most once per pad. */
   const nearMissed = useRef<Set<number>>(new Set());
-  /** Highest pad the blob has actually landed on — death is measured below THIS, not the
-   *  airborne apex (a tall launch arcs >DEATH_FALL_DISTANCE above its own pad and would
-   *  otherwise self-destruct on the way back down to the very pad it left). */
+  /** Last cloud Blobby caught and settled into — death is measured below THIS, not the airborne
+   *  apex. Falling back into a lower cloud is a valid recovery, so this can move down; maxY still
+   *  tracks the high-water mark for score and altitude. */
   const safeY = useRef(0);
   const lastEnsureY = useRef(0);
   const dead = useRef(false);
@@ -102,8 +101,18 @@ export function PlayerBlob() {
   /** Seconds the blob has rested idle (not airborne, not being aimed). Drives only expression
    *  impatience; launch remains entirely player-controlled. */
   const idle = useRef(0);
-  /** Recent happy energy from a strong/accurate bounce; drives idle burble + face. */
+  /** Recent happy energy from a strong/accurate catch; drives idle burble + face. */
   const excitement = useRef(0);
+  /** Recent soft-cloud adhesion. It decays unless the cloud field refreshes it this frame,
+   *  giving the renderer a clear "coating/clinging to a cloud" envelope. */
+  const cloudCling = useRef({
+    padId: -1,
+    type: "standard",
+    position: [0, STARTER_BLOB_Y, 0] as [number, number, number],
+    relX: 0,
+    relZ: 0,
+    strength: 0,
+  });
   /** Combo is a skill reward, not attract-mode scoring: only build it after the player has
    *  launched, air-steered, or spent a mid-air bounce in the current run. */
   const playerControlStarted = useRef(false);
@@ -138,12 +147,13 @@ export function PlayerBlob() {
     resetPowerups();
     resetViewControls();
     resetDroplets();
-    resetBridges(); // clear any launch/aim/rebound/splat left pending from the prior run
+    resetBridges(); // clear any launch/aim/cloud/splat left pending from the prior run
     resetFlash(); // no leftover combo/launch/death flash crossing into the new run
     impact.current = 0;
     dangerBeat.current = 0;
     idle.current = 0;
     excitement.current = 0;
+    cloudCling.current.strength = 0;
     playerControlStarted.current = false;
     setBlobDiagnostics({
       position: [0, STARTER_BLOB_Y, 0],
@@ -266,52 +276,17 @@ export function PlayerBlob() {
       );
       impact.current = Math.max(impact.current, 0.08 * adherence.strength);
       excitement.current = Math.max(excitement.current, 0.2 * adherence.strength);
+      cloudCling.current.padId = adherence.padId;
+      cloudCling.current.type = adherence.type;
+      cloudCling.current.position[0] = adherence.position[0];
+      cloudCling.current.position[1] = adherence.position[1];
+      cloudCling.current.position[2] = adherence.position[2];
+      cloudCling.current.relX = adherence.relX;
+      cloudCling.current.relZ = adherence.relZ;
+      cloudCling.current.strength = Math.max(cloudCling.current.strength, adherence.strength);
       p = body.translation();
       v = body.linvel();
       airborne = Math.abs(v.y) > 0.5;
-    }
-
-    // Cloud-pad rebound: a strong cloud catch pops Blobby back up; a soft catch is handled by
-    // cloud adherence above, leaving him nestled in the cloud until the player charges launch.
-    const bounce = consumeRebound();
-    if (bounce) {
-      body.wakeUp();
-      // Launch ALONG the pad's surface normal: a flat pad bounces straight up (keeps the
-      // blob's horizontal drift); a canted pad's tilted normal throws the blob sideways-
-      // and-up toward the next pad. Blend horizontal momentum with the normal's lateral
-      // component so canted pads redirect without fully killing existing drift.
-      const n = bounce.normal;
-      if (n && (n[0] !== 0 || n[2] !== 0)) {
-        body.setLinvel(
-          {
-            x: v.x * 0.3 + n[0] * bounce.speed,
-            y: n[1] * bounce.speed,
-            z: v.z * 0.3 + n[2] * bounce.speed,
-          },
-          true,
-        );
-      } else {
-        body.setLinvel({ x: v.x, y: bounce.speed, z: v.z }, true);
-      }
-      const run = useGameStore.getState().run;
-      // Ice pads are slippery: a big bouncy launch but it BREAKS the clean-combo streak
-      // (risk/reward). Every other pad builds the combo, capped at MAX_COMBO (the launch
-      // multiplier is balanced around that cap; leaving it unclamped overshot).
-      const nextCombo =
-        !playerControlStarted.current || bounce.type === "ice"
-          ? 0
-          : Math.min(run.combo + 1, MAX_COMBO);
-      setRun({ combo: nextCombo, maxCombo: Math.max(run.maxCombo, nextCombo) });
-      // Rising-pitch combo blip on a clean bounce — the streak audibly climbs (silent on ice,
-      // which resets the combo to 0). A celebratory fanfare fires ONCE on the frame the streak
-      // first hits the cap (the "on fire" milestone).
-      playComboBlip(nextCombo);
-      if (nextCombo >= MAX_COMBO && run.combo < MAX_COMBO) {
-        playComboFanfare();
-        duckMusic(600); // sidechain the music so the on-fire fanfare punches through
-      }
-      // Gold screen flash as the streak escalates (from 3×), intensity ramping with heat.
-      if (nextCombo >= 3) flash("gold", Math.min(1, (nextCombo - 2) / 6));
     }
 
     // Launch: set velocity directly for a crisp, predictable pop.
@@ -330,6 +305,9 @@ export function PlayerBlob() {
         charge: req.charge,
         kind: "launch",
       });
+      // Launch detaches Blobby from the cloud-coating state; the high upward velocity then takes
+      // over as the missile/stretch cue on the next diagnostics frame.
+      cloudCling.current.strength = 0;
       // PERFECT RELEASE: a launch charged into the sweet-spot window earns the power bonus (baked
       // into launchVelocity above) PLUS a gold flourish + a celebratory cue — the satisfying
       // "nailed it" beat that rewards the timing skill. Otherwise a launch flash scales with charge.
@@ -348,7 +326,7 @@ export function PlayerBlob() {
       // drift. Added to the air-steer accel and integrated the same way.
       const [wx, wz] = windAt(p.y, state.clock.elapsedTime);
       // DOWNDRAFT hazard: in the space band, pulsing downdrafts add extra downward pull, so the
-      // player can't dawdle up high — counterable by a clean bounce, punishing if you stall.
+      // player can't dawdle up high — counterable by a clean catch, punishing if you stall.
       const down = downdraftAt(p.y, state.clock.elapsedTime);
       if (sx !== 0 || sz !== 0 || wx !== 0 || wz !== 0 || down !== 0) {
         body.setLinvel(
@@ -434,9 +412,9 @@ export function PlayerBlob() {
     if (landed > 0) {
       const strength = Math.min(1, landed / MAX_IMPACT_SPEED);
       impact.current = strength;
-      // This pad is now the safe floor — death is measured below the highest pad reached,
-      // so a tall launch can fall back past DEATH_FALL_DISTANCE of its own apex and live.
-      if (p.y > safeY.current) safeY.current = p.y;
+      // This cloud is now the safe floor. It can be lower than the previous one: falling back
+      // into a lower cloud is a recovery, not an instant death state.
+      safeY.current = p.y;
       let routeQuality = 0;
       const landing = consumeLanding();
       if (landing) {
@@ -444,6 +422,22 @@ export function PlayerBlob() {
         const source = pads.find((pad) => pad.goldenPath?.toPadId === landing.padId);
         const targetPad = pads.find((pad) => pad.id === landing.padId);
         const proof = source?.goldenPath;
+        const run = useGameStore.getState().run;
+        // A combo is now a sequence of human-made cloud catches, not an automatic rebound
+        // cascade. Ice clouds remain the streak-breaker.
+        const nextCombo =
+          !playerControlStarted.current || targetPad?.type === "ice"
+            ? 0
+            : Math.min(run.combo + 1, MAX_COMBO);
+        setRun({ combo: nextCombo, maxCombo: Math.max(run.maxCombo, nextCombo) });
+        if (nextCombo > 0) {
+          playComboBlip(nextCombo);
+          if (nextCombo >= MAX_COMBO && run.combo < MAX_COMBO) {
+            playComboFanfare();
+            duckMusic(600);
+          }
+          if (nextCombo >= 3) flash("gold", Math.min(1, (nextCombo - 2) / 6));
+        }
         if (proof && targetPad) {
           const miss = Math.hypot(
             landing.position[0] - proof.landing[0],
@@ -461,8 +455,8 @@ export function PlayerBlob() {
             targetType: targetPad.type,
           });
           if (bonus > 0) {
-            const run = useGameStore.getState().run;
-            setRun({ stylePoints: run.stylePoints + bonus });
+            const scoredRun = useGameStore.getState().run;
+            setRun({ stylePoints: scoredRun.stylePoints + bonus });
           }
           if (routeQuality > 0.72) flash("gold", Math.min(1, routeQuality));
         }
@@ -470,7 +464,7 @@ export function PlayerBlob() {
       excitement.current = Math.max(excitement.current, strength, 0.25 + routeQuality * 0.75);
       // Fling a gooey splash from the contact point (just under the blob).
       splash([p.x, p.y - BLOB.radius, p.z], strength);
-      // Low-end thump layer under the bounce, mirroring the haptic strength split.
+      // Low-end thump layer under the catch, mirroring the haptic strength split.
       playThump(strength);
       // Landing impact RING on the pad, sized by impact — the touchdown counterpart to the
       // launch pop. Gated so micro-settles don't ping.
@@ -498,8 +492,12 @@ export function PlayerBlob() {
     }
     impact.current = Math.max(0, impact.current - dt * 2.5);
     excitement.current = Math.max(0, excitement.current - dt * 0.65);
-    // Death is fall below the highest pad LANDED on (safeY), not the airborne apex (maxY) —
-    // otherwise a big launch kills itself on the way back down to its own pad.
+    cloudCling.current.strength = Math.max(
+      0,
+      cloudCling.current.strength - dt * (airborne ? 4.8 : 1.2),
+    );
+    // Death is fall below the last cloud caught (safeY), not the airborne apex (maxY) —
+    // otherwise a big launch kills itself on the way back down to its own cloud.
     const fallDepth = safeY.current - p.y;
     const expr = classifyExpression({ vy: v.y, impact: impact.current, fallDepth, airborne });
 
@@ -533,6 +531,21 @@ export function PlayerBlob() {
       groundY: safeY.current,
       idleSeconds: idle.current,
       excitement: excitement.current,
+      cloudAdherence:
+        cloudCling.current.strength > 0.01
+          ? {
+              padId: cloudCling.current.padId,
+              type: cloudCling.current.type,
+              position: [
+                cloudCling.current.position[0],
+                cloudCling.current.position[1],
+                cloudCling.current.position[2],
+              ],
+              relX: cloudCling.current.relX,
+              relZ: cloudCling.current.relZ,
+              strength: cloudCling.current.strength,
+            }
+          : undefined,
     });
 
     // Project the Rapier-driven state onto the blob's ECS entity so systems + UI can query

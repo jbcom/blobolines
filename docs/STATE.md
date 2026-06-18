@@ -27,12 +27,12 @@ UI, persistence, CI/CD (incl. Android debug APK), e2e "is it playable" gate.
 - **Crystals + power-ups** — instanced crystals, magnet/thruster/shield/slowmo/doubler/
   multi-bounce pickups, HUD badges, and 3D models/fallbacks. ✅
 - **Cloud behaviors** — standard, booster, drifting, fragile, super, slick, canted, and wobbler
-  cloud pads with reachability guarantees. ✅
+  cloud pads with reachability guarantees and catch adherence. ✅
 
 ## Next
 
-- Continue balance and feel passes with real browser playthroughs: pad spacing, rebound
-  strength, air-steer sensitivity, hazard pressure, and altitude pacing.
+- Continue balance and feel passes with real browser playthroughs: cloud spacing, adherence
+  strength, charge feel, air-steer sensitivity, hazard pressure, and altitude pacing.
 - Keep screenshot/diagnostic reads in the loop for camera framing, blob readability, and
   3D spatial awareness.
 - Track upstream dependency warnings separately from app-owned warnings; do not hide console

@@ -242,35 +242,10 @@ export function consumeCloudAdherence(): CloudAdherenceRequest | null {
   return req;
 }
 
-/** A pending trampoline rebound: the rebound speed to bounce the blob at, the pad type
- *  (for combo/scoring), and the pad's surface NORMAL — the launch direction. A flat pad's
- *  normal is straight up [0,1,0]; a canted pad's normal tilts, redirecting the bounce
- *  laterally so the blob is thrown sideways-and-up toward the next pad (navigability).
- *  Reported by a trampoline on contact, consumed by the blob. */
-export interface ReboundRequest {
-  speed: number;
-  type: string;
-  /** Unit surface normal = launch direction. Defaults to straight up when omitted. */
-  normal?: readonly [number, number, number];
-}
-
-let rebound: ReboundRequest | null = null;
-
-export function reportRebound(req: ReboundRequest): void {
-  // Keep the strongest pending rebound if several pads are touched in one frame.
-  if (!rebound || req.speed > rebound.speed) rebound = req;
-}
-
-export function consumeRebound(): ReboundRequest | null {
-  const r = rebound;
-  rebound = null;
-  return r;
-}
-
 /**
  * Clear ALL pending bridge state. Called on run end (menu/gameover) so a value reported in
  * the last frame before the run ended can't fire on the next run's first frame. (powerups
- * have their own resetPowerups; this covers launch/aim/rebound/splat/steer/impact.)
+ * have their own resetPowerups; this covers launch/aim/cloud/splat/steer/impact.)
  */
 export function resetBridges(): void {
   pending = null;
@@ -279,7 +254,6 @@ export function resetBridges(): void {
   routeGateHit = null;
   splitQueue = [];
   cloudAdherence = null;
-  rebound = null;
   splatQueue = [];
   launchBurstQueue = [];
   steer = [0, 0];

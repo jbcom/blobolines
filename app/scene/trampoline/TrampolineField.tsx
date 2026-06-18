@@ -59,7 +59,6 @@ export function TrampolineField({ onImpact }: TrampolineFieldProps) {
           depth={t.depth}
           type={t.type}
           cant={t.cant}
-          cantAngleRad={t.cantAngleRad}
           moveAxis={t.moveAxis}
           onImpact={(speed) => onImpact?.(t.id, speed)}
         />

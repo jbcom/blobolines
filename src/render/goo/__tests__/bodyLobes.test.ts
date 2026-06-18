@@ -118,4 +118,62 @@ describe("bodyLobes", () => {
     expect(impatient[1].scale[1]).toBeGreaterThan(calm[1].scale[1]);
     expect(impatient[2].position[1]).toBeGreaterThan(calm[2].position[1]);
   });
+
+  it("spreads the lower lobe into a cloud cling", () => {
+    const settled = bodyLobes({
+      time: 0.8,
+      settled: 1,
+      velocity: [0, 0, 0],
+      radius: 0.85,
+      aimCharge: 0,
+      idleSeconds: 0,
+      excitement: 0,
+      cloudAdherence: 0,
+      cloudOffset: [0.5, -0.25],
+    });
+    const clinging = bodyLobes({
+      time: 0.8,
+      settled: 1,
+      velocity: [0, 0, 0],
+      radius: 0.85,
+      aimCharge: 0,
+      idleSeconds: 0,
+      excitement: 0,
+      cloudAdherence: 1,
+      cloudOffset: [0.5, -0.25],
+    });
+
+    expect(clinging[0].position[1]).toBeLessThan(settled[0].position[1]);
+    expect(clinging[0].position[0]).toBeGreaterThan(settled[0].position[0]);
+    expect(clinging[0].scale[0]).toBeGreaterThan(settled[0].scale[0]);
+    expect(clinging[0].scale[2]).toBeGreaterThan(settled[0].scale[2]);
+  });
+
+  it("pulls a stronger launch bead out of a clinging cloud puddle", () => {
+    const loose = bodyLobes({
+      time: 0,
+      settled: 1,
+      velocity: [0, 0, 0],
+      radius: 0.85,
+      aimCharge: 1,
+      aimDirection: [1, 0.8, 0],
+      idleSeconds: 0,
+      excitement: 0,
+      cloudAdherence: 0,
+    });
+    const clinging = bodyLobes({
+      time: 0,
+      settled: 1,
+      velocity: [0, 0, 0],
+      radius: 0.85,
+      aimCharge: 1,
+      aimDirection: [1, 0.8, 0],
+      idleSeconds: 0,
+      excitement: 0,
+      cloudAdherence: 1,
+    });
+
+    expect(clinging[2].position[0]).toBeGreaterThan(loose[2].position[0]);
+    expect(clinging[2].position[1]).toBeGreaterThan(loose[2].position[1]);
+  });
 });
