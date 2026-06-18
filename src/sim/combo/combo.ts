@@ -24,3 +24,12 @@ export function onCleanBounce(state: ComboState): ComboState {
 export function breakCombo(): ComboState {
   return { streak: 0 };
 }
+
+/**
+ * Visual heat scale [0, 1] from a combo count, which ramps up the flame/trail visual intensity.
+ * Starts heating up above the specified threshold (default 0), and scales to 1.0 at MAX_COMBO.
+ */
+export function comboHeat(combo: number, threshold = 0): number {
+  if (combo <= threshold) return 0;
+  return Math.min(1, (combo - threshold) / (MAX_COMBO - threshold));
+}

@@ -10,7 +10,7 @@ import {
   Vector3,
 } from "three";
 import type { BlobSkin } from "@/core/types";
-import { MAX_COMBO } from "@/sim/combo";
+import { comboHeat } from "@/sim/combo";
 import { getBlobDiagnostics, useGameStore } from "@/state";
 import { hex, palette } from "@/styles/tokens";
 
@@ -91,7 +91,7 @@ export function BlobTrail({ skin }: BlobTrailProps) {
 
     // Combo → ignite color from skin tint toward flame.
     const combo = useGameStore.getState().run.combo;
-    const heat = Math.min(1, combo / MAX_COMBO);
+    const heat = comboHeat(combo);
     headCol.set(palette.blob[skin]).lerp(flame, heat);
 
     const posAttr = geo.getAttribute("position") as Float32BufferAttribute;

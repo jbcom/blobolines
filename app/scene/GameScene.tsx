@@ -17,6 +17,7 @@ import { TrampolineField } from "./trampoline";
 import {
   BiomeGeometry,
   BiomeProps,
+  BiomeScenicProps,
   BlobCaustic,
   BlobFollowLight,
   BlobShadow,
@@ -69,6 +70,7 @@ export function GameScene() {
           outside the Physics Suspense boundary so they can never unmount the blob/pads. */}
       {playing && <BiomeGeometry />}
       {playing && <BiomeProps />}
+      {playing && <BiomeScenicProps />}
       {playing && <BlobFollowLight />}
       {playing && <BlobShadow />}
       {playing && <BlobCaustic skin={skin} />}

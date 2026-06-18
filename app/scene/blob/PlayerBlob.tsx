@@ -13,6 +13,7 @@ import {
   playThump,
   setMusicAltitude,
 } from "@/audio";
+import { blob } from "@/config";
 import { ImpactStyle, impact as impact_, vibrate } from "@/platform";
 import { classifyExpression, stepIdlePatience } from "@/sim/blob";
 import { MAX_COMBO } from "@/sim/combo";
@@ -22,6 +23,7 @@ import {
   BLOB,
   DEATH_FALL_DISTANCE,
   MAX_IMPACT_SPEED,
+  runHeightFromWorldY,
   STARTER_BLOB_Y,
   WORLD_BOUND_XZ,
 } from "@/sim/physics";
@@ -109,8 +111,6 @@ export function PlayerBlob() {
    *  launched, air-steered, or spent a mid-air bounce in the current run. */
   const playerControlStarted = useRef(false);
 
-  const runHeightFromWorldY = (y: number) => Math.max(0, y - STARTER_BLOB_Y);
-
   // Reset body to the starter pad whenever a run begins. PlayerBlob remounts on each
   // run (GameScene mounts <Physics> only while playing), so [] is correct; the refs
   // below also re-init here for safety if it ever stays mounted across runs.
@@ -155,7 +155,7 @@ export function PlayerBlob() {
     if (isPowerupActive("thruster")) {
       body.wakeUp();
       const liveV = body.linvel();
-      body.setLinvel({ x: liveV.x, y: 34, z: liveV.z }, true);
+      body.setLinvel({ x: liveV.x, y: blob.thrusterVelocity, z: liveV.z }, true);
     }
   };
 
@@ -186,7 +186,7 @@ export function PlayerBlob() {
     p: { x: number; y: number; z: number },
     v: { x: number; y: number; z: number },
   ) => {
-    if (v.y < -8) {
+    if (v.y < blob.nearMiss.speedThreshold) {
       const pads = useWorldStore.getState().trampolines;
       for (const pad of pads) {
         if (nearMissed.current.has(pad.id)) continue;
@@ -196,9 +196,12 @@ export function PlayerBlob() {
         const dz = p.z - pad.position[2];
         const lateral = Math.hypot(dx, dz);
         const half = Math.max(pad.width, pad.depth) * 0.5;
-        if (lateral > half + 0.4 && lateral < half + 2.5) {
+        if (
+          lateral > half + blob.nearMiss.minDistance &&
+          lateral < half + blob.nearMiss.maxDistance
+        ) {
           nearMissed.current.add(pad.id);
-          playLaunch(0.45);
+          playLaunch(blob.nearMiss.soundVolume);
         }
       }
       if (nearMissed.current.size > 64 && pads.length > 0) {
@@ -296,7 +299,7 @@ export function PlayerBlob() {
     if (consumeMidAirBounce() && consumeBounceCharge()) {
       playerControlStarted.current = true;
       body.wakeUp();
-      body.setLinvel({ x: v.x, y: 22, z: v.z }, true);
+      body.setLinvel({ x: v.x, y: blob.midAirBounceVelocity, z: v.z }, true);
       launchBurst([p.x, p.y - BLOB.radius, p.z], 0.6);
       reportLaunchBurst({ position: [p.x, p.y - BLOB.radius, p.z], charge: 0.6, kind: "launch" });
       flash("blue", 0.6);
@@ -444,8 +447,8 @@ export function PlayerBlob() {
 
     stepLandings(p);
 
-    impact.current = Math.max(0, impact.current - dt * 2.5);
-    excitement.current = Math.max(0, excitement.current - dt * 0.65);
+    impact.current = Math.max(0, impact.current - dt * blob.decay.impactDecay);
+    excitement.current = Math.max(0, excitement.current - dt * blob.decay.excitementDecay);
     cloudCling.current.strength = Math.max(
       0,
       cloudCling.current.strength - dt * (airborne ? 4.8 : 1.2),
@@ -458,7 +461,7 @@ export function PlayerBlob() {
       flash("red", danger);
       dangerBeat.current -= realDt;
       if (dangerBeat.current <= 0) {
-        dangerBeat.current = 0.45 - danger * 0.33;
+        dangerBeat.current = blob.dangerBeat.initialTimer - danger * blob.dangerBeat.scale;
         if (useGameStore.getState().settings.haptics) void vibrate(12 + Math.round(danger * 20));
       }
     } else {
@@ -497,8 +500,11 @@ export function PlayerBlob() {
     if (!dead.current && fallDepth > DEATH_FALL_DISTANCE && !isRouteProofSequenceActive()) {
       if (consumeShield()) {
         body.wakeUp();
-        body.setTranslation({ x: p.x, y: safeY.current + 2, z: p.z }, true);
-        body.setLinvel({ x: 0, y: 18, z: 0 }, true);
+        body.setTranslation(
+          { x: p.x, y: safeY.current + blob.shield.spawnHeightOffset, z: p.z },
+          true,
+        );
+        body.setLinvel({ x: 0, y: blob.shield.reboundVelocity, z: 0 }, true);
         flash("blue", 1);
         playPowerup();
       } else {

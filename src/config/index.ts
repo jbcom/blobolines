@@ -42,6 +42,26 @@ export const blob = blobCfg as {
   puddle: { settleSpeed: number; scale: [number, number, number] };
   deformSpringTau: number;
   wobbleDecayTau: number;
+  thrusterVelocity: number;
+  midAirBounceVelocity: number;
+  shield: {
+    reboundVelocity: number;
+    spawnHeightOffset: number;
+  };
+  nearMiss: {
+    speedThreshold: number;
+    minDistance: number;
+    maxDistance: number;
+    soundVolume: number;
+  };
+  decay: {
+    impactDecay: number;
+    excitementDecay: number;
+  };
+  dangerBeat: {
+    initialTimer: number;
+    scale: number;
+  };
 };
 
 export const launch = launchCfg as {

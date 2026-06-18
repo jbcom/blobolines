@@ -282,7 +282,7 @@ function aimSourceMechanic(
 ) {
   if (prev.type === "canted") {
     const direction = aim2(prev, target);
-    (prev as { cant?: readonly [number, number] }).cant = direction;
+    prev.cant = direction;
     prev.cantAngleRad = routeCantAngle(profile, prev.routeIndex ?? 0);
     prev.moveAxis = undefined;
     return;
@@ -740,6 +740,15 @@ function ensureReachable(
   return result;
 }
 
+function pickPowerUpType(roll: number): PowerUpType {
+  if (roll < 0.14) return "shield";
+  if (roll < 0.28) return "slowmo";
+  if (roll < 0.42) return "doubler";
+  if (roll < 0.56) return "multibounce";
+  if (roll < 0.78) return "magnet";
+  return "thruster";
+}
+
 /**
  * Generate trampolines (and crystals) from `fromY` up to at least `targetY`.
  * Candidate types are seeded and weighted; accepted routes are decided by certified
@@ -895,19 +904,7 @@ export function generateUpTo(
       // Spawn weighting: the four "strong" buffs (shield one-shot revive, slow-mo bullet-time,
       // score-doubler, multi-bounce charges) are each uncommon (~0.14), with the workhorse
       // magnet/thruster splitting the rest (~0.22 each).
-      const roll = rng.next();
-      const type: PowerUpType =
-        roll < 0.14
-          ? "shield"
-          : roll < 0.28
-            ? "slowmo"
-            : roll < 0.42
-              ? "doubler"
-              : roll < 0.56
-                ? "multibounce"
-                : roll < 0.78
-                  ? "magnet"
-                  : "thruster";
+      const type = pickPowerUpType(rng.next());
       powerups.push({
         position: [
           x + (rng.next() - 0.5) * 1.5,

@@ -25,3 +25,8 @@ export const WORLD_BOUND_XZ = physics.worldBoundXZ;
 
 /** Impact speed that maps to a full-strength (1.0) squash/squint. */
 export const MAX_IMPACT_SPEED = physics.maxImpactSpeed;
+
+/** Mapped world altitude height helper. */
+export function runHeightFromWorldY(y: number): number {
+  return Math.max(0, y - STARTER_BLOB_Y);
+}
