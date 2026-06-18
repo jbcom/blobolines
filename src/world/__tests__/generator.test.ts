@@ -288,19 +288,41 @@ describe("world generator", () => {
         expect(
           lateral,
           `seed ${seed}: opening pad #${i} collapsed into a near-overhead stack`,
-        ).toBeGreaterThanOrEqual(3.55);
+        ).toBeGreaterThanOrEqual(10.5);
         expect(
           lateral,
           `seed ${seed}: opening pad #${i} is too far off the starter line`,
-        ).toBeLessThanOrEqual(10.45);
+        ).toBeLessThanOrEqual(14.25);
         expect(
           Math.min(current.width, current.depth),
           `seed ${seed}: opening pad #${i} should be forgivingly large`,
-        ).toBeGreaterThanOrEqual(8.4);
+        ).toBeGreaterThanOrEqual(9.4);
         expect(reaches(previous, current), `seed ${seed}: opening pad #${i} is stranded`).toBe(
           true,
         );
       }
+    }
+  });
+
+  it("opens Easy with a non-tap first-hop charge window and three certified variants", () => {
+    for (let seed = 0; seed < 40; seed++) {
+      const start = starterPad();
+      const { trampolines } = generateUpTo(createRng(`first-charge-${seed}`), 0, 80, start);
+      const first = trampolines[0];
+      const proof = start.goldenPath;
+      const variants = proof?.variants ?? [];
+
+      expect(first, `seed ${seed}: missing first target`).toBeDefined();
+      expect(proof?.toPadId, `seed ${seed}: starter proof misses first target`).toBe(first?.id);
+      expect(variants, `seed ${seed}: Easy should expose three first-hop proofs`).toHaveLength(3);
+      expect(
+        proof?.launchCharge,
+        `seed ${seed}: first hop should not require a tap-strength release`,
+      ).toBeGreaterThanOrEqual(0.26);
+      expect(
+        Math.max(...variants.map((variant) => variant.launchCharge)),
+        `seed ${seed}: first hop needs an upper charge variant for scrubbing practice`,
+      ).toBeGreaterThanOrEqual(0.34);
     }
   });
 

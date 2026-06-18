@@ -3,6 +3,7 @@ import {
   classifyExpression,
   combineScale,
   eyeShape,
+  faceFocusDartFromNdc,
   impactSquash,
   mouthShape,
   speedStretch,
@@ -97,6 +98,30 @@ describe("eyeShape", () => {
 
   it("blink closes the eyes regardless of expression", () => {
     expect(eyeShape("wide", 1).openY).toBeCloseTo(0, 5);
+  });
+});
+
+describe("faceFocusDartFromNdc", () => {
+  it("points pupils toward the projected route target", () => {
+    const [x, y] = faceFocusDartFromNdc([0, 0], [0.5, 0.25], 1);
+
+    expect(x).toBeGreaterThan(0);
+    expect(y).toBeGreaterThan(0);
+  });
+
+  it("clamps large screen-space deltas", () => {
+    const [x, y] = faceFocusDartFromNdc([0, 0], [10, -10], 1);
+
+    expect(x).toBeCloseTo(0.085);
+    expect(y).toBeCloseTo(-0.085);
+  });
+
+  it("scales down with focus intensity", () => {
+    const strong = faceFocusDartFromNdc([0, 0], [0.8, 0], 1)[0];
+    const soft = faceFocusDartFromNdc([0, 0], [0.8, 0], 0.25)[0];
+
+    expect(soft).toBeGreaterThan(0);
+    expect(soft).toBeLessThan(strong);
   });
 });
 

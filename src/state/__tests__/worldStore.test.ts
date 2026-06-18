@@ -57,8 +57,8 @@ describe("worldStore.reset seeding", () => {
       const dy = next.position[1] - starter.position[1];
       const lateral = lateralGap(starter.position, next.position);
       expect(dy).toBeLessThanOrEqual(7.2);
-      expect(lateral).toBeGreaterThanOrEqual(3.55);
-      expect(lateral).toBeLessThanOrEqual(10.45);
+      expect(lateral).toBeGreaterThanOrEqual(10.5);
+      expect(lateral).toBeLessThanOrEqual(14.25);
     }
   });
 });

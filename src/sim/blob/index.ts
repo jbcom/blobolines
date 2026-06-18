@@ -14,6 +14,10 @@ export {
   mouthShape,
 } from "./expression";
 export {
+  type FaceFocusNdc,
+  faceFocusDartFromNdc,
+} from "./focus";
+export {
   type IdlePatienceInput,
   type IdlePatienceStep,
   stepIdlePatience,

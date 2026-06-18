@@ -1,9 +1,10 @@
 import { useFrame } from "@react-three/fiber";
 import { useEffect, useRef } from "react";
 import type { Group, Object3D } from "three";
+import { Vector3 } from "three";
 import type { EyeExpression } from "@/core/types";
-import { eyeShape } from "@/sim/blob";
-import { getAim, getBlobDiagnostics } from "@/state";
+import { eyeShape, faceFocusDartFromNdc } from "@/sim/blob";
+import { getAim, getBlobDiagnostics, getBlobFaceFocusTarget } from "@/state";
 import { palette } from "@/styles/tokens";
 import { BlobMouth } from "./BlobMouth";
 
@@ -61,6 +62,8 @@ function Eye({ side }: { side: 1 | -1 }) {
 export function BlobEyes({ expression, radius, live = false }: BlobEyesProps) {
   const groupRef = useRef<Group>(null);
   const timer = useRef(0);
+  const blobNdc = useRef(new Vector3());
+  const targetNdc = useRef(new Vector3());
   // Cached animated nodes, bucketed ONCE on mount (a single traverse) instead of traversing +
   // string-matching every frame. The frame loop then iterates these arrays directly.
   const parts = useRef<{ lids: Object3D[]; pupils: Object3D[]; tears: Object3D[] }>({
@@ -85,7 +88,7 @@ export function BlobEyes({ expression, radius, live = false }: BlobEyesProps) {
     parts.current = { lids, pupils, tears };
   }, []);
 
-  useFrame((_, dt) => {
+  useFrame((state, dt) => {
     const g = groupRef.current;
     if (!g) return;
     timer.current += dt;
@@ -96,6 +99,7 @@ export function BlobEyes({ expression, radius, live = false }: BlobEyesProps) {
 
     const diag = live ? getBlobDiagnostics() : null;
     const aim = live ? getAim() : null;
+    const focus = live ? getBlobFaceFocusTarget() : null;
     const expr = diag?.expression ?? expression;
     const shape = eyeShape(expr, blink);
     const aimCharge = aim?.charge ?? 0;
@@ -114,19 +118,41 @@ export function BlobEyes({ expression, radius, live = false }: BlobEyesProps) {
     // hero (no live diag) keeps centered pupils. Clamped to stay within the sclera.
     let dartX = 0;
     let dartY = 0;
-    if (aim) {
-      dartX = aim.dir[0] * 0.07;
-      dartY = (aim.dir[1] - 0.65) * 0.08;
-    } else if (diag) {
-      const [vx, vy] = diag.velocity;
-      const mag = Math.hypot(vx, vy);
-      if (mag > 1) {
-        dartX = (vx / mag) * 0.06;
-        dartY = (vy / mag) * 0.06;
+    let hasFocusDart = false;
+    if (focus && diag) {
+      blobNdc.current.set(...diag.position).project(state.camera);
+      targetNdc.current.set(...focus.position).project(state.camera);
+      if (
+        Number.isFinite(blobNdc.current.x) &&
+        Number.isFinite(blobNdc.current.y) &&
+        Number.isFinite(targetNdc.current.x) &&
+        Number.isFinite(targetNdc.current.y)
+      ) {
+        const [fx, fy] = faceFocusDartFromNdc(
+          [blobNdc.current.x, blobNdc.current.y],
+          [targetNdc.current.x, targetNdc.current.y],
+          focus.intensity,
+        );
+        dartX = fx;
+        dartY = fy;
+        hasFocusDart = true;
       }
-    } else {
-      dartX = Math.sin(timer.current * 0.9) * 0.025;
-      dartY = Math.sin(timer.current * 1.2 + 0.7) * 0.018;
+    }
+    if (!hasFocusDart) {
+      if (aim) {
+        dartX = aim.dir[0] * 0.07;
+        dartY = (aim.dir[1] - 0.65) * 0.08;
+      } else if (diag) {
+        const [vx, vy] = diag.velocity;
+        const mag = Math.hypot(vx, vy);
+        if (mag > 1) {
+          dartX = (vx / mag) * 0.06;
+          dartY = (vy / mag) * 0.06;
+        }
+      } else {
+        dartX = Math.sin(timer.current * 0.9) * 0.025;
+        dartY = Math.sin(timer.current * 1.2 + 0.7) * 0.018;
+      }
     }
 
     const tearing = shape.tear > 0;

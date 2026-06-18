@@ -1,7 +1,7 @@
 import { useKeyboardSteer } from "@app/hooks";
 import { AnimatePresence, motion, useMotionValue, useReducedMotion, useSpring } from "motion/react";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { computeAirSteer, computeHoldCharge, computeRouteAim } from "@/input";
+import { computeAirSteer, computeGroundedRouteCharge, computeRouteAim } from "@/input";
 import { isPerfectRelease } from "@/sim/launch";
 import type { LaunchRequest } from "@/state";
 import {
@@ -25,10 +25,27 @@ import { nextRouteStep } from "@/world";
 type GestureMode = "game" | "view" | "pinch";
 const FULL_CHARGE_SECONDS = 1.15;
 const TAP_CHARGE = 0.22;
+const AUTO_DISCHARGE_SECONDS = 0.95;
+const DRAG_DISCHARGE_PX = 165;
+const CANCEL_DRAG_PX = 118;
 
 interface PointerInfo {
   x: number;
   y: number;
+}
+
+interface GestureState {
+  mode: GestureMode;
+  startX: number;
+  startY: number;
+  lastX: number;
+  lastY: number;
+  startTime: number;
+  moved: boolean;
+  pinchDistance: number;
+  pinchZoom: number;
+  groundedChargePeak: number;
+  groundedCancelled: boolean;
 }
 
 /**
@@ -47,8 +64,8 @@ export function LaunchInput() {
   const [airReticleActive, setAirReticleActive] = useState(false);
   const airReticleActiveRef = useRef(false);
   const pointers = useRef(new Map<number, PointerInfo>());
-  const gesture = useRef({
-    mode: "view" as GestureMode,
+  const gesture = useRef<GestureState>({
+    mode: "view",
     startX: 0,
     startY: 0,
     lastX: 0,
@@ -57,6 +74,8 @@ export function LaunchInput() {
     moved: false,
     pinchDistance: 1,
     pinchZoom: 1,
+    groundedChargePeak: 0,
+    groundedCancelled: false,
   });
   const chargingRef = useRef(false);
   const [charging, setCharging] = useState(false);
@@ -114,22 +133,49 @@ export function LaunchInput() {
   }, []);
 
   const currentRouteCharge = useCallback(
-    (timeStamp: number, releasing = false) => {
+    (timeStamp: number, releasing = false, y = gesture.current.lastY, tapEligible = false) => {
       const held = Math.max(0, (timeStamp - gesture.current.startTime) / 1000);
-      const charge = computeHoldCharge(held, {
-        fullChargeSeconds: FULL_CHARGE_SECONDS,
-        tapCharge: TAP_CHARGE,
-        sensitivity,
-      });
-      return releasing && charge === 0 ? TAP_CHARGE : charge;
+      const result = computeGroundedRouteCharge(
+        {
+          heldSeconds: held,
+          dragY: y - gesture.current.startY,
+          releasing,
+          tapEligible,
+          wasCharged: gesture.current.groundedChargePeak > 0.02,
+        },
+        {
+          fullChargeSeconds: FULL_CHARGE_SECONDS,
+          tapCharge: TAP_CHARGE,
+          sensitivity,
+          autoDischargeSeconds: AUTO_DISCHARGE_SECONDS,
+          dragDischargePx: DRAG_DISCHARGE_PX,
+          cancelDragPx: CANCEL_DRAG_PX,
+        },
+      );
+      gesture.current.groundedChargePeak = Math.max(
+        gesture.current.groundedChargePeak,
+        result.charge,
+      );
+      if (result.cancelled) gesture.current.groundedCancelled = true;
+      return result;
     },
     [sensitivity],
   );
 
   const publishRouteCharge = useCallback(
-    (timeStamp: number, releasing = false): LaunchRequest => {
-      const charge = currentRouteCharge(timeStamp, releasing);
-      const req = { dir: routeLaunchDirection(charge), charge };
+    (
+      timeStamp: number,
+      releasing = false,
+      y = gesture.current.lastY,
+      tapEligible = false,
+    ): LaunchRequest | null => {
+      const result = currentRouteCharge(timeStamp, releasing, y, tapEligible);
+      if (result.cancelled) {
+        setCharge(0);
+        setAim(null);
+        return null;
+      }
+      const req = { dir: routeLaunchDirection(result.charge), charge: result.charge };
       setCharge(req.charge);
       setAim(req.charge > 0.02 ? req : null);
       return req;
@@ -184,6 +230,8 @@ export function LaunchInput() {
   ) => {
     const mx = x - gesture.current.startX;
     const my = y - gesture.current.startY;
+    gesture.current.lastX = x;
+    gesture.current.lastY = y;
     if (Math.hypot(mx, my) > 4) gesture.current.moved = true;
     const tap = !gesture.current.moved;
     const airborne = getBlobDiagnostics().airborne;
@@ -218,20 +266,31 @@ export function LaunchInput() {
 
     hideAirReticle();
     // Grounded launch: hold-to-charge along the certified next-hop parabola. Direction is
-    // route-derived; dragging on Blobby no longer changes aim.
+    // route-derived; dragging the held finger down scrubs/cancels charge instead of steering.
     if (down) {
+      if (gesture.current.groundedCancelled) {
+        setCharge(0);
+        setAim(null);
+        return;
+      }
       chargingRef.current = true;
       setCharging(true);
-      publishRouteCharge(timeStamp);
+      const req = publishRouteCharge(timeStamp, false, y, tap);
+      if (!req && gesture.current.groundedCancelled) {
+        chargingRef.current = false;
+        setCharging(false);
+      }
       return;
     }
 
     chargingRef.current = false;
     setCharging(false);
-    const req = publishRouteCharge(timeStamp, true);
+    const req = gesture.current.groundedCancelled
+      ? null
+      : publishRouteCharge(timeStamp, true, y, tap);
     setAim(null);
     setCharge(0);
-    if (last && req.charge > 0.05) {
+    if (last && req && req.charge > 0.05) {
       requestLaunch(req);
     }
   };
@@ -265,6 +324,8 @@ export function LaunchInput() {
       moved: false,
       pinchDistance: 1,
       pinchZoom: getViewControls().zoom,
+      groundedChargePeak: 0,
+      groundedCancelled: false,
     };
     if (mode === "game") updateGameGesture(e.clientX, e.clientY, true, false, now);
   };
@@ -321,6 +382,8 @@ export function LaunchInput() {
           moved: false,
           pinchDistance: 1,
           pinchZoom: getViewControls().zoom,
+          groundedChargePeak: 0,
+          groundedCancelled: false,
         };
       }
     }
@@ -344,6 +407,8 @@ export function LaunchInput() {
           moved: false,
           pinchDistance: 1,
           pinchZoom: getViewControls().zoom,
+          groundedChargePeak: 0,
+          groundedCancelled: false,
         };
       }
     }
@@ -372,7 +437,7 @@ export function LaunchInput() {
       onPointerCancel={onPointerCancel}
       onWheel={onWheel}
       role="application"
-      aria-label="Launch area — hold on the blob to charge and release to fling; drag off the blob to rotate the view; pinch or wheel to zoom"
+      aria-label="Launch area — hold on the blob to charge, release to fling, or pull down below the blob to cancel; drag off the blob to rotate the view; pinch or wheel to zoom"
       className="pointer-events-auto absolute inset-0 touch-none"
     >
       {/* Edge glow that ignites as the charge nears max — the screen itself tenses up. */}
@@ -421,7 +486,8 @@ export function LaunchInput() {
       </AnimatePresence>
       {charge > 0 && (
         <div
-          className="absolute bottom-[18%] left-1/2 flex -translate-x-1/2 flex-col items-center gap-1"
+          className="absolute left-1/2 flex -translate-x-1/2 flex-col items-center gap-1"
+          style={{ bottom: "calc(var(--safe-bottom, 0px) + 2.75rem)" }}
           role="progressbar"
           aria-label="Launch power"
           aria-valuemin={0}

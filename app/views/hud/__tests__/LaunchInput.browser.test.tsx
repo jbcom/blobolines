@@ -2,7 +2,9 @@ import { afterEach, expect, test } from "vitest";
 import { cleanup, render } from "vitest-browser-react";
 import {
   activatePowerup,
+  consumeLaunch,
   consumeMidAirBounce,
+  getAim,
   getAirSteer,
   resetBridges,
   resetPowerups,
@@ -155,4 +157,45 @@ test("airborne tap with a multi-bounce charge hides the reticle and requests the
   await expect.element(screen.getByTestId("air-steer-reticle").query()).not.toBeInTheDocument();
   expect(getAirSteer()).toEqual([0, 0]);
   expect(consumeMidAirBounce()).toBe(true);
+});
+
+test("grounded downward drag cancels a route charge instead of launching", async () => {
+  const screen = await render(<LaunchInput />);
+  setAirborne(false);
+  const surface = document.querySelector('[role="application"]') as HTMLElement;
+  expect(surface).toBeTruthy();
+
+  surface.dispatchEvent(
+    new PointerEvent("pointerdown", {
+      bubbles: true,
+      pointerId: 1,
+      pointerType: "touch",
+      clientX: 300,
+      clientY: 300,
+      buttons: 1,
+    }),
+  );
+  surface.dispatchEvent(
+    new PointerEvent("pointermove", {
+      bubbles: true,
+      pointerId: 1,
+      pointerType: "touch",
+      clientX: 300,
+      clientY: 435,
+      buttons: 1,
+    }),
+  );
+  surface.dispatchEvent(
+    new PointerEvent("pointerup", {
+      bubbles: true,
+      pointerId: 1,
+      pointerType: "touch",
+      clientX: 300,
+      clientY: 435,
+    }),
+  );
+
+  await expect.element(screen.getByRole("progressbar").query()).not.toBeInTheDocument();
+  expect(getAim()).toBeNull();
+  expect(consumeLaunch()).toBeNull();
 });
