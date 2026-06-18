@@ -67,6 +67,31 @@ test("BlobActor renders with impact wobble", async () => {
   );
 });
 
+// Visual fixture: the title/menu hero must not sit as a static circle. Its idle CSG body
+// cycles between a flattened happy puddle and a taller perky blob; the canvas frame should
+// visibly change over the loop even without impact or player input.
+test("BlobActor hero idle visibly burbles over time", async () => {
+  const screen = await render(
+    <FixtureStage testId="blob-hero-idle-fixture" cameraDistance={3}>
+      <BlobActor skin="slime" expression="idle" />
+    </FixtureStage>,
+  );
+
+  await expect.element(screen.getByTestId("blob-hero-idle-fixture")).toBeInTheDocument();
+  await new Promise((r) => setTimeout(r, 180));
+
+  const canvas = document
+    .querySelector('[data-testid="blob-hero-idle-fixture"]')
+    ?.querySelector("canvas");
+  if (!canvas) throw new Error("canvas not mounted");
+  const firstFrame = canvas.toDataURL("image/png");
+
+  await new Promise((r) => setTimeout(r, 760));
+  const laterFrame = canvas.toDataURL("image/png");
+
+  expect(laterFrame).not.toBe(firstFrame);
+});
+
 // Visual fixture: the LIVE eyes (reading the diagnostics bridge) animate over several frames —
 // blink/pupil-dart/tear all driven off the once-bucketed lid/pupil/tear node arrays (the perf
 // ref-cache replacing the per-frame traverse). Guards that the cached-node animation loop still

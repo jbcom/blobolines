@@ -18,6 +18,8 @@ export {
   faceFocusDartFromNdc,
 } from "./focus";
 export {
+  type HeroIdleBurble,
+  heroIdleBurble,
   type IdlePatienceInput,
   type IdlePatienceStep,
   stepIdlePatience,

@@ -1,6 +1,6 @@
 ---
 title: Testing
-updated: 2026-06-17
+updated: 2026-06-18
 status: current
 domain: quality
 ---
@@ -23,7 +23,8 @@ accumulate before player control, while waiting on a pad never launches for the 
 
 Render regressions that only a real GPU context catches:
 - `app/scene/world/__tests__/SkyDome.fixture.test.tsx` — sky shader paints pixels
-- `app/scene/blob/__tests__/BlobActor.fixture.test.tsx` — gooey blob + eyes render
+- `app/scene/blob/__tests__/BlobActor.fixture.test.tsx` — gooey blob, eyes, mouth, and
+  menu-idle burble render and visibly animate instead of freezing as a static circle
 - `app/scene/blob/__tests__/GooCsg.fixture.test.tsx` — merged CSG goo body renders and
   survives rest/deform/refraction paths, including the first-pad idle-impatience burble and
   the charged aim-direction bead
