@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.1.10](https://github.com/jbcom/blobolines/compare/blobolines-v0.1.9...blobolines-v0.1.10) (2026-06-18)
+
+
+### Features
+
+* **ui:** local high scores leaderboard & achievements gallery ([#52](https://github.com/jbcom/blobolines/issues/52)) ([744c1b2](https://github.com/jbcom/blobolines/commit/744c1b2c02714801574f8d9cefbbb465f30e6259))
+* **world:** add infinite low-poly decorative prop system and resolve audit remediation items ([#54](https://github.com/jbcom/blobolines/issues/54)) ([e016251](https://github.com/jbcom/blobolines/commit/e016251cd6837537c29864177c3eabd37e9fc5c6))
+
 ## [0.1.9](https://github.com/jbcom/blobolines/compare/blobolines-v0.1.8...blobolines-v0.1.9) (2026-06-18)
 
 
