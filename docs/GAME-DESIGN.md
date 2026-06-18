@@ -109,15 +109,17 @@ meaning of the launch tool:
   anchored to a stored golden-path sample. The hidden proof still runs all the way to the next
   trampoline, but the live aim guide and dev red proof stop at the slicer so the player must
   route the remaining cut after passing through it. Touching a slicer splits Blobby into three
-  to five visible goo fragments that fan along the path as split echoes while the main body
-  continues.
+  to five visible goo fragments that follow certified post-cut lanes. One survivor lane is
+  guaranteed to stay inside the next trampoline footprint, and the main body inherits that
+  survivor exit velocity so the cut behaves like a route mechanic instead of pure decoration.
 - The generator only emits a gate when the source/target pair already has a valid proof; the
   metadata stores the source pad, target pad, proof sample index, live radius, and gate-specific
   timing or split parameters. Phase portals store period/open-fraction/phase data; slicers store
-  fragment count and split spread.
+  fragment count, split spread, and post-cut fragment lane samples.
 - Seed verification checks every gate against the proof samples and confirms phase portals have
-  a certified open timing while slicers have valid fragment metadata. A route gate floating away
-  from the proof path is a verifier failure, not a visual flourish.
+  a certified open timing while slicers have valid fragment metadata and at least one surviving
+  certified lane. A route gate floating away from the proof path is a verifier failure, not a
+  visual flourish.
 
 The selected difficulty is the starting cadence, not a permanent lock. As altitude increases,
 the effective route profile advances through the later modes; the HUD flashes labels like

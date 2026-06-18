@@ -299,6 +299,35 @@ export function verifySeedRoute({
         if ((gate.splitSpread ?? 0) <= 0) {
           addFailure(failures, i, source, target, "slicer split spread is invalid");
         }
+        const lanes = gate.fragmentLanes ?? [];
+        if (lanes.length !== gate.fragmentCount) {
+          addFailure(failures, i, source, target, "slicer fragment lanes do not match count");
+        }
+        if (!lanes.some((lane) => lane.survivor && lane.landingPrecision > 0)) {
+          addFailure(failures, i, source, target, "slicer has no surviving certified lane");
+        }
+        for (const lane of lanes) {
+          if (lane.samples.length < 2) {
+            addFailure(failures, i, source, target, "slicer fragment lane has too few samples");
+          }
+          const first = lane.samples[0];
+          if (
+            !first ||
+            Math.hypot(
+              first[0] - gate.position[0],
+              first[1] - gate.position[1],
+              first[2] - gate.position[2],
+            ) > EPS
+          ) {
+            addFailure(failures, i, source, target, "slicer fragment lane does not start at gate");
+          }
+          if (lane.duration <= 0) {
+            addFailure(failures, i, source, target, "slicer fragment lane duration is invalid");
+          }
+          if (lane.survivor && variantLandingMiss(lane, target) > halfFoot + EPS) {
+            addFailure(failures, i, source, target, "slicer survivor lane misses successor");
+          }
+        }
       }
     }
 

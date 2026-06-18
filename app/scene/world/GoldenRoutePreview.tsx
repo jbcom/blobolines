@@ -14,6 +14,8 @@ import { palette } from "@/styles/tokens";
 
 const MIN_POINTS = 2;
 const RADIUS = 0.045;
+const FRAGMENT_RADIUS = 0.032;
+const MAX_FRAGMENT_LANES = 5;
 const RING_NORMAL = new Vector3(0, 0, 1);
 
 function applyPadNormal(out: Vector3, pad: TrampolineSpec | undefined) {
@@ -34,9 +36,16 @@ function applyPadNormal(out: Vector3, pad: TrampolineSpec | undefined) {
 
 export function GoldenRoutePreview() {
   const meshRef = useRef<Mesh>(null);
+  const fragmentRefs = useRef<(Mesh | null)[]>(Array(MAX_FRAGMENT_LANES).fill(null));
   const impactRef = useRef<Mesh>(null);
   const impactNormal = useRef(new Vector3(0, 1, 0));
   const activeKey = useRef("");
+
+  const hideFragments = () => {
+    for (const fragment of fragmentRefs.current) {
+      if (fragment) fragment.visible = false;
+    }
+  };
 
   useFrame(() => {
     const mesh = meshRef.current;
@@ -46,6 +55,7 @@ export function GoldenRoutePreview() {
     if (!target) {
       mesh.visible = false;
       impact.visible = false;
+      hideFragments();
       activeKey.current = "";
       return;
     }
@@ -57,6 +67,7 @@ export function GoldenRoutePreview() {
     if (!from || !to || !proof || proof.samples.length < MIN_POINTS) {
       mesh.visible = false;
       impact.visible = false;
+      hideFragments();
       activeKey.current = "";
       return;
     }
@@ -66,11 +77,16 @@ export function GoldenRoutePreview() {
     if (visibleSamples.length < MIN_POINTS) {
       mesh.visible = false;
       impact.visible = false;
+      hideFragments();
       activeKey.current = "";
       return;
     }
 
-    const key = `${world.seedPhrase}:${world.seed}:${target.pairIndex}:${from.id}:${proof.toPadId}:${gate?.id ?? "full"}`;
+    const laneKey =
+      gate?.fragmentLanes
+        ?.map((lane) => `${lane.index}:${lane.samples.length}:${lane.landingPrecision.toFixed(3)}`)
+        .join("|") ?? "none";
+    const key = `${world.seedPhrase}:${world.seed}:${target.pairIndex}:${from.id}:${proof.toPadId}:${gate?.id ?? "full"}:${laneKey}`;
     if (key !== activeKey.current) {
       const points = visibleSamples.map((p) => new Vector3(p[0], p[1], p[2]));
       const curve = new CatmullRomCurve3(points);
@@ -78,9 +94,36 @@ export function GoldenRoutePreview() {
       const previous = mesh.geometry;
       mesh.geometry = next;
       previous.dispose();
+
+      for (let i = 0; i < MAX_FRAGMENT_LANES; i++) {
+        const fragment = fragmentRefs.current[i];
+        if (!fragment) continue;
+        const lane = gate?.fragmentLanes?.[i];
+        if (!lane || lane.samples.length < MIN_POINTS) {
+          fragment.visible = false;
+          continue;
+        }
+        const lanePoints = lane.samples.map((p) => new Vector3(p[0], p[1], p[2]));
+        const laneCurve = new CatmullRomCurve3(lanePoints);
+        const laneGeometry = new TubeGeometry(
+          laneCurve,
+          Math.max(10, lanePoints.length * 3),
+          lane.survivor ? FRAGMENT_RADIUS * 1.25 : FRAGMENT_RADIUS,
+          10,
+          false,
+        );
+        const oldLaneGeometry = fragment.geometry;
+        fragment.geometry = laneGeometry;
+        oldLaneGeometry.dispose();
+      }
       activeKey.current = key;
     }
     mesh.visible = true;
+    for (let i = 0; i < MAX_FRAGMENT_LANES; i++) {
+      const fragment = fragmentRefs.current[i];
+      const lane = gate?.fragmentLanes?.[i];
+      if (fragment) fragment.visible = Boolean(lane && lane.samples.length >= MIN_POINTS);
+    }
     if (gate) {
       impactNormal.current.set(...gate.normal).normalize();
     } else {
@@ -98,6 +141,28 @@ export function GoldenRoutePreview() {
         <bufferGeometry />
         <meshBasicMaterial color={palette.danger} depthTest={false} depthWrite={false} />
       </mesh>
+      {Array.from({ length: MAX_FRAGMENT_LANES }, (_, i) => (
+        <mesh
+          // biome-ignore lint/suspicious/noArrayIndexKey: fixed proof-lane pool
+          key={i}
+          ref={(node) => {
+            fragmentRefs.current[i] = node;
+          }}
+          frustumCulled={false}
+          renderOrder={50}
+          visible={false}
+        >
+          <bufferGeometry />
+          <meshBasicMaterial
+            color={i === 0 ? palette.tramp.gold : palette.tramp.orange}
+            transparent
+            opacity={i === 0 ? 0.72 : 0.42}
+            depthTest={false}
+            depthWrite={false}
+            blending={AdditiveBlending}
+          />
+        </mesh>
+      ))}
       <mesh
         ref={impactRef}
         frustumCulled={false}

@@ -76,14 +76,14 @@ describe("route gates", () => {
   it("creates proof-anchored slicers in Blobmare", () => {
     const samples: GoldenPathProof["samples"] = [
       [0, 0, 0],
-      [1, 1, 0],
-      [2, 2, 0],
-      [3, 3, 0],
-      [4, 4, 0],
-      [5, 5, 0],
-      [6, 6, 0],
-      [7, 7, 0],
-      [8, 8, 0],
+      [0, 1, 0],
+      [0, 2, 0],
+      [0, 3, 0],
+      [0, 4, 0],
+      [0, 5, 0],
+      [0, 6, 0],
+      [0, 7, 0],
+      [0, 8, 0],
     ];
     const created = createRouteGateForProof(
       pad(1, 6),
@@ -97,5 +97,11 @@ describe("route gates", () => {
     expect(created?.fragmentCount).toBeGreaterThanOrEqual(3);
     expect(created?.fragmentCount).toBeLessThanOrEqual(5);
     expect(created?.position).toEqual(samples[created?.sampleIndex ?? -1]);
+    expect(created?.fragmentLanes).toHaveLength(created?.fragmentCount);
+    expect(created?.fragmentLanes?.some((lane) => lane.survivor)).toBe(true);
+    const survivor = created?.fragmentLanes?.find((lane) => lane.survivor);
+    expect(survivor?.samples[0]).toEqual(created?.position);
+    expect(survivor?.landingPrecision).toBeGreaterThan(0);
+    expect(survivor?.exitVelocity.every(Number.isFinite)).toBe(true);
   });
 });

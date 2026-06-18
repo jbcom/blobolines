@@ -228,6 +228,11 @@ describe("world generator", () => {
       expect(proof?.toPadId).toBe(gate.targetPadId);
       expect(proof?.samples[gate.sampleIndex]).toEqual(gate.position);
       expect(gate.fragmentCount).toBeGreaterThanOrEqual(3);
+      expect(gate.fragmentLanes).toHaveLength(gate.fragmentCount);
+      const survivor = gate.fragmentLanes?.find((lane) => lane.survivor);
+      expect(survivor).toBeTruthy();
+      expect(survivor?.samples[0]).toEqual(gate.position);
+      expect(survivor?.landingPrecision).toBeGreaterThan(0);
     }
   });
 

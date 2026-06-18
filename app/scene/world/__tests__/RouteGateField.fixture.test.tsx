@@ -34,6 +34,34 @@ function fixtureSlicer(): RouteGateSpec {
     phaseOffset: 0,
     fragmentCount: 4,
     splitSpread: 3.2,
+    fragmentLanes: [
+      {
+        index: 0,
+        survivor: true,
+        samples: [
+          [0, 0, 0],
+          [0, 0.6, 0],
+          [0, 1, 0],
+        ],
+        landing: [0, 1, 0],
+        landingPrecision: 1,
+        exitVelocity: [0, 6, 0],
+        duration: 0.7,
+      },
+      {
+        index: 1,
+        survivor: false,
+        samples: [
+          [0, 0, 0],
+          [-0.7, 0.6, 0],
+          [-0.2, 1, 0],
+        ],
+        landing: [-0.2, 1, 0],
+        landingPrecision: 0.9,
+        exitVelocity: [-3, 5, 0],
+        duration: 0.7,
+      },
+    ],
   };
 }
 
@@ -169,6 +197,7 @@ test("RouteGateField reports split metadata when the blob enters a slicer", asyn
       expect(hit?.gateId).toBe(gate.id);
       expect(hit?.kind).toBe("slicer");
       expect(hit?.fragmentCount).toBe(4);
+      expect(hit?.fragmentLanes?.[0]?.survivor).toBe(true);
       expect(hit?.velocity).toEqual([2, 8, -1]);
     },
     { timeout: 6000, interval: 60 },

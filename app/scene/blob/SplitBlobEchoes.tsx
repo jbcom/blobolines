@@ -2,7 +2,7 @@ import { useFrame } from "@react-three/fiber";
 import { useEffect, useMemo, useRef } from "react";
 import type { Group } from "three";
 import { AdditiveBlending, MeshBasicMaterial } from "three";
-import type { BlobSkin } from "@/core/types";
+import type { BlobSkin, SlicerFragmentLane } from "@/core/types";
 import { consumeBlobSplits } from "@/state";
 import { palette } from "@/styles/tokens";
 
@@ -13,6 +13,7 @@ interface Fragment {
   position: [number, number, number];
   origin: readonly [number, number, number];
   velocity: [number, number, number];
+  lane?: SlicerFragmentLane;
   radius: number;
   phase: number;
 }
@@ -37,6 +38,7 @@ export function SplitBlobEchoes({ skin }: { skin: BlobSkin }) {
       position: [0, -999, 0],
       origin: [0, -999, 0],
       velocity: [0, 0, 0],
+      lane: undefined,
       radius: 0.28,
       phase: 0,
     })),
@@ -78,13 +80,17 @@ export function SplitBlobEchoes({ skin }: { skin: BlobSkin }) {
         const spread = centered * split.spread;
         fragment.active = true;
         fragment.age = 0;
-        fragment.life = 1.08 + Math.abs(centered) * 0.08;
+        const lane = split.fragmentLanes?.[i];
+        fragment.lane = lane;
+        fragment.life = lane?.duration ?? 1.08 + Math.abs(centered) * 0.08;
         fragment.origin = split.position;
-        fragment.velocity = [
-          split.velocity[0] * 0.62 + lateral[0] * spread,
-          Math.max(4, split.velocity[1] * 0.38 + 5.2 - Math.abs(centered) * 0.45),
-          split.velocity[2] * 0.62 + lateral[2] * spread,
-        ];
+        fragment.velocity = lane
+          ? [lane.exitVelocity[0], lane.exitVelocity[1], lane.exitVelocity[2]]
+          : [
+              split.velocity[0] * 0.62 + lateral[0] * spread,
+              Math.max(4, split.velocity[1] * 0.38 + 5.2 - Math.abs(centered) * 0.45),
+              split.velocity[2] * 0.62 + lateral[2] * spread,
+            ];
         fragment.radius = 0.24 + split.strength * 0.08 + (i % 2) * 0.025;
         fragment.phase = state.clock.elapsedTime + i * 1.7;
       }
@@ -104,12 +110,28 @@ export function SplitBlobEchoes({ skin }: { skin: BlobSkin }) {
       if (life <= 0) {
         fragment.active = false;
         fragment.age = Number.POSITIVE_INFINITY;
+        fragment.lane = undefined;
         group.visible = false;
         continue;
       }
-      const [ox, oy, oz] = fragment.origin;
-      const [vx, vy, vz] = fragment.velocity;
-      fragment.position = [ox + vx * t, oy + vy * t + 0.5 * GRAVITY_Y * t * t, oz + vz * t];
+      if (fragment.lane) {
+        const samples = fragment.lane.samples;
+        const u = Math.min(0.999, t / Math.max(0.001, fragment.lane.duration));
+        const scaled = u * (samples.length - 1);
+        const sampleIndex = Math.min(samples.length - 2, Math.floor(scaled));
+        const local = scaled - sampleIndex;
+        const a = samples[sampleIndex] ?? fragment.origin;
+        const b = samples[sampleIndex + 1] ?? a;
+        fragment.position = [
+          a[0] + (b[0] - a[0]) * local,
+          a[1] + (b[1] - a[1]) * local,
+          a[2] + (b[2] - a[2]) * local,
+        ];
+      } else {
+        const [ox, oy, oz] = fragment.origin;
+        const [vx, vy, vz] = fragment.velocity;
+        fragment.position = [ox + vx * t, oy + vy * t + 0.5 * GRAVITY_Y * t * t, oz + vz * t];
+      }
       const wobble = 1 + Math.sin(state.clock.elapsedTime * 12 + fragment.phase) * 0.13 * life;
       group.position.set(...fragment.position);
       group.scale.set(

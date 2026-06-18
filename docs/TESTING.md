@@ -28,9 +28,10 @@ Render regressions that only a real GPU context catches:
   survives rest/deform/refraction paths, including the first-pad idle-impatience burble and
   the charged aim-direction bead
 - `app/scene/blob/__tests__/SplitBlobEchoes.fixture.test.tsx` — slicer-triggered mini
-  Blobby fragments render as visible split echoes
+  Blobby fragments render as visible split echoes and can follow certified fragment lanes
 - `app/scene/world/__tests__/GoldenRoutePreview.fixture.test.tsx` — solid red route-proof
-  parabola renders from stored golden-path samples for the dev harness
+  parabola renders from stored golden-path samples for the dev harness, including warm
+  post-slicer fragment lane proofs
 - `app/scene/world/__tests__/RouteGateField.fixture.test.tsx` — proof-anchored phase
   portals and slicers render in WebGL and report gameplay hit metadata
 - `app/views/hud/__tests__/LaunchInput.browser.test.tsx` — launch surface, keyboard
@@ -81,7 +82,7 @@ report `3-3/3-3`, while a longer Easy-starting route that has progressed into Me
 report `2-3/2-3`. It also reports route-gate counts, split between phase portals and
 slicers, and fails any gate that is not anchored to a proof sample, any phase portal that
 cannot be crossed during a deterministic open timing, or any slicer with invalid fragment
-metadata.
+metadata, missing lane samples, or no surviving lane inside the target footprint.
 
 ## Coverage gates
 
