@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { breakCombo, createCombo, MAX_COMBO, onCleanBounce } from "../combo";
+import { breakCombo, comboHeat, createCombo, MAX_COMBO, onCleanBounce } from "../combo";
 
 describe("combo tracking", () => {
   it("starts at zero", () => {
@@ -23,5 +23,17 @@ describe("combo tracking", () => {
     const built = onCleanBounce(onCleanBounce(createCombo()));
     expect(built.streak).toBe(2);
     expect(breakCombo().streak).toBe(0);
+  });
+
+  it("calculates combo visual heat correctly", () => {
+    expect(comboHeat(0)).toBe(0);
+    expect(comboHeat(4)).toBe(4 / MAX_COMBO);
+    expect(comboHeat(MAX_COMBO)).toBe(1);
+    expect(comboHeat(MAX_COMBO + 2)).toBe(1);
+
+    expect(comboHeat(0, 2)).toBe(0);
+    expect(comboHeat(2, 2)).toBe(0);
+    expect(comboHeat(5, 2)).toBe((5 - 2) / (MAX_COMBO - 2));
+    expect(comboHeat(MAX_COMBO, 2)).toBe(1);
   });
 });

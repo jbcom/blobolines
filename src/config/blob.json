@@ -11,5 +11,25 @@
     "scale": [1.22, 0.78, 1.22]
   },
   "deformSpringTau": 0.06,
-  "wobbleDecayTau": 0.7
+  "wobbleDecayTau": 0.7,
+  "thrusterVelocity": 34,
+  "midAirBounceVelocity": 22,
+  "shield": {
+    "reboundVelocity": 18,
+    "spawnHeightOffset": 2
+  },
+  "nearMiss": {
+    "speedThreshold": -8,
+    "minDistance": 0.4,
+    "maxDistance": 2.5,
+    "soundVolume": 0.45
+  },
+  "decay": {
+    "impactDecay": 2.5,
+    "excitementDecay": 0.65
+  },
+  "dangerBeat": {
+    "initialTimer": 0.45,
+    "scale": 0.33
+  }
 }

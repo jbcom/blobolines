@@ -1,6 +1,7 @@
 import { useFrame } from "@react-three/fiber";
 import { useMemo, useRef } from "react";
 import { Color, type PointLight } from "three";
+import { comboHeat } from "@/sim/combo";
 import { getBlobDiagnostics, useGameStore } from "@/state";
 import { palette } from "@/styles/tokens";
 
@@ -25,7 +26,7 @@ export function BlobFollowLight() {
 
     // Tint to the skin, warming toward flame with combo heat.
     const combo = useGameStore.getState().run.combo;
-    const heat = Math.min(1, Math.max(0, (combo - 2) / 6));
+    const heat = comboHeat(combo, 2);
     base.set(palette.blob[skin]);
     base.lerp(flame, heat * 0.8);
     l.color.copy(base);
