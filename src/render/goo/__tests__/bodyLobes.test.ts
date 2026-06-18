@@ -92,4 +92,30 @@ describe("bodyLobes", () => {
     expect(excited[2].position[1]).toBeGreaterThan(calm[2].position[1]);
     expect(excited[2].scale[1]).toBeGreaterThan(calm[2].scale[1]);
   });
+
+  it("burble-perks when the player waits on the first pad", () => {
+    const pulsePeak = 0.37;
+    const calm = bodyLobes({
+      time: pulsePeak,
+      settled: 1,
+      velocity: [0, 0, 0],
+      radius: 0.85,
+      aimCharge: 0,
+      idleSeconds: 0.4,
+      excitement: 0,
+    });
+    const impatient = bodyLobes({
+      time: pulsePeak,
+      settled: 1,
+      velocity: [0, 0, 0],
+      radius: 0.85,
+      aimCharge: 0,
+      idleSeconds: 6.1,
+      excitement: 0,
+    });
+
+    expect(impatient[1].position[1]).toBeGreaterThan(calm[1].position[1]);
+    expect(impatient[1].scale[1]).toBeGreaterThan(calm[1].scale[1]);
+    expect(impatient[2].position[1]).toBeGreaterThan(calm[2].position[1]);
+  });
 });

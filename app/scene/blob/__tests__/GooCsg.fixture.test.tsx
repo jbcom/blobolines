@@ -178,6 +178,44 @@ test("GooCsg renders a settled, sagging+lobed goo puddle at rest", async () => {
   );
 });
 
+// First-pad waiting is a character moment: visual idle time accumulates before any player
+// launch, so the live CSG body should still render the impatient burble/perk path.
+test("GooCsg renders first-pad idle impatience burble", async () => {
+  setBlobDiagnostics({
+    position: [0, 0, 0],
+    velocity: [0, 0, 0],
+    speed: 0,
+    airborne: false,
+    expression: "idle",
+    squash: 1,
+    maxHeight: 0,
+    groundY: 0,
+    idleSeconds: 6.2,
+    excitement: 0,
+  });
+
+  const screen = await render(
+    <FixtureStage testId="goocsg-impatient-fixture" cameraDistance={5}>
+      <ambientLight intensity={1} />
+      <GooCsg skin="blue" blobRadius={0.85} getDroplets={() => []} />
+    </FixtureStage>,
+  );
+
+  await expect.element(screen.getByTestId("goocsg-impatient-fixture")).toBeInTheDocument();
+  await new Promise((r) => setTimeout(r, 220));
+
+  await vi.waitFor(
+    () => {
+      const canvas = document
+        .querySelector('[data-testid="goocsg-impatient-fixture"]')
+        ?.querySelector("canvas");
+      if (!canvas) throw new Error("canvas not mounted");
+      expect(canvas.toDataURL("image/png").length).toBeGreaterThan(4000);
+    },
+    { timeout: 6000, interval: 60 },
+  );
+});
+
 // Charged aiming should visibly bead the CSG body toward the selected launch vector. This
 // guards the expert-mode cue where Ultra Blobmare hides the parabola overlay and Blobby's
 // goo/face must carry more of the direction read.

@@ -6,6 +6,7 @@ import {
   impactSquash,
   mouthShape,
   speedStretch,
+  stepIdlePatience,
 } from "../index";
 
 describe("speedStretch", () => {
@@ -120,5 +121,58 @@ describe("mouthShape", () => {
     const m = mouthShape("tear");
     expect(m.open).toBeGreaterThan(0.3);
     expect(m.curve).toBeLessThan(0);
+  });
+});
+
+describe("stepIdlePatience", () => {
+  it("accumulates visual idle time before the first player control", () => {
+    const stepped = stepIdlePatience({
+      idleSeconds: 4.9,
+      dt: 0.2,
+      resting: true,
+      aiming: false,
+      playerControlStarted: false,
+      autoLaunchDelay: 5,
+    });
+
+    expect(stepped.idleSeconds).toBeCloseTo(5.1);
+    expect(stepped.shouldAutoLaunch).toBe(false);
+  });
+
+  it("auto-launches only after player control has started", () => {
+    const stepped = stepIdlePatience({
+      idleSeconds: 4.9,
+      dt: 0.2,
+      resting: true,
+      aiming: false,
+      playerControlStarted: true,
+      autoLaunchDelay: 5,
+    });
+
+    expect(stepped.idleSeconds).toBe(0);
+    expect(stepped.shouldAutoLaunch).toBe(true);
+  });
+
+  it("resets idle impatience while airborne or aiming", () => {
+    expect(
+      stepIdlePatience({
+        idleSeconds: 3,
+        dt: 0.1,
+        resting: false,
+        aiming: false,
+        playerControlStarted: true,
+        autoLaunchDelay: 5,
+      }),
+    ).toEqual({ idleSeconds: 0, shouldAutoLaunch: false });
+    expect(
+      stepIdlePatience({
+        idleSeconds: 3,
+        dt: 0.1,
+        resting: true,
+        aiming: true,
+        playerControlStarted: true,
+        autoLaunchDelay: 5,
+      }),
+    ).toEqual({ idleSeconds: 0, shouldAutoLaunch: false });
   });
 });

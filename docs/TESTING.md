@@ -18,6 +18,8 @@ Lives next to the code in `__tests__/`. `app/scene/blob/__tests__/TrajectoryPrev
 also locks the difficulty-gated aim-assist ladder: endpoint reticles below Blobmare,
 arc-only Blobmare, no parabola on Ultra Blobmare and up, and the active-tier progression rule
 that prevents an Easy-starting run from keeping Easy aim hints after it graduates.
+`src/sim/blob/__tests__/blob.test.ts` locks the first-pad idle rule: visual impatience can
+accumulate before player control, while auto-launch is still gated until after real input.
 
 ## Browser fixtures — `pnpm test:browser` (Vitest browser mode, real Chromium + WebGL)
 
@@ -25,7 +27,8 @@ Render regressions that only a real GPU context catches:
 - `app/scene/world/__tests__/SkyDome.fixture.test.tsx` — sky shader paints pixels
 - `app/scene/blob/__tests__/BlobActor.fixture.test.tsx` — gooey blob + eyes render
 - `app/scene/blob/__tests__/GooCsg.fixture.test.tsx` — merged CSG goo body renders and
-  survives rest/deform/refraction paths, including the charged aim-direction bead
+  survives rest/deform/refraction paths, including the first-pad idle-impatience burble and
+  the charged aim-direction bead
 - `app/scene/world/__tests__/GoldenRoutePreview.fixture.test.tsx` — solid red route-proof
   parabola renders from stored golden-path samples for the dev harness
 - `app/views/hud/__tests__/LaunchInput.browser.test.tsx` — launch surface, keyboard
