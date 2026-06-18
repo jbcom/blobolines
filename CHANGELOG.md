@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.1.8](https://github.com/jbcom/blobolines/compare/blobolines-v0.1.7...blobolines-v0.1.8) (2026-06-18)
+
+
+### Features
+
+* add blobby idle burble ([#48](https://github.com/jbcom/blobolines/issues/48)) ([2c7ae46](https://github.com/jbcom/blobolines/commit/2c7ae4627a90b5ab4cdcffa2b3b09591cfa2226c))
+* certify slicer fragment lanes ([f310431](https://github.com/jbcom/blobolines/commit/f310431769ce5eb2b9c7c4698e217a365d0ca548))
+* pivot trampolines into cloud pads ([9db9908](https://github.com/jbcom/blobolines/commit/9db990845d3defeb08d12626453318dc32511177))
+
+
+### Bug Fixes
+
+* tune route charge controls ([#47](https://github.com/jbcom/blobolines/issues/47)) ([aa2ac4e](https://github.com/jbcom/blobolines/commit/aa2ac4e9be9478a6a7d86703b592a658a0a74642))
+
 ## [0.1.7](https://github.com/jbcom/blobolines/compare/blobolines-v0.1.6...blobolines-v0.1.7) (2026-06-18)
 
 
