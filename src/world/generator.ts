@@ -457,15 +457,8 @@ function proofWithVariants(
   if (prev.type !== "canted" && prev.type !== "moving" && prev.type !== "wobbler") return null;
 
   const proofCandidates = [
-    solveGoldenPath(
-      prev,
-      target,
-      launchSpeedForCharge(profile.preferredCharge),
-      undefined,
-      undefined,
-      prev.type === "canted",
-    ),
-    solveGoldenPath(prev, target, undefined, undefined, undefined, prev.type === "canted"),
+    solveGoldenPath(prev, target, launchSpeedForCharge(profile.preferredCharge)),
+    solveGoldenPath(prev, target),
   ].filter((proof): proof is GoldenPathProof => proofAccepted(proof, profile));
   const primary = proofCandidates.sort(
     (a, b) => proofScore(b, profile) - proofScore(a, profile),
@@ -681,7 +674,57 @@ function ensureReachable(
     [px + dirX * fallbackGap, fallbackY, pz + dirZ * fallbackGap],
   );
   result = widenForHumanMargin(prev, result, profile);
-  const proof = proveAt(result);
+  let proof = proveAt(result);
+  if (!proof) {
+    const sourceStep = result.position[1] - prev.position[1];
+    const minStepY = prev.position[1] < STARTER_GUIDE_Y ? STARTER_MIN_STEP_Y : 5.8;
+    const rescueSteps = [
+      sourceStep,
+      sourceStep * 0.85,
+      sourceStep * 0.7,
+      sourceStep * 0.55,
+      minStepY,
+    ]
+      .map((step) => clamp(step, minStepY, Math.max(minStepY, MAX_GOLDEN_STEP_Y)))
+      .filter((step, i, xs) => i === 0 || Math.abs(step - xs[i - 1]) > 0.05);
+    const rescueGaps = [fallbackGap, minLegalLateral, (minLegalLateral + fallbackMaxGap) / 2];
+    for (let i = 0; i <= 6; i++) {
+      const gap = minLegalLateral + (fallbackMaxGap - minLegalLateral) * (i / 6);
+      if (rescueGaps.every((g) => Math.abs(g - gap) > 0.05)) rescueGaps.push(gap);
+    }
+    const rescueFootprints = [
+      profile.minFootprint,
+      profile.minFootprint * 1.25,
+      profile.minFootprint * 1.5,
+      profile.minFootprint * 1.85,
+    ];
+
+    rescueLoop: for (const step of rescueSteps) {
+      const y = prev.position[1] + step;
+      for (const rescueGap of rescueGaps) {
+        for (const footprint of rescueFootprints) {
+          const candidate = widenForHumanMargin(
+            prev,
+            withPosition(
+              {
+                ...pad,
+                width: Math.max(pad.width, footprint),
+                depth: Math.max(pad.depth, footprint),
+              },
+              [px + dirX * rescueGap, y, pz + dirZ * rescueGap],
+            ),
+            profile,
+          );
+          proof = proveAt(candidate);
+          if (proof) {
+            result = candidate;
+            break rescueLoop;
+          }
+        }
+      }
+    }
+  }
+
   if (!proof) {
     const finalGap = Math.hypot(
       result.position[0] - prev.position[0],

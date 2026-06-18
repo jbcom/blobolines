@@ -3,6 +3,7 @@ import { createRng } from "@/core/math";
 import { effectiveRouteDifficulty, routeDifficultyProgress, routeProfile } from "../difficulty";
 import { generateUpTo, starterPad } from "../generator";
 import { reaches } from "../reachable";
+import { verifySeedRoute } from "../seedVerifier";
 
 function lateralGap(a: readonly [number, number, number], b: readonly [number, number, number]) {
   return Math.hypot(b[0] - a[0], b[2] - a[2]);
@@ -351,6 +352,15 @@ describe("world generator", () => {
         expect(variant.launchCharge).toBeLessThanOrEqual(1);
       }
     }
+  });
+
+  it("rescues ready seeds that need expanded proof variants after wobblers", () => {
+    const report = verifySeedRoute({ seed: "seed-38", difficulty: "ready", targetY: 120 });
+
+    expect(report.ok).toBe(true);
+    expect(report.failures).toEqual([]);
+    expect(report.minProofVariants).toBe(routeProfile("ready").proofVariants);
+    expect(report.maxProofVariants).toBe(routeProfile("ready").proofVariants);
   });
 
   // Golden-path navigability — STRUCTURAL property: every canted pad's cant is a unit vector
