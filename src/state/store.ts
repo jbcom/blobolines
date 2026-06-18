@@ -66,7 +66,7 @@ export const DEFAULT_SETTINGS: GameSettings = {
   musicVolume: 0.8,
   ambientVolume: 0.7,
   musicEnabled: true,
-  slingshotSensitivity: 1,
+  chargeSensitivity: 1,
   haptics: true,
   reducedMotion: false,
   qualityPref: "auto",

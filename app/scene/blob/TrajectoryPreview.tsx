@@ -16,10 +16,9 @@ import { hex, palette } from "@/styles/tokens";
 import { nextRouteStep, PAD_SURFACE_Y } from "@/world";
 
 /**
- * Aim/targeting feedback while the player charges the slingshot. Reads the live aim from
- * the bridge each frame, runs the SAME launchVelocity the blob will use, and difficulty-gates
- * assistance: Easy/Medium/Hard show a dotted arc plus endpoint reticle, Blobmare keeps only
- * the arc, and Ultra Blobmare / One Wrong Move hide the parabola entirely.
+ * Aim/targeting feedback while the player charges. Reads the live aim from the bridge each
+ * frame and runs the SAME launchVelocity the blob will use. The guide stays visible at every
+ * difficulty; expert tiers tighten the viable release, they do not remove the readable arc.
  */
 const DOTS = 26;
 const MAX_ENDPOINT_TIME = 4.5;
@@ -37,11 +36,11 @@ export interface AimEndpoint {
 }
 
 export function showsAimEndpointReticle(difficulty: WorldDifficulty): boolean {
-  return difficulty === "ready" || difficulty === "medium" || difficulty === "hard";
+  return Boolean(difficulty);
 }
 
 export function showsAimParabola(difficulty: WorldDifficulty): boolean {
-  return difficulty !== "ultraBlobmare" && difficulty !== "oneWrongMove";
+  return Boolean(difficulty);
 }
 
 export function aimAssistDifficulty(

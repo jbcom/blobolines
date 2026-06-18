@@ -1,5 +1,4 @@
 export {
-  AUTO_LAUNCH_POWER,
   BASE_POWER,
   comboMultiplier,
   isPerfectRelease,

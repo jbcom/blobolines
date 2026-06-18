@@ -87,6 +87,19 @@ describe("world generator", () => {
     expect(routeProfile("ready").shapeVariety).toBeLessThan(
       routeProfile("oneWrongMove").shapeVariety,
     );
+
+    expect(routeProfile("ready").preferredCharge).toBeLessThan(
+      routeProfile("medium").preferredCharge,
+    );
+    expect(routeProfile("medium").preferredCharge).toBeLessThan(
+      routeProfile("oneWrongMove").preferredCharge,
+    );
+    expect(routeProfile("ready").chargeTolerance).toBeGreaterThan(
+      routeProfile("oneWrongMove").chargeTolerance,
+    );
+    expect(routeProfile("ready").chargeWeight).toBeLessThan(
+      routeProfile("oneWrongMove").chargeWeight,
+    );
   });
 
   it("progresses the selected starting difficulty by altitude", () => {
@@ -318,6 +331,25 @@ describe("world generator", () => {
     ];
     for (let i = 1; i < hardPads.length; i++) {
       expect(hardPads[i - 1].goldenPath?.variants?.length).toBe(routeProfile("hard").proofVariants);
+    }
+  });
+
+  it("keeps certified route charge metadata on every generated proof", () => {
+    const start = starterPad();
+    const pads = [
+      start,
+      ...generateUpTo(createRng("charge-metadata"), 0, 500, start, "hard").trampolines,
+    ];
+
+    for (let i = 1; i < pads.length; i++) {
+      const proof = pads[i - 1].goldenPath;
+      expect(proof?.toPadId).toBe(pads[i].id);
+      expect(proof?.launchCharge).toBeGreaterThanOrEqual(0);
+      expect(proof?.launchCharge).toBeLessThanOrEqual(1);
+      for (const variant of proof?.variants ?? []) {
+        expect(variant.launchCharge).toBeGreaterThanOrEqual(0);
+        expect(variant.launchCharge).toBeLessThanOrEqual(1);
+      }
     }
   });
 

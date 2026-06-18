@@ -18,12 +18,26 @@ import { DEFAULT_PROGRESS, DEFAULT_SETTINGS, type GameState, useGameStore } from
 const KEY_PROGRESS = "blobolines.progress";
 const KEY_SETTINGS = "blobolines.settings";
 
+type PersistedSettings = Partial<GameSettings> & {
+  slingshotSensitivity?: number;
+};
+
+function normalizeSettings(settings: PersistedSettings): GameSettings {
+  const legacyCharge = settings.slingshotSensitivity;
+  const { slingshotSensitivity: _legacy, ...rest } = settings;
+  return {
+    ...DEFAULT_SETTINGS,
+    ...rest,
+    chargeSensitivity: rest.chargeSensitivity ?? legacyCharge ?? DEFAULT_SETTINGS.chargeSensitivity,
+  };
+}
+
 export async function hydrateStore(): Promise<void> {
   const [progress, settings] = await Promise.all([
     loadJson<PlayerProgress>(KEY_PROGRESS, DEFAULT_PROGRESS),
-    loadJson<GameSettings>(KEY_SETTINGS, DEFAULT_SETTINGS),
+    loadJson<PersistedSettings>(KEY_SETTINGS, DEFAULT_SETTINGS),
   ]);
-  const mergedSettings = { ...DEFAULT_SETTINGS, ...settings };
+  const mergedSettings = normalizeSettings(settings);
   useGameStore.setState({
     progress: { ...DEFAULT_PROGRESS, ...progress },
     settings: mergedSettings,

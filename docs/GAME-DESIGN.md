@@ -17,7 +17,7 @@ trickier types, longer falls.
 ## Core loop
 
 1. The blob rests on a trampoline.
-2. **Drag back** to charge a slingshot launch (a power meter fills); **release** to fly.
+2. **Hold on Blobby** to charge the route launch (a power meter fills); **release** to fly.
 3. In the air, **drag** to steer in 3D (left/right = world X, forward/back = world Z).
 4. Land on a higher trampoline — it **auto-bounces** you (springy), and a clean landing
    builds your **combo** multiplier, which boosts launch power.
@@ -54,28 +54,28 @@ impact circle, then captures a timed PNG/JSON sequence for inspection.
 Generation is difficulty-profiled but not fixed-patterned. Candidate pad types are weighted by
 difficulty, then the hidden parabola verifier decides what is legal: the source pad may remain
 flat or become moving, canted, or wobbly only if the resulting arc proves a readable descending
-impact inside the successor footprint. Flat sources are verified against the real slingshot
-launch curve rather than a fake straight-up bounce. The generator also budgets the horizontal
+impact inside the successor footprint. Flat sources are verified against the real hold-charge
+route curve rather than a fake straight-up bounce. The generator also budgets the horizontal
 turn angle between consecutive route bearings: an arc can be mathematically reachable and still
 be rejected if it asks the player to reverse direction too sharply for the active difficulty.
 The variant count is an exact active-difficulty target, not only a lower bound: Easy stores
 exactly three accepted launch variants per step, Medium exactly two, and Hard, Blobmare, Ultra
 Blobmare, and One Wrong Move exactly one, with increasingly small lip, precision, footprint,
-turn-angle, and compression margins. Flat-to-flat, flat-to-slider, slider-to-canted,
+turn-angle, charge fit, and compression margins. Flat-to-flat, flat-to-slider, slider-to-canted,
 canted-to-canted, wobbler recovery, and compressed parabolas are all valid when the verifier
 proves the route under the active profile. The long-run goal is Tetris-like cadence: every
 seed is theoretically endless and eventually reaches one-path precision, but Easy gives a kid
 a long runway before that ramp while Ultra Blobmare reaches it much sooner.
 
-During a live run, the proof stays hidden. Easy mode means larger footprints, more accepted
-trajectory variants, wider lips, and slower cadence; it does **not** mean the game draws the
-golden solution. Player-facing guidance comes from:
+During a live run, the dev proof stays hidden, but the player always sees the live parabola
+that would happen from the current charge. Easy mode means larger footprints, more accepted
+trajectory variants, wider lips, and slower cadence; expert modes tighten charge/angle
+precision instead of removing the readable route instrument. Player-facing guidance comes from:
 
 - camera framing that keeps the current, immediate, and following trampolines readable
 - the next-pad radar, which gives direction/distance without naming the exact catch point
-- a live aim preview while charging: Easy/Medium/Hard show a dotted launch arc plus a pulsing
-  endpoint reticle at the descending height crossing, Blobmare keeps only the dotted arc, and
-  Ultra Blobmare / One Wrong Move hide the parabola overlay entirely
+- a live aim preview while charging: every difficulty shows the dotted launch arc plus a
+  pulsing endpoint reticle at the descending height crossing
 - Blobby himself: while charging, his eyes, mouth, and goo body bead toward the selected launch
   direction, so expert modes still get character-readable intent without a drawn route
 - a short route-quality toast after each certified landing (`Perfect route`, `Great route`,
@@ -129,16 +129,14 @@ motion and launch charge:
 |-------|---------|
 | idle / blink | resting / periodic; first-pad waiting still counts as visual idle time |
 | impatient burble | lingering on a pad without aiming; goo lobes perk/twitch and face opens |
-| charge anticipation | slingshot held; eyes widen/dart, mouth opens |
-| aim bead | charged slingshot; goo body forms a leading lobe toward the launch vector |
+| charge anticipation | route charge held; eyes widen/dart, mouth opens |
+| aim bead | charged route launch; goo body forms a leading lobe toward the launch vector |
 | squint | hard impact (landing) |
 | wide | big launch / fast ascent |
 | tear | falling far / near death |
 
-Visual impatience is separate from auto-launch: Blobby can get visibly restless before the
-first launch, but the first launch remains player-controlled. The gentle auto-launch only
-begins after the run has already received real player input, so a post-launch stall cannot
-freeze the run while the opener still belongs to the player.
+Visual impatience never launches for the player: Blobby can get visibly restless before the
+first launch, but every grounded launch belongs to a player hold-release.
 
 ## Physics constants (current tuning — `src/sim/physics/config.ts`)
 

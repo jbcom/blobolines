@@ -17,9 +17,6 @@ export const BLOB = physics.blob;
 /** Blob center Y when resting on the starter pad surface. */
 export const STARTER_BLOB_Y = physics.starterBlobY;
 
-/** How long the blob may rest on a pad before it auto-launches (seconds). */
-export const AUTO_LAUNCH_DELAY = physics.autoLaunchDelay;
-
 /** Death threshold: fall this far below the lowest nearby platform → game over. */
 export const DEATH_FALL_DISTANCE = physics.deathFallDistance;
 

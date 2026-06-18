@@ -3,8 +3,8 @@ import { useEffect, useState } from "react";
 import { getAim, getBlobDiagnostics, useGameStore } from "@/state";
 
 /**
- * First-run coachmark over the launch surface: a looping drag-ghost (finger pulling back)
- * with "Drag back & release to fling". Shows only until the player's first real launch, then
+ * First-run coachmark over the launch surface: a pulsing hold cue with
+ * "Hold & release to fling". Shows only until the player's first real launch, then
  * marks the tutorial seen (persisted) so it never shows again.
  */
 export function Onboarding() {
@@ -47,26 +47,22 @@ export function Onboarding() {
           className="pointer-events-none absolute inset-x-0 bottom-[26%] flex flex-col items-center gap-3"
           role="status"
         >
-          {/* Drag-ghost: a dot that pulls down-and-back on a loop, miming the slingshot.
-              Reduced-motion → a STATIC cue: park the ghost at the pulled-back position with a
-              down-arrow so the "drag back" intent still reads without the loop. */}
+          {/* Hold cue: a dot swelling in place. Reduced-motion keeps it static. */}
           {reduced ? (
             <div
               aria-hidden
-              className="flex size-6 translate-y-[34px] items-center justify-center rounded-full border-2 border-cream/80 bg-cream/30 text-cream"
-            >
-              ↓
-            </div>
+              className="size-7 rounded-full border-2 border-cream/80 bg-cream/30 shadow-[var(--glow-warm)]"
+            />
           ) : (
             <motion.div
               aria-hidden
-              className="size-6 rounded-full border-2 border-cream/80 bg-cream/30"
-              animate={{ y: [0, 34, 0], scale: [1, 0.9, 1] }}
+              className="size-7 rounded-full border-2 border-cream/80 bg-cream/30 shadow-[var(--glow-warm)]"
+              animate={{ scale: [1, 1.35, 1], opacity: [0.65, 1, 0.65] }}
               transition={{ duration: 1.4, repeat: Number.POSITIVE_INFINITY, ease: "easeInOut" }}
             />
           )}
           <span className="rounded-full bg-bg/70 px-4 py-1.5 font-display text-sm font-bold text-cream backdrop-blur-md">
-            Drag back &amp; release to fling
+            Hold &amp; release to fling
           </span>
         </motion.div>
       )}

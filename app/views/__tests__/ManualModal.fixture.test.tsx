@@ -7,6 +7,6 @@ test("ManualModal renders open with the mechanics", async () => {
 
   await expect.element(screen.getByTestId("manual")).toBeVisible();
   await expect.element(screen.getByRole("heading", { name: "How to play" })).toBeVisible();
-  await expect.element(screen.getByText("Slingshot launch")).toBeVisible();
+  await expect.element(screen.getByText("Charge launch")).toBeVisible();
   await expect.element(screen.getByText("Hyper-thrust")).toBeVisible();
 });

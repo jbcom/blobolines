@@ -125,32 +125,26 @@ describe("mouthShape", () => {
 });
 
 describe("stepIdlePatience", () => {
-  it("accumulates visual idle time before the first player control", () => {
+  it("accumulates visual idle time without launching", () => {
     const stepped = stepIdlePatience({
       idleSeconds: 4.9,
       dt: 0.2,
       resting: true,
       aiming: false,
-      playerControlStarted: false,
-      autoLaunchDelay: 5,
     });
 
     expect(stepped.idleSeconds).toBeCloseTo(5.1);
-    expect(stepped.shouldAutoLaunch).toBe(false);
   });
 
-  it("auto-launches only after player control has started", () => {
+  it("keeps accumulating after player control instead of launching", () => {
     const stepped = stepIdlePatience({
       idleSeconds: 4.9,
       dt: 0.2,
       resting: true,
       aiming: false,
-      playerControlStarted: true,
-      autoLaunchDelay: 5,
     });
 
-    expect(stepped.idleSeconds).toBe(0);
-    expect(stepped.shouldAutoLaunch).toBe(true);
+    expect(stepped.idleSeconds).toBeCloseTo(5.1);
   });
 
   it("resets idle impatience while airborne or aiming", () => {
@@ -160,19 +154,15 @@ describe("stepIdlePatience", () => {
         dt: 0.1,
         resting: false,
         aiming: false,
-        playerControlStarted: true,
-        autoLaunchDelay: 5,
       }),
-    ).toEqual({ idleSeconds: 0, shouldAutoLaunch: false });
+    ).toEqual({ idleSeconds: 0 });
     expect(
       stepIdlePatience({
         idleSeconds: 3,
         dt: 0.1,
         resting: true,
         aiming: true,
-        playerControlStarted: true,
-        autoLaunchDelay: 5,
       }),
-    ).toEqual({ idleSeconds: 0, shouldAutoLaunch: false });
+    ).toEqual({ idleSeconds: 0 });
   });
 });

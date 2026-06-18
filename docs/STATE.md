@@ -10,7 +10,7 @@ domain: context
 ## Shipped (Phase 1, on `main`, live)
 
 The game is **playable and live** at https://jonbogaty.com/blobolines/
-(jbcom.github.io/blobolines/ redirects there). Loop: slingshot launch → climb (altimeter)
+(jbcom.github.io/blobolines/ redirects there). Loop: hold-charge launch → climb (altimeter)
 → trampoline auto-bounce + clean-bounce combo → 3D mid-air steering → fall → game over →
 replay. Rapier 3D physics, deterministic seeded sim, design-token system, shadcn+Motion
 UI, persistence, CI/CD (incl. Android debug APK), e2e "is it playable" gate.

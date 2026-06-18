@@ -13,7 +13,7 @@ afterEach(() => cleanup());
 test("LaunchInput exposes the gameplay control as a labelled application region", async () => {
   const screen = await render(<LaunchInput />);
   await expect
-    .element(screen.getByRole("application", { name: /drag back to aim/i }))
+    .element(screen.getByRole("application", { name: /hold on the blob/i }))
     .toBeInTheDocument();
 });
 

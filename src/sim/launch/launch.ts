@@ -57,6 +57,3 @@ export function launchVelocity(
     perfectReleaseMultiplier(charge);
   return [dir[0] * power, dir[1] * power, dir[2] * power];
 }
-
-/** Auto-launch power when the player rests too long on a pad (gentle pop straight up). */
-export const AUTO_LAUNCH_POWER = 16;

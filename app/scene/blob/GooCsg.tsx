@@ -372,7 +372,7 @@ export function GooCsg({ skin, blobRadius, getDroplets }: GooCsgProps) {
         z: target.z + (pz - target.z) * settled + breathe - perky * 0.08,
       };
     }
-    // Charging the slingshot: the resting puddle gathers up toward the pull.
+    // Charging the route launch: the resting puddle gathers up toward the route direction.
     if (aim && !diag.airborne) {
       const g = Math.min(aim.charge, 1);
       target = {

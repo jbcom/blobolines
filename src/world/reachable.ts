@@ -1,11 +1,12 @@
 import { launch as launchCfg, trampoline as trampCfg } from "@/config";
 import type { GoldenPathProof, TrampolineSpec, Vec3 } from "@/core/types";
+import { computeRouteAim } from "@/input";
 import { GRAVITY } from "@/sim/physics";
 
 /**
  * Pure reachability check for the golden-path guarantee: can a blob launch from pad A and
  * reach pad B? Mechanic pads use their surface/route normal at `speed`; flat pads use the
- * actual slingshot launch curve because charging a flat-pad launch also adds lateral speed.
+ * actual route-charge launch curve because charging a flat-pad launch also adds lateral speed.
  * Ballistic model under gravity g (>0 magnitude): from A's top, the launch reaches at least
  * B's height with enough lateral travel to land within B's footprint.
  *
@@ -81,7 +82,6 @@ const MIN_CERTIFIED_SPEED = launchCfg.basePower;
 const MAX_CERTIFIED_SPEED =
   (launchCfg.basePower + launchCfg.powerPerCharge) * launchCfg.perfectRelease.bonus;
 const APEX_MARGIN = 1.4;
-const SLINGSHOT_Z_SCALE = 1.25;
 const MANUAL_CHARGE_STEP = 0.005;
 
 function heightClearanceSpeed(dy: number, normalY: number, g: number): number {
@@ -147,7 +147,7 @@ function uniqueSpeeds(speeds: readonly (number | null | undefined)[]): number[] 
   return result;
 }
 
-function launchSpeedForCharge(charge: number): number {
+export function launchSpeedForCharge(charge: number): number {
   const perfect =
     charge >= launchCfg.perfectRelease.min && charge <= launchCfg.perfectRelease.max
       ? launchCfg.perfectRelease.bonus
@@ -159,14 +159,25 @@ function launchSpeedForCharge(charge: number): number {
   );
 }
 
-function slingshotDirectionToward(a: TrampolineSpec, b: TrampolineSpec, charge: number): Vec3 {
+function launchChargeForSpeed(speed: number): number {
+  const perfectCharge = clamp(
+    (speed / launchCfg.perfectRelease.bonus - launchCfg.basePower) / launchCfg.powerPerCharge,
+    0,
+    1,
+  );
+  if (
+    perfectCharge >= launchCfg.perfectRelease.min &&
+    perfectCharge <= launchCfg.perfectRelease.max &&
+    Math.abs(launchSpeedForCharge(perfectCharge) - speed) < 0.04
+  ) {
+    return perfectCharge;
+  }
+  return clamp((speed - launchCfg.basePower) / launchCfg.powerPerCharge, 0, 1);
+}
+
+function routeChargeDirectionToward(a: TrampolineSpec, b: TrampolineSpec, charge: number): Vec3 {
   const [ux, uz] = unitToward(a, b);
-  const angle = Math.atan2(SLINGSHOT_Z_SCALE * ux, uz);
-  const x = Math.sin(angle) * charge;
-  const z = Math.cos(angle) * charge * SLINGSHOT_Z_SCALE;
-  const y = 0.35 + charge * 1.62;
-  const len = Math.hypot(x, y, z) || 1;
-  return [x / len, y / len, z / len];
+  return computeRouteAim(ux, uz, charge);
 }
 
 /**
@@ -231,6 +242,7 @@ function proofFromVelocity(
   requiredCant: boolean,
   sourceMode: SourceMode,
   includeSamples = true,
+  launchCharge = launchChargeForSpeed(launchSpeed),
 ): GoldenPathProof | null {
   const origin: Vec3 = [a.position[0], a.position[1] + PAD_SURFACE_Y, a.position[2]];
   const targetY = b.position[1] + PAD_SURFACE_Y;
@@ -268,6 +280,7 @@ function proofFromVelocity(
     toPadId: b.id,
     launchNormal,
     launchSpeed,
+    launchCharge,
     flightTime,
     apex,
     landing,
@@ -291,7 +304,7 @@ export function solveFlatLaunchProofs(
 ): GoldenPathProof[] {
   const proofs: GoldenPathProof[] = [];
   for (let charge = MANUAL_CHARGE_STEP; charge <= 1 + 1e-9; charge += MANUAL_CHARGE_STEP) {
-    const launchNormal = slingshotDirectionToward(a, b, charge);
+    const launchNormal = routeChargeDirectionToward(a, b, charge);
     const launchSpeed = launchSpeedForCharge(charge);
     const proof = proofFromVelocity(
       a,
@@ -302,6 +315,7 @@ export function solveFlatLaunchProofs(
       false,
       "flat",
       includeSamples,
+      charge,
     );
     if (proof) proofs.push(proof);
   }

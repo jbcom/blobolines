@@ -216,7 +216,7 @@ export function CameraRig({ active }: { active: boolean }) {
       lastImpact.current = impact;
       shake.current *= Math.exp(-dt / 0.12); // fast decay
 
-      // FOV WARP on launch: a sharp jump in upward velocity (slingshot release, super pad, thrust)
+      // FOV WARP on launch: a sharp jump in upward velocity (hold-release, super pad, thrust)
       // punches the FOV wider for a "hyperspace" kick that sells the speed, then eases back. The
       // warp scales with how big the launch was, capped so it never disorients.
       const vy = diag.velocity[1];
