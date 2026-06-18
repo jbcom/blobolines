@@ -127,12 +127,18 @@ motion and launch charge:
 
 | State | Trigger |
 |-------|---------|
-| idle / blink | resting / periodic |
+| idle / blink | resting / periodic; first-pad waiting still counts as visual idle time |
+| impatient burble | lingering on a pad without aiming; goo lobes perk/twitch and face opens |
 | charge anticipation | slingshot held; eyes widen/dart, mouth opens |
 | aim bead | charged slingshot; goo body forms a leading lobe toward the launch vector |
 | squint | hard impact (landing) |
 | wide | big launch / fast ascent |
 | tear | falling far / near death |
+
+Visual impatience is separate from auto-launch: Blobby can get visibly restless before the
+first launch, but the first launch remains player-controlled. The gentle auto-launch only
+begins after the run has already received real player input, so a post-launch stall cannot
+freeze the run while the opener still belongs to the player.
 
 ## Physics constants (current tuning — `src/sim/physics/config.ts`)
 

@@ -18,7 +18,7 @@ import {
 import { Blob, Transform, Velocity } from "@/ecs";
 import { spawnBlob } from "@/factories";
 import { ImpactStyle, impact as impact_, vibrate } from "@/platform";
-import { blobTraitsFromSnapshot, classifyExpression } from "@/sim/blob";
+import { blobTraitsFromSnapshot, classifyExpression, stepIdlePatience } from "@/sim/blob";
 import { MAX_COMBO } from "@/sim/combo";
 import { downdraftAt, windAt } from "@/sim/hazard";
 import { isPerfectRelease, launchVelocity } from "@/sim/launch";
@@ -282,33 +282,36 @@ export function PlayerBlob() {
       }
     }
 
-    // AUTO-LAUNCH on idle: after the player has already made a real control input, if the blob is
-    // resting on a pad and the player isn't aiming, count up; past AUTO_LAUNCH_DELAY fling it
-    // gently straight up so a post-launch run never stalls. The first move still belongs to the
-    // player. Reset the timer the moment it's airborne or being aimed. Uses real time so a slow-mo
-    // buff doesn't stretch the patience window.
+    // PAD-IDLE: count visual idle time whenever Blobby is settled and not being aimed, including
+    // the first launch wait, so eyes/mouth/goo can get impatient. Auto-launch is still gated until
+    // the player has already made a real control input; the first move belongs to the player.
+    // Uses real time so a slow-mo buff doesn't stretch the patience window.
     // Re-read the LIVE vertical velocity here, not the stale top-of-frame `airborne`: a launch /
     // rebound / thruster / mid-air-bounce earlier this frame may have just set a big vy, and the
     // auto-launch must NOT overwrite that with its gentle kick. (`airborne` was snapshotted before
     // those impulse branches ran.)
     const liveVy = body.linvel().y;
-    if (Math.abs(liveVy) > 0.5 || getAim() || !playerControlStarted.current) {
-      idle.current = 0;
-    } else {
-      idle.current += realDt;
-      if (idle.current >= AUTO_LAUNCH_DELAY) {
-        idle.current = 0;
-        body.wakeUp();
-        const lv = launchVelocity([0, 1, 0], 0.35, "standard", useGameStore.getState().run.combo);
-        body.setLinvel({ x: lv[0], y: lv[1], z: lv[2] }, true);
-        playLaunch(0.35);
-        launchBurst([p.x, p.y - BLOB.radius, p.z], 0.35);
-        reportLaunchBurst({
-          position: [p.x, p.y - BLOB.radius, p.z],
-          charge: 0.35,
-          kind: "launch",
-        });
-      }
+    const liveAim = getAim();
+    const idleStep = stepIdlePatience({
+      idleSeconds: idle.current,
+      dt: realDt,
+      resting: Math.abs(liveVy) <= 0.5,
+      aiming: Boolean(liveAim),
+      playerControlStarted: playerControlStarted.current,
+      autoLaunchDelay: AUTO_LAUNCH_DELAY,
+    });
+    idle.current = idleStep.idleSeconds;
+    if (idleStep.shouldAutoLaunch) {
+      body.wakeUp();
+      const lv = launchVelocity([0, 1, 0], 0.35, "standard", useGameStore.getState().run.combo);
+      body.setLinvel({ x: lv[0], y: lv[1], z: lv[2] }, true);
+      playLaunch(0.35);
+      launchBurst([p.x, p.y - BLOB.radius, p.z], 0.35);
+      reportLaunchBurst({
+        position: [p.x, p.y - BLOB.radius, p.z],
+        charge: 0.35,
+        kind: "launch",
+      });
     }
 
     // Wet goo trail: while flying fast, shed a lagging droplet wake behind the blob.

@@ -14,6 +14,11 @@ export {
   mouthShape,
 } from "./expression";
 export {
+  type IdlePatienceInput,
+  type IdlePatienceStep,
+  stepIdlePatience,
+} from "./idle";
+export {
   combineScale,
   DEFAULT_SPEED_STRETCH,
   impactSquash,
