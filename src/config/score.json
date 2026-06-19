@@ -1,7 +1,7 @@
 {
-  "heightPoints": 10,
-  "crystalPoints": 50,
-  "goldenPathPerfectPoints": 45,
-  "comboStyleBase": 25,
-  "comboStyleGrowth": 1.35
+  "heightPoints": 5,
+  "crystalPoints": 150,
+  "goldenPathPerfectPoints": 120,
+  "comboStyleBase": 30,
+  "comboStyleGrowth": 1.38
 }
