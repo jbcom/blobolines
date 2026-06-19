@@ -82,6 +82,7 @@ const ROUTE_TYPES: readonly TrampType[] = [
   "fragile",
   "storm",
   "vortex",
+  "bubble",
 ];
 const SOURCE_MECHANICS: readonly TrampType[] = ["standard", "moving", "canted", "wobbler"];
 const STARTER_VISIBLE_MECHANICS: readonly TrampType[] = ["canted", "wobbler"];

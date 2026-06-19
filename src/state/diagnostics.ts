@@ -30,6 +30,10 @@ export interface BlobDiagnostics {
   excitement?: number;
   /** Soft-cloud contact envelope [0,1]. Drives cloud-coating/puddle/cling visuals. */
   cloudAdherence?: CloudAdherenceDiagnostics;
+  /** Whether the bubble powerup effect is currently active on the player. */
+  bubbleActive?: boolean;
+  /** Remaining duration of the bubble powerup in seconds. */
+  bubbleRemaining?: number;
 }
 
 let snapshot: BlobDiagnostics = {
@@ -43,6 +47,8 @@ let snapshot: BlobDiagnostics = {
   groundY: 0,
   idleSeconds: 0,
   excitement: 0,
+  bubbleActive: false,
+  bubbleRemaining: 0,
 };
 
 export function setBlobDiagnostics(d: BlobDiagnostics): void {

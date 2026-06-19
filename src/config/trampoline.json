@@ -9,7 +9,8 @@
     "canted": 1.35,
     "wobbler": 1.2,
     "storm": 2.2,
-    "vortex": 1.5
+    "vortex": 1.5,
+    "bubble": 1.25
   },
   "cantedTiltRad": 0.42,
   "wobblerMaxTiltRad": 0.5,

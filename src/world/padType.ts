@@ -28,7 +28,15 @@ const BANDS: Band[] = [
   },
   {
     y: 150,
-    weights: { standard: 4, booster: 1.5, moving: 1.5, fragile: 1, ice: 1, super: 0.4 },
+    weights: {
+      standard: 4,
+      booster: 1.5,
+      moving: 1.5,
+      fragile: 1,
+      ice: 1,
+      super: 0.4,
+      bubble: 0.8,
+    },
   },
   {
     y: 450,
@@ -42,6 +50,7 @@ const BANDS: Band[] = [
       super: 0.8,
       storm: 1.0,
       vortex: 1.2,
+      bubble: 1.2,
     },
   },
 ];
@@ -65,6 +74,7 @@ const ALL_TYPES: TrampType[] = [
   "super",
   "storm",
   "vortex",
+  "bubble",
 ];
 
 /** Linearly interpolate the weight table at altitude `y` between the bracketing bands. */

@@ -9,6 +9,7 @@ describe("design tokens", () => {
   it("exposes the trampoline gameplay types (incl. super/ice bonus + canted/wobbler nav pads)", () => {
     expect(Object.keys(trampColor).sort()).toEqual([
       "booster",
+      "bubble",
       "canted",
       "fragile",
       "ice",

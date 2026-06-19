@@ -110,6 +110,8 @@ export function PlayerBlob() {
   /** Combo is a skill reward, not attract-mode scoring: only build it after the player has
    *  launched, air-steered, or spent a mid-air bounce in the current run. */
   const playerControlStarted = useRef(false);
+  /** Bubble duration timer in seconds. Active > 0. */
+  const bubbleRemaining = useRef(0);
 
   // Reset body to the starter pad whenever a run begins. PlayerBlob remounts on each
   // run (GameScene mounts <Physics> only while playing), so [] is correct; the refs
@@ -136,6 +138,7 @@ export function PlayerBlob() {
     excitement.current = 0;
     cloudCling.current.strength = 0;
     playerControlStarted.current = false;
+    bubbleRemaining.current = 0;
     setBlobDiagnostics({
       position: [0, STARTER_BLOB_Y, 0],
       velocity: [0, 0, 0],
@@ -165,7 +168,11 @@ export function PlayerBlob() {
     time: number,
     body: RapierRigidBody,
   ) => {
-    const [sx, sz] = getAirSteer();
+    let [sx, sz] = getAirSteer();
+    if (bubbleRemaining.current > 0) {
+      sx *= 2.5;
+      sz *= 2.5;
+    }
     if (sx !== 0 || sz !== 0) playerControlStarted.current = true;
     const [wx, wz] = windAt(p.y, time);
     const down = downdraftAt(p.y, time);
@@ -265,6 +272,17 @@ export function PlayerBlob() {
             ? 0
             : Math.min(run.combo + 1, MAX_COMBO);
         setRun({ combo: nextCombo, maxCombo: Math.max(run.maxCombo, nextCombo) });
+
+        if (targetPad && targetPad.type === "bubble") {
+          bubbleRemaining.current = 3.5;
+          playPowerup();
+          flash("blue", 0.8);
+        } else if (bubbleRemaining.current > 0) {
+          bubbleRemaining.current = 0;
+          splash([p.x, p.y - BLOB.radius, p.z], 0.8);
+          playSplat();
+          flash("blue", 0.5);
+        }
         if (nextCombo > 0) {
           playComboBlip(nextCombo);
           if (nextCombo >= MAX_COMBO && run.combo < MAX_COMBO) {
@@ -328,6 +346,19 @@ export function PlayerBlob() {
     let v = body.linvel();
     let airborne = Math.abs(v.y) > 0.5;
 
+    if (bubbleRemaining.current > 0) {
+      bubbleRemaining.current -= dt;
+      body.setGravityScale(0.2, true);
+      if (bubbleRemaining.current <= 0) {
+        body.setGravityScale(1.0, true);
+        splash([p.x, p.y - BLOB.radius, p.z], 0.8);
+        playSplat();
+        flash("blue", 0.5);
+      }
+    } else {
+      body.setGravityScale(1.0, true);
+    }
+
     stepPowerups(realDt, body);
 
     if (consumeMidAirBounce() && consumeBounceCharge()) {
@@ -342,6 +373,12 @@ export function PlayerBlob() {
 
     const gateHit = consumeRouteGateHit();
     if (gateHit) {
+      if (bubbleRemaining.current > 0) {
+        bubbleRemaining.current = 0;
+        body.setGravityScale(1.0, true);
+        splash([p.x, p.y - BLOB.radius, p.z], 0.8);
+        playSplat();
+      }
       playerControlStarted.current = true;
       body.wakeUp();
       const live = body.linvel();
@@ -515,6 +552,8 @@ export function PlayerBlob() {
       groundY: safeY.current,
       idleSeconds: idle.current,
       excitement: excitement.current,
+      bubbleActive: bubbleRemaining.current > 0,
+      bubbleRemaining: bubbleRemaining.current,
       cloudAdherence:
         cloudCling.current.strength > 0.01
           ? {
