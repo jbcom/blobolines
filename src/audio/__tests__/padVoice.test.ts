@@ -11,6 +11,8 @@ const ALL: TrampType[] = [
   "wobbler",
   "fragile",
   "ice",
+  "storm",
+  "vortex",
 ];
 
 describe("padVoice", () => {
@@ -34,6 +36,8 @@ describe("padVoice", () => {
       "moving",
       "canted",
       "wobbler",
+      "storm",
+      "vortex",
     ] as TrampType[]) {
       expect(padVoice(t).sample).toBe("bounce");
     }

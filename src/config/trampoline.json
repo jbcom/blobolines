@@ -7,7 +7,9 @@
     "super": 2.8,
     "ice": 1.55,
     "canted": 1.35,
-    "wobbler": 1.2
+    "wobbler": 1.2,
+    "storm": 2.2,
+    "vortex": 1.5
   },
   "cantedTiltRad": 0.42,
   "wobblerMaxTiltRad": 0.5,

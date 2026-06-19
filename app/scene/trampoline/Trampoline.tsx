@@ -1,6 +1,13 @@
 import { useFrame } from "@react-three/fiber";
 import { useEffect, useMemo, useRef } from "react";
-import { CanvasTexture, type Color, type Group, type ShaderMaterial, SRGBColorSpace } from "three";
+import {
+  CanvasTexture,
+  type Color,
+  type Group,
+  type Mesh,
+  type ShaderMaterial,
+  SRGBColorSpace,
+} from "three";
 import { playBounce } from "@/audio";
 import { biomeSkyAt, trampoline as trampCfg } from "@/config";
 import { clamp } from "@/core/math";
@@ -12,6 +19,7 @@ import { cloudCatch } from "@/sim/cloudPad";
 import { MAX_IMPACT_SPEED } from "@/sim/physics";
 import { createTrampState, impactTargets, stepTramp, type TrampState } from "@/sim/trampoline";
 import {
+  flash,
   getBlobDiagnostics,
   getRouteProofTarget,
   reportCloudAdherence,
@@ -136,7 +144,107 @@ function CloudTypeWisps({
       </mesh>
     );
   }
+  if (type === "storm") {
+    return <StormWisps radius={radius} tint={hex(palette.tramp.gold)} />;
+  }
+  if (type === "vortex") {
+    return <VortexWisps radius={radius} width={width} depth={depth} />;
+  }
   return null;
+}
+
+function StormWisps({ radius, tint }: { radius: number; tint: number }) {
+  const groupRef = useRef<Group>(null);
+  useFrame((state) => {
+    if (!groupRef.current) return;
+    const t = state.clock.elapsedTime;
+    groupRef.current.rotation.y = t * 1.8;
+    const childCount = groupRef.current.children.length;
+    for (let i = 0; i < childCount; i++) {
+      const child = groupRef.current.children[i] as Mesh;
+      const scale = 0.85 + Math.sin(t * 8.0 + i * 2.0) * 0.25;
+      child.scale.set(scale, scale, scale);
+    }
+  });
+  return (
+    <group ref={groupRef}>
+      <mesh position={[-0.22, 0.45, 0.15]}>
+        <sphereGeometry args={[radius * 0.6, 12, 8]} />
+        <meshBasicMaterial color={tint} transparent opacity={0.65} />
+      </mesh>
+      <mesh position={[0.25, 0.52, -0.1]}>
+        <sphereGeometry args={[radius * 0.5, 12, 8]} />
+        <meshBasicMaterial color={tint} transparent opacity={0.65} />
+      </mesh>
+      <mesh position={[-0.05, 0.6, -0.2]}>
+        <sphereGeometry args={[radius * 0.45, 12, 8]} />
+        <meshBasicMaterial color={tint} transparent opacity={0.7} />
+      </mesh>
+    </group>
+  );
+}
+
+function VortexWisps({ radius, width, depth }: { radius: number; width: number; depth: number }) {
+  const ring1Ref = useRef<Group>(null);
+  const ring2Ref = useRef<Group>(null);
+
+  useFrame((state) => {
+    const t = state.clock.elapsedTime;
+    if (ring1Ref.current) {
+      ring1Ref.current.rotation.y = t * 2.5;
+      ring1Ref.current.rotation.x = Math.sin(t * 0.8) * 0.15;
+    }
+    if (ring2Ref.current) {
+      ring2Ref.current.rotation.y = -t * 1.6;
+      ring2Ref.current.rotation.z = Math.cos(t * 0.6) * 0.12;
+    }
+  });
+
+  const size = Math.max(width, depth) * 0.35;
+
+  return (
+    <group position={[0, 0.58, 0]}>
+      {/* Swirling Inner Core */}
+      <group ref={ring1Ref}>
+        <mesh rotation={[Math.PI / 2, 0, 0]}>
+          <torusGeometry args={[size * 0.7, 0.08, 12, 32]} />
+          <meshBasicMaterial color={hex(palette.tramp.gold)} transparent opacity={0.65} />
+        </mesh>
+        {[0, 1, 2].map((i) => {
+          const angle = (i * Math.PI * 2) / 3;
+          return (
+            <mesh
+              key={i}
+              position={[Math.cos(angle) * size * 0.7, 0, Math.sin(angle) * size * 0.7]}
+            >
+              <sphereGeometry args={[radius * 0.35, 8, 8]} />
+              <meshBasicMaterial color={hex(palette.tramp.violet)} transparent opacity={0.8} />
+            </mesh>
+          );
+        })}
+      </group>
+
+      {/* Counter-Swirling Outer Core */}
+      <group ref={ring2Ref}>
+        <mesh rotation={[Math.PI / 2, 0, 0]}>
+          <torusGeometry args={[size * 1.1, 0.05, 10, 24]} />
+          <meshBasicMaterial color={hex(palette.tramp.violet)} transparent opacity={0.45} />
+        </mesh>
+        {[0, 1, 2, 3].map((i) => {
+          const angle = (i * Math.PI * 2) / 4 + 0.5;
+          return (
+            <mesh
+              key={i}
+              position={[Math.cos(angle) * size * 1.1, 0, Math.sin(angle) * size * 1.1]}
+            >
+              <sphereGeometry args={[radius * 0.25, 8, 8]} />
+              <meshBasicMaterial color={hex(palette.tramp.gold)} transparent opacity={0.75} />
+            </mesh>
+          );
+        })}
+      </group>
+    </group>
+  );
 }
 
 /**
@@ -176,8 +284,15 @@ export function Trampoline({
   const cloudColor = useMemo(() => {
     const biome = biomeSkyAt(position[1]);
     const base =
-      type === "wobbler" || type === "fragile" ? palette.cloud.blush : palette.cloud.puff;
-    return mixHex(mixHex(base, color, 0.14), biome.mid, 0.12);
+      type === "storm"
+        ? palette.cloud.storm
+        : type === "vortex"
+          ? palette.cloud.vortex
+          : type === "wobbler" || type === "fragile"
+            ? palette.cloud.blush
+            : palette.cloud.puff;
+    const accent = type === "storm" || type === "vortex" ? palette.tramp.violet : color;
+    return mixHex(mixHex(base, accent, 0.14), biome.mid, 0.12);
   }, [color, position, type]);
   const cloudHeight = Math.max(0.92, Math.min(1.28, Math.max(width, depth) * 0.15));
 
@@ -235,6 +350,21 @@ export function Trampoline({
     material.uniforms.uWobble.value = 0.16 + stress * 0.8 + Math.abs(breathe) * 1.5;
     material.uniforms.uEnvLight.value = Math.min(0.62, 0.12 + position[1] / 1600);
     (material.uniforms.uEnvTint.value as Color).set(biomeSkyAt(position[1]).top);
+
+    if (type === "storm") {
+      const tCycle = (state.clock.elapsedTime * 0.8 + id * 1.43) % 5.0; // every 5s per pad
+      let flashK = 0;
+      if (tCycle < 0.35) {
+        if (tCycle < 0.05) flashK = 1.0;
+        else if (tCycle < 0.09) flashK = 0.0;
+        else if (tCycle < 0.18) flashK = 0.85;
+        else {
+          flashK = 0.85 * (1 - (tCycle - 0.18) / 0.17); // decay back
+        }
+      }
+      const flickered = mixHex(cloudColor, palette.cloud.glow, flashK);
+      (material.uniforms.uColor.value as Color).set(flickered);
+    }
 
     if (breaking.current) {
       breakTimer.current += step;
@@ -298,6 +428,9 @@ export function Trampoline({
 
     playBounce(type, Math.min(1, hit.speed / MAX_IMPACT_SPEED));
     if (type === "fragile") breaking.current = true;
+    if (type === "storm") {
+      flash("white", 0.85);
+    }
     onImpact?.(hit.speed, hit.relX, hit.relZ);
   });
 

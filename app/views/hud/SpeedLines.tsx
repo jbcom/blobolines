@@ -58,9 +58,8 @@ export function SpeedLines() {
     <div
       ref={ref}
       aria-hidden
-      className="pointer-events-none absolute inset-0"
+      className="pointer-events-none absolute inset-0 z-flash"
       style={{
-        zIndex: "var(--z-flash)" as unknown as number,
         opacity: 0,
         // Fine white streaks radiating outward, masked to the screen edges (clear center) so
         // they frame the action without obscuring the blob — a speed-tunnel feel.

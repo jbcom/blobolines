@@ -44,6 +44,13 @@
 
   --ease-bounce: var(--ease-bounce);
   --ease-out-soft: var(--ease-out-soft);
+
+  --z-canvas: 0;
+  --z-hud: 10;
+  --z-overlay: 20;
+  --z-modal: 30;
+  --z-flash: 40;
+  --z-loader: 50;
 }
 
 html,

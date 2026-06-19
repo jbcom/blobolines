@@ -257,14 +257,13 @@ export function CameraRig({ active }: { active: boolean }) {
         const screenX = left + ((screenPoint.current.x + 1) * width) / 2;
         const screenY = top + ((1 - screenPoint.current.y) * height) / 2;
         const distance = camera.position.distanceTo(screenPoint.current.set(...diag.position));
+        const isGrounded = !diag.airborne;
+        const minRadius = isGrounded ? BLOB_SCREEN_MIN_RADIUS * 2.5 : BLOB_SCREEN_MIN_RADIUS;
+        const maxRadius = isGrounded ? BLOB_SCREEN_MAX_RADIUS * 2.5 : BLOB_SCREEN_MAX_RADIUS;
         setBlobScreenTarget({
           x: screenX,
           y: screenY,
-          radius: clamp(
-            1150 / Math.max(8, distance),
-            BLOB_SCREEN_MIN_RADIUS,
-            BLOB_SCREEN_MAX_RADIUS,
-          ),
+          radius: clamp(1150 / Math.max(8, distance), minRadius, maxRadius),
         });
         return;
       }
@@ -305,10 +304,13 @@ export function CameraRig({ active }: { active: boolean }) {
       const screenX = left + ((screenPoint.current.x + 1) * width) / 2;
       const screenY = top + ((1 - screenPoint.current.y) * height) / 2;
       const distance = camera.position.distanceTo(screenPoint.current.set(...diag.position));
+      const isGrounded = !diag.airborne;
+      const minRadius = isGrounded ? BLOB_SCREEN_MIN_RADIUS * 2.5 : BLOB_SCREEN_MIN_RADIUS;
+      const maxRadius = isGrounded ? BLOB_SCREEN_MAX_RADIUS * 2.5 : BLOB_SCREEN_MAX_RADIUS;
       setBlobScreenTarget({
         x: screenX,
         y: screenY,
-        radius: clamp(1150 / Math.max(8, distance), BLOB_SCREEN_MIN_RADIUS, BLOB_SCREEN_MAX_RADIUS),
+        radius: clamp(1150 / Math.max(8, distance), minRadius, maxRadius),
       });
     } else {
       // Menu: clear the launch warp + FOV back to base (so re-entering a run starts unwarped),

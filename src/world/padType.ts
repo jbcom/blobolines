@@ -40,6 +40,8 @@ const BANDS: Band[] = [
       ice: 1.5,
       wobbler: 1.5,
       super: 0.8,
+      storm: 1.0,
+      vortex: 1.2,
     },
   },
 ];
@@ -61,6 +63,8 @@ const ALL_TYPES: TrampType[] = [
   "ice",
   "wobbler",
   "super",
+  "storm",
+  "vortex",
 ];
 
 /** Linearly interpolate the weight table at altitude `y` between the bracketing bands. */

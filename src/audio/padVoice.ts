@@ -36,6 +36,10 @@ const BASE: Record<TrampType, PadVoice> = {
   fragile: { sample: "bounce_soft", rate: 1.0, volume: 0.9 },
   // Ice: glassy bright click (its own sample).
   ice: { sample: "bounce_ice", rate: 1.0, volume: 1.0 },
+  // Storm: sharp electric crack — pitched up and loud.
+  storm: { sample: "bounce", rate: 1.35, volume: 1.15 },
+  // Vortex: deep portal hum — pitched down, louder.
+  vortex: { sample: "bounce", rate: 0.58, volume: 1.2 },
 };
 
 /**

@@ -66,10 +66,7 @@ export function Game() {
         <GameScene />
       </Canvas>
 
-      <div
-        className="pointer-events-none absolute inset-0"
-        style={{ zIndex: "var(--z-hud)" as unknown as number }}
-      >
+      <div className="pointer-events-none absolute inset-0 z-hud">
         <HudOverlay />
       </div>
     </div>

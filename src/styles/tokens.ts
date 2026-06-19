@@ -26,6 +26,7 @@ export const palette = {
     blush: "#ffb6a3",
     gold: "#ffd66b",
     storm: "#9a6a8f",
+    vortex: "#2d0a4e",
     glow: "#ffffff",
   },
   sky: {
@@ -98,7 +99,9 @@ export type TrampType =
   | "super"
   | "ice"
   | "canted"
-  | "wobbler";
+  | "wobbler"
+  | "storm"
+  | "vortex";
 export type CloudPadType = TrampType;
 
 export const trampColor: Record<TrampType, string> = {
@@ -110,6 +113,8 @@ export const trampColor: Record<TrampType, string> = {
   ice: palette.tramp.ice,
   canted: palette.tramp.orange,
   wobbler: palette.tramp.violet,
+  storm: palette.cloud.storm,
+  vortex: palette.cloud.vortex,
 };
 
 export const motion = {

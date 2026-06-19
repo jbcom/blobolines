@@ -182,6 +182,40 @@ export function PlayerBlob() {
     }
   };
 
+  const stepVortexAttraction = (
+    p: { x: number; y: number; z: number },
+    dt: number,
+    body: RapierRigidBody,
+  ) => {
+    const liveV = body.linvel();
+    if (liveV.y >= 0) return;
+
+    const pads = useWorldStore.getState().trampolines;
+    const influenceRadius = 8.5;
+    const verticalLimit = 12.0;
+
+    for (const pad of pads) {
+      if (pad.type !== "vortex") continue;
+
+      const dx = pad.position[0] - p.x;
+      const dz = pad.position[2] - p.z;
+      const dist = Math.hypot(dx, dz);
+      const dy = Math.abs(p.y - pad.position[1]);
+
+      if (dist < influenceRadius && dy < verticalLimit && dist > 0.1) {
+        const k = 1.0 - dist / influenceRadius;
+        const inwardStrength = 14.0;
+        const swirlStrength = 6.0;
+
+        const forceX = ((dx / dist) * inwardStrength + (-dz / dist) * swirlStrength) * k * dt;
+        const forceZ = ((dz / dist) * inwardStrength + (dx / dist) * swirlStrength) * k * dt;
+
+        body.setLinvel({ x: liveV.x + forceX, y: liveV.y, z: liveV.z + forceZ }, true);
+        break;
+      }
+    }
+  };
+
   const stepNearMisses = (
     p: { x: number; y: number; z: number },
     v: { x: number; y: number; z: number },
@@ -411,6 +445,7 @@ export function PlayerBlob() {
       }
     } else if (airborne) {
       stepHazards(p, dt, state.clock.elapsedTime, body);
+      stepVortexAttraction(p, dt, body);
     }
 
     p = body.translation();

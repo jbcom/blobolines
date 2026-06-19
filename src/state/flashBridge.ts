@@ -5,7 +5,7 @@
  * frame to drive its animation. Imperative so a flash never triggers a per-frame re-render.
  */
 
-export type FlashKind = "gold" | "blue" | "red";
+export type FlashKind = "gold" | "blue" | "red" | "white";
 
 export interface FlashRequest {
   kind: FlashKind;
