@@ -27,6 +27,7 @@ export const palette = {
     gold: "#ffd66b",
     storm: "#9a6a8f",
     vortex: "#2d0a4e",
+    bubble: "#aae2ff",
     glow: "#ffffff",
   },
   sky: {
@@ -101,7 +102,8 @@ export type TrampType =
   | "canted"
   | "wobbler"
   | "storm"
-  | "vortex";
+  | "vortex"
+  | "bubble";
 export type CloudPadType = TrampType;
 
 export const trampColor: Record<TrampType, string> = {
@@ -115,6 +117,7 @@ export const trampColor: Record<TrampType, string> = {
   wobbler: palette.tramp.violet,
   storm: palette.cloud.storm,
   vortex: palette.cloud.vortex,
+  bubble: palette.cloud.bubble,
 };
 
 export const motion = {

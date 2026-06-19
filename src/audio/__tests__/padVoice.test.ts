@@ -13,6 +13,7 @@ const ALL: TrampType[] = [
   "ice",
   "storm",
   "vortex",
+  "bubble",
 ];
 
 describe("padVoice", () => {
@@ -29,6 +30,7 @@ describe("padVoice", () => {
   it("ice + fragile keep their dedicated samples; the rest reuse the punchy bounce", () => {
     expect(padVoice("ice").sample).toBe("bounce_ice");
     expect(padVoice("fragile").sample).toBe("bounce_soft");
+    expect(padVoice("bubble").sample).toBe("bounce_soft");
     for (const t of [
       "standard",
       "booster",

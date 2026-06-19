@@ -40,6 +40,8 @@ const BASE: Record<TrampType, PadVoice> = {
   storm: { sample: "bounce", rate: 1.35, volume: 1.15 },
   // Vortex: deep portal hum — pitched down, louder.
   vortex: { sample: "bounce", rate: 0.58, volume: 1.2 },
+  // Bubble: soft soapy launch — pitched slightly up.
+  bubble: { sample: "bounce_soft", rate: 1.25, volume: 1.15 },
 };
 
 /**

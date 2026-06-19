@@ -56,6 +56,7 @@ export function GooCsg({ skin, blobRadius, getDroplets }: GooCsgProps) {
   const groupRef = useRef<Group>(null);
   const resultRef = useRef<Mesh>(null);
   const eyesRef = useRef<Group>(null);
+  const bubbleRef = useRef<Mesh>(null);
   const camera = useThree((s) => s.camera);
   const gl = useThree((s) => s.gl);
   const scene = useThree((s) => s.scene);
@@ -426,6 +427,23 @@ export function GooCsg({ skin, blobRadius, getDroplets }: GooCsgProps) {
       eyes.scale.set(1 / deform.current.x, 1 / deform.current.y, 1 / deform.current.z);
       eyes.lookAt(camera.position);
     }
+
+    const bubbleMesh = bubbleRef.current;
+    if (bubbleMesh) {
+      const active = !!diag.bubbleActive;
+      bubbleMesh.visible = active;
+      if (active) {
+        const t = state.clock.elapsedTime;
+        bubbleMesh.rotation.y = t * 1.35;
+        bubbleMesh.rotation.x = t * 0.72;
+        const pulse = 1.35 + Math.sin(t * 7.5) * 0.05;
+        bubbleMesh.scale.set(
+          pulse / deform.current.x,
+          pulse / deform.current.y,
+          pulse / deform.current.z,
+        );
+      }
+    }
   });
 
   return (
@@ -438,6 +456,17 @@ export function GooCsg({ skin, blobRadius, getDroplets }: GooCsgProps) {
       <group ref={eyesRef} renderOrder={2}>
         <BlobEyes expression="idle" radius={blobRadius} live />
       </group>
+      <mesh ref={bubbleRef} visible={false}>
+        <sphereGeometry args={[blobRadius, 32, 32]} />
+        <meshPhongMaterial
+          color={palette.cloud.bubble}
+          transparent
+          opacity={0.35}
+          shininess={80}
+          specular="#ffffff"
+          depthWrite={false}
+        />
+      </mesh>
     </group>
   );
 }
