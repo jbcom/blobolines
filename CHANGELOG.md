@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.1.11](https://github.com/jbcom/blobolines/compare/blobolines-v0.1.10...blobolines-v0.1.11) (2026-06-19)
+
+
+### Features
+
+* **bubble-cloud-pad:** implement interactive bubble / helium cloud pad mechanics and rendering ([#58](https://github.com/jbcom/blobolines/issues/58)) ([c91abeb](https://github.com/jbcom/blobolines/commit/c91abebbb44093dfbae23c86516fa9f7d3044998))
+* **world:** massively tune difficulty profiles and balance scoring for skill ([#57](https://github.com/jbcom/blobolines/issues/57)) ([5ce2dad](https://github.com/jbcom/blobolines/commit/5ce2dad402a25118c400df5328c3acabc2be536f))
+
+
+### Bug Fixes
+
+* **views:** convert repetitive zIndex style casts to compile-safe tailwind classes ([#55](https://github.com/jbcom/blobolines/issues/55)) ([e6038aa](https://github.com/jbcom/blobolines/commit/e6038aa8608a7111c3b6266d7ef51c6f5c074ea6))
+
 ## [0.1.10](https://github.com/jbcom/blobolines/compare/blobolines-v0.1.9...blobolines-v0.1.10) (2026-06-18)
 
 
