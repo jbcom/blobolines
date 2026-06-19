@@ -14,7 +14,9 @@ describe("design tokens", () => {
       "ice",
       "moving",
       "standard",
+      "storm",
       "super",
+      "vortex",
       "wobbler",
     ]);
   });

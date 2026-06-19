@@ -45,12 +45,12 @@
   --ease-bounce: var(--ease-bounce);
   --ease-out-soft: var(--ease-out-soft);
 
-  --z-canvas: var(--z-canvas);
-  --z-hud: var(--z-hud);
-  --z-overlay: var(--z-overlay);
-  --z-modal: var(--z-modal);
-  --z-flash: var(--z-flash);
-  --z-loader: var(--z-loader);
+  --z-canvas: 0;
+  --z-hud: 10;
+  --z-overlay: 20;
+  --z-modal: 30;
+  --z-flash: 40;
+  --z-loader: 50;
 }
 
 html,

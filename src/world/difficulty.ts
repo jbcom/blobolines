@@ -127,6 +127,8 @@ export const ROUTE_PROFILES: Record<WorldDifficulty, RouteDifficultyProfile> = {
       ice: 0.45,
       super: 0.25,
       fragile: 0.22,
+      storm: 0.15,
+      vortex: 0.12,
     },
   },
   hard: {
@@ -156,6 +158,8 @@ export const ROUTE_PROFILES: Record<WorldDifficulty, RouteDifficultyProfile> = {
       ice: 0.55,
       super: 0.3,
       fragile: 0.45,
+      storm: 0.25,
+      vortex: 0.22,
     },
   },
   blobmare: {
@@ -185,6 +189,8 @@ export const ROUTE_PROFILES: Record<WorldDifficulty, RouteDifficultyProfile> = {
       ice: 0.65,
       super: 0.35,
       fragile: 0.65,
+      storm: 0.3,
+      vortex: 0.32,
     },
   },
   ultraBlobmare: {
@@ -214,6 +220,8 @@ export const ROUTE_PROFILES: Record<WorldDifficulty, RouteDifficultyProfile> = {
       ice: 0.7,
       super: 0.35,
       fragile: 0.85,
+      storm: 0.3,
+      vortex: 0.35,
     },
   },
   oneWrongMove: {
@@ -243,6 +251,8 @@ export const ROUTE_PROFILES: Record<WorldDifficulty, RouteDifficultyProfile> = {
       ice: 0.75,
       super: 0.35,
       fragile: 1,
+      storm: 0.35,
+      vortex: 0.4,
     },
   },
 };

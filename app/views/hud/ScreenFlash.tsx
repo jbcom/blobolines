@@ -15,6 +15,7 @@ const COLORS: Record<FlashKind, string> = {
   gold: palette.tramp.gold,
   blue: palette.sky.mid,
   red: palette.danger,
+  white: palette.cloud.glow,
 };
 
 export function ScreenFlash() {
@@ -61,6 +62,9 @@ export function ScreenFlash() {
           if (kind.current === "red") {
             el.style.background = `radial-gradient(ellipse at center, transparent 45%, ${c} 140%)`;
             el.style.opacity = String(Math.min(0.6, e * 0.6));
+          } else if (kind.current === "white") {
+            el.style.background = c;
+            el.style.opacity = String(Math.min(0.72, e * 0.72));
           } else {
             el.style.background = c;
             el.style.opacity = String(Math.min(0.35, e * 0.35));

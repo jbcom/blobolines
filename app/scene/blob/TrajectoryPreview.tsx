@@ -151,14 +151,15 @@ export function TrajectoryPreview() {
         : null;
     const validEndpoint = aimEndpointHitsStep(step, endpoint) ? endpoint : null;
 
-    if (validEndpoint) {
+    const targetEndpoint = endpoint || validEndpoint;
+    if (targetEndpoint) {
       setBlobFaceFocusTarget({
         kind: step?.proof?.routeGate?.kind === "slicer" ? "slicer" : "routeEndpoint",
-        position: validEndpoint.position,
+        position: targetEndpoint.position,
         intensity: Math.max(0.25, Math.min(1, aim.charge)),
       });
       for (let shown = 0; shown < DOTS; shown++) {
-        const t = validEndpoint.time * ((shown + 1) / DOTS);
+        const t = targetEndpoint.time * ((shown + 1) / DOTS);
         const x = bx + v[0] * t;
         const y = by + v[1] * t + 0.5 * GRAVITY[1] * t * t;
         const z = bz + v[2] * t;
@@ -173,12 +174,24 @@ export function TrajectoryPreview() {
 
       const pulse = 1 + Math.sin(state.clock.elapsedTime * 6.5) * 0.08;
       const base = activeDifficulty === "ready" ? 0.9 : activeDifficulty === "medium" ? 0.75 : 0.62;
-      reticle.position.set(...validEndpoint.position);
+      reticle.position.set(...targetEndpoint.position);
       halo.position.copy(reticle.position);
       reticle.scale.setScalar(base * pulse);
       halo.scale.setScalar(base * (1.28 + (pulse - 1) * 1.6));
-      (reticle.material as MeshBasicMaterial).opacity = 0.72;
-      (halo.material as MeshBasicMaterial).opacity = 0.18 + (pulse - 1) * 0.55;
+
+      // Dynamic color/style: Gold if hit, danger-red if missed
+      if (validEndpoint) {
+        (reticle.material as MeshBasicMaterial).color.set(hex(palette.tramp.gold));
+        (halo.material as MeshBasicMaterial).color.set(hex(palette.goo.rim));
+        (reticle.material as MeshBasicMaterial).opacity = 0.72;
+        (halo.material as MeshBasicMaterial).opacity = 0.18 + (pulse - 1) * 0.55;
+      } else {
+        (reticle.material as MeshBasicMaterial).color.set(hex(palette.danger));
+        (halo.material as MeshBasicMaterial).color.set(hex(palette.danger));
+        (reticle.material as MeshBasicMaterial).opacity = 0.55;
+        (halo.material as MeshBasicMaterial).opacity = 0.12 + (pulse - 1) * 0.35;
+      }
+
       reticle.visible = true;
       halo.visible = true;
       return;
