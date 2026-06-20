@@ -402,12 +402,121 @@ latent edge bugs. No new behavior; pure test additions (+ tiny fixes if a test r
       designed.
 
 ### L2 PR cutting point
-- [x] L2.1a Verified (typecheck+lint+466 unit+e2e 5/1-skip); PR #69 opened.
-- [ ] [WAIT-REVIEW] L2.1b Babysit PR #69: gates green → address feedback → squash-merge → re-write
-      directive forward.
+- [x] L2.1b PR #69 SQUASH-MERGED (406a342, 2026-06-20). gemini's 5 test-quality findings folded
+      in (full bridge coverage, exact queue assertion, fixed nudge description, expanded reset).
+      launchBridge now has direct coverage.
+
+## Queue — Milestone: Biome-band banner (branch feat/biome-banner)
+
+Surface the biome progression to the player: a brief "Entering the <Biome>" HUD banner when the
+climb crosses into a new canonical biome band — mirroring the existing DifficultyBanner but with a
+softer cue (the difficulty banner owns the loud gold-flash/stinger; the biome banner is a gentle
+arrival note). Ties the four-dimension biome work to player-facing feedback. No new assets; reuses
+biomeBandAt + the banner pattern.
+
+### M0 Architecture
+- [x] M0.1 Decided (decisions.ndjson): BiomeBanner mirrors DifficultyBanner but with a SOFT cue
+      (blue flash 0.4 + playChime, NOT the gold/milestone). Friendly labels via a biomeBandLabel
+      map in biomes.ts (throws on unknown — no silent fallback); up-crossing test via biomeBandIndex.
+      Fires only on an UPWARD band-index increase, gated PLAYING, watches run.height.
+
+### M1 Implementation
+- [x] M1.1 BiomeBanner (app/views/hud) watches run.height → biomeBandAt, fires on an upward
+      biomeBandIndex increase with flash("blue",0.4)+playChime, shows a motion "Entering <label>"
+      for 1600ms, auto-hides; mounted in Hud next to DifficultyBanner. biomeBandIndex/biomeBandLabel
+      added to biomes.ts + @/config barrel. Added window.__blobtest.setHeight(y) to drive the height
+      readout for HUD QA. Live dev-bridge QA confirmed correct labels on each crossing ("The Sky",
+      "The Stratosphere"); the motion fade only animates in a FOREGROUND tab (rAF-gated) so the
+      foreground browser fixtures are the authoritative visual proof.
+
+### M1.2 Tests
+- [x] M1.2 biomes.test.ts: biomeBandIndex (ordinal, strict monotonic up-order, −1 unknown) +
+      biomeBandLabel (every band labelled, canonical names, throws on unknown) — 16 pass.
+      BiomeBanner.browser.test.tsx: fires on up-cross, no-fire within a band, NO-fire on descent —
+      3 pass. typecheck + lint clean, 473 unit + 113 browser green. Committed 170cbf6; reviewer
+      dispatched (fold findings forward).
+
+### M2 PR cutting point
+- [x] M2.1a Reviewer returned CLEAN (every flagged concern self-resolved). PR #70 opened
+      (feat/biome-banner pushed, body written). Monitor armed on PR #70 CI checks.
+- [x] M2.1b PR #70 CI ALL GREEN (verify + Playwright E2E + Android APK + CodeRabbit pass).
+      DECISION: the daily-results work (N1.1) is pure + self-contained UI polish and the PR was
+      still open, so it was folded into #70 as a second feature rather than a separate branch —
+      same player-facing-polish theme, not a scope-flip.
+- [x] M2.1c-feedback Addressed gemini HIGH on PR #70: BiomeBanner subscribed to run.height
+      (~60fps re-renders); moved biomeBandAt INTO the Zustand selector so it only re-renders on a
+      band change (commit e87e280). Thread resolved; 3 banner fixtures still pass.
+- [ ] [WAIT-REVIEW] M2.1d Wait CI green on e87e280, then squash-merge PR #70 + sync local main.
+      Then start the next milestone (N2 below).
+
+## Queue — Milestone: Interactive scenery (blob-reactive props) (branch feat/reactive-scenery)
+
+Picked the next polish unit: scenery that REACTS to the blob, per the mandate ("the mounted
+assets server for props/scenery makes the game richer and more fun"). Today the parallax props
+(BiomeScenicProps) float/bob/drift on a purely deterministic path — pretty, but inert; they
+ignore the blob entirely. Make the NEAR layer come alive when the blob rushes past.
+
+### N2 Architecture
+- [x] N2.1 ENUMERATED (read BiomeScenicProps.tsx + biomeProps.ts parallaxLayers + diagnostics).
+      FINDINGS: props render in 3 parallax layers; the blob plays at z≈0 and the NEAR layer sits
+      at z −6..1 — close enough to plausibly react; far/mid are distant backdrop (leave calm).
+      Each ScenicInstance already reads getBlobDiagnostics().position every frame (position +
+      velocity available). USE CASES for "reacts to the blob": (a) PROXIMITY SWAY — a near prop
+      the blob passes close to (small |dx|,|dy|) leans away from the blob like it's shoved by the
+      rushing air, then eases back (spring); (b) FLYBY PULSE — a quick scale-pop/glint when the
+      blob's y crosses the prop's y at close x; (c) VELOCITY-SCALED — a faster blob shoves harder
+      than a slow drift-by. DECISION: implement as a NEAR-LAYER-ONLY reaction inside the existing
+      ScenicInstance useFrame (no new component, no new draw call): compute a normalized influence
+      = clamp(1 - dist/REACT_RADIUS) * speedScale, drive a lean (rotation.z away from the blob) +
+      a small scale-pop, eased back each frame (ref-lerp, deterministic — no Math.random, no new
+      state). Gate strictly to layer.id === "near" so the calm backdrop is untouched and the
+      budget cost is ~16 near instances doing a couple of cheap vector ops/frame. Determinism:
+      reaction is a pure function of blob position + the instance's own seeded x/y/z, so the sim
+      stays reproducible. NEXT: N2.2 implement the reaction in ScenicInstance + a unit test for
+      the pure influence/lean math (extract it as a tiny pure helper) + a browser fixture; visual
+      QA via teleport + claude-in-chrome.
+- [ ] [BLOCKED-ON-MERGE] N2.2 After PR #70 merges, on fresh branch feat/reactive-scenery: extract
+      a pure `sceneryReaction(blobPos, blobVel, propPos)` helper (lean angle + scale-pop +
+      influence), unit-test it, wire it into ScenicInstance's near-layer useFrame, add a browser
+      fixture, visual-verify, PR.
+
+## Queue — Milestone: Daily-challenge results polish (branch feat/daily-results, NEXT)
+
+The daily challenge already exists (dailyRun flag, seedPhrase, leaderboard high-scores) but the
+RESULTS moment is thin — a daily run ends like any run. Give the daily its own payoff: surface on
+the GameOver card whether this was a daily run, the seed phrase played, and the player's daily
+placement vs. their own high-score history for that day's seed. Data-driven off the existing
+store (dailyRun + highScores + seedPhrase); no new assets; pure UI + a small selector. Enumerate
+use cases (first daily of the day vs. repeat attempt vs. new personal daily best) before building.
+
+### N0 Architecture
+- [x] N0.1 DONE (read GameOver.tsx + daily.ts + persistence highScoreEntrySchema + store
+      commitBestHeight). FINDINGS: GameOver already shows a daily `runTag`
+      (`Daily <key> · <difficulty> · <hash>`) but NO placement — the daily results moment is
+      flavour text, no comparison. Each HighScoreEntry stores its `seedPhrase`; a daily run's
+      phrase is `dailySeedPhrase(today)` = `blobolines-daily-<YYYY-MM-DD>`, so the player's prior
+      attempts at TODAY's seed are exactly `highScores.filter(e => e.seedPhrase === todayPhrase)`.
+      USE CASES enumerated: (a) first daily attempt today (no prior entry → "Your first run on
+      today's tower"); (b) repeat attempt, not a personal daily best (show rank: "#2 of 3 today");
+      (c) NEW personal daily best (rank #1, celebratory "Best on today's tower yet!").
+      DECISION (to record in decisions.ndjson): add a PURE, date-injected selector
+      `dailyStanding(highScores, todaySeedPhrase, thisRunScore)` in src/sim/daily/ returning
+      `{ attemptsToday, rank, isPersonalDailyBest }` (sim stays pure — caller passes today's
+      phrase, no new Date() in sim). GameOver computes `dailySeedPhrase(new Date())` (UI side) and
+      renders a daily-only "Today's tower" sub-section under runTag. No new assets; pure selector +
+      UI. NEXT: N1.1 implement the selector + tests, N1.2 wire the GameOver section + browser
+      fixture.
+
+### N1 Implementation
+- [x] N1.1 DONE (commit 457eec9, folded into PR #70). Pure `dailyStanding(highScores,
+      todaySeedPhrase, thisRunScore)` selector in src/sim/daily/ → { attemptsToday, rank,
+      isPersonalDailyBest, isFirstAttempt } (ties share the better rank; counts this run
+      defensively). GameOver renders a daily-only "Today's tower" section: first climb / ranked
+      "#N of M" / gold personal-daily-best, hidden for random runs. 6 selector unit tests + 4
+      GameOver browser fixtures. 479 unit + 117 browser green; typecheck + lint clean.
 
 ## Notes
 - This is a living plan. After every stage, backward+forward sweep and edit the queue.
-- Next candidate milestones (surface, don't pre-commit): per-biome MUSIC layers, daily-challenge
-  leaderboard polish, a test-coverage hardening pass on the session's new systems, USE the teleport
-  tool to manually QA + polish each upper biome band's look.
+- Next candidate milestones (surface, don't pre-commit): per-biome MUSIC layers (needs new audio
+  assets), daily-challenge leaderboard polish, interactive scenery, USE the teleport tool to QA +
+  polish each upper biome band's look.

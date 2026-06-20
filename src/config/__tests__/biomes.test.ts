@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { biomeBandAt, biomeBands, biomeSkyAt } from "../biomes";
+import { biomeBandAt, biomeBandIndex, biomeBandLabel, biomeBands, biomeSkyAt } from "../biomes";
 
 describe("biomeSkyAt", () => {
   it("returns the ground band at/below height 0", () => {
@@ -103,5 +103,48 @@ describe("biomeBandAt", () => {
 
   it("resolves very high altitudes to the deepest band", () => {
     expect(biomeBandAt(99999)).toBe(biomeBands[biomeBands.length - 1].name);
+  });
+});
+
+describe("biomeBandIndex", () => {
+  it("returns the ordinal in canonical low→high order (ground = 0)", () => {
+    biomeBands.forEach((band, i) => {
+      expect(biomeBandIndex(band.name), band.name).toBe(i);
+    });
+  });
+
+  it("strictly increases as the climb crosses up through the bands (the banner's UP test)", () => {
+    // The banner fires only when index(now) > index(before); ground→sky→…→deep-space must be
+    // a monotonic increase or an upward crossing could be missed or fire on a descent.
+    for (let i = 1; i < biomeBands.length; i++) {
+      expect(biomeBandIndex(biomeBands[i].name)).toBeGreaterThan(
+        biomeBandIndex(biomeBands[i - 1].name),
+      );
+    }
+  });
+
+  it("returns −1 for an unknown band name (no false UP-crossing)", () => {
+    expect(biomeBandIndex("atlantis")).toBe(-1);
+  });
+});
+
+describe("biomeBandLabel", () => {
+  it("gives a friendly display label for every canonical band", () => {
+    for (const band of biomeBands) {
+      const label = biomeBandLabel(band.name);
+      expect(label.length, band.name).toBeGreaterThan(0);
+      // labels are human title-case, never the raw kebab id
+      expect(label, band.name).not.toBe(band.name);
+    }
+  });
+
+  it("reads the canonical bands as the player-facing names", () => {
+    expect(biomeBandLabel("ground")).toBe("The Ground");
+    expect(biomeBandLabel("upper-atmosphere")).toBe("Upper Atmosphere");
+    expect(biomeBandLabel("deep-space")).toBe("Deep Space");
+  });
+
+  it("throws on an unknown band rather than silently mislabelling it", () => {
+    expect(() => biomeBandLabel("atlantis")).toThrow(/atlantis/);
   });
 });

@@ -58,3 +58,54 @@ export function runHash(result: RunResult): string {
   ].join(":");
   return normalizeSeed(`run:${canonical}`).toString(36);
 }
+
+/** A high-score row as the daily-standing selector needs to read it — the structural subset of
+ *  `HighScoreEntry` (score + which seed it was set on). Kept local + minimal so the pure sim
+ *  doesn't depend on the persistence/state layer's full entry shape. */
+export interface SeededScore {
+  score: number;
+  seedPhrase: string;
+}
+
+/** Where this run places among the player's OWN prior attempts at today's daily tower. */
+export interface DailyStanding {
+  /** Total attempts at today's seed INCLUDING this run (always ≥ 1). */
+  attemptsToday: number;
+  /** 1-based rank of this run's score among today's attempts (1 = best). Ties share the better
+   *  rank — two runs at the same top score are both rank 1. */
+  rank: number;
+  /** True when this run is (tied for) the best the player has done on today's tower. */
+  isPersonalDailyBest: boolean;
+  /** True when this is the FIRST attempt at today's seed (no prior same-seed entry). */
+  isFirstAttempt: boolean;
+}
+
+/**
+ * Pure daily-results selector: given the player's stored high scores, TODAY's daily seed phrase
+ * (the caller derives it from the current date via `dailySeedPhrase` — sim never reads the clock),
+ * and the score this run just achieved, report how this run stands against the player's own prior
+ * runs ON THE SAME DAILY TOWER. Drives the GameOver "Today's tower" section.
+ *
+ * `highScores` is assumed to ALREADY include this run (the store commits the run before game-over);
+ * if it somehow doesn't, this run is still counted so `attemptsToday`/`rank` stay consistent.
+ */
+export function dailyStanding(
+  highScores: readonly SeededScore[],
+  todaySeedPhrase: string,
+  thisRunScore: number,
+): DailyStanding {
+  const todays = highScores.filter((e) => e.seedPhrase === todaySeedPhrase).map((e) => e.score);
+  // Count this run even if the caller passed scores that don't yet include it.
+  const committed = todays.length;
+  const attemptsToday = Math.max(1, committed);
+  const isFirstAttempt = committed <= 1;
+  // Rank = 1 + how many DISTINCT prior attempts strictly beat this run. Ties share the rank.
+  const better = todays.filter((s) => s > thisRunScore).length;
+  const rank = better + 1;
+  return {
+    attemptsToday,
+    rank,
+    isPersonalDailyBest: rank === 1,
+    isFirstAttempt,
+  };
+}

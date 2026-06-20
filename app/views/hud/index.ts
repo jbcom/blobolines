@@ -1,6 +1,7 @@
 export { AchievementToast } from "./AchievementToast";
 export { AirNudgeIndicator } from "./AirNudgeIndicator";
 export { Altimeter } from "./Altimeter";
+export { BiomeBanner } from "./BiomeBanner";
 export { ComboBadge } from "./ComboBadge";
 export { CrystalCounter } from "./CrystalCounter";
 export { DifficultyBanner } from "./DifficultyBanner";

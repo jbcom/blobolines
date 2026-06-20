@@ -1,6 +1,7 @@
 import { AchievementToast } from "./AchievementToast";
 import { AirNudgeIndicator } from "./AirNudgeIndicator";
 import { Altimeter } from "./Altimeter";
+import { BiomeBanner } from "./BiomeBanner";
 import { ComboBadge } from "./ComboBadge";
 import { CrystalCounter } from "./CrystalCounter";
 import { DifficultyBanner } from "./DifficultyBanner";
@@ -28,6 +29,8 @@ export function Hud() {
       <MilestoneBanner />
       {/* effective route difficulty bump: MEDIUM!!! HARD!!! etc. */}
       <DifficultyBanner />
+      {/* gentle "Entering The Stratosphere" note on first UP-crossing into a new biome band */}
+      <BiomeBanner />
       {/* full-screen flash layer: gold combo / blue launch / red near-death */}
       <ScreenFlash />
       {/* route landing quality callout, fed by the certified golden-path scorer */}

@@ -1,5 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { dailyKey, dailySeed, dailySeedPhrase, runHash } from "../daily";
+import {
+  dailyKey,
+  dailySeed,
+  dailySeedPhrase,
+  dailyStanding,
+  runHash,
+  type SeededScore,
+} from "../daily";
 
 // Fixed UTC dates (date is injected — sim never calls new Date()).
 const jun16 = new Date(Date.UTC(2026, 5, 16, 9, 30)); // month is 0-based → June
@@ -39,5 +46,70 @@ describe("daily challenge", () => {
 
   it("runHash is a compact base36 string", () => {
     expect(runHash({ seed: 1, height: 1, crystals: 0, maxCombo: 0 })).toMatch(/^[0-9a-z]+$/);
+  });
+});
+
+describe("dailyStanding", () => {
+  const TODAY = dailySeedPhrase(jun16); // blobolines-daily-2026-06-16
+  const OTHER = dailySeedPhrase(jun17); // a different day's tower
+  const RANDOM = "lemon-otter-77"; // a non-daily random run
+
+  const row = (score: number, seedPhrase: string): SeededScore => ({ score, seedPhrase });
+
+  it("first attempt on today's tower → rank 1, personal best, first-attempt flagged", () => {
+    // highScores already includes this run (the store commits before game-over): exactly one today.
+    const s = dailyStanding([row(1200, TODAY)], TODAY, 1200);
+    expect(s).toEqual({
+      attemptsToday: 1,
+      rank: 1,
+      isPersonalDailyBest: true,
+      isFirstAttempt: true,
+    });
+  });
+
+  it("a repeat attempt that beats the prior best is rank 1 of N", () => {
+    // Two prior runs (900, 1500) + this run (2000) all on today's seed.
+    const scores = [row(900, TODAY), row(1500, TODAY), row(2000, TODAY)];
+    const s = dailyStanding(scores, TODAY, 2000);
+    expect(s.attemptsToday).toBe(3);
+    expect(s.rank).toBe(1);
+    expect(s.isPersonalDailyBest).toBe(true);
+    expect(s.isFirstAttempt).toBe(false);
+  });
+
+  it("a worse repeat attempt ranks below the better prior runs", () => {
+    const scores = [row(2500, TODAY), row(1800, TODAY), row(1000, TODAY)];
+    const s = dailyStanding(scores, TODAY, 1000);
+    expect(s.attemptsToday).toBe(3);
+    expect(s.rank).toBe(3); // two prior runs beat 1000
+    expect(s.isPersonalDailyBest).toBe(false);
+  });
+
+  it("ties share the better rank (two top scores are both rank 1)", () => {
+    const scores = [row(2000, TODAY), row(2000, TODAY)];
+    const s = dailyStanding(scores, TODAY, 2000);
+    expect(s.rank).toBe(1); // no STRICTLY-better run exists
+    expect(s.isPersonalDailyBest).toBe(true);
+    expect(s.attemptsToday).toBe(2);
+  });
+
+  it("ignores runs from other days and random (non-daily) seeds", () => {
+    const scores = [
+      row(9999, OTHER), // yesterday/tomorrow's tower — must not count
+      row(8888, RANDOM), // a random run — must not count
+      row(1200, TODAY),
+    ];
+    const s = dailyStanding(scores, TODAY, 1200);
+    expect(s.attemptsToday).toBe(1); // only the one TODAY entry
+    expect(s.rank).toBe(1);
+    expect(s.isFirstAttempt).toBe(true);
+  });
+
+  it("still counts this run when highScores has not yet recorded it (defensive)", () => {
+    // No TODAY entry committed yet — the selector must not report 0 attempts or rank 0.
+    const s = dailyStanding([row(500, RANDOM)], TODAY, 1500);
+    expect(s.attemptsToday).toBe(1);
+    expect(s.rank).toBe(1);
+    expect(s.isFirstAttempt).toBe(true);
   });
 });
