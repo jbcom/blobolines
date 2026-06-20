@@ -33,3 +33,47 @@ test("sequential teleports land the blob up in each biome band without dying", a
   // the snap-to-pad fix holds and the page kept simulating through the band changes.
   await expect.poll(bodyY, { timeout: 12_000, intervals: [600] }).toBeGreaterThan(30);
 });
+
+/**
+ * Regression: second consecutive teleport to a HIGHER band from a resting body dies.
+ *
+ * Root cause: TrampolineField drives its mount window from React state (setCenterY).
+ * When the body teleports 290+ world units upward, React commits the new window 1–2
+ * frames later — during which the body free-falls with no cloud sensor present.
+ * DEATH_FALL_DISTANCE = 24 m, gravity = -22 m/s², so the body dies within ~1.5 s.
+ *
+ * Fix: PlayerBlob.useFrame seeds a `teleportAnchor` on every cloud-pad teleport and
+ * injects a synthetic reportCloudAdherence() each frame until a real Trampoline sensor
+ * takes over. This keeps the soft-settle force active throughout the mount gap.
+ */
+test("second teleport from resting body to higher band survives and stays playing", async ({
+  page,
+}) => {
+  await page.goto("/?dev");
+  await startRun(page);
+  await page.waitForTimeout(1500);
+
+  const bodyY = () => page.evaluate(() => window.__blobtest.altitude());
+  const phase = () => page.evaluate(() => window.__blobtest.phase());
+
+  // Establish the blob airborne before the first teleport.
+  await page.evaluate(() => window.__blobtest.launchUp());
+  await expect.poll(bodyY, { timeout: 12_000, intervals: [500] }).toBeGreaterThan(5);
+
+  // First teleport — lands at ~340.
+  await teleport(page, 340);
+  await expect.poll(bodyY, { timeout: 12_000, intervals: [600] }).toBeGreaterThan(300);
+
+  // Let the body fully settle on the cloud pad (1400 ms).
+  await page.waitForTimeout(1400);
+
+  // Second teleport to a much higher band — this is the regression case.
+  // The TrampolineField window lags 1–2 render cycles before the new Trampoline mounts;
+  // the teleport anchor must bridge that gap so the body doesn't free-fall and die.
+  await teleport(page, 640);
+
+  // After 900 ms the anchor has long handed off to the real sensor. Assert alive + up-band.
+  await page.waitForTimeout(900);
+  expect(await phase()).toBe("playing");
+  expect(await bodyY()).toBeGreaterThan(560);
+});
