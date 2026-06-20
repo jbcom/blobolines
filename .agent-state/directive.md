@@ -146,7 +146,16 @@ re-write directive forward → next.
       genuine improvements.)
 - [x] C3.3 FIX (bdf4dcc): tripled CI E2E budgets (global 45→90s, perf 45→90s, expect 5→20s);
       local keeps tight values. Verified locally with CI=true (2 passed). Pushed.
-- [ ] [WAIT] C3.4 Once CI is green on bdf4dcc, squash-merge PR #59, then re-write directive
+- [x] C3.4 90s timeout STILL failed → downloaded the trace artifact. TRUE ROOT CAUSE (from
+      the trace's page snapshot): the click hung on the "⤒ launch up (max) 📸" DevHarness
+      button — the blob HAD climbed (altitude 48m, game works), but the button's
+      canvas.toDataURL PNG capture STALLS for tens of seconds under SwiftShader ("GPU stall
+      due to ReadPixels"), so the Playwright click never settles. Not OOM, not a crash, not
+      plain slowness — the synchronous framebuffer readback.
+- [x] C3.5 FIX (f292729): gate the toDataURL capture behind a ?capture URL param.
+      perf/playable/scenarios use plain ?dev (skip the readback); route-proof opts in with
+      ?dev&capture (it asserts on the PNGs). 5 E2E pass locally with CI=true.
+- [ ] [WAIT] C3.6 Once CI is green on f292729, squash-merge PR #59, then re-write directive
       forward to the per-biome ambient-audio milestone (D0, fresh branch).
 
 ## Notes
