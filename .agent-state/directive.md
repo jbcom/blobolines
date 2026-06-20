@@ -415,22 +415,30 @@ arrival note). Ties the four-dimension biome work to player-facing feedback. No 
 biomeBandAt + the banner pattern.
 
 ### M0 Architecture
-- [ ] M0.1 Read DifficultyBanner (the pattern) + biomeBandAt + the band names. Decide friendly
-      band labels (ground→"The Ground", upper-atmosphere→"Upper Atmosphere", …) and the cue
-      (subtle: a brief blue flash + a soft chime, NOT the difficulty-up gold/stinger). Fire only on
-      an UPWARD crossing into a higher band. Record decision.
+- [x] M0.1 Decided (decisions.ndjson): BiomeBanner mirrors DifficultyBanner but with a SOFT cue
+      (blue flash 0.4 + playChime, NOT the gold/milestone). Friendly labels via a biomeBandLabel
+      map in biomes.ts (throws on unknown — no silent fallback); up-crossing test via biomeBandIndex.
+      Fires only on an UPWARD band-index increase, gated PLAYING, watches run.height.
 
 ### M1 Implementation
-- [ ] M1.1 BiomeBanner component (mirrors DifficultyBanner: watches run.height → biomeBandAt,
-      shows on a new higher band, auto-hides, soft cue), mounted in the HUD. Visual-verify via the
-      teleport tool (jump across bands → banner shows).
+- [x] M1.1 BiomeBanner (app/views/hud) watches run.height → biomeBandAt, fires on an upward
+      biomeBandIndex increase with flash("blue",0.4)+playChime, shows a motion "Entering <label>"
+      for 1600ms, auto-hides; mounted in Hud next to DifficultyBanner. biomeBandIndex/biomeBandLabel
+      added to biomes.ts + @/config barrel. Added window.__blobtest.setHeight(y) to drive the height
+      readout for HUD QA. Live dev-bridge QA confirmed correct labels on each crossing ("The Sky",
+      "The Stratosphere"); the motion fade only animates in a FOREGROUND tab (rAF-gated) so the
+      foreground browser fixtures are the authoritative visual proof.
 
 ### M1.2 Tests
-- [ ] M1.2 Band-label mapping unit test (every band has a friendly label) + a HUD browser fixture
-      for the banner. typecheck + lint + test (+ test:browser per the UI gate).
+- [x] M1.2 biomes.test.ts: biomeBandIndex (ordinal, strict monotonic up-order, −1 unknown) +
+      biomeBandLabel (every band labelled, canonical names, throws on unknown) — 16 pass.
+      BiomeBanner.browser.test.tsx: fires on up-cross, no-fire within a band, NO-fire on descent —
+      3 pass. typecheck + lint clean, 473 unit + 113 browser green. Committed 170cbf6; reviewer
+      dispatched (fold findings forward).
 
 ### M2 PR cutting point
-- [ ] M2.1 Verify + screenshot; open PR; babysit to squash-merge; re-write directive forward.
+- [ ] M2.1 Reviewer findings folded forward → open PR; babysit to squash-merge; re-write directive
+      forward to the next milestone.
 
 ## Notes
 - This is a living plan. After every stage, backward+forward sweep and edit the queue.
