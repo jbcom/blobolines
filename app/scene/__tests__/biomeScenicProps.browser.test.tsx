@@ -251,6 +251,80 @@ test("a near prop FLYBY PULSE spikes its scale as the blob passes closest", asyn
   ).toBeGreaterThan(1.13);
 });
 
+test("a near prop GLINTS (emissive spikes) as the blob passes closest", async () => {
+  let sceneRoot: Group | null = null;
+  setAltitude(50);
+
+  const screen = await render(
+    <FixtureStage testId="glint-fixture" cameraDistance={40}>
+      <CaptureScene onScene={(s) => (sceneRoot = s as Group)} />
+      <BiomeScenicProps />
+    </FixtureStage>,
+  );
+  await expect.element(screen.getByTestId("glint-fixture")).toBeInTheDocument();
+
+  const nearGroups = () => {
+    const out: Object3D[] = [];
+    (sceneRoot as unknown as Object3D | null)?.traverse((o: Object3D) => {
+      if (o.renderOrder === 2) out.push(o);
+    });
+    return out;
+  };
+
+  // Max emissiveIntensity across every lit material under the near groups.
+  const maxEmissive = () => {
+    let max = 0;
+    for (const g of nearGroups()) {
+      g.traverse((o: Object3D) => {
+        const mesh = o as {
+          material?: { emissiveIntensity?: number } | { emissiveIntensity?: number }[];
+        };
+        const mats = mesh.material
+          ? Array.isArray(mesh.material)
+            ? mesh.material
+            : [mesh.material]
+          : [];
+        for (const m of mats) {
+          if (typeof m.emissiveIntensity === "number") max = Math.max(max, m.emissiveIntensity);
+        }
+      });
+    }
+    return max;
+  };
+
+  await vi.waitFor(() => expect(nearGroups().length).toBeGreaterThan(0), {
+    timeout: 10000,
+    interval: 100,
+  });
+
+  const target = nearGroups()[0];
+  target.getWorldPosition(_tmp);
+  const propX = _tmp.x;
+  const propY = _tmp.y;
+
+  // Sweep the blob through the prop (below → at → above) to fire a real flyby peak, sampling the
+  // brightest emissive across the pass.
+  let peakEmissive = 0;
+  for (const off of [-3, -1.5, -0.5, 0, 0.5, 1.5, 3]) {
+    setBlobDiagnostics({
+      position: [propX + 0.4, propY + off, 0],
+      velocity: [0, 40, 0],
+      speed: 40,
+      airborne: true,
+      expression: "idle",
+      squash: 1,
+      maxHeight: propY,
+      groundY: 0,
+    });
+    await new Promise((r) => setTimeout(r, 60));
+    peakEmissive = Math.max(peakEmissive, maxEmissive());
+  }
+
+  // The glint adds up to GLINT_PEAK_INTENSITY (0.9) on top of the props' ~0 baseline emissive, so a
+  // real flyby drives emissiveIntensity clearly above rest.
+  expect(peakEmissive, "the flyby glint should brighten the prop's emissive").toBeGreaterThan(0.2);
+});
+
 const _tmp = new Vector3();
 
 test("BiomeProps mounts and resolves ambience across every band without throwing", async () => {

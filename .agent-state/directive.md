@@ -558,10 +558,17 @@ visual channel. No new assets.
       near-layer only, deterministic (pure function of r.pulse), and reuses the existing 3-point
       peak → envelope (no new detector). Materials must be CLONED (never mutate the shared cached
       GLB material) + disposed on unmount, mirroring the existing haze-clone discipline.
-- [ ] N5.2 Implement: PropModel near-clone + onMaterials ref; a pure `glintEmissive(pulse)` helper
-      (intensity + tint) in src/render/vfx; wire ScenicInstance to drive emissive from r.pulse;
-      unit-test the helper; browser fixture asserting a near prop's material emissiveIntensity
-      spikes on a flyby; visual-verify; PR.
+- [x] N5.2 DONE. Pure `glintEmissive(pulse)` + GLINT_PEAK_INTENSITY (0.9) in sceneryReaction.ts
+      (linear, clamped). PropModel now clones materials for NEAR props too (not just hazy opacity<1)
+      and hands them up via onMaterials; ScenicInstance filters to lit materials (emissive present),
+      stores baseline emissiveIntensity, and drives emissiveIntensity + a warm gold emissive tint
+      from r.pulse each frame (restored on dispose). 4 glint unit tests + a browser fixture sweeping
+      the blob through a near prop and asserting emissiveIntensity spikes. 499 unit + 120 browser
+      green; typecheck + biome ci clean. Committed; reviewer to dispatch.
+
+### N5.3 PR cutting point
+- [ ] N5.3 Commit, dispatch reviewer, fold findings forward, open PR, babysit to squash-merge,
+      sync main, re-write directive forward.
 
 ## Queue — Milestone: Daily-challenge results polish (branch feat/daily-results, NEXT)
 

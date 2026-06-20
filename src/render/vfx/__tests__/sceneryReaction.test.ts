@@ -4,6 +4,8 @@ import {
   DEFAULT_FLYBY_PULSE,
   DEFAULT_SCENERY_REACTION,
   flybyPeaked,
+  GLINT_PEAK_INTENSITY,
+  glintEmissive,
   sceneryReaction,
   stepFlybyPulse,
 } from "../sceneryReaction";
@@ -125,5 +127,25 @@ describe("stepFlybyPulse", () => {
   it("clamps the attack to 1 even for an over-unity peak strength", () => {
     const v = stepFlybyPulse(0, true, 5, 1 / 60);
     expect(v).toBeLessThanOrEqual(1);
+  });
+});
+
+describe("glintEmissive", () => {
+  it("is zero at rest (no pulse → no glow added)", () => {
+    expect(glintEmissive(0)).toBe(0);
+  });
+
+  it("scales linearly with the pulse up to the peak intensity at full envelope", () => {
+    expect(glintEmissive(1)).toBeCloseTo(GLINT_PEAK_INTENSITY, 10);
+    expect(glintEmissive(0.5)).toBeCloseTo(GLINT_PEAK_INTENSITY * 0.5, 10);
+  });
+
+  it("clamps a pulse outside [0,1] (defensive)", () => {
+    expect(glintEmissive(-0.3)).toBe(0);
+    expect(glintEmissive(2)).toBeCloseTo(GLINT_PEAK_INTENSITY, 10);
+  });
+
+  it("honors a custom peak", () => {
+    expect(glintEmissive(1, 0.4)).toBeCloseTo(0.4, 10);
   });
 });
