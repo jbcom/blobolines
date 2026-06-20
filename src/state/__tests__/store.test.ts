@@ -108,6 +108,20 @@ describe("useGameStore", () => {
     expect(ids.filter((id) => id === "height-100")).toHaveLength(1);
   });
 
+  it("unlockAchievements ALSO grants a tied cosmetic skin (the second grant path)", () => {
+    expect(useGameStore.getState().progress.unlockedSkins).not.toContain("ink");
+    const fresh = useGameStore.getState().unlockAchievements({
+      bestHeight: 1000, // meets height-1000 → grants ink
+      bestScore: 0,
+      lifetimeCrystals: 0,
+      runHeight: 1000,
+      runMaxCombo: 0,
+      runCrystals: 0,
+    });
+    expect(fresh).toContain("height-1000");
+    expect(useGameStore.getState().progress.unlockedSkins).toContain("ink");
+  });
+
   it("real-time checkAndUnlock triggers on setRun height change and addCrystals", () => {
     // 1. Trigger height-100 real-time via setRun height mutation
     useGameStore.getState().setRun({ height: 105 });
