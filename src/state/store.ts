@@ -282,19 +282,27 @@ export const useGameStore = create<GameState>((set) => ({
       };
       // Daily-challenge streak: only a DAILY run advances it. nextDailyStreak extends it on a
       // next-day play, leaves it on a same-day replay, and resets it after a missed day. A non-daily
-      // run leaves the streak untouched. (commitBestHeight is the state layer, so reading the clock
-      // here is fine — the PURE streak math is date-injected in src/sim/daily.)
-      const todayKey = dailyKey(new Date());
-      const streak = s.dailyRun
+      // run leaves the streak untouched, so the clock is only read for daily runs. (commitBestHeight
+      // is the state layer, so reading the clock here is fine — the PURE streak math is date-injected.)
+      const todayKey = s.dailyRun ? dailyKey(new Date()) : null;
+      const streak = todayKey
         ? nextDailyStreak(s.progress.dailyStreak ?? 0, s.progress.lastDailyKey, todayKey)
         : null;
+      // Anti-exploit: NEVER move the streak anchor BACKWARD. A backward clock skew yields a todayKey
+      // older than the stored lastDailyKey; committing it would let the player inflate the streak when
+      // they restore the clock (the gap would read positive again). Only advance when today is on-or-
+      // after the last completed daily.
+      const advanceStreak =
+        streak !== null &&
+        todayKey !== null &&
+        (!s.progress.lastDailyKey || todayKey >= s.progress.lastDailyKey);
 
       const nextProgress: PlayerProgress = {
         ...s.progress,
         bestHeight: Math.max(s.progress.bestHeight, h),
         bestScore: Math.max(s.progress.bestScore, runScore),
         highScores: updatedScores,
-        ...(streak ? { dailyStreak: streak.streak, lastDailyKey: todayKey } : {}),
+        ...(advanceStreak ? { dailyStreak: streak.streak, lastDailyKey: todayKey } : {}),
       };
 
       const { progress, run } = checkAndUnlock(nextProgress, nextRun);

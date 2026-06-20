@@ -1,4 +1,5 @@
 export {
+  DAILY_NS,
   type DailyStanding,
   type DailyStreakUpdate,
   dailyKey,

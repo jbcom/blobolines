@@ -6,7 +6,7 @@ import { useEffect, useRef, useState } from "react";
 import { playRecord, startMusic, stopMusic } from "@/audio";
 import type { BlobSkin } from "@/core/types";
 import { achievementById } from "@/sim/achievements";
-import { dailyKey, dailySeedPhrase, dailyStanding, runHash } from "@/sim/daily";
+import { DAILY_NS, dailyStanding, runHash } from "@/sim/daily";
 import { comboMultiplier } from "@/sim/launch";
 import { SKIN_COST, useGameStore, useWorldStore } from "@/state";
 import { ROUTE_PROFILES } from "@/world";
@@ -43,17 +43,19 @@ export function GameOver() {
 
   const freshAchievements = useGameStore((s) => s.run.unlockedAchievements) || [];
 
-  // Daily-results standing: where this run places among the player's OWN prior attempts at today's
-  // daily tower (the store commits this run into highScores before game-over, so it's counted).
-  // Computed at the UI edge so the daily sim stays pure (it never reads the clock).
-  const dailyStand = dailyRun
-    ? dailyStanding(highScores, dailySeedPhrase(new Date()), runScore)
-    : null;
+  // Daily-results standing: where this run places among the player's OWN prior attempts at THIS
+  // run's daily tower. Use the seed phrase the run was ACTUALLY played on (from the world store) —
+  // NOT a re-derived dailySeedPhrase(new Date()): a run finishing just before UTC midnight would
+  // otherwise render against the NEXT day's seed (wrong/empty standing). The store already committed
+  // this run into highScores before game-over, so it's counted.
+  const dailyStand = dailyRun ? dailyStanding(highScores, seedPhrase, runScore) : null;
 
-  // Daily run → a shareable verification hash binding this result to today's seed (so a
-  // leaderboard can spot a score that doesn't match its seed). Only shown for a daily run.
+  // Daily run → a shareable verification hash binding this result to the run's seed. The date key
+  // comes from the run's own seed phrase ("blobolines-daily-<YYYY-MM-DD>"), again so a midnight
+  // rollover at render can't mislabel the tag with tomorrow's date.
+  const dailyDateKey = seedPhrase.replace(`${DAILY_NS}-`, "");
   const runTag = dailyRun
-    ? `Daily ${dailyKey(new Date())} · ${ROUTE_PROFILES[difficulty].label} · ${runHash({
+    ? `Daily ${dailyDateKey} · ${ROUTE_PROFILES[difficulty].label} · ${runHash({
         seed,
         height,
         crystals,

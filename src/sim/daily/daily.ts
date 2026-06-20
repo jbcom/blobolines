@@ -11,8 +11,10 @@ import type { WorldDifficulty } from "@/core/types";
  * the same.
  */
 
-/** Namespace prefix so the daily seed space can't collide with other seed strings. */
-const DAILY_NS = "blobolines-daily";
+/** Namespace prefix so the daily seed space can't collide with other seed strings. Exported so the
+ *  UI can recover a run's date key from its `blobolines-daily-<YYYY-MM-DD>` seed phrase without
+ *  re-reading the clock (which would mis-date a run that finishes across UTC midnight). */
+export const DAILY_NS = "blobolines-daily";
 
 /** YYYY-MM-DD in UTC for a date — the stable per-day key (UTC so a player's timezone doesn't
  *  shift which "day" they get, and the challenge rolls over at the same instant worldwide). */

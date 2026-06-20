@@ -118,6 +118,21 @@ describe("useGameStore", () => {
     expect(useGameStore.getState().progress.dailyStreak).toBe(1);
   });
 
+  it("never moves the streak anchor BACKWARD (backward-clock exploit guard)", () => {
+    // Simulate a stored future anchor (a player who set the clock forward, played, then set it back):
+    // lastDailyKey is in the year 3000, so today's key is lexicographically smaller. A daily commit
+    // must NOT overwrite the anchor with the older key (which would let them inflate the streak on
+    // clock-restore), and must NOT advance the streak.
+    useGameStore.setState((s) => ({
+      progress: { ...s.progress, dailyStreak: 9, lastDailyKey: "3000-01-01" },
+    }));
+    useGameStore.getState().setDailyRun(true);
+    useGameStore.getState().commitBestHeight(400);
+    const p = useGameStore.getState().progress;
+    expect(p.lastDailyKey).toBe("3000-01-01"); // anchor unchanged — never moved backward
+    expect(p.dailyStreak).toBe(9); // streak unchanged — not inflated
+  });
+
   it("unlockAchievements persists newly-met ids once and returns only the fresh ones", () => {
     // A 100m best unlocks "height-100"; the action returns it and stores it.
     const fresh = useGameStore.getState().unlockAchievements({
