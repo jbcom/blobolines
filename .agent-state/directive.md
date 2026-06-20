@@ -172,17 +172,17 @@ re-write directive forward → next.
 ## Queue — Milestone: Per-biome ambient audio aligned to canonical bands (branch feat/biome-ambient-audio)
 
 ### D0 Architecture
-- [ ] D0.1 audioCfg.ambientBands has a drifted 4-band split (0/200/600/950) covering only 4 of
-      the 6 canonical bands. Refactor ambientBandFor() in howler.ts to use biomeBandAt (single
-      source of truth) and map an ambient bed for ALL 6 bands (reuse nearest existing mp3 where
-      no dedicated bed exists, explicitly — no silent fallback). Record decision.
+- [x] D0.1 Decided (decisions.ndjson): biomeBandAt replaces the drifted ambientBands table;
+      all 6 canonical bands map to a bed in audio.json (ground→forest, sky/upper-atmosphere→
+      wind, stratosphere→strongwind, space/deep-space→space); setAmbientBand throws on an
+      unmapped band (no silent fallback).
 
 ### D1 Implementation
-- [ ] D1.1 Implement the band-aligned ambient bed mapping + crossfade; remove the drifted
-      ambientBands table. Source new beds (upper-atmosphere, deep-space) via the itch pipeline
-      if distinct beds improve identity, else map explicitly to a shared bed.
-- [ ] D1.2 Tests: ambient band resolution unit tests; audio-graph/browser test per the audio
-      coverage gate. typecheck + lint + test (+ test:browser if render/UI touched).
+- [x] D1.1 howler.ts uses biomeBandAt for the ambient band; removed ambientBandFor +
+      ambientBands; audio.json maps all 6 bands explicitly; setAmbientBand throws on unmapped.
+- [x] D1.2 Tests: extended sfx.test.ts ambient-lifecycle to cover all 6 band altitudes +
+      assert forest/space beds; new audioAmbient.test.ts config-coverage guard (every
+      canonical band mapped, no non-canonical names). typecheck + lint clean, 434 tests pass.
 
 ### D2 PR cutting point
 - [ ] D2.1 Open PR; address feedback; resolve threads; squash-merge; re-write directive forward.

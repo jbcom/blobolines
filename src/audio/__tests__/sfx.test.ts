@@ -194,11 +194,29 @@ describe("music + ambient lifecycle", () => {
     stopMusic();
   });
 
-  it("ambient bed follows the biome bands (ground → space) without throwing", () => {
+  it("ambient bed follows ALL 6 canonical biome bands without throwing", () => {
+    const loopPaths = () => {
+      const hs = (Howler as unknown as { _howls: Array<{ _loop: boolean; _src: string[] }> })
+        ._howls;
+      return hs
+        .filter((h) => h._loop)
+        .flatMap((h) => h._src)
+        .join(" ");
+    };
     startMusic();
+    // A representative altitude inside each canonical band (ground/sky/upper-atmosphere/
+    // stratosphere/space/deep-space). Every band must map to a bed — setAmbientBand throws
+    // on an unmapped band, so reaching all of them without throwing proves full coverage.
+    const bandAltitudes = [10, 150, 400, 700, 1000, 1500];
     expect(() => {
-      for (const y of [0, 250, 700, 1200, 100]) setMusicAltitude(y);
+      for (const y of bandAltitudes) setMusicAltitude(y);
     }).not.toThrow();
+    // Deep-space shares the space bed; confirm the cosmic bed is live up high.
+    setMusicAltitude(1500);
+    expect(loopPaths()).toContain("space.mp3");
+    // Returning to the ground band swaps back to the warm forest bed.
+    setMusicAltitude(0);
+    expect(loopPaths()).toContain("forest.mp3");
     stopMusic();
   });
 

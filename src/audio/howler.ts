@@ -1,5 +1,6 @@
 import { Howl, Howler } from "howler";
 import audioCfg from "@/config/audio.json";
+import { biomeBandAt } from "@/config/biomes";
 import type { TrampType } from "@/core/types";
 import { MAX_COMBO } from "@/sim/combo";
 import { padVoice } from "./padVoice";
@@ -232,18 +233,8 @@ export function playRecord(): void {
 // ── Music + ambient ────────────────────────────────────────────────────────────
 const musicTracks = audioCfg.music as Record<string, string>;
 const ambientBeds = audioCfg.ambient as Record<string, string>;
-const ambientBands = audioCfg.ambientBands;
 /** Above this altitude the in-game music swaps to the tense "high/space" track. */
 const MUSIC_HIGH_START = audioCfg.musicHighStart;
-
-/** The ambient-bed band name for a height (highest band whose minHeight is met). */
-function ambientBandFor(height: number): string {
-  let band = ambientBands[0].name;
-  for (const b of ambientBands) {
-    if (height >= b.minHeight) band = b.name;
-  }
-  return band;
-}
 
 /** Crossfade the music to `key` (a track in audioCfg.music); no-op if already on it. The old
  *  track fades out (scheduleStop) while the new one fades in (startBed). */
@@ -256,11 +247,15 @@ function setMusicTrack(key: string): void {
   music = startBed(path, musicTarget());
 }
 
-/** Swap the ambient bed to the band for `height` (per-biome bed); no-op if unchanged. */
+/** Swap the ambient bed to `band` (a canonical biome band, from biomeBandAt); no-op if
+ *  unchanged. Throws if the band has no bed mapped in audio.json — every canonical band must
+ *  map to a bed (no silent fallback; see [[blobolines-no-fallbacks]]). */
 function setAmbientBand(band: string): void {
   if (band === ambientBand) return;
   const path = ambientBeds[band];
-  if (!path) return;
+  if (!path) {
+    throw new Error(`setAmbientBand: no ambient bed mapped for biome band "${band}".`);
+  }
   if (ambient && ambientBeds[ambientBand]) scheduleStop(ambientBeds[ambientBand], ambient);
   ambientBand = band;
   ambient = startBed(path, ambientTarget());
@@ -330,7 +325,7 @@ export function setMusicAltitude(height: number): void {
   if (musicKey === "ingame" || musicKey === "highspace") {
     setMusicTrack(height >= MUSIC_HIGH_START ? "highspace" : "ingame");
   }
-  setAmbientBand(ambientBandFor(height));
+  setAmbientBand(biomeBandAt(height));
 }
 
 // ── Settings ─────────────────────────────────────────────────────────────────
