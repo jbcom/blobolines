@@ -864,8 +864,17 @@ milestones, so a 2000m crossing LOOKS as grand as it sounds.
       reviewer to dispatch.
 
 ### N13.3 PR cutting point
-- [ ] N13.3 Commit, dispatch reviewer, fold findings forward, open PR, babysit to squash-merge,
-      sync main, re-write directive forward to N14.
+- [x] N13.3a Committed (d56c79a), dispatched reviewer (background, focused on the clipboard handler
+      + the daily hash-vs-seed copy semantics), pushed, opened PR #81. Monitor armed. Ran
+      `npx biome ci .` as the last step before push.
+- [ ] [WAIT-REVIEW] N13.3b Babysit PR #81: wait CI green, fold reviewer + gemini/CodeRabbit findings
+      forward, resolve threads, squash-merge once green, sync main, then start N14.
+
+### N14 Next milestone (surface after #81 merges)
+- [ ] [WAIT-MERGE] N14.1 Pick the next polish unit. Keep adding small, real player-facing beats
+      (the game is comprehensively built; survey to avoid reinventing). Candidates to probe: more
+      GameOver share richness, an onboarding/first-run polish, a settings/quality option, or another
+      owned-audio/asset enrichment. Enumerate use cases + survey first.
 
 ### N9 Next milestone (surface after #76 merges)
 - [ ] [WAIT-MERGE] N9.1 Pick the next polish unit (don't pre-commit). Biome identity + docs are now

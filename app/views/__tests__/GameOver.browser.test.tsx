@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, expect, test } from "vitest";
+import { afterEach, beforeEach, expect, test, vi } from "vitest";
 import { cleanup, render } from "vitest-browser-react";
 import { dailySeedPhrase } from "@/sim/daily";
 import { useGameStore, useWorldStore } from "@/state";
@@ -120,18 +120,24 @@ test("a normal run shows its replay seed without the daily tag", async () => {
   await expect.element(screen.getByText("Seed bouncy-bright-blob")).toBeInTheDocument();
 });
 
-test("the seed line is a labelled copy-seed button (replay this exact tower)", async () => {
+test("the seed line is a labelled copy-seed button that copies the seed + confirms", async () => {
   useWorldStore.setState({ seed: 12345, seedPhrase: "bouncy-bright-blob" });
   useGameStore.setState({ dailyRun: false });
+  // Stub the clipboard so the copy resolves deterministically (real clipboard.writeText is
+  // permission-gated in headless) — then we can assert both the WRITTEN value and the confirmation.
+  const writeText = vi.fn().mockResolvedValue(undefined);
+  vi.stubGlobal("navigator", { ...navigator, clipboard: { writeText } });
+
   const screen = await render(<GameOver />);
-  // The seed line is a button whose accessible name carries the seed for replay — and it still
-  // shows the seed phrase text. Clicking it must not throw (clipboard write is best-effort: it's
-  // permission/availability-gated in headless, and the handler swallows a denial; the point of the
-  // test is that the affordance is present, labelled for replay, and clickable).
   const copyBtn = screen.getByRole("button", { name: /copy seed bouncy-bright-blob/i });
   await expect.element(copyBtn).toBeInTheDocument();
   await expect.element(screen.getByText("Seed bouncy-bright-blob")).toBeInTheDocument();
+
   await copyBtn.click();
+  expect(writeText).toHaveBeenCalledWith("bouncy-bright-blob"); // copies the SEED phrase
+  await expect.element(screen.getByText("Seed copied!")).toBeInTheDocument(); // flips to confirm
+
+  vi.unstubAllGlobals();
 });
 
 test("daily run, first attempt → 'first climb' standing", async () => {

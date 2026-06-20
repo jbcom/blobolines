@@ -290,7 +290,13 @@ export function GameOver() {
             onClick={copySeed}
             // Tap the seed line to copy this run's seed — replay this exact tower or share it.
             className="pointer-events-auto flex items-center gap-1.5 rounded-lg px-2 py-1 text-center font-ui text-xs font-semibold text-fg-subtle tabular-nums hover:bg-bg/40"
-            aria-label={`Copy seed ${seedPhrase} to replay this tower`}
+            // For a daily run the seed phrase is an opaque internal namespaced string, so the label
+            // stays generic; a normal run reads out its human seed (what you'd paste to replay).
+            aria-label={
+              dailyRun
+                ? "Copy today's daily seed to replay this tower"
+                : `Copy seed ${seedPhrase} to replay this tower`
+            }
           >
             {seedCopied ? (
               <>
