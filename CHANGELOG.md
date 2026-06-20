@@ -1,5 +1,27 @@
 # Changelog
 
+## [0.1.12](https://github.com/jbcom/blobolines/compare/blobolines-v0.1.11...blobolines-v0.1.12) (2026-06-20)
+
+
+### Features
+
+* **audio:** align ambient beds to the canonical biome bands ([#61](https://github.com/jbcom/blobolines/issues/61)) ([4811d44](https://github.com/jbcom/blobolines/commit/4811d4490b8931bacdb7f5eda6922326cd27c7a7))
+* **audio:** escalating victory stingers by milestone tier ([#78](https://github.com/jbcom/blobolines/issues/78)) ([31ce694](https://github.com/jbcom/blobolines/commit/31ce6944639a4cbec0bb99a711a87bf5d87d5221))
+* **audio:** per-biome music — each band gets its own upbeat track ([#77](https://github.com/jbcom/blobolines/issues/77)) ([be54b08](https://github.com/jbcom/blobolines/commit/be54b08f6eb815879d0f1ccebb28c90f20274e3b))
+* biome-band banner + daily 'Today's tower' standing ([#70](https://github.com/jbcom/blobolines/issues/70)) ([b670cad](https://github.com/jbcom/blobolines/commit/b670cad3722fe026a39dd62f2aa501ada73b7bee))
+* **collect:** rare treasure-tier jackpot pickup ([#67](https://github.com/jbcom/blobolines/issues/67)) ([4dee63f](https://github.com/jbcom/blobolines/commit/4dee63f11c4b8b8e6bc0db74cac588f425510460))
+* data-driven biome scenery & per-biome ambience (+ air nudge / achievement toasts) ([#59](https://github.com/jbcom/blobolines/issues/59)) ([4624d7c](https://github.com/jbcom/blobolines/commit/4624d7c8767f99a3ebd474ee44fb432c73898c33))
+* **dev:** blob altitude teleport for biome-band QA ([#65](https://github.com/jbcom/blobolines/issues/65)) ([69f09ed](https://github.com/jbcom/blobolines/commit/69f09ed95b570658956794a897dac7d7cb614f0b))
+* **gameover:** make the seed line a one-tap copy-seed button ([#81](https://github.com/jbcom/blobolines/issues/81)) ([8141f3f](https://github.com/jbcom/blobolines/commit/8141f3f32f537a629daf4dbbbfba69988d950ca8))
+* **progression:** unlock cosmetic skins by earning achievements ([#66](https://github.com/jbcom/blobolines/issues/66)) ([4072b5e](https://github.com/jbcom/blobolines/commit/4072b5e182393982762ebfd7e5549dc10645d579))
+* **scene:** parallax depth layers for the biome scenery ([#63](https://github.com/jbcom/blobolines/issues/63)) ([155a2b6](https://github.com/jbcom/blobolines/commit/155a2b609a47366bceab7bacb2a240ac9aecb9f1))
+* **scene:** per-biome particle grain (size + drift) ([#64](https://github.com/jbcom/blobolines/issues/64)) ([92175f5](https://github.com/jbcom/blobolines/commit/92175f5b14b98ef4080c4559b1331392bab1cebc))
+* **scenery:** enrich biome prop variety (+2 per band) from the NAS library ([#74](https://github.com/jbcom/blobolines/issues/74)) ([3a2597a](https://github.com/jbcom/blobolines/commit/3a2597a727b57823feb3539d16e70b33bfc169bf))
+* **scenery:** flyby glint — near props brighten as the blob catches them ([#73](https://github.com/jbcom/blobolines/issues/73)) ([a5b5756](https://github.com/jbcom/blobolines/commit/a5b5756d3a740a0ee5352022f7edc7a63285d16e))
+* **scenery:** flyby pulse — near props spike as the blob shoots past ([#72](https://github.com/jbcom/blobolines/issues/72)) ([8d5e875](https://github.com/jbcom/blobolines/commit/8d5e875d7ae4cae13530498cfcc5fcbcb0002851))
+* **scenery:** near-layer props react to the blob rushing past ([#71](https://github.com/jbcom/blobolines/issues/71)) ([21468f9](https://github.com/jbcom/blobolines/commit/21468f9e88a013dbc76ee7503223fb5ffe7b9702))
+* **scenery:** per-band hero landmarks anchor each biome's identity ([#75](https://github.com/jbcom/blobolines/issues/75)) ([a8b4193](https://github.com/jbcom/blobolines/commit/a8b41930176a6fe65e0811176d8ca18ad2d7317a))
+
 ## [0.1.11](https://github.com/jbcom/blobolines/compare/blobolines-v0.1.10...blobolines-v0.1.11) (2026-06-19)
 
 
