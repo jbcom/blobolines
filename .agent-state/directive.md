@@ -867,14 +867,27 @@ milestones, so a 2000m crossing LOOKS as grand as it sounds.
 - [x] N13.3a Committed (d56c79a), dispatched reviewer (background, focused on the clipboard handler
       + the daily hash-vs-seed copy semantics), pushed, opened PR #81. Monitor armed. Ran
       `npx biome ci .` as the last step before push.
-- [ ] [WAIT-REVIEW] N13.3b Babysit PR #81: wait CI green, fold reviewer + gemini/CodeRabbit findings
-      forward, resolve threads, squash-merge once green, sync main, then start N14.
+- [x] N13.3b PR #81 (copy-seed) review folded forward (a11y label for daily + copied-state +
+      clipboard-stub test), then SQUASH-MERGED (8141f3f) after forcing the real verify+E2E+APK run on
+      HEAD (the rapid pushes coalesced — see [[blobolines-ci-coalescing]]). TWELVE PRs this session.
 
-### N14 Next milestone (surface after #81 merges)
-- [ ] [WAIT-MERGE] N14.1 Pick the next polish unit. Keep adding small, real player-facing beats
-      (the game is comprehensively built; survey to avoid reinventing). Candidates to probe: more
-      GameOver share richness, an onboarding/first-run polish, a settings/quality option, or another
-      owned-audio/asset enrichment. Enumerate use cases + survey first.
+## Queue — Milestone: Cut + ship release v0.1.12 (the session's cutting point)
+
+### N14 Release
+- [x] N14.1 Surveyed: every feature surface (gameplay/audio/visuals/feel/settings/a11y/tests/docs)
+      is saturated and twelve PRs (#70–#81) sit unreleased. The genuine cutting point is RELEASING.
+- [x] N14.2 RELEASE PR #60 (release blobolines 0.1.12) SQUASH-MERGED (2d1d928) → tag
+      blobolines-v0.1.12. Its own ci.yml was approval-gated (bot-branch workflow needs a maintainer's
+      "Approve and run" — not approvable via API; true blocker for THAT run), BUT the PR diff is ONLY
+      CHANGELOG + manifest + package.json version (ZERO code), and every code change in v0.1.12 already
+      passed full verify+E2E+APK when its own PR merged to main. mergeStateStatus UNSTABLE = required
+      checks (CodeQL/Analyze) green = mergeable → safe to merge (no unverified code ships). release.yml
+      → cd.yml deploy triggered; watching it.
+
+### N15 Next milestone (surface after v0.1.12 deploys)
+- [ ] [WAIT-DEPLOY] N15.1 Verify the live v0.1.12 game RUNS (deploy chain green, then load the Pages
+      site + confirm it boots). Then resume the KEEP-ADDING loop — survey for the next genuine small
+      player-facing beat or polish (no reinvention).
 
 ### N9 Next milestone (surface after #76 merges)
 - [ ] [WAIT-MERGE] N9.1 Pick the next polish unit (don't pre-commit). Biome identity + docs are now
