@@ -53,6 +53,9 @@ export interface GameState {
   dailyRun: boolean;
 
   setPhase: (phase: GamePhase) => void;
+  /** Toggle the in-run pause: playing→paused / paused→playing. A no-op in any other phase (you
+   *  can't pause the menu or the game-over screen). */
+  togglePause: () => void;
   setCustomizerIntent: (open: boolean) => void;
   setDailyRun: (daily: boolean) => void;
   updateSettings: (patch: Partial<GameSettings>) => void;
@@ -158,6 +161,12 @@ export const useGameStore = create<GameState>((set) => ({
   dailyRun: false,
 
   setPhase: (phase) => set({ phase }),
+  togglePause: () =>
+    set((s) => {
+      if (s.phase === "playing") return { phase: "paused" };
+      if (s.phase === "paused") return { phase: "playing" };
+      return {}; // menu / gameover: not pausable
+    }),
   setCustomizerIntent: (open) => set({ customizerIntent: open }),
   setDailyRun: (daily) => set({ dailyRun: daily }),
 

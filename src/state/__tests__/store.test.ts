@@ -37,6 +37,22 @@ describe("useGameStore", () => {
     expect(useGameStore.getState().phase).toBe("playing");
   });
 
+  it("togglePause flips playing↔paused and is a no-op on menu/gameover", () => {
+    const { setPhase, togglePause } = useGameStore.getState();
+    setPhase("playing");
+    togglePause();
+    expect(useGameStore.getState().phase).toBe("paused"); // playing → paused
+    togglePause();
+    expect(useGameStore.getState().phase).toBe("playing"); // paused → playing
+    // Not pausable from the menu or after game over.
+    setPhase("menu");
+    togglePause();
+    expect(useGameStore.getState().phase).toBe("menu");
+    setPhase("gameover");
+    togglePause();
+    expect(useGameStore.getState().phase).toBe("gameover");
+  });
+
   it("updateSettings patches only provided keys", () => {
     useGameStore.getState().updateSettings({ masterVolume: 0.5 });
     const { settings } = useGameStore.getState();

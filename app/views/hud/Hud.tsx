@@ -10,6 +10,7 @@ import { LaunchInput } from "./LaunchInput";
 import { MilestoneBanner } from "./MilestoneBanner";
 import { NextPadRadar } from "./NextPadRadar";
 import { Onboarding } from "./Onboarding";
+import { PauseButton } from "./PauseButton";
 import { PowerUpBadges } from "./PowerUpBadges";
 import { RouteLandingToast } from "./RouteLandingToast";
 import { ScreenFlash } from "./ScreenFlash";
@@ -77,9 +78,9 @@ export function Hud() {
           <PowerUpBadges />
           <AirNudgeIndicator />
         </div>
-        {/* top-right: crystals */}
+        {/* top-right: crystals + the pause control beneath them */}
         <div
-          className="absolute"
+          className="absolute flex flex-col items-end gap-2"
           style={{
             top: "calc(var(--safe-top) + 0.75rem)",
             right: "calc(var(--safe-right) + 1rem)",
@@ -88,6 +89,7 @@ export function Hud() {
           }}
         >
           <CrystalCounter />
+          <PauseButton />
         </div>
         {/* lower-left: next-pad spatial radar. Sits above the safe area and away from the
             center launch-power affordance, while pointer-events remain disabled. */}

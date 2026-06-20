@@ -8,7 +8,7 @@ import type { BlobSkin, TrampType } from "@/styles/tokens";
 export type { BlobSkin, TrampType } from "@/styles/tokens";
 
 /** High-level game lifecycle. */
-export type GamePhase = "menu" | "playing" | "gameover";
+export type GamePhase = "menu" | "playing" | "paused" | "gameover";
 
 /** A 3D vector as a plain tuple (sim-friendly, serializable). */
 export type Vec3 = readonly [x: number, y: number, z: number];
