@@ -128,10 +128,14 @@ re-write directive forward → next.
       never the cause. → This blocks ALL merges, so fixing it is the real unblock.
 
 ### C3 Fix the pre-existing CI E2E instability (unblocks all PRs)
-- [ ] C3.1 stuck-loop-debugger (aafb61fe) finding root cause of the SwiftShader page-close +
-      a deterministic fix (candidates: run E2E against `vite preview` of a prod build vs
-      `pnpm dev`; renderer context-loss guard; scope perf budget; reduce postfx under a CI
-      flag; shm sizing). Implement, verify locally, push, get CI green.
+- [x] C3.1 ROOT CAUSE FOUND (stuck-loop-debugger): CI's 64MB /dev/shm OOM-kills the
+      Chromium renderer under SwiftShader (WebGL RTs + preserveDrawingBuffer + dev-harness
+      toDataURL readbacks route through shm; route-proof dying at 3/8 captures is the
+      progressive-exhaustion signature). FIX (368f0c4): added --disable-dev-shm-usage +
+      --disable-gpu-sandbox to Playwright Chromium launch args + a config-source regression
+      test. Local Docker repro was unreliable (QEMU amd64 segfaults, flaky arm64 webServer)
+      so CI is the verifier; fix is the canonical, evidence-matched shm fix. 432 unit + 5
+      local E2E green.
 - [ ] [WAIT] C3.2 Once C3.1 lands and CI is green, squash-merge PR #59, then re-write
       directive forward to the per-biome ambient-audio milestone (D0, on a fresh branch).
 
