@@ -446,8 +446,9 @@ biomeBandAt + the banner pattern.
 - [x] M2.1c-feedback Addressed gemini HIGH on PR #70: BiomeBanner subscribed to run.height
       (~60fps re-renders); moved biomeBandAt INTO the Zustand selector so it only re-renders on a
       band change (commit e87e280). Thread resolved; 3 banner fixtures still pass.
-- [ ] [WAIT-REVIEW] M2.1d Wait CI green on e87e280, then squash-merge PR #70 + sync local main.
-      Then start the next milestone (N2 below).
+- [x] M2.1d PR #70 SQUASH-MERGED (b670cad, 2026-06-20). All gates CLEAN, 0 unresolved threads,
+      gemini perf thread resolved. Local main synced to b670cad; cut fresh branch
+      feat/reactive-scenery for N2. Biome-band banner + daily "Today's tower" standing shipped.
 
 ## Queue — Milestone: Interactive scenery (blob-reactive props) (branch feat/reactive-scenery)
 
@@ -475,10 +476,20 @@ ignore the blob entirely. Make the NEAR layer come alive when the blob rushes pa
       stays reproducible. NEXT: N2.2 implement the reaction in ScenicInstance + a unit test for
       the pure influence/lean math (extract it as a tiny pure helper) + a browser fixture; visual
       QA via teleport + claude-in-chrome.
-- [ ] [BLOCKED-ON-MERGE] N2.2 After PR #70 merges, on fresh branch feat/reactive-scenery: extract
-      a pure `sceneryReaction(blobPos, blobVel, propPos)` helper (lean angle + scale-pop +
-      influence), unit-test it, wire it into ScenicInstance's near-layer useFrame, add a browser
-      fixture, visual-verify, PR.
+- [x] N2.2 DONE. Pure `sceneryReaction(blobPos, blobVel, propPos)` in src/render/vfx/ →
+      { influence, lean, pop }: distance falloff × speed scale, leans the prop AWAY from the blob
+      (X-sign), small scale-pop, clamped to config maxima; depth (Z) ignored (X/Y near-miss plane).
+      7 unit tests (rest beyond radius, rises on approach, lean direction, speed-scaling, no-shove
+      when still, clamp, Z-ignored). Wired into ScenicInstance useFrame NEAR-LAYER ONLY with an
+      eased ref-lerp springback (far/mid backdrop untouched; no new draw call / state / RNG).
+      Browser fixture drives a fast blob at a near prop and asserts rotation.z/scale leave rest.
+      486 unit + 118 browser green; typecheck + lint clean. (Reaction is motion-only / rAF-gated,
+      so the browser fixture is the authoritative visual proof — a backgrounded-tab static
+      screenshot can't capture the spring.)
+
+### N3 PR cutting point
+- [ ] N3.1 Commit, dispatch reviewer, fold findings forward, open PR for feat/reactive-scenery,
+      babysit to squash-merge, sync main, re-write directive forward.
 
 ## Queue — Milestone: Daily-challenge results polish (branch feat/daily-results, NEXT)
 
