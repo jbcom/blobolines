@@ -136,6 +136,11 @@ test("the seed line is a labelled copy-seed button that copies the seed + confir
   await copyBtn.click();
   expect(writeText).toHaveBeenCalledWith("bouncy-bright-blob"); // copies the SEED phrase
   await expect.element(screen.getByText("Seed copied!")).toBeInTheDocument(); // flips to confirm
+  // The accessible name updates too, so a screen reader announces the copied state (not the stale
+  // "Copy seed…").
+  await expect
+    .element(screen.getByRole("button", { name: /seed copied to clipboard/i }))
+    .toBeInTheDocument();
 
   vi.unstubAllGlobals();
 });
