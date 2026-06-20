@@ -437,8 +437,25 @@ biomeBandAt + the banner pattern.
       dispatched (fold findings forward).
 
 ### M2 PR cutting point
-- [ ] M2.1 Reviewer findings folded forward → open PR; babysit to squash-merge; re-write directive
-      forward to the next milestone.
+- [x] M2.1a Reviewer returned CLEAN (every flagged concern self-resolved). PR #70 opened
+      (feat/biome-banner pushed, body written). Monitor armed on PR #70 CI checks.
+- [ ] [WAIT-REVIEW] M2.1b Babysit PR #70: wait CI green, address any gemini/CodeRabbit threads
+      (fold forward + resolve), squash-merge once green, sync local main. Then start N0.
+
+## Queue — Milestone: Daily-challenge results polish (branch feat/daily-results, NEXT)
+
+The daily challenge already exists (dailyRun flag, seedPhrase, leaderboard high-scores) but the
+RESULTS moment is thin — a daily run ends like any run. Give the daily its own payoff: surface on
+the GameOver card whether this was a daily run, the seed phrase played, and the player's daily
+placement vs. their own high-score history for that day's seed. Data-driven off the existing
+store (dailyRun + highScores + seedPhrase); no new assets; pure UI + a small selector. Enumerate
+use cases (first daily of the day vs. repeat attempt vs. new personal daily best) before building.
+
+### N0 Architecture
+- [ ] N0.1 Read GameOver card + daily store fields (dailyRun, seedPhrase, highScores schema) +
+      the existing leaderboard render. Enumerate the daily-results use cases; decide a pure
+      selector (daily placement / personal-best-for-seed) + the GameOver daily section shape.
+      Record decision in decisions.ndjson.
 
 ## Notes
 - This is a living plan. After every stage, backward+forward sweep and edit the queue.
