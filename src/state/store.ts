@@ -41,6 +41,11 @@ export interface RunStats {
   scoreDelta: number;
   /** Achievements unlocked during this run. */
   unlockedAchievements: string[];
+  /** The new daily-streak length IFF this run EXTENDED the streak (yesterday → today); 0 otherwise
+   *  (a non-daily run, a same-day replay that didn't grow it, or a broken/restarted streak). Lets the
+   *  game-over card celebrate the extension ("Streak extended to N!") rather than just show the count.
+   *  Set by commitBestHeight from nextDailyStreak's `extended` flag. */
+  streakExtended: number;
 }
 
 export interface GameState {
@@ -114,6 +119,7 @@ const EMPTY_RUN: RunStats = {
   stylePoints: 0,
   scoreDelta: 0,
   unlockedAchievements: [],
+  streakExtended: 0,
 };
 
 /**
@@ -301,12 +307,6 @@ export const useGameStore = create<GameState>((set) => ({
         .sort((a, b) => b.score - a.score)
         .slice(0, 5);
 
-      const nextRun: RunStats = {
-        ...s.run,
-        recordDelta,
-        score: runScore,
-        scoreDelta,
-      };
       // Daily-challenge streak: only TODAY'S daily run advances it. nextDailyStreak extends it on a
       // next-day play, leaves it on a same-day replay, and resets it after a missed day. A non-daily
       // run — OR a replay of a PAST day's daily tower (from the Hall-of-Fame Replay button) — leaves
@@ -336,6 +336,17 @@ export const useGameStore = create<GameState>((set) => ({
       const nextDailyBests = isTodaysDaily
         ? recordDailyBest(s.progress.dailyBests ?? {}, todayKey, runScore)
         : null;
+
+      const nextRun: RunStats = {
+        ...s.run,
+        recordDelta,
+        score: runScore,
+        scoreDelta,
+        // Celebrate a genuine extension only: the streak grew (extended) AND we actually advanced
+        // the anchor (not a backward-clock no-op). The game-over card reads this to show the
+        // "Streak extended to N!" flourish instead of the plain count.
+        streakExtended: advanceStreak && streak?.extended ? streak.streak : 0,
+      };
 
       const nextProgress: PlayerProgress = {
         ...s.progress,

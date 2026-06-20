@@ -1337,6 +1337,15 @@ drop most days). A 7-day daily-best trend in the Hall-of-Fame.
   presence). Pivot to gameplay FEEL or codebase/test quality — do NOT keep stacking daily-system UI.
 - Candidates to survey (not pre-committed): a juicier cloud-catch feedback beat, a new pad behaviour
   variant, an asset-server scenery/prop enrichment for a sparse band, a settings/accessibility option.
+- [x] N29: Streak-EXTENSION celebration. `nextDailyStreak` already computed `extended`/`brokeStreak`
+      but the store DISCARDED them — they never reached the UI, so a freshly-extended streak looked
+      identical to a static count. Now `RunStats.streakExtended` carries the new streak length on a
+      genuine extension (gated on advanceStreak && streak.extended), and GameOver shows a celebratory
+      gold "Streak extended to N!" pop (spring, reduced-motion-aware) instead of the calm "N-day
+      streak". Tests: 2 store (genuine-extension flags it; same-day replay + non-daily don't) + 1
+      GameOver browser (celebration shows, plain count suppressed). 563 unit / 150 browser green;
+      typecheck + pinned lint clean. (Visual: store not page-reachable for a seeded screenshot — the
+      3 deterministic browser tests assert the text + suppression; styling = standard gold tokens.)
 
 ## Notes
 - This is a living plan. After every stage, backward+forward sweep and edit the queue.

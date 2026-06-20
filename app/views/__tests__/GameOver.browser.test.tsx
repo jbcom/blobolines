@@ -30,6 +30,7 @@ beforeEach(() => {
       stylePoints: 0,
       scoreDelta: 0,
       unlockedAchievements: [],
+      streakExtended: 0,
     },
     progress: {
       ...useGameStore.getState().progress,
@@ -133,6 +134,21 @@ test("a DAILY run shows the daily streak badge", async () => {
   await expect.element(screen.getByText(/5-day streak/)).toBeInTheDocument();
 });
 
+test("a run that EXTENDED the streak celebrates it instead of showing the plain count", async () => {
+  // run.streakExtended > 0 means this run grew the streak (yesterday → today) → the card shows the
+  // celebratory "Streak extended to N!" beat rather than the calm "N-day streak" line.
+  useWorldStore.setState({ seed: 1, seedPhrase: todayPhrase });
+  useGameStore.setState((s) => ({
+    dailyRun: true,
+    run: { ...s.run, streakExtended: 5 },
+    progress: { ...s.progress, dailyStreak: 5, highScores: [dailyScore(1000)] },
+  }));
+  const screen = await render(<GameOver />);
+  await expect.element(screen.getByText(/Streak extended to 5!/)).toBeInTheDocument();
+  // The calm count line is NOT shown when celebrating an extension.
+  await expect.element(screen.getByText(/^5-day streak$/).query()).not.toBeInTheDocument();
+});
+
 test("a normal run shows NO daily streak badge", async () => {
   useWorldStore.setState({ seed: 12345, seedPhrase: "bouncy-bright-blob" });
   useGameStore.setState((s) => ({ dailyRun: false, progress: { ...s.progress, dailyStreak: 5 } }));
@@ -229,6 +245,7 @@ test("celebrates a height record instead of a short-by delta", async () => {
       stylePoints: 0,
       scoreDelta: 0,
       unlockedAchievements: [],
+      streakExtended: 0,
     },
     progress: { ...useGameStore.getState().progress, bestHeight: 150, bestScore: 9000 },
   });
@@ -251,6 +268,7 @@ test("celebrates a SCORE record even without a height record", async () => {
       stylePoints: 0,
       scoreDelta: 450,
       unlockedAchievements: [],
+      streakExtended: 0,
     },
     progress: { ...useGameStore.getState().progress, bestHeight: 134, bestScore: 7200 },
   });
