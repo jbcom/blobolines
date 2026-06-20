@@ -1,5 +1,5 @@
-import { palette } from "@/styles/tokens";
-import { biomeBands } from "./biomes";
+import { mixHex, palette } from "@/styles/tokens";
+import { biomeBandAt, biomeBands } from "./biomes";
 
 /**
  * Data-driven biome scenery registry. Each canonical biome band (from biomes.json, via
@@ -124,6 +124,51 @@ export const biomePropRegistry: BiomePropSet[] = biomeBands.map((band) => {
 export function propSetForBand(bandName: string): BiomePropSet | undefined {
   return biomePropRegistry.find((set) => set.band === bandName);
 }
+
+/** Atmospheric ambience per band — the drifting ambient-mote tint + opacity that gives each
+ *  stratum its own air. Keyed by canonical band name and resolved via `biomeBandAt`, so the
+ *  recolor shares the single-source-of-truth band logic instead of drifted height magic. */
+export interface BiomeAmbience {
+  /** Ambient mote color for this band. */
+  mote: string;
+  /** Ambient mote opacity for this band. */
+  opacity: number;
+}
+
+const AMBIENCE: Record<string, BiomeAmbience> = {
+  // Warm petals drift over the sunny ground.
+  ground: { mote: mixHex(palette.goo.flame, palette.cream, 0.4), opacity: 0.5 },
+  // Icy-cream wind motes through the daylight sky.
+  sky: { mote: palette.cream, opacity: 0.5 },
+  // Golden pollen haze in the upper atmosphere.
+  "upper-atmosphere": { mote: mixHex(palette.tramp.ice, palette.cream, 0.3), opacity: 0.48 },
+  // Mystical blush spores in the fungal stratosphere.
+  stratosphere: { mote: mixHex(palette.cloud.blush, palette.cream, 0.25), opacity: 0.46 },
+  // Nebula-violet dust as the sky gives way to space.
+  space: { mote: mixHex(palette.tramp.violet, palette.cream, 0.35), opacity: 0.5 },
+  // Cold cosmic glimmer in deep space.
+  "deep-space": { mote: mixHex(palette.cloud.bubble, palette.cloud.vortex, 0.45), opacity: 0.52 },
+};
+
+/** Ambient-mote ambience for the band containing world height `h`. Throws if the band has
+ *  no ambience defined — a config gap to surface loudly, not fall back silently. */
+export function biomeAmbienceAt(h: number): BiomeAmbience {
+  const band = biomeBandAt(h);
+  const ambience = AMBIENCE[band];
+  if (!ambience) {
+    throw new Error(`biomeAmbienceAt: no ambience defined for biome band "${band}".`);
+  }
+  return ambience;
+}
+
+/** Every canonical band's ambience, in band order — for exhaustive testing. */
+export const biomeAmbience: BiomeAmbience[] = biomeBands.map((band) => {
+  const ambience = AMBIENCE[band.name];
+  if (!ambience) {
+    throw new Error(`biomeAmbience: no ambience defined for biome band "${band.name}".`);
+  }
+  return ambience;
+});
 
 /** Every GLB file referenced by the registry — used for preloading. */
 export const allBiomePropFiles: string[] = biomePropRegistry.flatMap((set) =>

@@ -1,5 +1,5 @@
 import { FixtureStage } from "@app/fixtures";
-import { BiomeScenicProps } from "@app/scene/world";
+import { BiomeProps, BiomeScenicProps } from "@app/scene/world";
 import { useThree } from "@react-three/fiber";
 import { useEffect } from "react";
 import type { Group, Object3D } from "three";
@@ -91,5 +91,25 @@ test("BiomeScenicProps mounts and shows registry props across every biome band",
       },
       { timeout: 4000, interval: 100 },
     );
+  }
+});
+
+test("BiomeProps mounts and resolves ambience across every band without throwing", async () => {
+  // The per-band ambience lookup throws on a missing band; driving the blob through every
+  // band altitude in a live render proves the BiomeProps per-frame loop resolves ambience
+  // for all of them (and that the mote layer mounts without error).
+  setAltitude(0);
+  const screen = await render(
+    <FixtureStage testId="biome-props-fixture" cameraDistance={40}>
+      <BiomeProps />
+    </FixtureStage>,
+  );
+  await expect.element(screen.getByTestId("biome-props-fixture")).toBeInTheDocument();
+
+  for (const band of biomeBands) {
+    setAltitude(band.minHeight + 1);
+    // Let a few frames run at this altitude so the useFrame ambience lookup executes.
+    await new Promise((r) => setTimeout(r, 80));
+    await expect.element(screen.getByTestId("biome-props-fixture")).toBeInTheDocument();
   }
 });

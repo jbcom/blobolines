@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { allBiomePropFiles, biomePropRegistry, propSetForBand } from "../biomeProps";
+import {
+  allBiomePropFiles,
+  biomeAmbience,
+  biomeAmbienceAt,
+  biomePropRegistry,
+  propSetForBand,
+} from "../biomeProps";
 import { biomeBands } from "../biomes";
 
 /** The GLBs that actually exist on disk, enumerated by Vite at import time. Keyed by path
@@ -67,6 +73,35 @@ describe("biomePropRegistry", () => {
     expect(onDiskGlbs.size, "expected biome GLBs to be discovered on disk").toBeGreaterThan(0);
     for (const file of allBiomePropFiles) {
       expect(onDiskGlbs.has(file), `${file} missing on disk`).toBe(true);
+    }
+  });
+});
+
+describe("biomeAmbience", () => {
+  it("defines ambience for every canonical band with a valid color and opacity", () => {
+    expect(biomeAmbience).toHaveLength(biomeBands.length);
+    for (const a of biomeAmbience) {
+      expect(a.mote, "mote color").toMatch(/^#[0-9a-fA-F]{6}$/);
+      expect(a.opacity).toBeGreaterThan(0);
+      expect(a.opacity).toBeLessThanOrEqual(1);
+    }
+  });
+
+  it("resolves ambience at a representative altitude for each band, matching band order", () => {
+    biomeBands.forEach((band, i) => {
+      expect(biomeAmbienceAt(band.minHeight + 1)).toEqual(biomeAmbience[i]);
+    });
+  });
+
+  it("resolves below-ground and very-high altitudes to the edge bands", () => {
+    expect(biomeAmbienceAt(-100)).toEqual(biomeAmbience[0]);
+    expect(biomeAmbienceAt(99999)).toEqual(biomeAmbience[biomeAmbience.length - 1]);
+  });
+
+  it("gives adjacent bands visibly distinct mote tints", () => {
+    // The whole point of per-band ambience: no two neighbours share a tint.
+    for (let i = 0; i < biomeAmbience.length - 1; i++) {
+      expect(biomeAmbience[i].mote).not.toBe(biomeAmbience[i + 1].mote);
     }
   });
 });

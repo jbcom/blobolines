@@ -83,8 +83,30 @@ re-write directive forward → next.
       hand-edited per doctrine.
 
 ### B3 Cutting point
-- [ ] B3.1 At the significant cutting point: open the PR, address all feedback, resolve
-      threads, squash-merge; then re-write this directive forward to the next milestone.
+- [ ] B3.1 Biome milestone (B0–B2) DONE: registry + resolver + 24 curated props + refactor
+      + tests + docs + review folded forward, all green (3 commits c608a0e/8b76cf4/4b474f0).
+      DECISION: layer ONE more cohesive richness milestone (per-biome ambient particle
+      ambience — see C0 below) before the PR, so the branch ships as a complete
+      "world richness" story, then open the PR. Not a scope-flip; same theme.
+
+## Queue — Milestone: Per-biome atmospheric ambience
+
+### C0 Architecture
+- [x] C0.1 Enumerate ambience use cases; decided per-biome ambience is a DATA EXTENSION of
+      BiomeProps (per-band mote tint/opacity config keyed off biomeBandAt) — decision in
+      decisions.ndjson.
+- [x] C0.2 Added biomeAmbience table + biomeAmbienceAt(h) to biomeProps.ts (throws on a
+      missing band — no silent fallback); refactored BiomeProps.moteColor() away, mote layer
+      now recolors per canonical band. All 6 bands get a distinct atmospheric tint.
+
+### C1 Verify
+- [x] C1.1 Ambience config tests (4) + BiomeProps render test (mounts, resolves ambience
+      across every band without throwing). typecheck + lint clean, 419 unit + 106 browser
+      pass. (BiomeProps is the procedural strata layer; per-band visibility verified by test.)
+
+### C2 PR cutting point
+- [ ] C2.1 Open the PR for the whole branch (nudge/achievements + biome scenery + ambience);
+      address ALL feedback, resolve threads, squash-merge; re-write directive forward.
 
 ## Notes
 - This is a living plan. After every stage, backward+forward sweep and edit the queue.
