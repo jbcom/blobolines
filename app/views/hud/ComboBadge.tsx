@@ -12,8 +12,10 @@ import { palette } from "@/styles/tokens";
  * multiplier (comboMultiplier).
  */
 
-/** Visual escalation keyed on the streak length. */
+/** Visual escalation keyed on the streak length. The top "BLAZING" tier rewards the high combos the
+ *  raised MAX_COMBO (12) now allows, so reaching for 10+ feels distinct from a mid streak. */
 function comboTier(combo: number): { color: string; label: string; scale: number; glow: number } {
+  if (combo >= 10) return { color: palette.tramp.violet, label: "BLAZING", scale: 1.42, glow: 30 };
   if (combo >= 7) return { color: palette.goo.flame, label: "ON FIRE", scale: 1.28, glow: 22 };
   if (combo >= 5) return { color: palette.tramp.orange, label: "ON FIRE", scale: 1.14, glow: 14 };
   return { color: palette.tramp.gold, label: "Clean combo", scale: 1, glow: 6 };

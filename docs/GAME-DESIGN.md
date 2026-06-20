@@ -192,9 +192,9 @@ first launch, but every grounded launch belongs to a player hold-release.
 | `FIXED_DT` (engine) | `1/60` | Fixed sim timestep |
 
 Launch power (`src/sim/launch`): `dir × (BASE_POWER 14 + charge × 17.5) ×
-launchMultiplier × comboMultiplier`. Combo multiplier: `1 + (streak−1) × 0.15`,
-streak capped at 8. Cloud catches adhere and score; they do not auto-bounce into the
-next launch.
+launchMultiplier × comboMultiplier`. Combo multiplier: `1 + (streak − comboStart + 1) ×
+comboStep` (anchored at `comboStart` 2, `comboStep` 0.12), streak capped at MAX_COMBO 12.
+Cloud catches adhere and score; they do not auto-bounce into the next launch.
 
 Cloud catch spring (`src/sim/trampoline`, compatibility name): depress + tilt via the
 `-k·x − c·v` damped spring (stiffness 170 / damping 26 for depress; 150 / 22 for tilt),

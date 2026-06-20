@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { MAX_COMBO } from "@/sim/combo";
 import { blobSkinColor } from "@/styles/tokens";
 import {
   ACHIEVEMENT_SKIN,
@@ -68,7 +69,19 @@ describe("achievements", () => {
   it("unlocks run-scoped achievements off the run stats", () => {
     expect(newlyUnlocked({ ...ZERO, runMaxCombo: 5 }, [])).toContain("combo-5");
     expect(newlyUnlocked({ ...ZERO, runMaxCombo: 8 }, [])).toContain("combo-8");
+    // combo-12 ("Comet Streak") — now reachable since MAX_COMBO was raised to 12.
+    expect(newlyUnlocked({ ...ZERO, runMaxCombo: 11 }, [])).not.toContain("combo-12");
+    expect(newlyUnlocked({ ...ZERO, runMaxCombo: 12 }, [])).toContain("combo-12");
     expect(newlyUnlocked({ ...ZERO, runCrystals: 25 }, [])).toContain("crystals-run-25");
+  });
+
+  it("every combo achievement target is within reach of MAX_COMBO", () => {
+    // A combo achievement above the gameplay cap could NEVER unlock (the streak clamps at MAX_COMBO).
+    for (const a of ACHIEVEMENTS) {
+      if (a.id.startsWith("combo-")) {
+        expect(a.target, `${a.id} must be ≤ MAX_COMBO`).toBeLessThanOrEqual(MAX_COMBO);
+      }
+    }
   });
 
   it("does NOT re-report already-unlocked achievements", () => {

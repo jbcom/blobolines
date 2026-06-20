@@ -5,7 +5,11 @@
  * Capped so the multiplier stays fair.
  */
 
-export const MAX_COMBO = 8;
+/** Combo ceiling — raised from 8 to give expert play more skill headroom. The score + launch
+ *  rewards are rebalanced (lower comboStyleGrowth + comboStep in config) so the NEW max-combo
+ *  reward stays close to the OLD max-combo reward — the higher ceiling adds GRANULARITY (levels
+ *  9–12 now reward) rather than inflating the top-end score. */
+export const MAX_COMBO = 12;
 
 export interface ComboState {
   streak: number;
@@ -27,9 +31,16 @@ export function breakCombo(): ComboState {
 
 /**
  * Visual heat scale [0, 1] from a combo count, which ramps up the flame/trail visual intensity.
- * Starts heating up above the specified threshold (default 0), and scales to 1.0 at MAX_COMBO.
+ * Starts heating up above the specified threshold (default 0), and scales to 1.0 at HEAT_FULL_COMBO.
+ *
+ * The visual ramp ceiling is DECOUPLED from MAX_COMBO on purpose: when the combo cap rose 8→12,
+ * tying the heat to MAX_COMBO would have made the flame build ~33% slower (combo 5 → 0.3 heat
+ * instead of 0.5), a VFX-responsiveness regression. Pinning full heat at HEAT_FULL_COMBO (8, the
+ * prior cap) keeps the mid-combo flame feel identical; combos 9–12 simply stay at max heat (clamped).
  */
+export const HEAT_FULL_COMBO = 8;
+
 export function comboHeat(combo: number, threshold = 0): number {
   if (combo <= threshold) return 0;
-  return Math.min(1, (combo - threshold) / (MAX_COMBO - threshold));
+  return Math.min(1, (combo - threshold) / (HEAT_FULL_COMBO - threshold));
 }

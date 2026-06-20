@@ -15,9 +15,10 @@ describe("comboMultiplier", () => {
     expect(comboMultiplier(1)).toBe(1);
   });
 
-  it("compounds with the streak", () => {
-    expect(comboMultiplier(2)).toBeCloseTo(1.15, 5);
-    expect(comboMultiplier(3)).toBeCloseTo(1.3, 5);
+  it("compounds with the streak (1 + (combo - start + 1)·step from comboStart)", () => {
+    // comboStart = 2, comboStep = 0.12 → first bonus at combo 2 is +step, then +step per bounce.
+    expect(comboMultiplier(2)).toBeCloseTo(1.12, 5);
+    expect(comboMultiplier(3)).toBeCloseTo(1.24, 5);
   });
 });
 

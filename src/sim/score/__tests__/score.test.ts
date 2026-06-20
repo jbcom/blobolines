@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { score as cfg } from "@/config";
+import { MAX_COMBO } from "@/sim/combo";
 import {
   comboStyleBonus,
   computeScore,
@@ -60,7 +61,9 @@ describe("computeScore", () => {
   it("combo bonus is monotonic and zero at zero", () => {
     expect(comboStyleBonus(0)).toBe(0);
     let prev = -1;
-    for (let c = 0; c <= 10; c++) {
+    // Cover the FULL combo range up to (and one past) the cap, derived from MAX_COMBO so the raise
+    // to 12 doesn't leave 11/12 unchecked.
+    for (let c = 0; c <= MAX_COMBO + 1; c++) {
       const b = comboStyleBonus(c);
       expect(b).toBeGreaterThanOrEqual(prev);
       prev = b;
@@ -68,10 +71,25 @@ describe("computeScore", () => {
   });
 
   it("self-clamps combo to the gameplay cap (no runaway for a stray uncapped caller)", () => {
-    // MAX_COMBO is 8; anything beyond must not grow the bonus (guards growth^n explosion).
-    const atCap = comboStyleBonus(8);
-    expect(comboStyleBonus(50)).toBe(atCap);
+    // Anything beyond MAX_COMBO must not grow the bonus (guards growth^n explosion). Derived from
+    // the cap so a future cap change can't silently leave this asserting a stale value.
+    const atCap = comboStyleBonus(MAX_COMBO);
+    expect(comboStyleBonus(MAX_COMBO + 42)).toBe(atCap);
     expect(comboStyleBonus(1000)).toBe(atCap);
+  });
+
+  it("the rebalanced max-combo bonus stays bounded (the higher cap adds granularity, not inflation)", () => {
+    // MAX_COMBO rose 8→12 with comboStyleGrowth lowered (1.38→1.18), so the TOP-end style bonus must
+    // not blow up — the new max-combo bonus stays in the same ballpark as the prior tuning's ceiling
+    // (a touch above, rewarding the harder combo, not a runaway). Locks the rebalance intent.
+    const maxBonus = comboStyleBonus(MAX_COMBO);
+    expect(maxBonus).toBeGreaterThan(800); // still a meaningful reward
+    expect(maxBonus).toBeLessThan(1300); // but NOT the ~3400 a naive 1.38^12 sum would give
+    // Monotonic + smoothly increasing: each extra combo level adds a positive, non-explosive step.
+    for (let c = 1; c < MAX_COMBO; c++) {
+      const step = comboStyleBonus(c + 1) - comboStyleBonus(c);
+      expect(step, `step ${c}→${c + 1}`).toBeGreaterThan(0);
+    }
   });
 
   it("combines all three axes", () => {
