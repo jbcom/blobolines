@@ -29,6 +29,10 @@ leaderboard + achievements gallery, and real-time air-nudge + achievement toasts
   (`biomePropRegistry`), **parallax depth layers** (far/mid/near) in `BiomeScenicProps`,
   per-band **ambient audio beds**, and per-band **particle grain** (mote size/drift/tint via
   `biomeAmbience`).
+- **Biome-band banner** — a gentle "Entering The Stratosphere"-style note (`BiomeBanner`) on the
+  first UP-crossing into a new band, with a soft cue (blue flash + collect chime) that stays
+  clear of the difficulty banner's loud gold/milestone moment. Friendly labels come from
+  `biomeBandLabel`; the up-crossing test uses `biomeBandIndex` (both in `src/config/biomes.ts`).
 - **Treasure jackpot** — a rare top crystal tier (`treasure`) worth a crystal burst with a
   celebratory gold-flash collect + a chest GLB (`TreasureChests`).
 - **Achievement-gated cosmetics** — earning an achievement unlocks an exclusive skin
@@ -51,7 +55,9 @@ leaderboard + achievements gallery, and real-time air-nudge + achievement toasts
 ## Key facts for contributors
 
 - Drive the game in tests/QA via `window.__blobtest` (dev-only, tree-shaken from prod):
-  `startRun` / `launchUp` / `gameOver` / `teleport(y)` / `altitude` / `phase`. E2E specs use it
+  `startRun` / `launchUp` / `gameOver` / `teleport(y)` / `setHeight(y)` / `altitude` / `phase`.
+  `setHeight(y)` drives the run height readout (what the altimeter + biome/difficulty banners
+  watch) without moving the physics body — for QA of altitude-reactive HUD. E2E specs use it
   instead of clicking DevHarness buttons (synthetic clicks stall under software GL).
 - The in-game goo body follows diagnostics in world space; avoid parenting it under the
   Rapier body unless the world-space CSG alignment is preserved.

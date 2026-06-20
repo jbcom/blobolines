@@ -33,6 +33,10 @@ export interface BlobTestBridge {
   /** Teleport the blob to a target altitude (extends world-gen, places + settles the body).
    *  For visual QA of each biome band across the full climb without playing up to it. */
   teleport(y: number): void;
+  /** Set the run height readout directly (the climb metric the altimeter and the altitude-reactive
+   *  HUD — biome banner, difficulty banner — watch), WITHOUT moving the physics body. Lets E2E and
+   *  visual QA exercise height-driven HUD without a full physics climb or a settled teleport. */
+  setHeight(y: number): void;
 }
 
 function launchWhenReady(req: LaunchRequest, attempt = 0): Promise<void> {
@@ -73,6 +77,9 @@ export function installTestBridge(): void {
     },
     teleport(y) {
       requestTeleport(y);
+    },
+    setHeight(y) {
+      useGameStore.getState().setRun({ height: y });
     },
   };
   (window as unknown as { __blobtest: BlobTestBridge }).__blobtest = bridge;

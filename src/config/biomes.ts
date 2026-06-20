@@ -36,6 +36,29 @@ export function biomeBandAt(h: number): string {
   return bands[0].name;
 }
 
+/** Ordinal of a band in the canonical low→high order (0 = ground). −1 for an unknown name.
+ *  Lets the HUD detect an UPWARD band crossing (index increased). */
+export function biomeBandIndex(name: string): number {
+  return biomeBands.findIndex((b) => b.name === name);
+}
+
+/** Player-facing display label per canonical band name — the single source of truth for how a
+ *  biome reads in the UI (the band banner). Throws on an unknown band (no silent fallback). */
+const BAND_LABEL: Record<string, string> = {
+  ground: "The Ground",
+  sky: "The Sky",
+  "upper-atmosphere": "Upper Atmosphere",
+  stratosphere: "The Stratosphere",
+  space: "Space",
+  "deep-space": "Deep Space",
+};
+
+export function biomeBandLabel(name: string): string {
+  const label = BAND_LABEL[name];
+  if (!label) throw new Error(`biomeBandLabel: no display label for biome band "${name}".`);
+  return label;
+}
+
 const colorsOf = (b: Band): BiomeColors => ({ ...b.sky, fog: b.fog });
 
 /** Smoothly interpolated biome colors at a given climb height (world Y). */
