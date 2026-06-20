@@ -26,6 +26,14 @@ export default defineConfig({
         "--ignore-gpu-blocklist",
         "--use-gl=angle",
         "--use-angle=swiftshader-webgl",
+        // GitHub Actions gives Chromium a 64MB /dev/shm. Under SwiftShader every WebGL
+        // surface + the EffectComposer's full-screen render targets + the preserveDrawingBuffer
+        // backbuffer + the dev harness's repeated canvas.toDataURL readbacks are CPU-backed and
+        // route through that shared memory. The 64MB ceiling OOM-kills the renderer mid-test
+        // (page closes → every E2E cascades to timeout). Route Chromium shmem to disk-backed
+        // /tmp (the runner has GBs) so the renderer survives the full climb + captures.
+        "--disable-dev-shm-usage",
+        "--disable-gpu-sandbox",
       ],
     },
   },
