@@ -26,9 +26,21 @@ leaderboard + achievements gallery, and real-time air-nudge + achievement toasts
 
 - **Biome identity across four sensory dimensions**, all keyed off the canonical biome bands
   (`src/config/biomes.ts` → `biomeBandAt`): data-driven per-band scenery props
-  (`biomePropRegistry`), **parallax depth layers** (far/mid/near) in `BiomeScenicProps`,
-  per-band **ambient audio beds**, and per-band **particle grain** (mote size/drift/tint via
-  `biomeAmbience`).
+  (`biomePropRegistry`, **6 props/band**), **parallax depth layers** (far/mid/near + a sparse
+  **landmark** layer) in `BiomeScenicProps`, per-band **ambient audio beds**, and per-band
+  **particle grain** (mote size/drift/tint via `biomeAmbience`).
+- **Blob-reactive scenery** — the NEAR parallax props come alive as the blob rushes past: a
+  proximity **lean** + scale **pop**, a discrete **flyby pulse** (scale spike at closest approach),
+  and an emissive **glint** (warm brighten), all from the pure `sceneryReaction` /
+  `flybyPeaked` / `stepFlybyPulse` / `glintEmissive` helpers in `src/render/vfx/sceneryReaction.ts`,
+  driven near-layer-only in `ScenicInstance`. Deterministic; no new draw calls.
+- **Per-band hero landmarks** — one large signature structure per band (obelisk → great-pine →
+  ice-spire → monolith-spire → ringed-planet → gas-giant) on a dedicated slow, far parallax layer
+  so each stratum has a memorable monument. `landmark` on `biomePropRegistry`; curated GLBs vetted
+  by `scripts/vet-biome-glbs.mjs` (rejects external-texture GLBs that break headless WebGL).
+- **Daily "Today's tower" standing** — the GameOver card shows a daily run's placement among the
+  player's own prior attempts at today's seed (first climb / "#N of M" / new personal daily best),
+  via the pure `dailyStanding` selector in `src/sim/daily/`.
 - **Biome-band banner** — a gentle "Entering The Stratosphere"-style note (`BiomeBanner`) on the
   first UP-crossing into a new band, with a soft cue (blue flash + collect chime) that stays
   clear of the difficulty banner's loud gold/milestone moment. Friendly labels come from
@@ -45,10 +57,13 @@ leaderboard + achievements gallery, and real-time air-nudge + achievement toasts
 
 ## Next
 
-- Continue richness + feel passes: per-biome music layers, interactive props that react to the
-  blob, biome-reactive blob tinting. Use the teleport tool to QA each upper band's look.
-- Keep screenshot/diagnostic reads + the e2e bridge in the loop for camera framing, blob
-  readability, and 3D spatial awareness.
+- Continue richness + feel passes: per-biome **music layers** (needs new owned audio via the
+  itch pipeline), gameplay/feel systems (combo/score juice, new pad behaviours). The biome visual
+  identity (scenery + parallax + landmarks + reactions + audio + particles + banner) is now deep.
+- Visual QA is via the **deterministic browser fixtures** (real foreground Chromium), NOT live
+  teleport screenshots: the claude-in-chrome tab is backgrounded, so rAF is throttled — the
+  physics teleport doesn't move the blob and DOM motion animations don't advance. `setHeight(y)`
+  drives the HUD readout headless but does not scroll scenery.
 - Track upstream dependency warnings separately from app-owned warnings; never hide console
   noise by suppressing real app errors.
 

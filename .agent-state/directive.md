@@ -669,16 +669,29 @@ QA shows a band reads empty/flat.)
       KNOWN to fold: reviewer flagged a latent coupling — the landmark uses activeSet(band) which
       returns null when props.length===0, so a propless band would skip its landmark; fix by
       looking the set up directly for the landmark path (all bands have props today, so latent).
-- [ ] [WAIT-REVIEW] N7.4b Babysit PR #75: wait CI green, fold reviewer + gemini/CodeRabbit findings
-      forward (incl. the activeSet/landmark decoupling), resolve threads, squash-merge once green,
-      sync main, then start N8.
+- [x] N7.4b-feedback Both my reviewer AND gemini flagged the SAME activeSet/landmark coupling.
+      Fixed in d9aa60c: landmark resolves via landmarkSetForBand() (registry-direct, ignores
+      props.length) + the registry now THROWS on a band with no PROP_FILES entry (killed the silent
+      `?? []` fallback). gemini thread resolved. 503 unit + 120 browser green.
+- [x] N7.4c PR #75 SQUASH-MERGED (a8b4193, 2026-06-20). CLEAN, 0 threads. Landmarks shipped. Local
+      main synced; cut docs/refresh-scenery-arc. SIX feature PRs this session (#70–#75).
 
-### N8 Next milestone (surface after #75 merges)
-- [ ] [WAIT-MERGE] N8.1 Pick the next polish unit (don't pre-commit). The biome visual identity is
-      now deep (scenery + parallax + landmarks + audio + particles + reactions). Candidates to SHIFT
-      toward: per-biome MUSIC layers (needs new owned audio via the itch pipeline), a gameplay/feel
-      system (combo/score juice, new pad behaviors), or docs refresh (5+ feature PRs since the last
-      docs pass). Enumerate use cases first; read own spec docs.
+## Queue — Milestone: Docs refresh after the scenery arc (branch docs/refresh-scenery-arc)
+
+Six feature PRs shipped since the last docs pass (#68/K0): scenery reactions (lean/pop/pulse/glint),
+landmarks, prop variety, daily standing, biome banner. STATE.md + ARCHITECTURE.md drifted. The
+mandate explicitly includes keeping docs aligned (no end-of-project catch-up).
+
+### N8 Docs pass
+- [x] N8.1 STATE.md: added the scenery-reaction arc, per-band landmarks, 6-props/band variety, and
+      the daily "Today's tower" standing to "Recently shipped"; corrected "Next" (scenery reactions
+      done; visual QA is via browser fixtures, NOT live teleport — headless rAF gating). ARCHITECTURE.md:
+      `src/config` landmark layer + banner helpers, `src/render/vfx` scenery-reaction helpers,
+      `src/sim/daily` row (was missing) with dailyStanding, BiomeScenicProps reaction + landmark
+      layer. All cited symbols verified on disk; biome ci + typecheck clean.
+
+### N8.2 PR cutting point
+- [ ] N8.2 Commit, open PR, babysit to squash-merge, sync main, re-write directive forward to N9.
 
 ## Queue — Milestone: Daily-challenge results polish (branch feat/daily-results, NEXT)
 
