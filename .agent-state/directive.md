@@ -837,7 +837,20 @@ milestones, so a 2000m crossing LOOKS as grand as it sounds.
       cited symbols verified on disk; biome ci clean; frontmatter already current.
 
 ### N12.3 PR cutting point
-- [ ] N12.3 Commit, open PR, babysit to squash-merge, sync main, re-write directive forward to N13.
+- [x] N12.3a Committed (c7aae5b), pushed, opened PR #80 (docs-only). Monitor armed.
+- [ ] [WAIT-REVIEW] N12.3b Babysit PR #80: wait CI green, address any CodeRabbit doc nits, squash-
+      merge once green, sync main, then start N13.
+
+### N13 Next milestone (surface after #80 merges)
+- [ ] [WAIT-MERGE] N13.1 Pick the next polish unit. The game is now comprehensively built across
+      visuals (biome scenery/parallax/landmarks/reactions/banner), audio (per-biome music/ambient/
+      tiered stingers), feel (11 pad types, tiered combo, scoring, shake/trail/speedlines/powerups),
+      and progression (achievements/skins/daily/leaderboard). Per the mandate, KEEP ADDING — look
+      for a fresh POLISH beat or a small NEW system that genuinely doesn't exist yet (NOT a
+      reinvention; the prior surveys ruled out new pad types / combo / scenery / audio as saturated).
+      Candidates to probe: GameOver share-card richness, a settings/accessibility option gap, a
+      first-run onboarding polish, or a perf/quality pass. Enumerate use cases first; survey before
+      committing to avoid reinventing a built system.
 
 ### N9 Next milestone (surface after #76 merges)
 - [ ] [WAIT-MERGE] N9.1 Pick the next polish unit (don't pre-commit). Biome identity + docs are now
