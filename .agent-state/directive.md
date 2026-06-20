@@ -443,8 +443,17 @@ biomeBandAt + the banner pattern.
       DECISION: the daily-results work (N1.1) is pure + self-contained UI polish and the PR was
       still open, so it was folded into #70 as a second feature rather than a separate branch —
       same player-facing-polish theme, not a scope-flip.
-- [ ] [WAIT-REVIEW] M2.1c Babysit PR #70 (now biome banner + daily standing): re-wait CI on the
-      folded-in commit, address any gemini/CodeRabbit threads, squash-merge once green, sync main.
+- [x] M2.1c-feedback Addressed gemini HIGH on PR #70: BiomeBanner subscribed to run.height
+      (~60fps re-renders); moved biomeBandAt INTO the Zustand selector so it only re-renders on a
+      band change (commit e87e280). Thread resolved; 3 banner fixtures still pass.
+- [ ] [WAIT-REVIEW] M2.1d Wait CI green on e87e280, then squash-merge PR #70 + sync local main.
+      Then start the next milestone (N2 below).
+
+### N2 Next milestone (surface after #70 merges)
+- [ ] [BLOCKED-ON-MERGE] N2.1 Pick + enumerate the next polish unit on a fresh branch. Candidates
+      (don't pre-commit): interactive scenery that reacts to the blob (NAS props), per-biome MUSIC
+      layers (needs new owned audio), or USE the teleport tool to QA + polish each upper biome
+      band's look. Enumerate use cases first, read own spec docs, then build.
 
 ## Queue — Milestone: Daily-challenge results polish (branch feat/daily-results, NEXT)
 
