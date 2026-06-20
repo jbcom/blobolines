@@ -10,8 +10,18 @@
     "crystal": "assets/audio/sfx/crystal.mp3",
     "powerup": "assets/audio/sfx/powerup.mp3",
     "milestone": "assets/audio/sfx/milestone.mp3",
-    "record": "assets/audio/sfx/record.mp3"
+    "record": "assets/audio/sfx/record.mp3",
+    "milestone-tier1": "assets/audio/sfx/milestones/tier1-bright.mp3",
+    "milestone-tier2": "assets/audio/sfx/milestones/tier2-triumph.mp3",
+    "milestone-tier3": "assets/audio/sfx/milestones/tier3-epic.mp3",
+    "milestone-tier4": "assets/audio/sfx/milestones/tier4-mega.mp3"
   },
+  "milestoneTiers": [
+    { "minHeight": 0, "sfx": "milestone-tier1" },
+    { "minHeight": 500, "sfx": "milestone-tier2" },
+    { "minHeight": 1000, "sfx": "milestone-tier3" },
+    { "minHeight": 2000, "sfx": "milestone-tier4" }
+  ],
   "ui": {
     "hover": "assets/audio/ui/hover.mp3",
     "click": "assets/audio/ui/click.mp3",

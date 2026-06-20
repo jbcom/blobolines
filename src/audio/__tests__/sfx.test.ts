@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   duckMusic,
   isAudioInitialized,
+  milestoneTierFor,
   playBounce,
   playChime,
   playComboBlip,
@@ -300,5 +301,31 @@ describe("music + ambient lifecycle", () => {
     expect(beds.every((h) => h._html5 === true)).toBe(true); // beds stream
     expect(sfx.every((h) => h._html5 === false)).toBe(true); // SFX low-latency
     stopMusic();
+  });
+});
+
+// The milestone stinger escalates with altitude — a higher climb earns a grander fanfare. The tier
+// resolver is pure (config-driven thresholds), so we lock its boundaries directly.
+describe("milestone stinger tiers", () => {
+  it("escalates the stinger by altitude tier (bright → triumph → epic → mega)", () => {
+    expect(milestoneTierFor(100)).toBe("milestone-tier1"); // first altitude milestone
+    expect(milestoneTierFor(400)).toBe("milestone-tier1"); // still tier 1 below 500
+    expect(milestoneTierFor(500)).toBe("milestone-tier2"); // boundary → tier 2
+    expect(milestoneTierFor(999)).toBe("milestone-tier2");
+    expect(milestoneTierFor(1000)).toBe("milestone-tier3"); // boundary → tier 3
+    expect(milestoneTierFor(2000)).toBe("milestone-tier4"); // boundary → top tier
+    expect(milestoneTierFor(99999)).toBe("milestone-tier4"); // very high stays top tier
+  });
+
+  it("falls to the lowest tier below the first threshold (and at 0)", () => {
+    expect(milestoneTierFor(0)).toBe("milestone-tier1");
+    expect(milestoneTierFor(-50)).toBe("milestone-tier1"); // defensive: never undefined
+  });
+
+  it("playMilestone(height) is a safe no-op across every tier pre-init", () => {
+    for (const h of [0, 100, 500, 1000, 2000, 5000]) {
+      expect(() => playMilestone(h)).not.toThrow();
+    }
+    expect(() => playMilestone()).not.toThrow(); // no-arg → lowest tier
   });
 });
