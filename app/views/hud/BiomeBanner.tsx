@@ -15,8 +15,10 @@ const BANNER_MS = 1600;
 
 export function BiomeBanner() {
   const phase = useGameStore((s) => s.phase);
-  const height = useGameStore((s) => s.run.height);
-  const band = biomeBandAt(height);
+  // Subscribe to the RESOLVED band string, not raw height. `run.height` mutates ~60fps during a
+  // climb; computing biomeBandAt inside the selector means Zustand's strict-equality check only
+  // re-renders this component when the band actually changes (a few times per run), not every frame.
+  const band = useGameStore((s) => biomeBandAt(s.run.height));
   const last = useRef<string>(band);
   const [shown, setShown] = useState<string | null>(null);
 
