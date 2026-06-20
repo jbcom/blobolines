@@ -106,8 +106,12 @@ re-write directive forward → next.
 ### C2 PR cutting point
 - [x] C2.1a PR #59 opened for the whole branch (nudge/achievements + biome scenery +
       ambience). Pushed, build green locally.
-- [ ] [WAIT-REVIEW] C2.1b Babysit PR #59: wait CI green → address ALL feedback (CodeRabbit +
-      human) → resolve threads → squash-merge → re-write directive forward to next milestone.
+- [x] C2.1b-feedback Addressed ALL review feedback on PR #59: amazon-q (duplicate nudge),
+      code-quality (dead linvel read), gemini HIGH (toast overwrite → FIFO queue) + 2 MEDIUM
+      (nudge dedup, impure mutator). 5 threads resolved, 0 unresolved. Fixes in 809d2ca +
+      3dd921f with new tests (430 unit pass).
+- [ ] [WAIT] C2.1c Wait final CI green on 3dd921f (UNSTABLE→CLEAN), then squash-merge PR #59
+      and re-write directive forward to next milestone (monitor armed as wake signal).
 
 ## Notes
 - This is a living plan. After every stage, backward+forward sweep and edit the queue.
