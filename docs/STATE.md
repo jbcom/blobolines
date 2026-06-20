@@ -66,6 +66,14 @@ leaderboard + achievements gallery, and real-time air-nudge + achievement toasts
   heartbeat) so it never goes stale.
 - **This-week daily summary** — a 7-day bar chart of daily bests (`weeklyDailySummary`) in the
   Achievements modal, with the week-best day flagged.
+- **Complete feel-feedback layer (0.1.14)** — every meaningful moment now has audio + visual +
+  tactile payoff: a success haptic on each celebratory peak (max combo, perfect release, treasure
+  jackpot, achievement unlock, new record, streak extension); a full goo-splat + heavy haptic on
+  death and a relief buzz on a shield save; coin/powerup/success feedback on a customizer purchase;
+  and a tap sound on the menu's primary buttons.
+- **Two-skill onboarding** — the launch coachmark plus a new mid-air **steer** coachmark
+  (`SteerCoachmark`) teach both core skills once, in context; a short first hop re-arms the steer
+  cue rather than burning the teach.
 - **Dev teleport** — jump the Rapier body to any altitude (`requestTeleport` / DevHarness /
   `window.__blobtest.teleport`) for QA across the whole climb.
 - **E2E reliability** — specs drive the game via the `window.__blobtest` test bridge (store
