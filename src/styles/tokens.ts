@@ -59,9 +59,12 @@ export const palette = {
   /** Danger red — near-death screen-edge pulse / warning feedback. */
   danger: "#ff3b4e",
   /** Scenery feedback colors. `glint` is the warm-gold flash a near prop emits as the blob rushes
-   *  past (the flyby glint) — owned here so the emissive tint isn't a raw RGB literal in scene code. */
+   *  past (the flyby glint) — owned here so the emissive tint isn't a raw RGB literal in scene code.
+   *  `rock`/`asteroid` tint the off-route bounce obstacles (warm stone low, cold space rock high). */
   scenery: {
     glint: "#ffd180",
+    rock: "#a8836a",
+    asteroid: "#6b5e7a",
   },
 } as const;
 

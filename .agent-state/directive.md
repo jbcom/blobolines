@@ -1092,10 +1092,19 @@ uniquely suited to.
       (4 — determinism + the INVARIANT across 7 seeds: no obstacle in any golden-arc corridor + obstacles
       actually placed) + a worldStore obstacle test (generated/deterministic/cleared-on-reset/bounded).
       typecheck + pinned lint clean.
-- [ ] N19.3 Obstacle COLLIDER + bounce + contact feedback: a Rapier fixed collider the blob ricochets
-      off (restitution tuned to feel springy-not-sticky); report contact via a bridge call for sound +
-      a small visual pop. No failure, no trap. Browser/e2e: blob bouncing off an obstacle survives +
-      redirects. visual-verify the bounce.
+- [x] N19.3 DONE. app/scene/world/ObstacleField.tsx: render-windowed (pad-window match), each obstacle
+      a FIXED RigidBody + BallCollider (restitution 0.55 — springy, not a launch pad) so Rapier resolves
+      the rebound against the blob's collider; mounted INSIDE <Physics> in GameScene. A per-frame
+      proximity check fires the cosmetic feedback on a FAST contact (≥ MIN_BOUNCE_SPEED): a speed-scaled
+      playThump + a scale-pop/emissive pulse + a reportObstacleBounce bridge event (new — for any HUD/
+      vfx). Per-band tint (warm rock low → icy/violet mid → dark asteroid space) via new palette tokens
+      scenery.rock/asteroid. No failure state, no trap. Tests: ObstacleField browser fixture (renders in
+      WebGL + fires a bounce on fast contact + stays SILENT on a slow brush) + the obstacle-bounce bridge.
+      typecheck + pinned lint + 134 browser / 530 unit green. VISUAL-VERIFY NOTE: confirmed obstacles
+      generate off-route in-store (4 at y=101–169, 11–32u lateral offset, r1.5–1.8) and render in the
+      WebGL fixture; a LIVE in-scene screenshot is blocked by the dev-teleport/rAF issues
+      ([[blobolines-headless-raf-gating]] + N19-pending teleport fix), so the deterministic browser
+      fixture IS the rendered-output verification here. Added a __worldStore dev hook for QA.
 - [ ] N19.4 Obstacle VISUALS: mine an assets-server GLB per band (boulder / asteroid / crystal-spire)
       matching the band palette; vet via scripts/vet-biome-glbs.mjs (no external image URIs). Screenshot
       + READ against the band look.

@@ -83,4 +83,6 @@ export function installTestBridge(): void {
     },
   };
   (window as unknown as { __blobtest: BlobTestBridge }).__blobtest = bridge;
+  // Dev-only: expose the world store so QA can inspect the generated tower / obstacles / crystals.
+  (window as unknown as { __worldStore: typeof useWorldStore }).__worldStore = useWorldStore;
 }

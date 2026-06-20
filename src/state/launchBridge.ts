@@ -270,6 +270,30 @@ export function consumeAirNudge(): readonly [number, number] | null {
   return n;
 }
 
+/** A blob↔obstacle bounce: the blob ricocheted off an off-route bounce obstacle. Reported by the
+ *  ObstacleField when the blob enters an obstacle's proximity at speed; drained for the contact
+ *  feedback (a bounce sound + a small visual pop at the contact point). Purely cosmetic — the
+ *  actual rebound is resolved by Rapier (the obstacle is a solid collider). Last-strongest wins so
+ *  one frame's feedback reflects the hardest contact. */
+export interface ObstacleBounceEvent {
+  position: readonly [number, number, number];
+  /** Impact speed (blob speed at contact), drives feedback intensity. */
+  speed: number;
+}
+
+let obstacleBounce: ObstacleBounceEvent | null = null;
+
+export function reportObstacleBounce(ev: ObstacleBounceEvent): void {
+  if (!obstacleBounce || ev.speed > obstacleBounce.speed) obstacleBounce = ev;
+}
+
+/** Consume the pending obstacle bounce (returns it once, then clears). */
+export function consumeObstacleBounce(): ObstacleBounceEvent | null {
+  const ev = obstacleBounce;
+  obstacleBounce = null;
+  return ev;
+}
+
 /**
  * Clear ALL pending bridge state. Called on run end (menu/gameover) so a value reported in
  * the last frame before the run ended can't fire on the next run's first frame. (powerups
@@ -290,6 +314,7 @@ export function resetBridges(): void {
   midAirBounce = false;
   pendingNudge = null;
   pendingTeleport = null;
+  obstacleBounce = null;
   setRouteProofTarget(null);
   clearRouteLandingFeedback();
 }
