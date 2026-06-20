@@ -120,6 +120,20 @@ test("a normal run shows its replay seed without the daily tag", async () => {
   await expect.element(screen.getByText("Seed bouncy-bright-blob")).toBeInTheDocument();
 });
 
+test("the seed line is a labelled copy-seed button (replay this exact tower)", async () => {
+  useWorldStore.setState({ seed: 12345, seedPhrase: "bouncy-bright-blob" });
+  useGameStore.setState({ dailyRun: false });
+  const screen = await render(<GameOver />);
+  // The seed line is a button whose accessible name carries the seed for replay — and it still
+  // shows the seed phrase text. Clicking it must not throw (clipboard write is best-effort: it's
+  // permission/availability-gated in headless, and the handler swallows a denial; the point of the
+  // test is that the affordance is present, labelled for replay, and clickable).
+  const copyBtn = screen.getByRole("button", { name: /copy seed bouncy-bright-blob/i });
+  await expect.element(copyBtn).toBeInTheDocument();
+  await expect.element(screen.getByText("Seed bouncy-bright-blob")).toBeInTheDocument();
+  await copyBtn.click();
+});
+
 test("daily run, first attempt → 'first climb' standing", async () => {
   useWorldStore.setState({ seed: 12345, seedPhrase: todayPhrase });
   // Only this run's entry on today's seed → first attempt.

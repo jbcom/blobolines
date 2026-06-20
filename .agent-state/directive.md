@@ -838,19 +838,34 @@ milestones, so a 2000m crossing LOOKS as grand as it sounds.
 
 ### N12.3 PR cutting point
 - [x] N12.3a Committed (c7aae5b), pushed, opened PR #80 (docs-only). Monitor armed.
-- [ ] [WAIT-REVIEW] N12.3b Babysit PR #80: wait CI green, address any CodeRabbit doc nits, squash-
-      merge once green, sync main, then start N13.
+- [x] N12.3b-feedback gemini (doc accuracy): corrected that milestoneTierIndex (not
+      milestoneTierFor) is the shared threshold source both the audio + visual key off (9a3d3db).
+      Thread resolved.
+- [x] N12.3c PR #80 SQUASH-MERGED (e197321, 2026-06-20). CLEAN, 0 threads. Docs current. Local
+      main synced; cut feat/copy-seed. ELEVEN PRs this session (#70–#80).
 
-### N13 Next milestone (surface after #80 merges)
-- [ ] [WAIT-MERGE] N13.1 Pick the next polish unit. The game is now comprehensively built across
-      visuals (biome scenery/parallax/landmarks/reactions/banner), audio (per-biome music/ambient/
-      tiered stingers), feel (11 pad types, tiered combo, scoring, shake/trail/speedlines/powerups),
-      and progression (achievements/skins/daily/leaderboard). Per the mandate, KEEP ADDING — look
-      for a fresh POLISH beat or a small NEW system that genuinely doesn't exist yet (NOT a
-      reinvention; the prior surveys ruled out new pad types / combo / scenery / audio as saturated).
-      Candidates to probe: GameOver share-card richness, a settings/accessibility option gap, a
-      first-run onboarding polish, or a perf/quality pass. Enumerate use cases first; survey before
-      committing to avoid reinventing a built system.
+## Queue — Milestone: Copy-seed on the GameOver card (branch feat/copy-seed)
+
+### N13 Survey + implement
+- [x] N13.1 SURVEYED settings/accessibility (volumes/music/charge/haptics/reducedMotion — all
+      consumed, reducedMotion drives MotionConfig) + tests (newest pure modules all have direct
+      tests) — both saturated. Found a GENUINE small gap: the TitleScreen already supports entering
+      a custom seed phrase to replay a specific tower (pendingSeedPhrase + canonicalSeedPhrase), and
+      GameOver SHOWS the run's seed ("Seed <phrase>"), but there's no easy way to COPY it. DECISION:
+      make the GameOver seed line a one-tap copy-seed button so a player who had a great climb can
+      replay this exact tower (paste into the title seed field) or share it.
+- [x] N13.2 DONE. GameOver seed line is now a labelled copy-seed button (Copy icon + the seed,
+      flips to "Seed copied!" for 1.6s), mirroring the share() clipboard pattern with an
+      unmount-safe timer; graceful no-op if the clipboard is denied. Browser fixture asserts the
+      button is present, labelled for replay (aria-label carries the seed), and clickable. 518 unit
+      + 121 browser green; typecheck + biome ci clean. Live screenshot read: the seed line renders
+      as "📋 Seed <phrase>", composites cleanly on the card (the "Seed copied!" flip needs a focused
+      tab — clipboard.writeText rejects on a backgrounded headless tab, expected). Committed;
+      reviewer to dispatch.
+
+### N13.3 PR cutting point
+- [ ] N13.3 Commit, dispatch reviewer, fold findings forward, open PR, babysit to squash-merge,
+      sync main, re-write directive forward to N14.
 
 ### N9 Next milestone (surface after #76 merges)
 - [ ] [WAIT-MERGE] N9.1 Pick the next polish unit (don't pre-commit). Biome identity + docs are now

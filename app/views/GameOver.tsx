@@ -1,6 +1,6 @@
 import { Button } from "@app/components/ui";
 import { Progress } from "@app/components/ui/progress";
-import { Check, RotateCcw, Share2 } from "lucide-react";
+import { Check, Copy, RotateCcw, Share2 } from "lucide-react";
 import { motion } from "motion/react";
 import { useEffect, useRef, useState } from "react";
 import { playRecord, startMusic, stopMusic } from "@/audio";
@@ -117,6 +117,29 @@ export function GameOver() {
       }
     } catch {
       // user cancelled the share sheet, or clipboard denied — no-op.
+    }
+  };
+
+  // Copy just this run's SEED phrase, so a player who had a great climb can replay this exact tower
+  // (paste it into the title-screen seed field) or send it to a friend. Mirrors the share timer's
+  // unmount-safe "Copied!" confirmation.
+  const [seedCopied, setSeedCopied] = useState(false);
+  const seedTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(
+    () => () => {
+      if (seedTimer.current) clearTimeout(seedTimer.current);
+    },
+    [],
+  );
+  const copySeed = async () => {
+    if (typeof navigator === "undefined" || !navigator.clipboard) return;
+    try {
+      await navigator.clipboard.writeText(seedPhrase);
+      setSeedCopied(true);
+      if (seedTimer.current) clearTimeout(seedTimer.current);
+      seedTimer.current = setTimeout(() => setSeedCopied(false), 1600);
+    } catch {
+      // clipboard denied — no-op.
     }
   };
 
@@ -262,9 +285,23 @@ export function GameOver() {
         )}
 
         {runTag && (
-          <p className="text-center font-ui text-xs font-semibold text-fg-subtle tabular-nums">
-            {runTag}
-          </p>
+          <button
+            type="button"
+            onClick={copySeed}
+            // Tap the seed line to copy this run's seed — replay this exact tower or share it.
+            className="pointer-events-auto flex items-center gap-1.5 rounded-lg px-2 py-1 text-center font-ui text-xs font-semibold text-fg-subtle tabular-nums hover:bg-bg/40"
+            aria-label={`Copy seed ${seedPhrase} to replay this tower`}
+          >
+            {seedCopied ? (
+              <>
+                <Check className="size-3" aria-hidden /> Seed copied!
+              </>
+            ) : (
+              <>
+                <Copy className="size-3 opacity-70" aria-hidden /> {runTag}
+              </>
+            )}
+          </button>
         )}
 
         {/* Daily-only "Today's tower" standing — how this run placed among the player's own
