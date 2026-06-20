@@ -63,10 +63,12 @@ export function sceneryReaction(
   const speedScale = Math.min(1, speed / cfg.fullSpeed);
   const influence = proximity * speedScale;
 
-  // Lean AWAY from the blob on the X axis: prop to the blob's right (dx > 0) tips further right
-  // (positive Z rotation reads as a rightward tip). Guard the degenerate dead-centre case.
+  // Lean AWAY from the blob on the X axis. A prop to the blob's RIGHT (dx > 0) should tip further
+  // right — and in three.js a positive rotation.z is COUNTER-clockwise (tips the top LEFT), so a
+  // rightward tip is a NEGATIVE z rotation. Hence the leading minus. Guard the dead-centre case.
   const dir = dx === 0 ? 0 : Math.sign(dx);
-  const lean = dir * cfg.maxLean * influence;
+  // `|| 0` normalizes the -0 that `-dir * … * 0` yields at zero influence to a clean +0.
+  const lean = -dir * cfg.maxLean * influence || 0;
   const pop = cfg.maxPop * influence;
   return { influence, lean, pop };
 }

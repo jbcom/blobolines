@@ -149,11 +149,12 @@ function ScenicInstance({ spec }: { spec: PropSpec }) {
   const [band, setBand] = useState(() => biomeBandAt(wrapY(spec.yFrac, 0, spec.layer.column)));
   // Eased blob-reaction state (near layer only): the prop springs toward the computed lean/pop
   // when the blob rushes past and eases back to rest when it leaves. Refs, not state — this must
-  // never trigger a React re-render.
+  // never trigger a React re-render. The propPos buffer is reused each frame (no per-frame alloc).
   const reactRef = useRef({ lean: 0, pop: 0 });
+  const propPosRef = useRef<[number, number, number]>([0, 0, 0]);
   const isNear = spec.layer.id === "near";
 
-  useFrame((state) => {
+  useFrame((state, delta) => {
     const group = groupRef.current;
     if (!group) return;
 
@@ -185,11 +186,17 @@ function ScenicInstance({ spec }: { spec: PropSpec }) {
     // Blob-reactive lean + scale-pop — NEAR layer only (far/mid stay calm backdrop). The prop
     // tips away from the blob and pops slightly as it rushes past, then eases back to rest.
     if (isNear) {
-      const target = sceneryReaction(diag.position, diag.velocity, [px, py, spec.z]);
+      const propPos = propPosRef.current;
+      propPos[0] = px;
+      propPos[1] = py;
+      propPos[2] = spec.z;
+      const target = sceneryReaction(diag.position, diag.velocity, propPos);
       const r = reactRef.current;
-      // Frame-rate-independent-ish ease (smooth springback regardless of where the blob is).
-      r.lean += (target.lean - r.lean) * 0.18;
-      r.pop += (target.pop - r.pop) * 0.18;
+      // Frame-rate-INDEPENDENT exponential ease: 0.18-per-frame-at-60fps converted to this frame's
+      // delta so the springback feels identical at 30/60/120fps (1 - (1-k)^(delta*60)).
+      const k = 1 - (1 - 0.18) ** (delta * 60);
+      r.lean += (target.lean - r.lean) * k;
+      r.pop += (target.pop - r.pop) * k;
       group.rotation.z += r.lean;
       const s = 1 + r.pop;
       group.scale.set(s, s, s);

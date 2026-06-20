@@ -22,11 +22,13 @@ describe("sceneryReaction", () => {
     expect(rNear.influence).toBeLessThanOrEqual(1);
   });
 
-  it("leans the prop AWAY from the blob (sign follows which side it's on)", () => {
-    const right: Vec3 = [2, 0, 0]; // prop to the blob's right → tips right (+lean)
-    const left: Vec3 = [-2, 0, 0]; // prop to the blob's left → tips left (−lean)
-    expect(sceneryReaction(STILL, FAST, right).lean).toBeGreaterThan(0);
-    expect(sceneryReaction(STILL, FAST, left).lean).toBeLessThan(0);
+  it("leans the prop AWAY from the blob (three.js +z is CCW, so a rightward tip is −z)", () => {
+    // Prop to the blob's RIGHT (dx>0) tips further right = a NEGATIVE z rotation (CCW convention);
+    // prop to the LEFT tips left = POSITIVE z. This is the "shoved by the rush of air" feel.
+    const right: Vec3 = [2, 0, 0];
+    const left: Vec3 = [-2, 0, 0];
+    expect(sceneryReaction(STILL, FAST, right).lean).toBeLessThan(0);
+    expect(sceneryReaction(STILL, FAST, left).lean).toBeGreaterThan(0);
   });
 
   it("scales the shove with blob speed — a slow drift-by barely stirs the prop", () => {

@@ -488,8 +488,17 @@ ignore the blob entirely. Make the NEAR layer come alive when the blob rushes pa
       screenshot can't capture the spring.)
 
 ### N3 PR cutting point
-- [ ] N3.1 Commit, dispatch reviewer, fold findings forward, open PR for feat/reactive-scenery,
-      babysit to squash-merge, sync main, re-write directive forward.
+- [x] N3.1a Committed (9dcebad), dispatched comprehensive reviewer (background), pushed, opened
+      PR #71. Monitor armed on #71 CI. (Lesson from #70: do NOT push extra state commits to the
+      branch — each push restarts the CI gate clock; let CI settle on the current HEAD.)
+- [ ] [WAIT-REVIEW] N3.1b Babysit PR #71: wait CI green, fold reviewer + gemini/CodeRabbit
+      findings forward, resolve threads, squash-merge once green, sync main, then start N4.
+
+### N4 Next milestone (surface after #71 merges)
+- [ ] [WAIT-MERGE] N4.1 Pick the next polish unit (don't pre-commit): candidates — per-biome
+      MUSIC layers (needs new owned audio via the itch pipeline), a FLYBY-PULSE extension of the
+      scenery reaction (glint/sparkle on closest approach), or QA + polish each upper biome band's
+      look using the teleport tool. Enumerate use cases first, read own spec docs, then build.
 
 ## Queue — Milestone: Daily-challenge results polish (branch feat/daily-results, NEXT)
 
