@@ -28,8 +28,9 @@ let ambient: Howl | null = null;
  *  (sky + upper-atmosphere → wind, space + deep-space → space), so the live-bed identity is
  *  tracked by PATH (not band name) — a band change that keeps the same bed must not restart it. */
 let ambientBed = "";
-/** Current music track key ("menu" | "ingame" | "highspace"), so an altitude/phase change only
- *  crossfades when the target track actually differs. */
+/** Current music track key — "menu", a static key ("ingame"), or a canonical biome band name
+ *  ("ground"/"sky"/…/"deep-space") once the climb's per-band music takes over — so an altitude/
+ *  phase change only crossfades when the target track actually differs. */
 let musicKey = "";
 let started = false;
 let muted = false;
@@ -243,18 +244,41 @@ export function playRecord(): void {
 
 // ── Music + ambient ────────────────────────────────────────────────────────────
 const musicTracks = audioCfg.music as Record<string, string>;
+/** Per-canonical-band in-game music — each biome gets its own upbeat loop, keyed by biomeBandAt
+ *  (the single-source band resolver, same as the ambient beds). */
+const bandMusic = audioCfg.bandMusic as Record<string, string>;
 const ambientBeds = audioCfg.ambient as Record<string, string>;
-/** Above this altitude the in-game music swaps to the tense "high/space" track. */
-const MUSIC_HIGH_START = audioCfg.musicHighStart;
 
 /** Crossfade the music to `key` (a track in audioCfg.music); no-op if already on it. The old
- *  track fades out (scheduleStop) while the new one fades in (startBed). */
+ *  track fades out (scheduleStop) while the new one fades in (startBed). Used for the menu track
+ *  + the initial ingame track; the per-band climb music goes through setMusicBand. */
 function setMusicTrack(key: string): void {
   if (key === musicKey) return;
   const path = musicTracks[key];
   if (!path) return;
-  if (music && musicTracks[musicKey]) scheduleStop(musicTracks[musicKey], music);
+  if (music && currentMusicPath()) scheduleStop(currentMusicPath() as string, music);
   musicKey = key;
+  music = startBed(path, musicTarget());
+}
+
+/** The path of the live music track, whether it came from the static `music` map (menu/ingame)
+ *  or the per-band `bandMusic` map — so a crossfade always fades the RIGHT outgoing bed out. */
+function currentMusicPath(): string | undefined {
+  return musicTracks[musicKey] ?? bandMusic[musicKey];
+}
+
+/** Crossfade the in-game music to the track for canonical biome `band` (from biomeBandAt). Throws
+ *  if the band has no track mapped — every canonical band must map to one (no silent fallback;
+ *  see [[blobolines-no-fallbacks]]). No-ops when already on that band's track. Mirrors
+ *  setAmbientBand so music + ambience climb the bands in lockstep. */
+function setMusicBand(band: string): void {
+  if (band === musicKey) return;
+  const path = bandMusic[band];
+  if (!path) {
+    throw new Error(`setMusicBand: no in-game music mapped for biome band "${band}".`);
+  }
+  if (music && currentMusicPath()) scheduleStop(currentMusicPath() as string, music);
+  musicKey = band;
   music = startBed(path, musicTarget());
 }
 
@@ -280,7 +304,8 @@ function setAmbientBand(band: string): void {
  *  from any menu track already playing. setMusicAltitude then drives the phase/biome changes. */
 export function startMusic(): void {
   started = true;
-  setMusicTrack("ingame");
+  // Start on the ground band's own track (per-band climb music), not a single generic ingame loop.
+  setMusicBand("ground");
   setAmbientBand("ground");
 }
 
@@ -300,7 +325,7 @@ export function startMenuMusic(): void {
 export function stopMusic(): void {
   if (!started) return;
   started = false;
-  if (music && musicTracks[musicKey]) scheduleStop(musicTracks[musicKey], music);
+  if (music && currentMusicPath()) scheduleStop(currentMusicPath() as string, music);
   if (ambient && ambientBed) scheduleStop(ambientBed, ambient);
   music = null;
   ambient = null;
@@ -331,16 +356,16 @@ export function duckMusic(ms = 700): void {
   }, 180);
 }
 
-/** Drive the music PHASE + ambient BIOME from altitude (called as the blob climbs, throttled by
- *  the caller). The in-game track swaps to the tense high/space track past MUSIC_HIGH_START; the
- *  ambient bed follows the biome bands (ground→sky→stratosphere→space). Both crossfade. No-op on
- *  the menu track (only the in-game phase climbs). */
+/** Drive the in-game MUSIC + ambient BIOME from altitude (called as the blob climbs, throttled by
+ *  the caller). Both the music track AND the ambient bed now follow the canonical biome bands via
+ *  biomeBandAt — each biome has its own upbeat loop, so the climb has real sonic progression
+ *  (ground → sky → … → deep-space). Both crossfade. No-op on the menu track (`musicKey` is "menu"
+ *  there, which isn't a band, so we leave the music alone and only move the ambient bed). */
 export function setMusicAltitude(height: number): void {
   if (!started) return;
-  if (musicKey === "ingame" || musicKey === "highspace") {
-    setMusicTrack(height >= MUSIC_HIGH_START ? "highspace" : "ingame");
-  }
-  setAmbientBand(biomeBandAt(height));
+  const band = biomeBandAt(height);
+  if (musicKey !== "menu") setMusicBand(band);
+  setAmbientBand(band);
 }
 
 // ── Settings ─────────────────────────────────────────────────────────────────

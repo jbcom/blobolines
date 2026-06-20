@@ -713,10 +713,19 @@ mandate explicitly includes keeping docs aligned (no end-of-project catch-up).
       tracks — memory blobolines-audio-identity warns against borrowed RPG music). audio.json grows
       a per-band `bandMusic` map; setMusicAltitude crossfades the band track via biomeBandAt;
       setMusicTrack throws on an unmapped band (no silent fallback). Keep menu track separate.
-- [ ] N9.2 Implement: promote the 6 loops into public/assets/audio/music/biomes/<band>.mp3; add
-      bandMusic to audio.json; refactor setMusicAltitude to biomeBandAt→track (crossfade, throw on
-      unmapped); extend the sfx/audio tests (every canonical band maps to a real track, crossfade
-      on band cross); typecheck/biome-ci/unit/browser; PR.
+- [x] N9.2 DONE. Promoted 6 owned casual-upbeat loops → public/assets/audio/music/biomes/<band>.mp3
+      (ground=BrightStart, sky=HappyMove, upper-atmosphere=ColorDash, stratosphere=CasualRush,
+      space=ArcadeBounce, deep-space=PlayLoop). Added `bandMusic` to audio.json; new `setMusicBand`
+      (mirrors setAmbientBand — biomeBandAt→track, crossfade, THROWS on unmapped); setMusicAltitude
+      now drives BOTH music + ambient by biomeBandAt; startMusic starts on the ground track.
+      REMOVED the dead ingame/highspace tracks + musicHighStart + MUSIC_HIGH_START (the binary
+      threshold is gone). Tests: per-band music coverage (every band→distinct real track) in
+      audioAmbient.test.ts + rewrote the sfx phase-music test to assert music+ambient follow the
+      bands. 506 unit + 120 browser green; typecheck + biome ci + build clean.
+
+### N9.3 PR cutting point
+- [ ] N9.3 Commit, dispatch reviewer, fold findings forward, open PR, babysit to squash-merge,
+      sync main, re-write directive forward to N10.
 
 ### N9 Next milestone (surface after #76 merges)
 - [ ] [WAIT-MERGE] N9.1 Pick the next polish unit (don't pre-commit). Biome identity + docs are now

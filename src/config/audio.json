@@ -21,11 +21,16 @@
     "coin": "assets/audio/ui/coin.mp3"
   },
   "music": {
-    "menu": "assets/audio/music/menu.mp3",
-    "ingame": "assets/audio/music/ingame.mp3",
-    "highspace": "assets/audio/music/highspace.mp3"
+    "menu": "assets/audio/music/menu.mp3"
   },
-  "musicHighStart": 600,
+  "bandMusic": {
+    "ground": "assets/audio/music/biomes/ground.mp3",
+    "sky": "assets/audio/music/biomes/sky.mp3",
+    "upper-atmosphere": "assets/audio/music/biomes/upper-atmosphere.mp3",
+    "stratosphere": "assets/audio/music/biomes/stratosphere.mp3",
+    "space": "assets/audio/music/biomes/space.mp3",
+    "deep-space": "assets/audio/music/biomes/deep-space.mp3"
+  },
   "ambient": {
     "ground": "assets/audio/ambient/forest.mp3",
     "sky": "assets/audio/ambient/wind.mp3",

@@ -175,7 +175,7 @@ describe("music + ambient lifecycle", () => {
     expect(loopPaths()).toBe(before);
   });
 
-  it("phase music: in-game → high/space crossfades via the right track loops", () => {
+  it("per-band music: the in-game track + ambient bed both follow the biome bands by altitude", () => {
     const loopPaths = () => {
       const hs = (Howler as unknown as { _howls: Array<{ _loop: boolean; _src: string[] }> })
         ._howls;
@@ -184,13 +184,17 @@ describe("music + ambient lifecycle", () => {
         .flatMap((h) => h._src)
         .join(" ");
     };
-    startMusic(); // PLAY → in-game track + ground ambient
-    setMusicAltitude(50);
-    expect(loopPaths()).toContain("ingame.mp3");
-    setMusicAltitude(1000); // past the high-start → tense track + space bed
+    startMusic(); // PLAY → ground band track + ground ambient
+    setMusicAltitude(50); // still the ground band
+    const low = loopPaths();
+    expect(low).toContain("music/biomes/ground.mp3"); // ground band's own track
+    expect(low).toContain("ambient/forest.mp3"); // ground ambient bed
+    setMusicAltitude(1000); // deep into the upper bands → space band
     const high = loopPaths();
-    expect(high).toContain("highspace.mp3");
-    expect(high).toContain("space.mp3"); // biome bed followed altitude
+    expect(high).toContain("music/biomes/space.mp3"); // music followed the band
+    expect(high).toContain("ambient/space.mp3"); // ambient bed followed too
+    // (the ground track + bed linger briefly here while they CROSSFADE out — that's expected;
+    //  the meaningful assertion is that the new band's track took over.)
     stopMusic();
   });
 
