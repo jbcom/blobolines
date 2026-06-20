@@ -1282,6 +1282,13 @@ drop most days). A 7-day daily-best trend in the Hall-of-Fame.
       pinned lint clean. VISUAL-VERIFIED live: the "This Week's Dailies" bar chart renders with the
       gold week-best day, streak badge, and "5/7 played · Best: 3,100".
 
+- [ ] [WAIT-REVIEW] PR #94 (N26 weekly daily summary) — babysit: local review + CI in flight (reviewer
+      checking the prune-reference gate + the 0-score-day division edge). Wait CI green, fold findings,
+      resolve threads, squash-merge, sync main.
+- [ ] [WAIT-CI] Release: PR #84 (release-please → blobolines 0.1.13) is open + accumulating all this
+      session's features. Once PR #94 is merged and #84's CI is green, squash-merge #84 to cut 0.1.13
+      (release.yml → cd.yml deploy). Verify the live deploy after.
+
 ## Notes
 - This is a living plan. After every stage, backward+forward sweep and edit the queue.
 - Next candidate milestones (surface, don't pre-commit): a new pad-type behaviour, a cosmetic trail,
