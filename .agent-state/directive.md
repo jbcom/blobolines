@@ -276,9 +276,9 @@ altitude. Enables real screenshot verification of upper-atmosphere/stratosphere/
 scenery, parallax, audio band, and particle grain.
 
 ### H0 Architecture
-- [ ] H0.1 Read PlayerBlob (how the Rapier body is driven) + DevHarness + testBridge; decide how
-      to expose a setTranslation-based teleport without breaking the sim (wake body, zero velocity,
-      reset world to match). Record decision.
+- [x] H0.1 Decided (decisions.ndjson): teleport via the same consume-bridge pattern as launch
+      (requestTeleport/consumeTeleport); PlayerBlob frame loop consumes → ensureHeight +
+      setTranslation + zero velocity + wake + ref sync. Implemented in H1.1.
 
 ### H1 Implementation
 - [x] H1.1 Teleport wired: requestTeleport/consumeTeleport in launchBridge (+reset, +index
