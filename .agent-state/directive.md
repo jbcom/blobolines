@@ -207,12 +207,39 @@ re-write directive forward → next.
       Addressed gemini HIGH (redundant startRun masking the card remount). Fixes in 6a07f82 +
       34a7ccd: fixed-frame-count perf sampling + skip route-proof (dev-tooling) in CI. CI=true
       runs 4 specs/58s, local 5/5.
-- [ ] [WAIT-REVIEW] E2.1c Babysit PR #62: confirm both verify + e2e gates GREEN in real CI →
-      resolve any new threads → squash-merge → re-write directive forward.
+- [x] E2.1c PR #62 SQUASH-MERGED (6e842c2, 2026-06-20). Both verify + e2e gates GREEN in real
+      CI — E2E coverage restored to the merge gate after being broken on main for 5+ releases.
+
+## Queue — Milestone: Parallax depth layers (branch feat/parallax-depth)
+
+Enrich the climb's visual depth: the scenery sits on one background plane (z −26..−10). Add
+multiple parallax depth layers that scroll at different rates with the climb so the world reads
+as deep, not flat — the mandate's "richer and more fun". Reuse the biome scenery system + NAS
+assets; keep determinism + mid-tier budget.
+
+### F0 Architecture
+- [x] F0.1 Decided (decisions.ndjson): discrete far/mid/near depth layers as a data-only
+      parallaxLayers table; each reuses the per-band registry + biomeBandAt, varying z/drift/
+      scale/density/wrap-column/opacity.
+
+### F1 Implementation
+- [x] F1.1 BiomeScenicProps renders 3 parallax layers (far slow+hazy+large, mid detailed, near
+      fast accents); per-layer RNG seeds (mid keeps 444/445 → unchanged layout); driftX sideways
+      parallax; PropModel clones materials for hazy layers. Live-app screenshot verified
+      (layered scenery renders, no errors).
+- [x] F1.2 Tests: parallaxLayers config tests (front-to-back depth/drift/scale ordering, sane
+      ranges) + browser test asserting props span multiple depth bands. 438 unit + 108 browser.
+      Reviewer (ae30c8) dispatched on the commit — fold findings forward.
+
+### F2 PR cutting point
+- [x] F2.1a Verified: typecheck + lint + 438 unit + 108 browser + e2e (4 pass/1 skip CI=true) +
+      live-app screenshot. Local review folded forward (cbcfe64): material-disposal leak fix,
+      renderOrder for transparent layers, scoped near xRange, clarified mid comment.
+- [ ] [WAIT-REVIEW] F2.1b Open PR; babysit: verify+e2e gates green → address feedback →
+      resolve threads → squash-merge → re-write directive forward to the next milestone.
 
 ## Notes
 - This is a living plan. After every stage, backward+forward sweep and edit the queue.
-- Next candidate milestones (surface, don't pre-commit): per-biome ambient audio beds,
-  collectible pickups along the climb, parallax depth layers, blob trail/cosmetic unlocks,
-  DevHarness blob-altitude TELEPORT (move the Rapier body, not score) for visual QA across
-  bands, denser/multi-depth scenery layers, biome-specific particle ambience.
+- Next candidate milestones (surface, don't pre-commit): collectible pickups along the climb,
+  blob trail/cosmetic unlocks, DevHarness blob-altitude TELEPORT (move the Rapier body, not
+  score) for visual QA across bands, biome-specific particle ambience, per-biome music layers.

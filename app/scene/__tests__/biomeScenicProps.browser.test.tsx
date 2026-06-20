@@ -2,7 +2,7 @@ import { FixtureStage } from "@app/fixtures";
 import { BiomeProps, BiomeScenicProps } from "@app/scene/world";
 import { useThree } from "@react-three/fiber";
 import { useEffect } from "react";
-import type { Group, Object3D } from "three";
+import { type Group, type Object3D, Vector3 } from "three";
 import { expect, test, vi } from "vitest";
 import { render } from "vitest-browser-react";
 import { biomePropRegistry } from "@/config/biomeProps";
@@ -93,6 +93,50 @@ test("BiomeScenicProps mounts and shows registry props across every biome band",
     );
   }
 });
+
+test("BiomeScenicProps renders props across multiple parallax depth layers", async () => {
+  let sceneRoot: Group | null = null;
+  setAltitude(50);
+
+  const screen = await render(
+    <FixtureStage testId="parallax-fixture" cameraDistance={40}>
+      <CaptureScene onScene={(s) => (sceneRoot = s as Group)} />
+      <BiomeScenicProps />
+    </FixtureStage>,
+  );
+  await expect.element(screen.getByTestId("parallax-fixture")).toBeInTheDocument();
+
+  // Collect the world-Z of every visible prop mesh; the far/mid/near layers place props in
+  // distinct z-bands (≈ -62..-42 / -26..-10 / -6..1), so the spread of z positions must be wide.
+  await vi.waitFor(
+    () => {
+      const root = sceneRoot as unknown as Object3D | null;
+      expect(root).not.toBeNull();
+      const zs: number[] = [];
+      (root as Object3D).traverse((o: Object3D) => {
+        if ((o as { isMesh?: boolean }).isMesh) {
+          o.getWorldPosition(_tmp);
+          zs.push(_tmp.z);
+        }
+      });
+      expect(zs.length).toBeGreaterThan(3);
+      // Assert explicit presence in distinct depth bands so a regression that drops ONE layer
+      // fails deterministically (a wide span alone could pass with a single stretched layer).
+      // Far props sit at z ≲ -40, near props at z ≳ -8 — require at least one of each.
+      expect(
+        zs.some((z) => z < -38),
+        "expected a far-layer prop (z ≲ -40)",
+      ).toBe(true);
+      expect(
+        zs.some((z) => z > -10),
+        "expected a near-layer prop (z ≳ -8)",
+      ).toBe(true);
+    },
+    { timeout: 10000, interval: 100 },
+  );
+});
+
+const _tmp = new Vector3();
 
 test("BiomeProps mounts and resolves ambience across every band without throwing", async () => {
   // The per-band ambience lookup throws on a missing band; driving the blob through every
