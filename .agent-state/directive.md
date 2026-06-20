@@ -263,11 +263,34 @@ points; determinism + mid-tier budget; no silent fallback.
 - [x] G2.1a Verified + PR #64 opened. Local review (a301e4) folded forward (46b98aa): bounded
       the unbounded mote X drift (pre-existing off-screen bug the bandDrift multiplier worsened)
       + seeded the eased grain ref from the ground band (kills the startup transient).
-- [ ] [WAIT-REVIEW] G2.1b Babysit PR #64: verify+e2e gates green → address feedback → resolve
-      threads → squash-merge → re-write directive forward to the next milestone.
+- [x] G2.1b PR #64 SQUASH-MERGED (92175f5, 2026-06-20). verify+e2e green; gemini's two HIGH
+      drift threads were stale (reviewed pre-46b98aa); reasoned-resolved (the bounded-sine fix
+      already addresses them). Biome sensory arc COMPLETE: scenery + parallax + audio + particles.
+
+## Queue — Milestone: DevHarness altitude teleport (branch feat/harness-teleport)
+
+Tooling that compounds the biome work: a DevHarness control (and a test-bridge method) that
+TELEPORTS the blob's Rapier body to a target altitude, so every biome band can be visually QA'd
+across the full climb range — which the prior biome PRs could only partially verify at low
+altitude. Enables real screenshot verification of upper-atmosphere/stratosphere/space/deep-space
+scenery, parallax, audio band, and particle grain.
+
+### H0 Architecture
+- [ ] H0.1 Read PlayerBlob (how the Rapier body is driven) + DevHarness + testBridge; decide how
+      to expose a setTranslation-based teleport without breaking the sim (wake body, zero velocity,
+      reset world to match). Record decision.
+
+### H1 Implementation
+- [ ] H1.1 Add a teleport to the launch bridge / PlayerBlob (consume a pending teleport like
+      requestLaunch), DevHarness buttons (jump to each band), and a window.__blobtest.teleport(y).
+- [ ] H1.2 Use it to screenshot-verify EACH biome band (ground→deep-space) and read the shots —
+      fixing any band that doesn't read right. Tests for the teleport bridge.
+
+### H2 PR cutting point
+- [ ] H2.1 Verify + screenshots of all bands; open PR; babysit to squash-merge; re-write forward.
 
 ## Notes
 - This is a living plan. After every stage, backward+forward sweep and edit the queue.
-- Next candidate milestones (surface, don't pre-commit): collectible pickups along the climb,
-  blob trail/cosmetic unlocks tied to achievements, DevHarness blob-altitude TELEPORT for visual
-  QA across bands, per-biome music layers, denser interactive props that react to the blob.
+- Next candidate milestones (surface, don't pre-commit): collectible variety/special pickups,
+  blob cosmetic unlocks tied to achievements, per-biome music layers, denser interactive props
+  that react to the blob, biome-reactive blob tinting.
