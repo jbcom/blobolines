@@ -232,8 +232,11 @@ assets; keep determinism + mid-tier budget.
       Reviewer (ae30c8) dispatched on the commit — fold findings forward.
 
 ### F2 PR cutting point
-- [ ] F2.1 Verify (typecheck + lint + test + test:browser + e2e) + app-runs screenshot; open
-      PR; address feedback; resolve threads; squash-merge; re-write directive forward.
+- [x] F2.1a Verified: typecheck + lint + 438 unit + 108 browser + e2e (4 pass/1 skip CI=true) +
+      live-app screenshot. Local review folded forward (cbcfe64): material-disposal leak fix,
+      renderOrder for transparent layers, scoped near xRange, clarified mid comment.
+- [ ] [WAIT-REVIEW] F2.1b Open PR; babysit: verify+e2e gates green → address feedback →
+      resolve threads → squash-merge → re-write directive forward to the next milestone.
 
 ## Notes
 - This is a living plan. After every stage, backward+forward sweep and edit the queue.
