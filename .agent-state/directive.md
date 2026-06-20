@@ -1114,6 +1114,12 @@ uniquely suited to.
       external URIs, ≤920 faces — headless-WebGL safe) and confirmed served 200 + loading without
       console errors on the live dev server. 134 browser / 530 unit green; typecheck + pinned lint clean.
 
+- [ ] [WAIT-CI-REVIEW] PR #87 (N19 off-route obstacles) — babysit: a local comprehensive-review is
+      running over the branch diff (the key risk it checks: an obstacle slipping BETWEEN discrete
+      golden-arc samples — sample spacing ~0.6m over a ~15m arc vs ROUTE_CLEARANCE 6.5, so covered,
+      but confirm). Wait CI green for HEAD, fold any review/CodeRabbit/gemini findings forward, resolve
+      threads, squash-merge. Then cut the next milestone branch.
+
 ## Notes
 - This is a living plan. After every stage, backward+forward sweep and edit the queue.
 - Next candidate milestones AFTER N19 (surface, don't pre-commit): per-biome MUSIC layers (needs new
