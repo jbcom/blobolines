@@ -891,12 +891,41 @@ milestones, so a 2000m crossing LOOKS as grand as it sounds.
       screen renders (gooey blob actor + "Blobolines" + tagline + PLAY + menu options) on the
       daylight sky. v0.1.12 shipping the session's twelve PRs is LIVE.
 
-### N16 Next milestone (resume the keep-adding loop)
-- [ ] [WAIT-MERGE] N16.1 With v0.1.12 shipped + verified, resume KEEP-ADDING. Every feature surface
-      surveyed so far is saturated, so probe a NOT-yet-examined corner for a genuine small beat:
-      e.g. the Onboarding/first-run coachmark, the AchievementsModal/leaderboard presentation, the
-      pause/in-run UX, or a NAS-asset enrichment (more landmark/prop variety, a menu-blob prop).
-      Enumerate + survey first; no reinvention.
+## Queue — Milestone: Achievement progress bars (branch feat/achievement-progress)
+
+### N16 Survey + implement
+- [x] N16.1 SURVEYED not-yet-examined corners (Onboarding coachmark — built; AchievementsModal —
+      Achievements + Leaderboard tabs built). Found a GENUINE gap: a LOCKED achievement showed only
+      a lock icon — no hint of how CLOSE you are. DECISION: add progress to the pure achievements
+      model + a progress bar on locked medals.
+- [x] N16.2 DONE. Refactored Achievement from a `met` lambda to `stat: (s)=>number` + `target:number`
+      (single source — no threshold duplicated); derived pure `isMet(a,s)` + `achievementProgress(a,s)
+      → {current,target,fraction}`. AchievementsModal builds an all-time AchievementStats snapshot and
+      renders a gold progress bar + "current / target" on locked medals — but ONLY for partial
+      progress (0<f<1): a 0-progress run-only medal (no stalled bar) and an already-met-but-uncommitted
+      medal (f≥1, pending unlock) both suppress it. Tests: isMet boundary + newlyUnlocked-agreement
+      sweep + achievementProgress current/target/clamp (8 new) + a modal browser fixture (progress
+      shows / no-stalled-bar / unlocked-shows-none). 523 unit + 125 browser green; typecheck + biome
+      ci clean. Live screenshot read: "Deep Space" locked medal shows a thin gold bar + "128 / 1,000".
+      Committed; reviewer to dispatch.
+
+### N16.3 PR cutting point
+- [x] N16.3a Committed (07f2ce0), dispatched reviewer (background, focused on the met→stat/target
+      refactor equivalence + the fraction guard), pushed, opened PR #83. Monitor armed (ci-coalescing-
+      aware — waits for the ci.yml run on the exact HEAD sha). Ran `npx biome ci .` as the last step.
+- [x] N16.3b-review Background reviewer returned FULLY CLEAN: the met→stat/target refactor is
+      provably behavior-identical (every predicate was `>= N`), the fraction math is correct at all
+      boundaries, the modal run-axis=0 snapshot + the 0<f<1 render guard (suppressing both 0-progress
+      run medals and the f≥1 met-but-uncommitted edge) are correctly reasoned, zero stale .met
+      callers, helpers pure. No forward fixes.
+- [ ] [WAIT-REVIEW] N16.3c Wait the ci.yml run on HEAD green + any gemini/CodeRabbit threads, squash-
+      merge PR #83, sync main, start N17.
+
+### N17 Next milestone (surface after #83 merges)
+- [ ] [WAIT-MERGE] N17.1 Keep adding. Probe another not-yet-examined corner for a genuine beat:
+      the Onboarding/first-run coachmark polish, the Leaderboard tab presentation, the in-run pause/
+      settings access, the customizer, or a NAS-asset enrichment. Enumerate + survey first; no
+      reinvention.
 
 ## Queue — Milestone: Daily-challenge results polish (branch feat/daily-results, NEXT)
 

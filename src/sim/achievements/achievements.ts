@@ -23,13 +23,37 @@ export interface AchievementStats {
   runCrystals: number;
 }
 
+/** A locked achievement's progress toward unlocking — so the UI can show "640 / 1000 m". */
+export interface AchievementProgress {
+  current: number;
+  target: number;
+  /** 0..1 fraction toward the target (clamped). */
+  fraction: number;
+}
+
 export interface Achievement {
   id: string;
   title: string;
   /** One-line description of the goal. */
   description: string;
-  /** Met predicate — pure, over the stats snapshot. */
-  met: (s: AchievementStats) => boolean;
+  /** The stat axis this achievement tracks (pure accessor over the stats snapshot). */
+  stat: (s: AchievementStats) => number;
+  /** The threshold on `stat` that unlocks it. */
+  target: number;
+}
+
+/** Pure: is the achievement met for these stats? (`stat` has reached `target`.) */
+export function isMet(a: Achievement, s: AchievementStats): boolean {
+  return a.stat(s) >= a.target;
+}
+
+/** Pure: how far `stats` is toward unlocking `a` — current value, target, and a clamped fraction.
+ *  Lets the achievements list show a progress bar on LOCKED medals (you're 640/1000m there). */
+export function achievementProgress(a: Achievement, s: AchievementStats): AchievementProgress {
+  const current = a.stat(s);
+  const fraction =
+    a.target > 0 ? Math.max(0, Math.min(1, current / a.target)) : current >= 0 ? 1 : 0;
+  return { current, target: a.target, fraction };
 }
 
 /** The achievement set. Ordered roughly by difficulty for a tidy list. Add freely — the store
@@ -39,67 +63,78 @@ export const ACHIEVEMENTS: readonly Achievement[] = [
     id: "height-100",
     title: "Cloud Niner",
     description: "Reach 100 m in a single run.",
-    met: (s) => s.bestHeight >= 100,
+    stat: (s) => s.bestHeight,
+    target: 100,
   },
   {
     id: "height-250",
     title: "Stratosphere",
     description: "Reach 250 m in a single run.",
-    met: (s) => s.bestHeight >= 250,
+    stat: (s) => s.bestHeight,
+    target: 250,
   },
   {
     id: "height-500",
     title: "Low Orbit",
     description: "Reach 500 m in a single run.",
-    met: (s) => s.bestHeight >= 500,
+    stat: (s) => s.bestHeight,
+    target: 500,
   },
   {
     id: "height-1000",
     title: "Deep Space",
     description: "Reach 1,000 m in a single run.",
-    met: (s) => s.bestHeight >= 1000,
+    stat: (s) => s.bestHeight,
+    target: 1000,
   },
   {
     id: "combo-5",
     title: "On a Roll",
     description: "Chain a 5× clean-bounce combo.",
-    met: (s) => s.runMaxCombo >= 5,
+    stat: (s) => s.runMaxCombo,
+    target: 5,
   },
   {
     id: "combo-8",
     title: "Unbreakable",
     description: "Chain an 8× clean-bounce combo.",
-    met: (s) => s.runMaxCombo >= 8,
+    stat: (s) => s.runMaxCombo,
+    target: 8,
   },
   {
     id: "crystals-run-25",
     title: "Magpie",
     description: "Collect 25 crystals in one run.",
-    met: (s) => s.runCrystals >= 25,
+    stat: (s) => s.runCrystals,
+    target: 25,
   },
   {
     id: "crystals-total-250",
     title: "Hoarder",
     description: "Collect 250 crystals all-time.",
-    met: (s) => s.lifetimeCrystals >= 250,
+    stat: (s) => s.lifetimeCrystals,
+    target: 250,
   },
   {
     id: "crystals-total-500",
     title: "Treasure Hunter",
     description: "Collect 500 crystals all-time.",
-    met: (s) => s.lifetimeCrystals >= 500,
+    stat: (s) => s.lifetimeCrystals,
+    target: 500,
   },
   {
     id: "score-10k",
     title: "High Roller",
     description: "Post a 10,000-point run.",
-    met: (s) => s.bestScore >= 10000,
+    stat: (s) => s.bestScore,
+    target: 10000,
   },
   {
     id: "score-25k",
     title: "Apex Ascent",
     description: "Post a 25,000-point run.",
-    met: (s) => s.bestScore >= 25000,
+    stat: (s) => s.bestScore,
+    target: 25000,
   },
 ];
 
@@ -135,7 +170,7 @@ export function newlyUnlocked(stats: AchievementStats, unlocked: readonly string
   const have = new Set(unlocked);
   const fresh: string[] = [];
   for (const a of ACHIEVEMENTS) {
-    if (!have.has(a.id) && a.met(stats)) fresh.push(a.id);
+    if (!have.has(a.id) && isMet(a, stats)) fresh.push(a.id);
   }
   return fresh;
 }
