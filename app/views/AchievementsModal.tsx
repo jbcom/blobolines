@@ -21,7 +21,7 @@ import {
   Trophy,
   Zap,
 } from "lucide-react";
-import { ACHIEVEMENTS } from "@/sim/achievements";
+import { ACHIEVEMENTS, type AchievementStats, achievementProgress } from "@/sim/achievements";
 import { useGameStore } from "@/state";
 
 // Map achievement IDs to high-quality Lucide icons for high-fidelity aesthetics
@@ -49,6 +49,18 @@ export function AchievementsModal({
   const progress = useGameStore((s) => s.progress);
   const highScores = progress.highScores ?? [];
   const unlockedAchievements = progress.unlockedAchievements ?? [];
+
+  // All-time stats snapshot for the LOCKED-achievement progress bars. The modal opens from the menu,
+  // so there's no live run — the per-run axes (a run's combo/crystals) read 0, and the all-time axes
+  // (best height/score, lifetime crystals) carry the real progress the bars show.
+  const stats: AchievementStats = {
+    bestHeight: progress.bestHeight,
+    bestScore: progress.bestScore,
+    lifetimeCrystals: progress.crystals,
+    runHeight: 0,
+    runMaxCombo: 0,
+    runCrystals: 0,
+  };
 
   const unlockedCount = unlockedAchievements.length;
   const totalCount = ACHIEVEMENTS.length;
@@ -139,7 +151,7 @@ export function AchievementsModal({
                     </div>
 
                     {/* Metadata text */}
-                    <div className="flex flex-col">
+                    <div className="flex min-w-0 flex-1 flex-col">
                       <span
                         className={`font-display text-sm font-bold tracking-wide transition-colors ${
                           isUnlocked ? "text-cream group-hover:text-tramp-gold" : "text-fg-muted"
@@ -150,6 +162,29 @@ export function AchievementsModal({
                       <span className="mt-0.5 font-ui text-[11px] leading-normal text-fg-subtle">
                         {ach.description}
                       </span>
+                      {/* Locked → show how close you are, but ONLY for partial progress (0 < f < 1):
+                          a fresh run-only medal at 0 would read as a stalled bar, and a medal whose
+                          stat already meets the target (f≥1) is pending commit on the next run-end —
+                          a full bar on a "locked" medal would confuse, so suppress it there too. */}
+                      {!isUnlocked &&
+                        (() => {
+                          const p = achievementProgress(ach, stats);
+                          if (p.fraction <= 0 || p.fraction >= 1) return null;
+                          return (
+                            <div className="mt-1.5 flex flex-col gap-0.5">
+                              <div className="h-1 w-full overflow-hidden rounded-full bg-border/30">
+                                <div
+                                  className="h-full rounded-full bg-tramp-gold/60"
+                                  style={{ width: `${Math.round(p.fraction * 100)}%` }}
+                                />
+                              </div>
+                              <span className="font-ui text-[10px] tabular-nums text-fg-subtle">
+                                {Math.floor(p.current).toLocaleString()} /{" "}
+                                {p.target.toLocaleString()}
+                              </span>
+                            </div>
+                          );
+                        })()}
                     </div>
 
                     {/* Unlocked tag corner */}
