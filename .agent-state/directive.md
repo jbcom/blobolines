@@ -260,8 +260,11 @@ points; determinism + mid-tier budget; no silent fallback.
       e2e (4 pass/1 skip, after one perf flake retry). Reviewer (a301e4) dispatched.
 
 ### G2 PR cutting point
-- [ ] G2.1 Verify (typecheck+lint+test+test:browser+e2e) + screenshot; open PR; babysit to
-      squash-merge; re-write directive forward.
+- [x] G2.1a Verified + PR #64 opened. Local review (a301e4) folded forward (46b98aa): bounded
+      the unbounded mote X drift (pre-existing off-screen bug the bandDrift multiplier worsened)
+      + seeded the eased grain ref from the ground band (kills the startup transient).
+- [ ] [WAIT-REVIEW] G2.1b Babysit PR #64: verify+e2e gates green → address feedback → resolve
+      threads → squash-merge → re-write directive forward to the next milestone.
 
 ## Notes
 - This is a living plan. After every stage, backward+forward sweep and edit the queue.
