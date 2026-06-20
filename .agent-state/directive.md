@@ -1346,6 +1346,16 @@ drop most days). A 7-day daily-best trend in the Hall-of-Fame.
       GameOver browser (celebration shows, plain count suppressed). 563 unit / 150 browser green;
       typecheck + pinned lint clean. (Visual: store not page-reachable for a seeded screenshot — the
       3 deterministic browser tests assert the text + suppression; styling = standard gold tokens.)
+- [x] N29 local review (comprehensive-review:code-reviewer, scoped to 3f48598): CLEAN — gating correct
+      across all paths, no stale-state carry-over, reorder dependency-safe, a11y sound. Noted 2
+      untested-but-correct gating paths (first-ever daily, backward-clock no-op) → FOLDED FORWARD in
+      95c3228 (2 store tests, both assert streakExtended===0). 565 unit green.
+
+### Cutting point: PR for the streak-extension-celebration polish
+- [ ] [WAIT-CI] Open ONE PR for feat/post-95-polish (docs(state) refresh + N29 celebration + its
+      test-hardening — 3 commits). Push, open PR, babysit CI green + bot threads, resolve, squash-
+      merge, reset main, live-verify. Then fresh branch; next theme = gameplay FEEL or another
+      genuinely-delightful polish (the daily payoff arc menu→play→celebrate is now complete).
 
 ## Notes
 - This is a living plan. After every stage, backward+forward sweep and edit the queue.
