@@ -1,28 +1,29 @@
 import { Pause } from "lucide-react";
 import { useEffect } from "react";
-import { pauseMusic, resumeMusic } from "@/audio";
+import { pauseMusic } from "@/audio";
 import { useGameStore } from "@/state";
 
 /**
- * In-run PAUSE control: a small top-corner button plus an Escape/P key handler that toggles the
- * paused phase (the physics stepper freezes; the PauseOverlay layers on). Mounted in the HUD, so it
- * only exists while playing/paused. Pausing ducks the music so the quiet break reads.
+ * In-run PAUSE control: a small top-corner button plus an Escape/P key handler that ENTERS pause
+ * (the physics stepper freezes; the PauseOverlay layers on). Mounted in the HUD, so it only exists
+ * while playing/paused. Pausing ducks the music so the quiet break reads.
+ *
+ * This handler ONLY pauses (playing → paused). The RESUME side (paused → playing) lives in
+ * PauseOverlay's own keydown listener, which is guarded on `!settingsOpen` — otherwise pressing
+ * Escape to close the Settings modal layered over the pause overlay would also resume the run.
  */
 export function PauseButton() {
   const togglePause = useGameStore((s) => s.togglePause);
   const phase = useGameStore((s) => s.phase);
 
-  // Escape / P toggles the pause. Guarded to the in-run phases so it can't fire on menu/gameover
-  // (HudOverlay only mounts this while playing/paused, but the listener is global, so re-check).
+  // Escape / P ENTERS pause. Guarded to `playing` only (re-checked from the store, since the
+  // listener is global) so it never fires the resume direction — PauseOverlay owns resume.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key !== "Escape" && e.key.toLowerCase() !== "p") return;
-      const p = useGameStore.getState().phase;
-      if (p !== "playing" && p !== "paused") return;
+      if (useGameStore.getState().phase !== "playing") return;
       e.preventDefault();
-      // Hold the music ducked while paused, restore it on resume — Escape/P toggles both ways.
-      if (p === "playing") pauseMusic();
-      else resumeMusic();
+      pauseMusic();
       togglePause();
     };
     window.addEventListener("keydown", onKey);

@@ -148,9 +148,10 @@ export function setSfxVolume(v: number): void {
 /** Set the MUSIC bus level [0,1] and re-level the live music bed (no fade — immediate). */
 export function setMusicVolume(v: number): void {
   musicVolume = Math.max(0, Math.min(1, v));
-  // While a pause holds the bed ducked, leave it ducked — a slider drag in the pause Settings
-  // panel updates the target level, but the bed re-levels to it on resumeMusic(), not now.
-  if (music && !musicPaused) music.volume(musicTarget());
+  // Re-level the live bed. While a pause holds it ducked, re-level to the DUCKED target (25%) so a
+  // slider drag in the pause Settings panel still takes effect immediately (e.g. dragging to mute) —
+  // resumeMusic() then restores to the full target. Outside pause, re-level to the full target.
+  if (music) music.volume(musicPaused ? musicTarget() * 0.25 : musicTarget());
 }
 
 /** Set the AMBIENT bus level [0,1] and re-level the live ambient bed. */

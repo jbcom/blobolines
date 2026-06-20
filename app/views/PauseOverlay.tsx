@@ -1,7 +1,7 @@
 import { Button } from "@app/components/ui";
 import { Play, RotateCcw, Settings as SettingsIcon } from "lucide-react";
 import { motion } from "motion/react";
-import { lazy, Suspense, useEffect, useRef, useState } from "react";
+import { lazy, Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { resumeMusic, startMenuMusic, stopMusic } from "@/audio";
 import { useGameStore } from "@/state";
 
@@ -22,16 +22,30 @@ export function PauseOverlay() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const resumeRef = useRef<HTMLButtonElement>(null);
 
+  // Resume returns to the climb AND lifts the pause music-duck (the bed fades back to full).
+  const resume = useCallback(() => {
+    resumeMusic();
+    togglePause();
+  }, [togglePause]);
+
   // Focus the primary action on open (WCAG 2.4.3).
   useEffect(() => {
     resumeRef.current?.focus();
   }, []);
 
-  // Resume returns to the climb AND lifts the pause music-duck (the bed fades back to full).
-  const resume = () => {
-    resumeMusic();
-    togglePause();
-  };
+  // Escape / P RESUMES from the overlay — but only when Settings is closed, so pressing Escape
+  // inside the Settings modal (layered on top) closes that modal instead of resuming the run.
+  // PauseButton owns the ENTER-pause direction; this owns the exit, so the two never double-fire.
+  useEffect(() => {
+    if (settingsOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "Escape" && e.key.toLowerCase() !== "p") return;
+      e.preventDefault();
+      resume();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [settingsOpen, resume]);
 
   const quitToMenu = () => {
     resetRun();
