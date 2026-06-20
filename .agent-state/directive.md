@@ -235,11 +235,34 @@ assets; keep determinism + mid-tier budget.
 - [x] F2.1a Verified: typecheck + lint + 438 unit + 108 browser + e2e (4 pass/1 skip CI=true) +
       live-app screenshot. Local review folded forward (cbcfe64): material-disposal leak fix,
       renderOrder for transparent layers, scoped near xRange, clarified mid comment.
-- [ ] [WAIT-REVIEW] F2.1b Open PR; babysit: verify+e2e gates green → address feedback →
-      resolve threads → squash-merge → re-write directive forward to the next milestone.
+- [x] F2.1b PR #63 SQUASH-MERGED (155a2b6, 2026-06-20). verify+e2e green; folded forward the
+      array-material crash fix (gemini), strengthened depth/xRange tests + reasoned-countered the
+      setState-in-useFrame heuristic (CodeRabbit). E2E gate held green across all 3 post-fix PRs.
+
+## Queue — Milestone: Per-biome particle ambience (branch feat/biome-particles)
+
+Completes the biome sensory arc (scenery + parallax + mote tint + audio done): give each biome
+band its OWN signature drifting particles — warm desert dust on the ground, drifting petals/pollen
+in the forest sky, icy glints in the upper atmosphere, glowing spores in the fungal stratosphere,
+star sparkles in space, cosmic shimmer in deep space. Data-driven via biomeBandAt; cheap instanced
+points; determinism + mid-tier budget; no silent fallback.
+
+### G0 Architecture
+- [ ] G0.1 Read BiomeProps (the existing mote layer) + biomeAmbience; decide whether per-biome
+      particles extend the mote system (shape/behaviour per band) or a new instanced layer.
+      Record decision.
+
+### G1 Implementation
+- [ ] G1.1 Per-band particle config (count/size/color/drift/shape) keyed off biomeBandAt; render
+      cheap instanced particles that crossfade across band crossings. Visual-verify (screenshot).
+- [ ] G1.2 Tests: particle config tests + render/browser test per the visual gate.
+
+### G2 PR cutting point
+- [ ] G2.1 Verify (typecheck+lint+test+test:browser+e2e) + screenshot; open PR; babysit to
+      squash-merge; re-write directive forward.
 
 ## Notes
 - This is a living plan. After every stage, backward+forward sweep and edit the queue.
 - Next candidate milestones (surface, don't pre-commit): collectible pickups along the climb,
-  blob trail/cosmetic unlocks, DevHarness blob-altitude TELEPORT (move the Rapier body, not
-  score) for visual QA across bands, biome-specific particle ambience, per-biome music layers.
+  blob trail/cosmetic unlocks tied to achievements, DevHarness blob-altitude TELEPORT for visual
+  QA across bands, per-biome music layers, denser interactive props that react to the blob.
