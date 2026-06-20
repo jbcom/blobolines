@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { blobSkinColor } from "@/styles/tokens";
 import {
   ACHIEVEMENT_SKIN,
   ACHIEVEMENTS,
@@ -44,6 +45,10 @@ describe("achievements", () => {
     expect(newlyUnlocked({ ...ZERO, bestHeight: 1000 }, [])).toEqual(
       expect.arrayContaining(["height-100", "height-250", "height-500", "height-1000"]),
     );
+    // height-2000 ("Voyager") is the new apex tier — only crossed at 2000m, and it grants nebula.
+    expect(newlyUnlocked({ ...ZERO, bestHeight: 1999 }, [])).not.toContain("height-2000");
+    expect(newlyUnlocked({ ...ZERO, bestHeight: 2000 }, [])).toContain("height-2000");
+    expect(ACHIEVEMENT_SKIN["height-2000"]).toBe("nebula");
   });
 
   it("unlocks the crystal total milestones at their thresholds", () => {
@@ -161,7 +166,9 @@ describe("achievement-gated skins", () => {
   });
 
   it("gates only valid blob skin ids", () => {
-    const VALID_SKINS = ["blue", "slime", "ghost", "ink"];
+    // Derive the valid set from the skin-color source of truth so adding a skin never silently
+    // staleness-breaks this guard (it just has to be a real BlobSkin).
+    const VALID_SKINS = Object.keys(blobSkinColor);
     for (const skin of Object.keys(SKIN_ACHIEVEMENT)) {
       expect(VALID_SKINS, `${skin} is a real blob skin`).toContain(skin);
     }

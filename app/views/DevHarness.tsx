@@ -16,6 +16,7 @@ import {
   useGameStore,
   useWorldStore,
 } from "@/state";
+import { blobSkinColor } from "@/styles/tokens";
 
 /**
  * Dev harness overlay — manual triggers for blob events so gameplay can be exercised
@@ -49,7 +50,9 @@ const captureEnabled = (): boolean => {
   return !params.has("dev");
 };
 
-const SKINS: BlobSkin[] = ["blue", "slime", "ghost", "ink"];
+// Derived from the skin-color source of truth so the dev skin-switcher always covers every skin
+// (no hardcoded list to drift when a new skin is added).
+const SKINS = Object.keys(blobSkinColor) as BlobSkin[];
 
 export function DevHarness() {
   const [open, setOpen] = useState(false);

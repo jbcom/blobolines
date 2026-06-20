@@ -11,6 +11,8 @@ export const palette = {
     blue: "#ff7a3d",
     slime: "#ff4f7b",
     ghost: "#ffd95a",
+    /** Cosmic violet — the 2000m "Voyager" reward skin (earned by the height-2000 achievement). */
+    nebula: "#a06bff",
   },
   tramp: {
     blue: "#ff6f61",
@@ -95,13 +97,14 @@ export const mixHex = (a: string, b: string, t: number): string => {
 };
 
 /** Blob skin identifiers (the playable characters from the cover art). */
-export type BlobSkin = "blue" | "slime" | "ghost" | "ink";
+export type BlobSkin = "blue" | "slime" | "ghost" | "ink" | "nebula";
 
 export const blobSkinColor: Record<BlobSkin, string> = {
   blue: palette.blob.blue,
   slime: palette.blob.slime,
   ghost: palette.blob.ghost,
   ink: palette.blob.ink,
+  nebula: palette.blob.nebula,
 };
 
 /** Cloud-pad gameplay types. Kept as TrampType for compatibility with older world-store and

@@ -88,6 +88,13 @@ export const ACHIEVEMENTS: readonly Achievement[] = [
     target: 1000,
   },
   {
+    id: "height-2000",
+    title: "Voyager",
+    description: "Reach 2,000 m in a single run.",
+    stat: (s) => s.bestHeight,
+    target: 2000,
+  },
+  {
     id: "combo-5",
     title: "On a Roll",
     description: "Chain a 5× clean-bounce combo.",
@@ -154,6 +161,7 @@ export function achievementById(id: string): Achievement | undefined {
 export const SKIN_ACHIEVEMENT: Partial<Record<BlobSkin, string>> = {
   ghost: "score-25k",
   ink: "height-1000",
+  nebula: "height-2000",
 };
 
 /** Reverse map: achievement id → the skin it unlocks (for the grant-on-unlock path). */

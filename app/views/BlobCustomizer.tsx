@@ -19,6 +19,7 @@ const SKINS: { id: BlobSkin; name: string }[] = [
   { id: "slime", name: "Berry" },
   { id: "ghost", name: "Honey" },
   { id: "ink", name: "Cocoa" },
+  { id: "nebula", name: "Nebula" },
 ];
 
 export function BlobCustomizer({
