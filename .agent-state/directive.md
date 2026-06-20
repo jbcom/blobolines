@@ -1163,9 +1163,28 @@ share button was text-only).
       READ the screenshot — wordmark/date/score/height/stat-row/URL all correct, emoji + Fredoka/Nunito
       fonts load, gradient + gold frame crisp. 543 unit / 139 browser green; typecheck + pinned lint clean.
 
+## Queue — Milestone: N22 Hall-of-Fame REPLAY (branch feat/gameplay-variety-survey)
+
+The N20.1 "historical-daily view" gap, built the most useful way: the Hall-of-Fame already SHOWS each
+high score's seed phrase + date, but replaying required copy/pasting the seed into the title screen.
+Surveyed the gameplay-variety corners first (11 pad types + the just-shipped obstacles = saturated),
+so the real win is turning the displayed seeds into one-tap re-climbs — useful for EVERY player (and
+covers the daily-history gap: daily seeds are date-stamped phrases right there in the list).
+
+### N22 Architecture
+- [x] N22.1 DONE. useGameStore.replaySeed(seedPhrase, difficulty): resets the run, regenerates the
+      world from the phrase, flags dailyRun iff it's a daily seed ("blobolines-daily-…" → the daily
+      game-over framing shows), and jumps to playing. The stored difficulty is an untrusted string
+      (HighScoreEntry persists it loosely) → validated against ROUTE_DIFFICULTIES, falling back to the
+      easiest tier (no-garbage-into-worldgen). A "▶ Replay" button per Hall-of-Fame entry calls it +
+      closes the modal. Tests: store replaySeed unit (normal vs daily seed, difficulty pass-through) +
+      AchievementsModal browser fixture (tab→leaderboard, click Replay → playing + dailyRun). 544 unit
+      / 140 browser green; typecheck + pinned lint clean. VISUAL-VERIFIED live: seeded two scores,
+      opened Hall of Fame → Leaderboard, screenshot shows the ▶ Replay pill on each entry, well-styled.
+
 ## Notes
 - This is a living plan. After every stage, backward+forward sweep and edit the queue.
-- Next candidate milestones (surface, don't pre-commit): historical-daily view (the last N20.1 gap),
-  more obstacle/pad variety, a new cosmetic. Per-biome music is SATURATED — don't rebuild.
+- Next candidate milestones (surface, don't pre-commit): more obstacle/pad variety, a new cosmetic,
+  a "best daily this week" mini-summary. Per-biome music + base gameplay mechanics are SATURATED.
 - Lesson banked this session: the pre-push lint gate is `pnpm lint` (PINNED biome 2.5.0), NOT
   `npx biome` / global biome (older, gives false-clean) — see [[blobolines-biome-ci-stricter]].

@@ -7,6 +7,7 @@ import {
   SKIN_COST,
   useGameStore,
 } from "../store";
+import { useWorldStore } from "../worldStore";
 
 beforeEach(() => {
   useGameStore.setState({
@@ -116,6 +117,21 @@ describe("useGameStore", () => {
     // Replaying the SAME day's daily must NOT inflate the streak (still 1).
     useGameStore.getState().commitBestHeight(350);
     expect(useGameStore.getState().progress.dailyStreak).toBe(1);
+  });
+
+  it("replaySeed regenerates the tower, starts playing, and flags daily iff a daily seed", () => {
+    // A normal seed replays as a non-daily run.
+    useGameStore.getState().setDailyRun(true); // stale flag from a prior run
+    useGameStore.getState().replaySeed("bouncy-bright-blob", "ready");
+    expect(useGameStore.getState().phase).toBe("playing");
+    expect(useGameStore.getState().dailyRun).toBe(false);
+    expect(useWorldStore.getState().seedPhrase).toBe("bouncy-bright-blob");
+
+    // A daily seed replays as a DAILY run (so the game-over daily framing shows).
+    useGameStore.getState().replaySeed("blobolines-daily-2026-06-20", "hard");
+    expect(useGameStore.getState().dailyRun).toBe(true);
+    expect(useWorldStore.getState().seedPhrase).toBe("blobolines-daily-2026-06-20");
+    expect(useWorldStore.getState().difficulty).toBe("hard");
   });
 
   it("never moves the streak anchor BACKWARD (backward-clock exploit guard)", () => {

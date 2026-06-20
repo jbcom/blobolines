@@ -48,3 +48,32 @@ test("an UNLOCKED achievement shows no progress bar (it's done)", async () => {
   await expect.element(screen.getByText("100 / 100").query()).not.toBeInTheDocument();
   await expect.element(screen.getByText("640 / 1,000")).toBeInTheDocument();
 });
+
+test("a Hall-of-Fame entry's Replay button re-climbs that exact tower", async () => {
+  let closed = false;
+  useGameStore.setState((s) => ({
+    progress: {
+      ...s.progress,
+      highScores: [
+        {
+          score: 4200,
+          height: 320,
+          crystals: 5,
+          maxCombo: 4,
+          date: "2026-06-20T00:00:00.000Z",
+          seedPhrase: "blobolines-daily-2026-06-19",
+          difficulty: "hard",
+        },
+      ],
+    },
+  }));
+  const screen = await render(<AchievementsModal open onOpenChange={() => (closed = true)} />);
+  // Switch to the Leaderboard tab where high scores live.
+  await screen.getByRole("tab", { name: /leaderboard/i }).click();
+  // The replay button is labelled with the seed for accessibility.
+  await screen.getByRole("button", { name: /replay this tower.*2026-06-19/i }).click();
+  // It closes the modal and starts a daily replay of that exact tower at its stored difficulty.
+  expect(closed).toBe(true);
+  expect(useGameStore.getState().phase).toBe("playing");
+  expect(useGameStore.getState().dailyRun).toBe(true); // the seed is a daily seed
+});
