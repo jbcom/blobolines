@@ -15,7 +15,7 @@ import {
 } from "@/audio";
 import { blob } from "@/config";
 import type { TrampolineSpec } from "@/core/types";
-import { ImpactStyle, impact as impact_, vibrate } from "@/platform";
+import { ImpactStyle, impact as impact_, NotificationType, notify, vibrate } from "@/platform";
 import { classifyExpression, stepIdlePatience } from "@/sim/blob";
 import { CLOUD_BODY_HALF_HEIGHT, CLOUD_SETTLE_Y } from "@/sim/cloudPad";
 import { MAX_COMBO } from "@/sim/combo";
@@ -74,6 +74,14 @@ import { useDroplets } from "./useDroplets";
  * Drives the blob's visual deformation/eyes through the diagnostics bridge (read by
  * BlobActor's own useFrame) rather than React state, so it never re-renders per frame.
  */
+
+/** A celebratory SUCCESS notification haptic for the genuine peak moments (max combo, perfect
+ *  release) — a distinct tactile reward layered on top of the audio fanfare, so the payoff lands
+ *  on mobile too. Gated on the haptics setting (read fresh, like the impact-haptic call sites);
+ *  the platform notify() no-ops where unsupported, so this is safe on web. */
+function celebrateHaptic(): void {
+  if (useGameStore.getState().settings.haptics) void notify(NotificationType.Success);
+}
 
 export function PlayerBlob() {
   const bodyRef = useRef<RapierRigidBody>(null);
@@ -315,6 +323,7 @@ export function PlayerBlob() {
           if (nextCombo >= MAX_COMBO && run.combo < MAX_COMBO) {
             playComboFanfare();
             duckMusic(600);
+            celebrateHaptic(); // tactile reward for hitting the max combo
           }
           if (nextCombo >= 3) flash("gold", Math.min(1, (nextCombo - 2) / 6));
         }
@@ -607,6 +616,7 @@ export function PlayerBlob() {
       if (isPerfectRelease(req.charge)) {
         flash("gold", 1);
         playComboFanfare();
+        celebrateHaptic(); // tactile reward for a perfect-charge launch
       } else if (req.charge > 0.6) {
         flash("blue", req.charge);
       }
