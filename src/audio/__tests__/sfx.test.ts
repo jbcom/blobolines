@@ -230,7 +230,9 @@ describe("music + ambient lifecycle", () => {
     // A stray altitude tick while on the menu must start NOTHING — neither a band music track nor
     // an ambient bed (the menu is deliberately music-only). The live-loop count must not grow.
     setMusicAltitude(900);
-    expect(liveLoops(), "menu altitude tick must not start any new bed").toBeLessThanOrEqual(before);
+    expect(liveLoops(), "menu altitude tick must not start any new bed").toBeLessThanOrEqual(
+      before,
+    );
     stopMusic();
   });
 

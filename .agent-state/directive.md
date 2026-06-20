@@ -732,7 +732,11 @@ mandate explicitly includes keeping docs aligned (no end-of-project catch-up).
       "ingame" comment (0bec5d7). gemini's 3 MEDIUM (double currentMusicPath lookup + `as string`
       cast) → factored a fadeOutCurrentMusic() helper (41985be); 3 threads resolved. 507 unit + 120
       browser green.
-- [ ] [WAIT-REVIEW] N9.3c Wait CI green on 41985be, squash-merge PR #77, sync main, start N10.
+- [x] N9.3c-feedback CodeRabbit: setMusicAltitude called setAmbientBand even on the menu (could
+      restart the ambient the music-only menu silenced). Fixed in b6a4ab4 — full early-return on
+      the menu + a regression test (a menu altitude tick starts no new bed). Thread resolved. 508
+      unit + 120 browser green.
+- [ ] [WAIT-REVIEW] N9.3d Wait CI green on b6a4ab4, squash-merge PR #77, sync main, start N10.
 
 ### N10 Next milestone (surface after #77 merges)
 - [ ] [WAIT-MERGE] N10.1 Pick the next polish unit (don't pre-commit). Biome identity is now
