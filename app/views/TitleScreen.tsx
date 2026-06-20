@@ -58,7 +58,24 @@ export function TitleScreen() {
   // clock in this UI layer is fine (only src/sim & src/engine must stay clock-free for determinism).
   const dailyStreakCount = useGameStore((s) => s.progress.dailyStreak) ?? 0;
   const lastDailyKey = useGameStore((s) => s.progress.lastDailyKey);
-  const streakStatus = dailyStreakStatus(dailyStreakCount, lastDailyKey, dailyKey(new Date()));
+  // `todayKey` is STATE, not a bare render-time `dailyKey(new Date())`, so a streak badge left open
+  // across a UTC midnight doesn't go stale (an at-risk streak would otherwise keep reading at-risk
+  // past the deadline). It refreshes when the tab is re-shown (the common mobile "came back the next
+  // day" trigger) and on a 60s heartbeat (covers a menu parked open through midnight).
+  const [todayKey, setTodayKey] = useState(() => dailyKey(new Date()));
+  useEffect(() => {
+    const refresh = () => setTodayKey(dailyKey(new Date()));
+    const onVisible = () => {
+      if (document.visibilityState === "visible") refresh();
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    const id = window.setInterval(refresh, 60_000);
+    return () => {
+      document.removeEventListener("visibilitychange", onVisible);
+      window.clearInterval(id);
+    };
+  }, []);
+  const streakStatus = dailyStreakStatus(dailyStreakCount, lastDailyKey, todayKey);
   const reduced = useReducedMotion();
   const [customizing, setCustomizing] = useState(false);
   const [achievementsOpen, setAchievementsOpen] = useState(false);

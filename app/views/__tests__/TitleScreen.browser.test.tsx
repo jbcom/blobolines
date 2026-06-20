@@ -1,4 +1,4 @@
-import { afterEach, expect, test } from "vitest";
+import { afterEach, expect, test, vi } from "vitest";
 import { cleanup, render } from "vitest-browser-react";
 import { dailyKey } from "@/sim/daily";
 import { useGameStore, useWorldStore } from "@/state";
@@ -6,6 +6,7 @@ import { TitleScreen } from "../TitleScreen";
 
 afterEach(() => {
   cleanup();
+  vi.useRealTimers();
   useGameStore.setState({ phase: "menu", dailyRun: false });
   useGameStore.setState((s) => ({
     progress: { ...s.progress, dailyStreak: undefined, lastDailyKey: undefined },
@@ -13,10 +14,19 @@ afterEach(() => {
   useWorldStore.getState().reset(1, "ready");
 });
 
-/** UTC YYYY-MM-DD `back` days before today — for seeding a streak's last-played key relative to now. */
+/** A fixed mid-day-UTC instant so the streak tests are immune to a real UTC-midnight rollover
+ *  between the test's `lastDailyKey` seed and the component's own `new Date()` read. Only Date is
+ *  faked (toFake: ["Date"]) so the menu's 60s setInterval heartbeat keeps real timing. */
+const FIXED_NOW = new Date(Date.UTC(2026, 5, 20, 12, 0, 0)); // 2026-06-20T12:00Z
+const FIXED_TODAY = dailyKey(FIXED_NOW); // "2026-06-20"
+function pinClock() {
+  vi.useFakeTimers({ toFake: ["Date"] });
+  vi.setSystemTime(FIXED_NOW);
+}
+
+/** UTC YYYY-MM-DD `back` days before the pinned today — seeds a streak's last-played key. */
 function keyDaysAgo(back: number): string {
-  const t = new Date();
-  return dailyKey(new Date(Date.UTC(t.getUTCFullYear(), t.getUTCMonth(), t.getUTCDate() - back)));
+  return dailyKey(new Date(Date.UTC(2026, 5, 20 - back)));
 }
 
 test("renders the Play CTA and the Daily Challenge entry", async () => {
@@ -59,6 +69,7 @@ test("Play starts a normal run (dailyRun false even if a daily flag lingered)", 
 
 test("an AT-RISK daily streak nudges 'play today to keep it' on the Daily Challenge CTA", async () => {
   // Streak alive (last played YESTERDAY) but today not yet done → the at-risk nudge shows.
+  pinClock();
   useGameStore.setState((s) => ({
     progress: { ...s.progress, dailyStreak: 4, lastDailyKey: keyDaysAgo(1) },
   }));
@@ -71,14 +82,35 @@ test("an AT-RISK daily streak nudges 'play today to keep it' on the Daily Challe
 });
 
 test("a SECURED daily streak (played today) shows the count without the at-risk nudge", async () => {
+  pinClock();
   useGameStore.setState((s) => ({
-    progress: { ...s.progress, dailyStreak: 4, lastDailyKey: dailyKey(new Date()) },
+    progress: { ...s.progress, dailyStreak: 4, lastDailyKey: FIXED_TODAY },
   }));
   const screen = await render(<TitleScreen />);
   await expect
     .element(screen.getByRole("button", { name: /4-day streak, secured today/ }))
     .toBeInTheDocument();
   expect(screen.container.textContent).not.toContain("Play today to keep your streak");
+});
+
+test("the streak badge refreshes across a UTC-midnight rollover (no stale at-risk)", async () => {
+  // At-risk on the pinned day (last played the prior day). After the clock advances two days past
+  // the last-played key and the menu's heartbeat fires, the streak is expired → the badge vanishes.
+  vi.useFakeTimers(); // fake ALL timers here so we can advance the 60s heartbeat deterministically
+  vi.setSystemTime(FIXED_NOW);
+  useGameStore.setState((s) => ({
+    progress: { ...s.progress, dailyStreak: 4, lastDailyKey: keyDaysAgo(1) },
+  }));
+  const screen = await render(<TitleScreen />);
+  await expect.element(screen.getByText(/Play today to keep your streak/)).toBeInTheDocument();
+
+  // Jump the clock two whole days forward (well past the at-risk deadline) and tick the heartbeat.
+  vi.setSystemTime(new Date(Date.UTC(2026, 5, 22, 12, 0, 0)));
+  vi.advanceTimersByTime(60_000);
+  // The recompute makes today's key gap ≥ 2 from the last-played day → expired → no badge/nudge.
+  // The testing-library element query retries (on real microtasks) until the re-render settles.
+  await expect.element(screen.getByText(/Play today to keep your streak/)).not.toBeInTheDocument();
+  expect(screen.container.textContent).not.toContain("🔥");
 });
 
 test("no streak → plain Daily Challenge CTA, no flame badge", async () => {
