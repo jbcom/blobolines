@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, expect, test } from "vitest";
+import { afterEach, beforeEach, expect, test, vi } from "vitest";
 import { cleanup, render } from "vitest-browser-react";
 import { dailySeedPhrase } from "@/sim/daily";
 import { useGameStore, useWorldStore } from "@/state";
@@ -118,6 +118,31 @@ test("a normal run shows its replay seed without the daily tag", async () => {
   const screen = await render(<GameOver />);
   await expect.element(screen.getByText(/Daily \d{4}-\d{2}-\d{2}/).query()).not.toBeInTheDocument();
   await expect.element(screen.getByText("Seed bouncy-bright-blob")).toBeInTheDocument();
+});
+
+test("the seed line is a labelled copy-seed button that copies the seed + confirms", async () => {
+  useWorldStore.setState({ seed: 12345, seedPhrase: "bouncy-bright-blob" });
+  useGameStore.setState({ dailyRun: false });
+  // Stub the clipboard so the copy resolves deterministically (real clipboard.writeText is
+  // permission-gated in headless) — then we can assert both the WRITTEN value and the confirmation.
+  const writeText = vi.fn().mockResolvedValue(undefined);
+  vi.stubGlobal("navigator", { ...navigator, clipboard: { writeText } });
+
+  const screen = await render(<GameOver />);
+  const copyBtn = screen.getByRole("button", { name: /copy seed bouncy-bright-blob/i });
+  await expect.element(copyBtn).toBeInTheDocument();
+  await expect.element(screen.getByText("Seed bouncy-bright-blob")).toBeInTheDocument();
+
+  await copyBtn.click();
+  expect(writeText).toHaveBeenCalledWith("bouncy-bright-blob"); // copies the SEED phrase
+  await expect.element(screen.getByText("Seed copied!")).toBeInTheDocument(); // flips to confirm
+  // The accessible name updates too, so a screen reader announces the copied state (not the stale
+  // "Copy seed…").
+  await expect
+    .element(screen.getByRole("button", { name: /seed copied to clipboard/i }))
+    .toBeInTheDocument();
+
+  vi.unstubAllGlobals();
 });
 
 test("daily run, first attempt → 'first climb' standing", async () => {
