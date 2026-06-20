@@ -1182,9 +1182,11 @@ covers the daily-history gap: daily seeds are date-stamped phrases right there i
       / 140 browser green; typecheck + pinned lint clean. VISUAL-VERIFIED live: seeded two scores,
       opened Hall of Fame → Leaderboard, screenshot shows the ▶ Replay pill on each entry, well-styled.
 
-- [ ] [WAIT-CI-REVIEW] PR #90 (N22 Hall-of-Fame replay) — babysit: local review + CI in flight (the
-      reviewer is checking the past-daily-replay-vs-streak interaction + the @/world→store import). Wait
-      CI green, fold findings forward, resolve threads, squash-merge, sync main. Then the next corner.
+- [ ] [WAIT-REVIEW] PR #90 (N22 Hall-of-Fame replay) — babysit. Local review FOLDED: no blockers/majors;
+      its one minor finding (replaying a PAST daily advanced the streak as if you played today's
+      challenge) fixed — the streak now gates on the run's seed being TODAY'S daily seed, not merely the
+      dailyRun flag, with a regression test. Confirmed clean: run reset, bridge clearing, no circular
+      import, button a11y. Waiting on CI green for the new HEAD → resolve any threads → squash-merge.
 
 ## Notes
 - This is a living plan. After every stage, backward+forward sweep and edit the queue.

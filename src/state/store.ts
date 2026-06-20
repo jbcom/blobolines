@@ -306,12 +306,17 @@ export const useGameStore = create<GameState>((set) => ({
         score: runScore,
         scoreDelta,
       };
-      // Daily-challenge streak: only a DAILY run advances it. nextDailyStreak extends it on a
+      // Daily-challenge streak: only TODAY'S daily run advances it. nextDailyStreak extends it on a
       // next-day play, leaves it on a same-day replay, and resets it after a missed day. A non-daily
-      // run leaves the streak untouched, so the clock is only read for daily runs. (commitBestHeight
-      // is the state layer, so reading the clock here is fine — the PURE streak math is date-injected.)
+      // run — OR a replay of a PAST day's daily tower (from the Hall-of-Fame Replay button) — leaves
+      // the streak untouched: the streak rewards playing TODAY'S shared challenge, not re-climbing an
+      // old one. We gate on the run's seed BEING today's daily seed (blobolines-daily-<todayKey>), not
+      // merely on dailyRun. (commitBestHeight is the state layer, so reading the clock here is fine —
+      // the PURE streak math is date-injected.)
       const todayKey = s.dailyRun ? dailyKey(new Date()) : null;
-      const streak = todayKey
+      const isTodaysDaily =
+        todayKey !== null && worldState.seedPhrase === `${DAILY_NS}-${todayKey}`;
+      const streak = isTodaysDaily
         ? nextDailyStreak(s.progress.dailyStreak ?? 0, s.progress.lastDailyKey, todayKey)
         : null;
       // Anti-exploit: NEVER move the streak anchor BACKWARD. A backward clock skew yields a todayKey
