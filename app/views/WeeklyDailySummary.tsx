@@ -37,9 +37,12 @@ export function WeeklyDailySummary() {
         {summary.days.map((d) => {
           const frac = summary.weekBest > 0 ? d.best / summary.weekBest : 0;
           const barH = d.played ? Math.max(0.12, frac) * 48 : 3;
-          // The single-letter UTC weekday for the label (derived from the day key — pure, no locale).
+          // The single-letter UTC weekday for the label, built from the key's parts via Date.UTC
+          // (NOT new Date("YYYY-MM-DD…"), whose string parse is flaky on older mobile WebViews —
+          // the Capacitor Android target). Pure, no locale.
+          const [ky, km, kd] = d.key.split("-").map(Number);
           const dow = ["S", "M", "T", "W", "T", "F", "S"][
-            new Date(`${d.key}T00:00:00Z`).getUTCDay()
+            new Date(Date.UTC(ky, km - 1, kd)).getUTCDay()
           ];
           return (
             <div key={d.key} className="flex flex-1 flex-col items-center gap-1">
