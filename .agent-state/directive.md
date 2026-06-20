@@ -338,18 +338,23 @@ rewards a big crystal burst + a celebratory flash/stinger. Ties into the existin
 audio + (optionally) achievement systems. Data-driven rarity; deterministic spawn; mid-tier budget.
 
 ### J0 Architecture
-- [ ] J0.1 Read the crystal/collectible spawn + collect pipeline (src/world generator, src/sim/
-      collect, CrystalField/PowerUpField) + crystal tiers. Decide whether treasure is a new
-      collectible type or a top crystal tier; where it spawns + how collection rewards. Record
-      decision + curate a treasure GLB from the asset server.
+- [x] J0.1 Decided (decisions.ndjson): treasure is a NEW TOP CRYSTAL TIER, not a new type —
+      reuses the whole crystal pipeline. Curated a self-contained chest GLB from the NAS library.
 
 ### J1 Implementation
-- [ ] J1.1 Spawn rare treasure (seeded, altitude-weighted), render the GLB with a glint/draw-eye
-      VFX, collect → crystal burst + celebratory flash + stinger. Visual-verify (screenshot).
-- [ ] J1.2 Tests: rarity/spawn config + collect-reward unit tests; render/browser + audio per gates.
+- [x] J1.1 'treasure' tier (value 25, scale 2.4, 0.5→3% odds) in crystalTier; CrystalField
+      renders it gold + jackpot collect (gold flash + milestone stinger); TreasureChests seats the
+      chest GLB beneath treasure gems. Visual: TreasureChests browser fixture proves render (chest
+      for treasure, hides otherwise + when collected) — claude-in-chrome sim unreliable for a live
+      screenshot, fixture is the authoritative proof.
+- [x] J1.2 Tests: tier value/scale/rarity, generator allowlist, crystalCollectBridge, TreasureChests
+      fixtures. 455 unit + browser. Review folded forward: missing generator allowlist + ghost-chest-
+      after-collect (shared crystalCollectBridge).
 
 ### J2 PR cutting point
-- [ ] J2.1 Verify + screenshot; open PR; babysit to squash-merge; re-write directive forward.
+- [x] J2.1a Verified + reviewed (2 bugs fixed); opening PR.
+- [ ] [WAIT-REVIEW] J2.1b Babysit PR: verify+e2e green → address feedback → resolve threads →
+      squash-merge → re-write directive forward.
 
 ## Notes
 - This is a living plan. After every stage, backward+forward sweep and edit the queue.
