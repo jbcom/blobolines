@@ -5,7 +5,11 @@
  * Capped so the multiplier stays fair.
  */
 
-export const MAX_COMBO = 8;
+/** Combo ceiling — raised from 8 to give expert play more skill headroom. The score + launch
+ *  rewards are rebalanced (lower comboStyleGrowth + comboStep in config) so the NEW max-combo
+ *  reward stays close to the OLD max-combo reward — the higher ceiling adds GRANULARITY (levels
+ *  9–12 now reward) rather than inflating the top-end score. */
+export const MAX_COMBO = 12;
 
 export interface ComboState {
   streak: number;

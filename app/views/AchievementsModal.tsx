@@ -35,6 +35,7 @@ const ACHIEVEMENT_ICONS: Record<string, React.ComponentType<{ className?: string
   "height-2000": Sparkles,
   "combo-5": Flame,
   "combo-8": Zap,
+  "combo-12": Crown,
   "crystals-run-25": Gem,
   "crystals-total-250": Sparkles,
   "crystals-total-500": Sparkles,

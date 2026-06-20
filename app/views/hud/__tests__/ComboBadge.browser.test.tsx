@@ -26,3 +26,9 @@ test("escalates to 'ON FIRE' at 5×", async () => {
   const screen = await render(<ComboBadge />);
   await expect.element(screen.getByText("ON FIRE", { exact: true })).toBeInTheDocument();
 });
+
+test("escalates to the top 'BLAZING' tier at 10× (the raised combo ceiling)", async () => {
+  useGameStore.setState((s) => ({ run: { ...s.run, combo: 11 } }));
+  const screen = await render(<ComboBadge />);
+  await expect.element(screen.getByText("BLAZING", { exact: true })).toBeInTheDocument();
+});

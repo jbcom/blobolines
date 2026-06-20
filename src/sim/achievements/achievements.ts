@@ -109,6 +109,13 @@ export const ACHIEVEMENTS: readonly Achievement[] = [
     target: 8,
   },
   {
+    id: "combo-12",
+    title: "Comet Streak",
+    description: "Chain a 12× clean-bounce combo.",
+    stat: (s) => s.runMaxCombo,
+    target: 12,
+  },
+  {
     id: "crystals-run-25",
     title: "Magpie",
     description: "Collect 25 crystals in one run.",

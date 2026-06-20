@@ -1238,10 +1238,27 @@ route at generation. (Also surveyed raising MAX_COMBO: comboStyleBonus is geomet
       (freeze the bob on pause via dt-accumulation, not the raw render clock). All threads resolved, CI
       run confirmed for the exact HEAD. Wait CI green → squash-merge → sync main → next corner.
 
+## Queue — Milestone: N25 HIGHER COMBO CEILING + rebalance (branch feat/higher-combo-ceiling)
+
+The deferred MAX_COMBO raise, done with the careful scoring rebalance it needed. Raises the combo
+ceiling 8→12 (real skill headroom; also unblocks the combo-12 achievement that was unreachable in
+N23). The rebalance keeps it BALANCE-CONSERVATIVE, not score-inflating.
+
+### N25 Architecture
+- [x] N25.1 DONE. MAX_COMBO 8→12. Rebalanced so the new ceiling adds GRANULARITY (levels 9–12 now
+      reward) not inflation: comboStyleGrowth 1.38→1.18 (the geometric style bonus: new max ≈1048 vs
+      old ≈959 at 8, +9% — NOT the ~3400 a naive 1.38^12 would give) and comboStep 0.15→0.12 (launch
+      multiplier at 12 ≈2.32× vs old max 2.05×). Added the combo-12 "Comet Streak" achievement (now
+      reachable) with a Crown icon, and a new top "BLAZING" combo-badge tier at 10× (violet, bigger
+      glow) so reaching the new ceiling FEELS distinct. Tests: combo-12 unlock thresholds + a
+      "combo achievement ≤ MAX_COMBO" reachability guard; a rebalance-intent score test (max bonus
+      bounded 800–1300, monotonic per-level steps); launch/score assertions re-derived from the new
+      config; a BLAZING badge fixture. 547 unit / 141 browser green; typecheck + pinned lint clean.
+
 ## Notes
 - This is a living plan. After every stage, backward+forward sweep and edit the queue.
 - Next candidate milestones (surface, don't pre-commit): a "best daily this week" mini-summary (needs
-  per-day daily-best storage, not just top-5), raise MAX_COMBO + rebalance comboStyleBonus geometric
-  growth. Per-biome music + base gameplay mechanics are SATURATED.
+  per-day daily-best storage), a new pad-type behaviour, a cosmetic trail. Per-biome music + the base
+  pad/obstacle/combo systems are now SATURATED.
 - Lesson banked this session: the pre-push lint gate is `pnpm lint` (PINNED biome 2.5.0), NOT
   `npx biome` / global biome (older, gives false-clean) — see [[blobolines-biome-ci-stricter]].
