@@ -37,8 +37,22 @@ describe("achievements", () => {
   it("unlocks the height milestones at their thresholds", () => {
     expect(newlyUnlocked({ ...ZERO, bestHeight: 100 }, [])).toContain("height-100");
     expect(newlyUnlocked({ ...ZERO, bestHeight: 99 }, [])).not.toContain("height-100");
-    expect(newlyUnlocked({ ...ZERO, bestHeight: 500 }, [])).toEqual(
-      expect.arrayContaining(["height-100", "height-250", "height-500"]),
+    expect(newlyUnlocked({ ...ZERO, bestHeight: 1000 }, [])).toEqual(
+      expect.arrayContaining(["height-100", "height-250", "height-500", "height-1000"]),
+    );
+  });
+
+  it("unlocks the crystal total milestones at their thresholds", () => {
+    expect(newlyUnlocked({ ...ZERO, lifetimeCrystals: 250 }, [])).toContain("crystals-total-250");
+    expect(newlyUnlocked({ ...ZERO, lifetimeCrystals: 500 }, [])).toEqual(
+      expect.arrayContaining(["crystals-total-250", "crystals-total-500"]),
+    );
+  });
+
+  it("unlocks the high score milestones at their thresholds", () => {
+    expect(newlyUnlocked({ ...ZERO, bestScore: 10000 }, [])).toContain("score-10k");
+    expect(newlyUnlocked({ ...ZERO, bestScore: 25000 }, [])).toEqual(
+      expect.arrayContaining(["score-10k", "score-25k"]),
     );
   });
 

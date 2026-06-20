@@ -1,6 +1,8 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from "./fixtures";
 
-test.setTimeout(45_000);
+// Software-GL (SwiftShader) CI is far slower to load + WASM-init than a real GPU; give the
+// scripted-climb sampling window generous headroom there, keep it tight locally.
+test.setTimeout(process.env.CI ? 90_000 : 45_000);
 
 /**
  * Perf-regression gate. Drives a scripted climb and samples per-frame times via rAF, then

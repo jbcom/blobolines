@@ -35,25 +35,9 @@ export function GameOver() {
   const seed = useWorldStore((s) => s.seed);
   const seedPhrase = useWorldStore((s) => s.seedPhrase);
   const difficulty = useWorldStore((s) => s.difficulty);
-  const unlockAchievements = useGameStore((s) => s.unlockAchievements);
 
-  // Evaluate achievements ONCE on game-over (the run is final here): persist newly-unlocked +
-  // capture them to celebrate on this card. commitBestHeight already merged this run into
-  // bestHeight/bestScore before the phase flip, so the lifetime stats are current.
-  const [freshAchievements, setFreshAchievements] = useState<string[]>([]);
-  // biome-ignore lint/correctness/useExhaustiveDependencies: evaluate exactly once on mount
-  useEffect(() => {
-    setFreshAchievements(
-      unlockAchievements({
-        bestHeight: best,
-        bestScore,
-        lifetimeCrystals,
-        runHeight: height,
-        runMaxCombo: maxCombo,
-        runCrystals: crystals,
-      }),
-    );
-  }, []);
+  const freshAchievements = useGameStore((s) => s.run.unlockedAchievements) || [];
+
   // Daily run → a shareable verification hash binding this result to today's seed (so a
   // leaderboard can spot a score that doesn't match its seed). Only shown for a daily run.
   const runTag = dailyRun

@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 import { keyboardSteer } from "@/input";
-import { getBlobDiagnostics, setAirSteer } from "@/state";
+import { getBlobDiagnostics, requestAirNudge, setAirSteer } from "@/state";
 
 /**
  * Desktop keyboard air-steering: WASD / arrow keys → lateral air-steer while the blob is
@@ -51,11 +51,32 @@ export function useKeyboardSteer() {
       setAirSteer(x, z);
     };
 
+    /** Request a one-shot air nudge in the currently-held direction, if airborne and any
+     *  direction is held. Single source for both Shift+direction orderings (Shift-first or
+     *  direction-first); the bridge stores one pending nudge consumed once by the blob, so a
+     *  single physical Shift+Arrow can never double-apply. */
+    const tryNudge = () => {
+      if (!getBlobDiagnostics().airborne) return;
+      const { left, right, up, down } = keys.current;
+      const x = (right ? 1 : 0) - (left ? 1 : 0);
+      const z = (down ? 1 : 0) - (up ? 1 : 0);
+      if (x === 0 && z === 0) return;
+      const len = Math.hypot(x, z);
+      requestAirNudge(x / len, z / len);
+    };
+
     const onDown = (e: KeyboardEvent) => {
+      // Shift pressed while a direction is already held → nudge that way.
+      if (e.key === "Shift" && !e.repeat) tryNudge();
+
       const k = dir(e.code);
       if (!k || e.repeat) return; // ignore auto-repeat (held-state already true)
       e.preventDefault(); // stop arrow keys from scrolling the page
       keys.current[k] = true;
+
+      // Direction pressed while Shift is held → nudge that way (now that the key is recorded).
+      if (e.shiftKey) tryNudge();
+
       publish();
     };
     const onUp = (e: KeyboardEvent) => {

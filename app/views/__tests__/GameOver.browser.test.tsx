@@ -60,6 +60,16 @@ test("tapping Customize requests the customizer and returns to menu", async () =
 
 test("celebrates newly-unlocked achievements + persists them", async () => {
   // beforeEach: bestHeight 134 (→ Cloud Niner / height-100) + run maxCombo 5 (→ On a Roll).
+  useGameStore.setState((s) => ({
+    run: {
+      ...s.run,
+      unlockedAchievements: ["height-100", "combo-5"],
+    },
+    progress: {
+      ...s.progress,
+      unlockedAchievements: ["height-100", "combo-5"],
+    },
+  }));
   const screen = await render(<GameOver />);
   await expect.element(screen.getByText(/Achievements? unlocked/i)).toBeInTheDocument();
   await expect.element(screen.getByText("Cloud Niner")).toBeInTheDocument();
@@ -72,6 +82,7 @@ test("celebrates newly-unlocked achievements + persists them", async () => {
 test("does not show the achievement card when nothing new is unlocked", async () => {
   // Pre-unlock everything this run would earn, so there's nothing fresh.
   useGameStore.setState((s) => ({
+    run: { ...s.run, unlockedAchievements: [] },
     progress: { ...s.progress, unlockedAchievements: ["height-100", "combo-5"] },
   }));
   const screen = await render(<GameOver />);

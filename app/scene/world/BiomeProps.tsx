@@ -1,9 +1,10 @@
 import { useFrame } from "@react-three/fiber";
 import { useMemo, useRef } from "react";
 import { Color, type InstancedMesh, Matrix4, Quaternion, Vector3 } from "three";
+import { biomeAmbienceAt } from "@/config/biomeProps";
 import { createRng } from "@/core/math";
 import { getBlobDiagnostics } from "@/state";
-import { hex, mixHex, palette } from "@/styles/tokens";
+import { hex, palette } from "@/styles/tokens";
 
 /**
  * Biome strata decor: soft clouds in the lower/sky bands and twinkling stars high up in
@@ -21,14 +22,6 @@ const tmpQuat = new Quaternion();
 const tmpScale = new Vector3();
 const tmpMat = new Matrix4();
 const tmpColor = new Color();
-
-/** Drifting ambient mote color by altitude: warm petals at the ground → icy white in the
- *  stratosphere → nebula violet in space. */
-function moteColor(h: number): string {
-  if (h < 200) return mixHex(palette.goo.flame, palette.cream, 0.4); // warm petal
-  if (h < 650) return palette.cream; // icy white wind motes
-  return mixHex(palette.tramp.violet, palette.cream, 0.35); // nebula dust
-}
 
 function layerOpacity(height: number, lo: number, hi: number): number {
   // Triangular fade: 0 outside [lo,hi], 1 in the middle.
@@ -135,8 +128,9 @@ export function BiomeProps() {
     const mote = moteRef.current;
     if (mote) {
       const m = mote.material as unknown as { color: Color; opacity: number };
-      m.color.lerp(tmpColor.set(moteColor(h)), 0.05); // ease the recolor across band crossings
-      m.opacity = 0.5;
+      const ambience = biomeAmbienceAt(h);
+      m.color.lerp(tmpColor.set(ambience.mote), 0.05); // ease the recolor across band crossings
+      m.opacity = ambience.opacity;
       motes.forEach((mo, i) => {
         tmpPos.set(
           mo.x + Math.sin(t * 0.5 + mo.phase) * 2 + t * mo.driftX * 0.4,

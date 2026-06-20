@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from "./fixtures";
 
 /**
  * Broader gameplay e2e beyond the headline "is it playable" gate: the gameover → retry remount

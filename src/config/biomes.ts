@@ -24,6 +24,18 @@ interface Band {
 
 export const biomeBands = biomesCfg.bands as Band[];
 
+/** Canonical name of the biome band containing world height `h` (the band whose
+ *  [minHeight, nextMinHeight) interval covers `h`). Single source of truth for band
+ *  membership — scenery/props key off this instead of re-inventing threshold magic
+ *  numbers. Heights at/below the first band's minHeight resolve to the first band. */
+export function biomeBandAt(h: number): string {
+  const bands = biomeBands;
+  for (let i = bands.length - 1; i >= 0; i--) {
+    if (h >= bands[i].minHeight) return bands[i].name;
+  }
+  return bands[0].name;
+}
+
 const colorsOf = (b: Band): BiomeColors => ({ ...b.sky, fog: b.fog });
 
 /** Smoothly interpolated biome colors at a given climb height (world Y). */

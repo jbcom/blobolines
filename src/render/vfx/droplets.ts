@@ -96,6 +96,40 @@ export function spawnLaunchBurst(
 }
 
 /**
+ * Spawn a directional burst of droplets opposite to the nudge direction (propulsion spray).
+ * `nudgeDir` [x, y, z] is the unit direction of the redirect.
+ */
+export function spawnNudgeBurst(
+  origin: Vec3,
+  nudgeDir: readonly [number, number, number],
+  rng: Rng,
+  config: SplashConfig = DEFAULT_SPLASH,
+): Droplet[] {
+  const count = Math.min(10, Math.ceil(0.5 * config.countScale));
+  const droplets: Droplet[] = [];
+  const opX = -nudgeDir[0];
+  const opY = -nudgeDir[1];
+  const opZ = -nudgeDir[2];
+
+  for (let i = 0; i < count; i++) {
+    // Generate a vector within a cone around the opposite direction
+    const rx = opX + rng.range(-0.5, 0.5);
+    const ry = opY + rng.range(-0.3, 0.3);
+    const rz = opZ + rng.range(-0.5, 0.5);
+    const h = Math.hypot(rx, ry, rz) || 1;
+    const speed = rng.range(config.minSpeed, config.maxSpeed) * 1.5;
+    droplets.push({
+      position: [origin[0], origin[1], origin[2]],
+      velocity: [(rx / h) * speed, (ry / h) * speed, (rz / h) * speed],
+      radius: rng.range(0.1, 0.22),
+      age: 0,
+      life: rng.range(0.3, 0.55),
+    });
+  }
+  return droplets;
+}
+
+/**
  * Emit a single short-lived wet-goo droplet trailing the blob, with a small jitter
  * opposite its travel direction so it lags into a wake. `speed` is the blob's current
  * speed [units/s]; the caller throttles emission by distance so the trail is even.

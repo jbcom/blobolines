@@ -1,20 +1,29 @@
 import { useGLTF } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
-import { useMemo, useRef } from "react";
+import { useMemo, useRef, useState } from "react";
 import type { Group } from "three";
+import {
+  allBiomePropFiles,
+  type BiomePropSet,
+  biomePropRegistry,
+  type PropShelf,
+} from "@/config/biomeProps";
+import { biomeBandAt } from "@/config/biomes";
 import { createRng } from "@/core/math";
 import { getBlobDiagnostics } from "@/state";
-import { palette } from "@/styles/tokens";
 
 /**
- * BiomeScenicProps - Renders beautiful low-poly decorative background elements (cactus,
- * tree, mushroom, and space rocks) scattered across the climb path.
- * As Blobby climbs, the props wrap continuously around the current altitude window
- * (matching the cloud/star wrap logic), and dynamically show/hide the appropriate model
- * based on the prop's wrapped altitude. This creates a dense, rich, and continuous biome
- * progression without any per-frame React state or re-render overhead!
+ * BiomeScenicProps — data-driven low-poly scenery scattered across the climb. Each prop
+ * instance wraps continuously around the current altitude window (matching cloud/star wrap)
+ * and, based on the wrapped altitude's canonical biome band (`biomeBandAt`), shows one prop
+ * from that band's curated set (see `biomePropRegistry`). All band sets are mounted up front
+ * and toggled by visibility — no per-frame React state, no re-render overhead — so the biome
+ * progression reads dense and continuous as Blobby climbs.
+ *
+ * Adding props or a band is a pure data edit in `src/config/biomeProps.ts`; this component
+ * carries no band thresholds or hardcoded model list of its own.
  */
-const PROP_COUNT = 14;
+const PROP_COUNT = 16;
 const COLUMN = 95; // vertical height window centered on the player
 
 function wrapY(yFrac: number, h: number): number {
@@ -25,28 +34,41 @@ function wrapY(yFrac: number, h: number): number {
 
 const url = (file: string) => `${import.meta.env.BASE_URL}assets/models/${file}`;
 
-function CactusModel({ scale }: { scale: number }) {
-  const { scene } = useGLTF(url("cactus.glb"));
+/** Generic GLB prop. Clones the loaded scene so each instance is independent. */
+function PropModel({ file, scale }: { file: string; scale: number }) {
+  const { scene } = useGLTF(url(file));
   const model = useMemo(() => scene.clone(true), [scene]);
   return <primitive object={model} scale={scale} />;
 }
 
-function TreeModel({ scale }: { scale: number }) {
-  const { scene } = useGLTF(url("tree.glb"));
-  const model = useMemo(() => scene.clone(true), [scene]);
-  return <primitive object={model} scale={scale} />;
-}
-
-function MushroomModel({ scale }: { scale: number }) {
-  const { scene } = useGLTF(url("mushroom.glb"));
-  const model = useMemo(() => scene.clone(true), [scene]);
-  return <primitive object={model} scale={scale} />;
-}
-
-function RockModel({ scale }: { scale: number }) {
-  const { scene } = useGLTF(url("rock.glb"));
-  const model = useMemo(() => scene.clone(true), [scene]);
-  return <primitive object={model} scale={scale} />;
+/** Soft decorative seat beneath a prop — a translucent disc on atmospheric bands or a
+ *  glowing celestial ring in the airless cosmic bands. */
+function Shelf({ shelf }: { shelf: PropShelf }) {
+  if (shelf.kind === "ring") {
+    return (
+      <mesh position={[0, 0, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+        <ringGeometry args={[1.5, 1.8, 32]} />
+        <meshBasicMaterial
+          color={shelf.color}
+          transparent
+          opacity={shelf.opacity}
+          depthWrite={false}
+        />
+      </mesh>
+    );
+  }
+  const [sx, sy] = shelf.scale ?? [2.0, 1.5];
+  return (
+    <mesh position={[0, -0.15, 0]} rotation={[-Math.PI / 2, 0, 0]} scale={[sx, sy, 1.0]}>
+      <circleGeometry args={[1, 32]} />
+      <meshBasicMaterial
+        color={shelf.color}
+        transparent
+        opacity={shelf.opacity}
+        depthWrite={false}
+      />
+    </mesh>
+  );
 }
 
 interface PropSpec {
@@ -59,15 +81,25 @@ interface PropSpec {
   rotSpeed: number;
   phase: number;
   bobAmplitude: number;
+  /** Per-band index into that band's prop set (which specific model this instance shows). */
+  pick: Record<string, number>;
   bobSpeed: number;
 }
 
+/** Pick the registry set for a band that actually has props, or null. */
+function activeSet(band: string): BiomePropSet | null {
+  const set = biomePropRegistry.find((s) => s.band === band);
+  return set && set.props.length > 0 ? set : null;
+}
+
+/** One scenery instance. Mounts ONLY the current band's prop (not all six) and swaps it via
+ *  React state when the wrapped altitude crosses into a new band — so the scene graph holds
+ *  one model per instance instead of one per band. `useGLTF` caches the loaded GLBs, so a
+ *  band crossing remounts from cache with no refetch. Band selection is `biomeBandAt` — the
+ *  single source of truth. */
 function ScenicInstance({ spec }: { spec: PropSpec }) {
   const groupRef = useRef<Group>(null);
-  const cactusRef = useRef<Group>(null);
-  const treeRef = useRef<Group>(null);
-  const mushRef = useRef<Group>(null);
-  const rockRef = useRef<Group>(null);
+  const [band, setBand] = useState(() => biomeBandAt(wrapY(spec.yFrac, 0)));
 
   useFrame((state) => {
     const group = groupRef.current;
@@ -77,33 +109,16 @@ function ScenicInstance({ spec }: { spec: PropSpec }) {
     const t = state.clock.elapsedTime;
 
     const y = wrapY(spec.yFrac, h);
+    const nextBand = biomeBandAt(y);
+    if (nextBand !== band) setBand(nextBand); // only re-renders on a band crossing (rare)
 
-    // Continuous floating/bobbing animation
+    // Continuous floating/bobbing animation.
     const bob = Math.sin(t * spec.bobSpeed + spec.phase) * spec.bobAmplitude;
     group.position.set(spec.x, y + bob, spec.z);
 
-    // Determine biome type based on the wrapped height
-    let activeType: "cactus" | "tree" | "mushroom" | "rock" = "cactus";
-    if (y < 160) {
-      activeType = "cactus";
-    } else if (y < 500) {
-      activeType = "tree";
-    } else if (y < 900) {
-      activeType = "mushroom";
-    } else {
-      activeType = "rock";
-    }
-
-    // Set visibility of specific biome models
-    if (cactusRef.current) cactusRef.current.visible = activeType === "cactus";
-    if (treeRef.current) treeRef.current.visible = activeType === "tree";
-    if (mushRef.current) mushRef.current.visible = activeType === "mushroom";
-    if (rockRef.current) rockRef.current.visible = activeType === "rock";
-
-    // Dynamic rotation
+    // Cosmic bands tumble in 3D; atmospheric bands spin gently about Y only.
     group.rotation.y = spec.rotY + t * spec.rotSpeed;
-    if (activeType === "rock") {
-      // Space rocks tumble in multiple dimensions
+    if (nextBand === "space" || nextBand === "deep-space") {
       group.rotation.x = t * spec.rotSpeed * 0.5;
       group.rotation.z = t * spec.rotSpeed * 0.3;
     } else {
@@ -112,86 +127,51 @@ function ScenicInstance({ spec }: { spec: PropSpec }) {
     }
   });
 
+  const set = activeSet(band);
+
   return (
     <group ref={groupRef}>
-      {/* Cactus Biome (Lower dry/sandy levels) */}
-      <group ref={cactusRef} visible={false}>
-        <CactusModel scale={spec.scale * 1.3} />
-        {/* Soft gold/warm cloud shelf beneath cactus */}
-        <mesh position={[0, -0.15, 0]} rotation={[-Math.PI / 2, 0, 0]} scale={[2.0, 1.4, 1.0]}>
-          <circleGeometry args={[1, 32]} />
-          <meshBasicMaterial
-            color={palette.cloud.warm}
-            transparent
-            opacity={0.28}
-            depthWrite={false}
+      {set && (
+        <>
+          <PropModel
+            file={set.props[spec.pick[set.band] % set.props.length].file}
+            scale={spec.scale * set.props[spec.pick[set.band] % set.props.length].scale}
           />
-        </mesh>
-      </group>
-
-      {/* Tree Biome (Lush middle levels) */}
-      <group ref={treeRef} visible={false}>
-        <TreeModel scale={spec.scale * 1.4} />
-        {/* Soft fluffy pink/cream cloud shelf beneath tree */}
-        <mesh position={[0, -0.15, 0]} rotation={[-Math.PI / 2, 0, 0]} scale={[2.4, 1.8, 1.0]}>
-          <circleGeometry args={[1, 32]} />
-          <meshBasicMaterial
-            color={palette.cloud.puff}
-            transparent
-            opacity={0.3}
-            depthWrite={false}
-          />
-        </mesh>
-      </group>
-
-      {/* Mushroom Biome (Fungal/mystical stratosphere levels) */}
-      <group ref={mushRef} visible={false}>
-        <MushroomModel scale={spec.scale * 1.3} />
-        {/* Soft mystical blush/violet cloud shelf beneath mushroom */}
-        <mesh position={[0, -0.1, 0]} rotation={[-Math.PI / 2, 0, 0]} scale={[2.0, 1.5, 1.0]}>
-          <circleGeometry args={[1, 32]} />
-          <meshBasicMaterial
-            color={palette.cloud.blush}
-            transparent
-            opacity={0.28}
-            depthWrite={false}
-          />
-        </mesh>
-      </group>
-
-      {/* Space Rock Biome (High cosmic/space levels) */}
-      <group ref={rockRef} visible={false}>
-        <RockModel scale={spec.scale * 1.6} />
-        {/* Celestial ring/halo glowing instead of a cloud shelf */}
-        <mesh position={[0, 0, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-          <ringGeometry args={[1.5, 1.8, 32]} />
-          <meshBasicMaterial
-            color={palette.cloud.glow}
-            transparent
-            opacity={0.32}
-            depthWrite={false}
-          />
-        </mesh>
-      </group>
+          <Shelf shelf={set.shelf} />
+        </>
+      )}
     </group>
   );
 }
 
 export function BiomeScenicProps() {
-  const specs = useMemo(() => {
-    const rng = createRng(444);
-    return Array.from({ length: PROP_COUNT }, (_, i) => ({
-      id: i,
-      x: rng.range(-22, 22),
-      z: rng.range(-26, -10), // background depth layer (behind play field)
-      yFrac: rng.next(),
-      scale: rng.range(0.8, 1.3),
-      rotY: rng.range(0, Math.PI * 2),
-      rotSpeed: rng.range(0.15, 0.45) * rng.sign(),
-      phase: rng.range(0, Math.PI * 2),
-      bobAmplitude: rng.range(0.2, 0.5),
-      bobSpeed: rng.range(0.6, 1.1),
-    }));
+  const specs = useMemo<PropSpec[]>(() => {
+    // Two independent RNG streams so adding a biome band never reshuffles existing layout:
+    // `layoutRng` owns placement/animation, `pickRng` owns per-band model selection. If both
+    // shared one stream, every per-band pick would shift the subsequent layout draws.
+    const layoutRng = createRng(444);
+    const pickRng = createRng(445);
+    return Array.from({ length: PROP_COUNT }, (_, i) => {
+      const spec: PropSpec = {
+        id: i,
+        x: layoutRng.range(-22, 22),
+        z: layoutRng.range(-26, -10), // background depth layer (behind play field)
+        yFrac: layoutRng.next(),
+        scale: layoutRng.range(0.8, 1.3),
+        rotY: layoutRng.range(0, Math.PI * 2),
+        rotSpeed: layoutRng.range(0.15, 0.45) * layoutRng.sign(),
+        phase: layoutRng.range(0, Math.PI * 2),
+        bobAmplitude: layoutRng.range(0.2, 0.5),
+        bobSpeed: layoutRng.range(0.6, 1.1),
+        pick: {},
+      };
+      // Deterministic per-band model pick for this instance (separate stream).
+      for (const set of biomePropRegistry) {
+        spec.pick[set.band] =
+          set.props.length > 0 ? Math.floor(pickRng.next() * set.props.length) : 0;
+      }
+      return spec;
+    });
   }, []);
 
   return (
@@ -203,10 +183,9 @@ export function BiomeScenicProps() {
   );
 }
 
-// Preload assets for stutter-free experience
+// Preload every registry prop for stutter-free band transitions.
 if (!import.meta.env.VITEST) {
-  useGLTF.preload(url("cactus.glb"));
-  useGLTF.preload(url("tree.glb"));
-  useGLTF.preload(url("mushroom.glb"));
-  useGLTF.preload(url("rock.glb"));
+  for (const file of allBiomePropFiles) {
+    useGLTF.preload(url(file));
+  }
 }

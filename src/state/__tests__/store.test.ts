@@ -22,6 +22,7 @@ beforeEach(() => {
       score: 0,
       stylePoints: 0,
       scoreDelta: 0,
+      unlockedAchievements: [],
     },
   });
 });
@@ -90,6 +91,26 @@ describe("useGameStore", () => {
     expect(again).toEqual([]);
     const ids = useGameStore.getState().progress.unlockedAchievements;
     expect(ids.filter((id) => id === "height-100")).toHaveLength(1);
+  });
+
+  it("real-time checkAndUnlock triggers on setRun height change and addCrystals", () => {
+    // 1. Trigger height-100 real-time via setRun height mutation
+    useGameStore.getState().setRun({ height: 105 });
+    let s = useGameStore.getState();
+    expect(s.run.unlockedAchievements).toContain("height-100");
+    expect(s.progress.unlockedAchievements).toContain("height-100");
+
+    // 2. Trigger combo-5 real-time via setRun combo mutation
+    useGameStore.getState().setRun({ maxCombo: 6 });
+    s = useGameStore.getState();
+    expect(s.run.unlockedAchievements).toContain("combo-5");
+    expect(s.progress.unlockedAchievements).toContain("combo-5");
+
+    // 3. Trigger crystals achievement real-time via addCrystals mutation
+    useGameStore.getState().addCrystals(30);
+    s = useGameStore.getState();
+    expect(s.run.unlockedAchievements).toContain("crystals-run-25");
+    expect(s.progress.unlockedAchievements).toContain("crystals-run-25");
   });
 
   it("commitBestHeight only updates when new height is higher", () => {

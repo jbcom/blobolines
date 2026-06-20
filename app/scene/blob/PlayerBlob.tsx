@@ -29,6 +29,7 @@ import {
 } from "@/sim/physics";
 import { goldenPathLandingBonus, goldenPathLandingQuality } from "@/sim/score";
 import {
+  consumeAirNudge,
   consumeBounceCharge,
   consumeCloudAdherence,
   consumeImpact,
@@ -76,7 +77,14 @@ export function PlayerBlob() {
   const setPhase = useGameStore((s) => s.setPhase);
   const commitBestHeight = useGameStore((s) => s.commitBestHeight);
   const ensureHeight = useWorldStore((s) => s.ensureHeight);
-  const { splash, launchBurst, trail, reset: resetDroplets, get: getDroplets } = useDroplets();
+  const {
+    splash,
+    launchBurst,
+    nudgeBurst,
+    trail,
+    reset: resetDroplets,
+    get: getDroplets,
+  } = useDroplets();
   const maxY = useRef(0);
   /** Last blob Y seen, to detect descending pad-level crossings for the near-miss whoosh. */
   const prevY = useRef(0);
@@ -112,6 +120,8 @@ export function PlayerBlob() {
   const playerControlStarted = useRef(false);
   /** Bubble duration timer in seconds. Active > 0. */
   const bubbleRemaining = useRef(0);
+  /** Whether the player has a mid-air redirect/nudge charge available to use. */
+  const nudgeAvailable = useRef(true);
 
   // Reset body to the starter pad whenever a run begins. PlayerBlob remounts on each
   // run (GameScene mounts <Physics> only while playing), so [] is correct; the refs
@@ -139,6 +149,7 @@ export function PlayerBlob() {
     cloudCling.current.strength = 0;
     playerControlStarted.current = false;
     bubbleRemaining.current = 0;
+    nudgeAvailable.current = true;
     setBlobDiagnostics({
       position: [0, STARTER_BLOB_Y, 0],
       velocity: [0, 0, 0],
@@ -256,6 +267,7 @@ export function PlayerBlob() {
   const stepLandings = (p: { x: number; y: number; z: number }) => {
     const landed = consumeImpact();
     if (landed > 0) {
+      nudgeAvailable.current = true;
       const strength = Math.min(1, landed / MAX_IMPACT_SPEED);
       impact.current = strength;
       safeY.current = p.y;
@@ -369,6 +381,32 @@ export function PlayerBlob() {
       reportLaunchBurst({ position: [p.x, p.y - BLOB.radius, p.z], charge: 0.6, kind: "launch" });
       flash("blue", 0.6);
       playLaunch(0.6);
+    }
+
+    const nudge = consumeAirNudge();
+    if (nudge && nudgeAvailable.current && airborne) {
+      nudgeAvailable.current = false;
+      playerControlStarted.current = true;
+      body.wakeUp();
+      const [nx, nz] = nudge;
+
+      const nudgeSpeed = 12.5; // satisfying snappy horizontal impulse speed
+      let vy = v.y;
+      if (vy < -2.5) {
+        vy = -2.5; // cushion rapid descents
+      } else {
+        vy = vy + 1.5; // slight buoyancy pop
+      }
+      body.setLinvel({ x: nx * nudgeSpeed, y: vy, z: nz * nudgeSpeed }, true);
+
+      const pos: [number, number, number] = [p.x, p.y, p.z];
+      nudgeBurst(pos, [nx, 0.1, nz]);
+      reportLaunchBurst({ position: [p.x, p.y - BLOB.radius, p.z], charge: 0.5, kind: "nudge" });
+      flash("blue", 0.4);
+      playLaunch(0.9);
+      if (useGameStore.getState().settings.haptics) {
+        vibrate(18);
+      }
     }
 
     const gateHit = consumeRouteGateHit();
@@ -485,6 +523,10 @@ export function PlayerBlob() {
       stepVortexAttraction(p, dt, body);
     }
 
+    if (!airborne) {
+      nudgeAvailable.current = true;
+    }
+
     p = body.translation();
     v = body.linvel();
     airborne = Math.abs(v.y) > 0.5;
@@ -554,6 +596,7 @@ export function PlayerBlob() {
       excitement: excitement.current,
       bubbleActive: bubbleRemaining.current > 0,
       bubbleRemaining: bubbleRemaining.current,
+      nudgeAvailable: nudgeAvailable.current,
       cloudAdherence:
         cloudCling.current.strength > 0.01
           ? {
