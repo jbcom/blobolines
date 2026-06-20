@@ -34,13 +34,13 @@ public surface; modules stay small and single-responsibility — no monolithic s
 |---------|--------|----------------|
 | `src/core/math` | ✓ | `createRng` (seedrandom-backed), seed phrases, clock facade, vec/lerp/spring helpers |
 | `src/core/types` | ✓ | shared domain types (ids, enums, golden-path proof data) |
-| `src/config` | ✓ | all tunables as per-domain JSON + typed barrel (physics/blob/launch/trampoline/collect/goo/world/biomes/audio). `biomes.ts` owns `biomeBandAt` (the single-source-of-truth altitude→band resolver); `biomeProps.ts` owns the data-driven scenery registry (per-band GLB sets + shelf styling), the `parallaxLayers` far/mid/near depth table, and the `biomeAmbience` per-band mote tint/size/drift. `crystalTier.ts` owns the crystal tiers incl. the rare `treasure` jackpot (value/scale/odds) |
+| `src/config` | ✓ | all tunables as per-domain JSON + typed barrel (physics/blob/launch/trampoline/collect/goo/world/biomes/audio). `biomes.ts` owns `biomeBandAt` (the single-source-of-truth altitude→band resolver); `biomeProps.ts` owns the data-driven scenery registry (per-band GLB sets + shelf styling), the `parallaxLayers` far/mid/near depth table, and the `biomeAmbience` per-band mote tint/size/drift |
 | `src/sim/physics` | ✓ | Rapier config, collision categories, spring/depress math (pure where possible) |
 | `src/sim/blob` | ✓ | blob state: squash/stretch springs, expression state machine (eyes), velocity model |
 | `src/sim/cloudPad` | ✓ | pass-through cloud catch/adherence tests and footprint math |
 | `src/sim/trampoline` | ✓ | compatibility package for cloud catch spring + tilt model, type behaviors (standard/booster/moving/fragile) |
 | `src/sim/launch` | ✓ | route charge→velocity, combo/multiplier, 3D air-steer model |
-| `src/world` | ✓ | seeded procedural vertical generator, route difficulty profiles, certified golden-path parabolas |
+| `src/world` | ✓ | seeded procedural vertical generator, route difficulty profiles, certified golden-path parabolas. `crystalTier.ts` owns the crystal rarity tiers incl. the rare `treasure` jackpot (value/scale/altitude-ramped odds) |
 | `src/engine` | ✓ | fixed-timestep accumulator (`advance`/`createStepLoop`) — deterministic sim stepping |
 | `src/audio` | ✓ | Howler.js engine playing the itch.io sample library (config/audio.json); music/ambient/sfx channels |
 | `src/render/materials` | ✓ | wet goo material (GooMaterial), eye materials, cloud-pad material reuse |
