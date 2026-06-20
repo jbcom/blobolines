@@ -938,7 +938,13 @@ milestones, so a 2000m crossing LOOKS as grand as it sounds.
       button + Escape/P toggles playing↔paused; a PauseOverlay (Resume / Settings / Quit-to-menu)
       shows over the frozen scene with music ducked. Determinism: pausing just stops advancing the
       sim clock — no reach math touched, no RNG.
-- [x] N17.2 DONE (1d7cabf): GamePhase += "paused"; togglePause action (playing↔paused only); GameScene
+- [x] N17.2 DONE + MERGED (PR #85, squash d15c1e5): GamePhase += "paused"; togglePause action
+      (playing↔paused only); GameScene mounts world for playing||paused, PhysicsStepDriver gates step
+      on playing; PauseOverlay + HUD PauseButton; Escape/P OWNERSHIP SPLIT (PauseButton enters,
+      PauseOverlay resumes guarded on !settingsOpen — gemini review); pauseMusic/resumeMusic
+      indefinite duck-hold; GamePhase derived from GAME_PHASES (no drift). 6 review findings folded
+      (3 local + 3 gemini), all threads resolved, 130 browser tests green. ORIGINAL N17.2 spec below:
+- [x] N17.2 spec: GamePhase += "paused"; togglePause action (playing↔paused only); GameScene
       mounts world for playing||paused, PhysicsStepDriver gates step on playing; HudOverlay shows Hud
       for playing||paused + PauseOverlay when paused; a pause button in the Hud + an Escape/P key
       handler; duckMusic on pause. Tests: store togglePause transitions (only from playing/paused,
@@ -980,8 +986,28 @@ use cases (first daily of the day vs. repeat attempt vs. new personal daily best
       "#N of M" / gold personal-daily-best, hidden for random runs. 6 selector unit tests + 4
       GameOver browser fixtures. 479 unit + 117 browser green; typecheck + lint clean.
 
+## Queue — Milestone: Upper-band visual QA + polish (branch feat/upper-band-polish, ACTIVE)
+
+The scenery system (BiomeScenicProps, 4 parallax layers, 6 props + 1 landmark per band) and the
+biome geometry are mature and dense. What has NOT been done is a deliberate eyes-on QA of how each
+UPPER band actually LOOKS in-game — the bands a typical run rarely reaches (stratosphere ~600m,
+space ~950m, deep-space ~1400m). The `__blobtest.teleport(y)` dev hook puts the blob at any height;
+drive it through each band, screenshot, READ the screenshot against the band's intended palette/mood
+(see src/config/biomes.ts band colors + docs/DESIGN.md), and fix spec drift (washed-out fog, prop
+scale wrong for the band, landmark clipping, lighting flat, sky gradient off). This is the "you own
+quality, especially visuals" doctrine applied to the bands the dev rarely sees.
+
+### N18 Architecture
+- [ ] N18.1 SURVEY: teleport through stratosphere/space/deep-space on the dev server (FOREGROUND the
+      tab so rAF isn't throttled — see [[blobolines-headless-raf-gating]]; the teleport needs stepped
+      frames to apply, and a backgrounded tab freezes the stepper). Screenshot each band. READ each
+      against biomes.ts band palette + DESIGN.md mood. Record per-band findings (what's off, what's
+      good) in this directive before any edit. Enumerate per finding: is the fix DATA
+      (biomeProps.ts / biomes.ts tuning) or RENDER CODE? Most should be data.
+
 ## Notes
 - This is a living plan. After every stage, backward+forward sweep and edit the queue.
-- Next candidate milestones (surface, don't pre-commit): per-biome MUSIC layers (needs new audio
-  assets), daily-challenge leaderboard polish, interactive scenery, USE the teleport tool to QA +
-  polish each upper biome band's look.
+- Next candidate milestones AFTER N18 (surface, don't pre-commit): per-biome MUSIC layers (needs new
+  audio assets), daily-challenge leaderboard polish, interactive scenery enrichment.
+- Lesson banked this session: the pre-push lint gate is `pnpm lint` (PINNED biome 2.5.0), NOT
+  `npx biome` / global biome (older, gives false-clean) — see [[blobolines-biome-ci-stricter]].
