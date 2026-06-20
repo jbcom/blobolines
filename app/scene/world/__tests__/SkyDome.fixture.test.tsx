@@ -41,6 +41,34 @@ async function centerLuminance(testId: string): Promise<number> {
   return sum / n;
 }
 
+/** Mean HSV-style saturation [0,1] of the rendered canvas center — (max−min)/max per pixel. A
+ *  washed-white/grey backdrop has near-zero saturation; a true colored band reads well above it. */
+async function centerSaturation(testId: string): Promise<number> {
+  const canvas = document.querySelector(`[data-testid="${testId}"]`)?.querySelector("canvas");
+  if (!canvas) throw new Error("canvas not mounted");
+  const off = document.createElement("canvas");
+  off.width = canvas.width;
+  off.height = canvas.height;
+  const ctx = off.getContext("2d");
+  if (!ctx) throw new Error("no 2d context");
+  ctx.drawImage(canvas, 0, 0);
+  const cx = Math.floor(off.width / 2);
+  const cy = Math.floor(off.height / 2);
+  const { data } = ctx.getImageData(cx - 8, cy - 8, 16, 16);
+  let sum = 0;
+  let n = 0;
+  for (let i = 0; i < data.length; i += 4) {
+    const r = data[i];
+    const g = data[i + 1];
+    const b = data[i + 2];
+    const max = Math.max(r, g, b);
+    const min = Math.min(r, g, b);
+    sum += max === 0 ? 0 : (max - min) / max;
+    n++;
+  }
+  return sum / n;
+}
+
 // Visual fixture: the painterly sky dome must actually paint colored pixels in a real
 // WebGL context (regression guard for the gradient shader material), AND now installs the
 // height-reactive biome fog on the scene without breaking that render.
@@ -89,6 +117,26 @@ test("the space band renders a DARK backdrop, not washed white", async () => {
       // Near-black space backdrop: well under mid-grey. The pre-fix washed-white render sat high
       // (≳0.6); the dark band must come in low.
       expect(lum).toBeLessThan(0.35);
+    },
+    { timeout: 6000, interval: 80 },
+  );
+});
+
+// F1 regression (the other end of the crossfade): the upper-atmosphere band must render as a real
+// COLORED sky (icy gold-over-blue: top #ffe8a8 / mid #8fcfff / deep #4a8edc), not the washed-white
+// grey the bug produced. A washed render has near-zero saturation; the true band is saturated.
+test("the upper-atmosphere band renders a COLORED sky, not washed grey", async () => {
+  setAltitude(360); // just into upper-atmosphere (minHeight 320)
+  await render(
+    <FixtureStage testId="sky-upper" cameraDistance={0.1}>
+      <SkyDome />
+    </FixtureStage>,
+  );
+  await new Promise((r) => setTimeout(r, 200));
+  await vi.waitFor(
+    async () => {
+      const sat = await centerSaturation("sky-upper");
+      expect(sat).toBeGreaterThan(0.12);
     },
     { timeout: 6000, interval: 80 },
   );

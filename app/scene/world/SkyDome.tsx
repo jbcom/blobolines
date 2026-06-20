@@ -90,18 +90,20 @@ export function SkyDome() {
       (wash.uniforms.uDeep.value as THREE.Color).set(hex(b.deep));
       // Painterly gradient opacity ramps 0.82 → 1.0 as the climb leaves the lower atmosphere, so the
       // upper bands' true colors (icy gold, sunset, near-black space) aren't washed white by the
-      // bright static <Sky> behind. Fully opaque by ~500m.
-      wash.uniforms.uAlpha.value = 0.82 + 0.18 * THREE.MathUtils.clamp(height / 500, 0, 1);
+      // bright static <Sky> behind. Fully opaque by the upper-atmosphere band (~320m) — that band is
+      // where the wash must already own the backdrop, not only by space.
+      wash.uniforms.uAlpha.value = 0.82 + 0.18 * THREE.MathUtils.clamp(height / 320, 0, 1);
     }
     fog.color.set(hex(b.fog));
 
-    // The bright physical daylight <Sky> belongs to the low atmosphere — fade it out from ~250m so
-    // it's GONE by the stratosphere (~600m), where the band gradient owns the backdrop. Otherwise
-    // its white atmospheric haze leaks through and washes the upper/space bands toward white.
+    // The bright physical daylight <Sky> belongs to the low atmosphere — fade it out from ~120m (the
+    // sky band) so it's GONE by the upper-atmosphere band (~320m), where the painterly band gradient
+    // must own the backdrop. Otherwise its desaturated white atmospheric haze leaks through the
+    // center of the view and washes the upper/space bands toward grey-white (the bug this fixes).
     const sky = skyRef.current;
     if (sky) {
       const skyMat = sky.material as THREE.Material;
-      const skyFade = 1 - THREE.MathUtils.clamp((height - 250) / 350, 0, 1);
+      const skyFade = 1 - THREE.MathUtils.clamp((height - 120) / 200, 0, 1);
       skyMat.transparent = true;
       skyMat.opacity = skyFade;
       sky.visible = skyFade > 0.01;
