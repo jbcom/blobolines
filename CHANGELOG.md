@@ -1,5 +1,22 @@
 # Changelog
 
+## [0.1.13](https://github.com/jbcom/blobolines/compare/blobolines-v0.1.12...blobolines-v0.1.13) (2026-06-20)
+
+
+### Features
+
+* **achievements:** show progress bars toward locked medals ([#83](https://github.com/jbcom/blobolines/issues/83)) ([011d526](https://github.com/jbcom/blobolines/commit/011d5261b44f4550c9757c61361cc6d56ab23071))
+* **cosmetic:** Nebula skin + the 2000m Voyager achievement ([#91](https://github.com/jbcom/blobolines/issues/91)) ([3e7972f](https://github.com/jbcom/blobolines/commit/3e7972f871f3aea03b899351d5e57794e70c244f))
+* **daily:** a 7-day 'this week's dailies' summary ([#94](https://github.com/jbcom/blobolines/issues/94)) ([da970f2](https://github.com/jbcom/blobolines/commit/da970f2ba6acd66d7fa35827849507b143cf3d04))
+* **daily:** branded PNG share card on the share button ([#89](https://github.com/jbcom/blobolines/issues/89)) ([fe52757](https://github.com/jbcom/blobolines/commit/fe52757d75a8e11231823618fc2f6263bb680748))
+* **daily:** daily-challenge streak system ([#88](https://github.com/jbcom/blobolines/issues/88)) ([799dddc](https://github.com/jbcom/blobolines/commit/799dddcd783eba15d188ce0600489cbc5a5718db))
+* **gameplay:** in-run PAUSE with frozen-scene overlay ([#85](https://github.com/jbcom/blobolines/issues/85)) ([d15c1e5](https://github.com/jbcom/blobolines/commit/d15c1e57150565415dfe924339695b984147b824))
+* **gameplay:** raise the combo ceiling to 12 (conservative rebalance) ([#93](https://github.com/jbcom/blobolines/issues/93)) ([a7db0b6](https://github.com/jbcom/blobolines/commit/a7db0b633fb979ebe48880ee45919d71cbf7f425))
+* **render:** upper-band sky/lighting polish + dev-teleport fix ([#86](https://github.com/jbcom/blobolines/issues/86)) ([337a40c](https://github.com/jbcom/blobolines/commit/337a40cf0109d5bcbbd415fc31571cbeb5628651))
+* **scene:** bobbing off-route obstacles ([#92](https://github.com/jbcom/blobolines/issues/92)) ([cef2e27](https://github.com/jbcom/blobolines/commit/cef2e2762c291da770d6e6d1802f8cbaa244a9ad))
+* **scene:** off-route bounce obstacles — a new interactive-scenery class ([#87](https://github.com/jbcom/blobolines/issues/87)) ([f290262](https://github.com/jbcom/blobolines/commit/f290262fc7b94895405a1c2dd3fd4db7ea23b323))
+* **ui:** one-tap Replay on Hall-of-Fame leaderboard entries ([#90](https://github.com/jbcom/blobolines/issues/90)) ([a73a479](https://github.com/jbcom/blobolines/commit/a73a479be94b719270d946dc7a35de41931c1790))
+
 ## [0.1.12](https://github.com/jbcom/blobolines/compare/blobolines-v0.1.11...blobolines-v0.1.12) (2026-06-20)
 
 
