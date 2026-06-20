@@ -691,7 +691,69 @@ mandate explicitly includes keeping docs aligned (no end-of-project catch-up).
       layer. All cited symbols verified on disk; biome ci + typecheck clean.
 
 ### N8.2 PR cutting point
-- [ ] N8.2 Commit, open PR, babysit to squash-merge, sync main, re-write directive forward to N9.
+- [x] N8.2a Committed (3688da9), pushed, opened PR #76 (docs-only — no code reviewer needed; CI
+      validates). Monitor armed.
+- [x] N8.2b PR #76 SQUASH-MERGED (ff32bc6, 2026-06-20). gemini's lone nit was a truncated paren in
+      an AUTO-GENERATED decisions.ndjson audit entry from a prior commit — reasoned-resolved (editing
+      the append-only audit log retroactively would corrupt the trail). 0 unresolved. Docs current.
+      SEVEN PRs this session (#70–#76). Local main synced; cut feat/feel-survey → renamed
+      feat/per-biome-music (see N9).
+
+## Queue — Milestone: Per-biome music layers (branch feat/per-biome-music)
+
+### N9 Architecture
+- [x] N9.1 SURVEY + DECISION. Surveyed the feel/audio surface: combo/score/style/golden-path
+      landing-quality + RouteLandingToast + camera-shake + blob-trail + speed-lines + power-ups are
+      ALL already built — reinventing them is waste. The real gap: MUSIC switches binary (ingame ↔
+      highspace at a single 600m threshold) for 6 bands, while AMBIENT already follows biomeBandAt.
+      KEY FINDING: the OWNED "gameloops-vol2-casualupbeat" itch pack (already extracted in
+      raw-assets/) has 10 distinct upbeat MP3 loops — enough to give each band its own track with
+      ZERO new fetching. DECISION: map music to the 6 canonical bands via biomeBandAt (the
+      single-source pattern), promoting 6 casual-upbeat loops (NOT the retro-combat "Battle/Dungeon"
+      tracks — memory blobolines-audio-identity warns against borrowed RPG music). audio.json grows
+      a per-band `bandMusic` map; setMusicAltitude crossfades the band track via biomeBandAt;
+      setMusicTrack throws on an unmapped band (no silent fallback). Keep menu track separate.
+- [x] N9.2 DONE. Promoted 6 owned casual-upbeat loops → public/assets/audio/music/biomes/<band>.mp3
+      (ground=BrightStart, sky=HappyMove, upper-atmosphere=ColorDash, stratosphere=CasualRush,
+      space=ArcadeBounce, deep-space=PlayLoop). Added `bandMusic` to audio.json; new `setMusicBand`
+      (mirrors setAmbientBand — biomeBandAt→track, crossfade, THROWS on unmapped); setMusicAltitude
+      now drives BOTH music + ambient by biomeBandAt; startMusic starts on the ground track.
+      REMOVED the dead ingame/highspace tracks + musicHighStart + MUSIC_HIGH_START (the binary
+      threshold is gone). Tests: per-band music coverage (every band→distinct real track) in
+      audioAmbient.test.ts + rewrote the sfx phase-music test to assert music+ambient follow the
+      bands. 506 unit + 120 browser green; typecheck + biome ci + build clean.
+
+### N9.3 PR cutting point
+- [x] N9.3a Committed (d7731b0), dispatched reviewer (background, focused on crossfade/stale-Howl +
+      menu↔band transition), pushed, opened PR #77. Monitor armed. Ran `npx biome ci .` before push.
+- [x] N9.3b-feedback Folded forward: my reviewer's main "bug" (stopMusic leaving musicKey stale →
+      silent replay) was a FALSE positive — stopMusic already resets musicKey="" (reset was outside
+      the diff it read); verified + added a same-band-replay regression test + cleaned the dead
+      "ingame" comment (0bec5d7). gemini's 3 MEDIUM (double currentMusicPath lookup + `as string`
+      cast) → factored a fadeOutCurrentMusic() helper (41985be); 3 threads resolved. 507 unit + 120
+      browser green.
+- [x] N9.3c-feedback CodeRabbit: setMusicAltitude called setAmbientBand even on the menu (could
+      restart the ambient the music-only menu silenced). Fixed in b6a4ab4 — full early-return on
+      the menu + a regression test (a menu altitude tick starts no new bed). Thread resolved. 508
+      unit + 120 browser green.
+- [ ] [WAIT-REVIEW] N9.3d Wait CI green on b6a4ab4, squash-merge PR #77, sync main, start N10.
+
+### N10 Next milestone (surface after #77 merges)
+- [ ] [WAIT-MERGE] N10.1 Pick the next polish unit (don't pre-commit). Biome identity is now
+      complete across ALL senses (visual scenery/parallax/landmarks/reactions + audio ambient +
+      MUSIC + particles + banner). Candidates to SHIFT axis: a gameplay/FEEL beat that's genuinely
+      missing (survey showed combo/score/landing-quality/toast/shake/trail/speedlines/powerups all
+      exist — look for a NEW pad type/hazard fitting the climber, or richer mid-air control feedback),
+      OR more owned-audio polish (victory-stinger variety per milestone tier, menu-music variety).
+      Enumerate use cases first; read own spec docs + the reachability-invariant + audio-identity
+      memories before touching pads/audio.
+
+### N9 Next milestone (surface after #76 merges)
+- [ ] [WAIT-MERGE] N9.1 Pick the next polish unit (don't pre-commit). Biome identity + docs are now
+      current. Strong candidates: per-biome MUSIC layers (needs new owned audio via the itch
+      pipeline — scripts/), or a gameplay/FEEL system (combo/score juice, a new pad behaviour/hazard
+      that fits the climber, richer launch/landing feedback). Enumerate use cases first; read own
+      spec docs (esp. the reachability invariant + audio-identity memory before touching pads/audio).
 
 ## Queue — Milestone: Daily-challenge results polish (branch feat/daily-results, NEXT)
 
