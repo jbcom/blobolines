@@ -540,9 +540,17 @@ export function PlayerBlob() {
 
     const adherence = consumeCloudAdherence();
     if (adherence) {
-      // A real adherence from a mounted Trampoline sensor means the pad window has
-      // caught up — the anchor is no longer needed.
-      if (teleportAnchor.current && adherence.padId === teleportAnchor.current.padId) {
+      // A real adherence from the now-mounted Trampoline sensor means the pad window has caught up —
+      // the anchor is no longer needed. Guard on object IDENTITY: the anchor we just injected via
+      // reportCloudAdherence() is what consumeCloudAdherence() returns until the real sensor reports
+      // (last-stronger-wins, and the anchor is strength 1.0), so a padId-only check would clear the
+      // anchor on its OWN frame-1 echo and defeat the lag bridge. Only a DIFFERENT object (the real
+      // sensor's report for the same pad) releases it.
+      if (
+        teleportAnchor.current &&
+        adherence !== teleportAnchor.current &&
+        adherence.padId === teleportAnchor.current.padId
+      ) {
         teleportAnchor.current = null;
       }
       body.wakeUp();
