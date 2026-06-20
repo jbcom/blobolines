@@ -78,6 +78,30 @@ describe("worldStore.ensureHeight", () => {
     expect(useWorldStore.getState().trampolines).toBe(trampolines); // same ref, untouched
   });
 
+  it("leaves no padless gap above DEATH_FALL_DISTANCE below any teleport target", () => {
+    // Regression: sequential dev teleports all collapsed to ~60 because the FIRST teleport
+    // pushed highestY high, so later ensureHeight(target+40) calls for lower bands hit the
+    // monotonic `targetY <= highestY` short-circuit and added no pads — the body free-dropped
+    // from the target past DEATH_FALL_DISTANCE (24) and died before touching anything. The
+    // tower IS generated continuously from 0 to highestY though, so for ANY target there must
+    // be a real pad within DEATH_FALL_DISTANCE below it. PlayerBlob's teleport snap relies on
+    // exactly this: it places the body on the nearest pad at-or-below the target.
+    const DEATH_FALL_DISTANCE = 24;
+    // First teleport to a high band — this is what sets highestY high in the failing scenario.
+    useWorldStore.getState().ensureHeight(600 + 40);
+    const pads = useWorldStore
+      .getState()
+      .trampolines.map((p) => p.position[1])
+      .sort((a, b) => a - b);
+    // Every sequential target the bug hit must have a pad within DEATH_FALL_DISTANCE below it.
+    for (const target of [120, 320, 600, 900, 1400].filter((t) => t <= 640)) {
+      const below = pads.filter((y) => y <= target);
+      expect(below.length).toBeGreaterThan(0);
+      const nearest = below[below.length - 1];
+      expect(target - nearest).toBeLessThan(DEATH_FALL_DISTANCE);
+    }
+  });
+
   it("keeps the trampoline list bounded over a long climb", () => {
     // Generate far up — many chunks. The retained tail must stay capped, not grow forever.
     for (let target = 500; target <= 12000; target += 500) {
