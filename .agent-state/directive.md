@@ -201,8 +201,14 @@ re-write directive forward → next.
 ### E2 PR cutting point
 - [x] E2.1a PR #62 opened (e2e test bridge). This run is also the real-CI validation that the
       bridge makes the e2e job green under SwiftShader.
-- [ ] [WAIT-REVIEW] E2.1b Babysit PR #62: confirm e2e job goes GREEN in real CI + verify gate
-      green → address feedback → resolve threads → squash-merge → re-write directive forward.
+- [x] E2.1b Real-CI run proved the bridge works: playable + both scenarios PASS (click stalls
+      gone). Two remaining failures were SwiftShader-specific (NOT clicks): perf liveness
+      assertion too strict for <2fps software GL, route-proof's 8 toDataURL readbacks too slow.
+      Addressed gemini HIGH (redundant startRun masking the card remount). Fixes in 6a07f82 +
+      34a7ccd: fixed-frame-count perf sampling + skip route-proof (dev-tooling) in CI. CI=true
+      runs 4 specs/58s, local 5/5.
+- [ ] [WAIT-REVIEW] E2.1c Babysit PR #62: confirm both verify + e2e gates GREEN in real CI →
+      resolve any new threads → squash-merge → re-write directive forward.
 
 ## Notes
 - This is a living plan. After every stage, backward+forward sweep and edit the queue.
