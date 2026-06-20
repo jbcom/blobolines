@@ -1376,10 +1376,26 @@ drop most days). A 7-day daily-best trend in the Hall-of-Fame.
       no visual change (existing GameOver record/streak tests render the new path). 565/153 green.
 
 ### Cutting point: PR for the celebration-haptics theme
-- [ ] [WAIT-CI] PR #98 (feat/feel-polish: N30 in-run haptics + N30b game-over haptics + audit-trail,
-      4 commits, HEAD da2e166). Babysit CI green (ci-coalescing guard armed: confirm ci.yml run for
-      HEAD before merge) + bot threads, resolve, squash-merge, reset main, live-verify. Then fresh
-      branch; next theme = another genuinely-delightful feel/polish gap (survey first, no bloat).
+- [x] PR #98 (celebration haptics: N30 in-run + N30b game-over + audit-trail + directive, HEAD
+      a1a916e) MERGED (squash 32d5f78). 8/8 CI green; ci-coalescing guard CONFIRMED the ci.yml run
+      for HEAD a1a916e is completed/success (re-armed Monitor after a directive push moved HEAD);
+      bots clean, 0 threads. cd.yml deployed on the main push (completed/success). Accumulating into
+      release PR #96 (0.1.14).
+
+### N31 death + clutch-save feedback (the failure/relief side of the feel layer)
+- [x] N31: The celebratory PEAKS now buzz (N30), but the DEATH — the climactic "Splat!" — and the
+      SHIELD SAVE (surviving a fatal fall) were under-punctuated vs. the peaks. Added on death: a
+      full-strength (1.0) goo-splat burst via reportSplat + a Heavy impact haptic, so the biggest
+      moment lands hardest. Added on a shield save: a Success haptic (clutch relief, like a peak).
+      Both gated on settings.haptics; reuses the already-visually-tested splat pipeline. Tests: a
+      launchBridge contract test pinning the death splat as a strength-1 burst. 566 unit / 153 browser
+      green; typecheck + pinned lint clean. (Death-splat visual reuses the tested splat renderer; the
+      physics death trigger is rAF-gated for headless QA — deterministic tests are the QA path here.)
+
+### Cutting point: PR for the death/clutch-save feedback
+- [ ] [WAIT-CI] PR for feat/feel-polish-2 (N31 death + shield-save feedback). Push, open PR, babysit
+      CI green (ci-coalescing guard: confirm ci.yml run for HEAD) + bot threads, resolve, squash-merge,
+      reset main. Then fresh branch; keep surveying for genuine feel gaps.
 
 ## Notes
 - This is a living plan. After every stage, backward+forward sweep and edit the queue.

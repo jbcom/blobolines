@@ -99,6 +99,15 @@ describe("launchBridge request/consume contracts", () => {
 });
 
 describe("launchBridge queues + persistent state", () => {
+  it("carries a death-strength (1.0) splat through the queue (the climactic game-over splat)", () => {
+    // PlayerBlob reports a full-strength splat on death so the most dramatic moment gets the biggest
+    // goo burst. Verify the bridge carries strength 1 intact (the renderer scales the burst by it).
+    reportSplat({ position: [3, -2, 1], strength: 1 });
+    const [death] = consumeSplats();
+    expect(death.strength).toBe(1);
+    expect(death.position).toEqual([3, -2, 1]);
+  });
+
   it("drains the splat/burst/split queues and clears them", () => {
     reportSplat({ position: [0, 0, 0], strength: 0.5 });
     reportSplat({ position: [1, 0, 0], strength: 0.8 });
