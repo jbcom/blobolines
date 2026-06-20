@@ -47,6 +47,9 @@ export const playerProgressSchema = z.object({
   // + tolerant so progress saved before this feature loads cleanly (undefined → no streak yet).
   dailyStreak: z.number().optional().catch(undefined),
   lastDailyKey: z.string().optional().catch(undefined),
+  // Per-day daily-best scores for the weekly summary (UTC day → score). Tolerant: a corrupt map
+  // falls back to empty rather than failing the whole progress load.
+  dailyBests: z.record(z.string(), z.number()).optional().catch(undefined),
 });
 
 const persistedSettingsSchema = z.object({

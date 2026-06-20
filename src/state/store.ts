@@ -9,7 +9,7 @@ import type {
   WorldDifficulty,
 } from "@/core/types";
 import { ACHIEVEMENT_SKIN, type AchievementStats, newlyUnlocked } from "@/sim/achievements";
-import { DAILY_NS, dailyKey, nextDailyStreak } from "@/sim/daily";
+import { DAILY_NS, dailyKey, nextDailyStreak, recordDailyBest } from "@/sim/daily";
 import { computeScore } from "@/sim/score";
 import { palette } from "@/styles/tokens";
 import { ROUTE_DIFFICULTIES } from "@/world";
@@ -328,12 +328,21 @@ export const useGameStore = create<GameState>((set) => ({
         todayKey !== null &&
         (!s.progress.lastDailyKey || todayKey >= s.progress.lastDailyKey);
 
+      // Per-day daily-best for the weekly summary. Recorded only for TODAY'S daily (same gate as the
+      // streak) — recordDailyBest prunes relative to the recorded day, so feeding it a replayed PAST
+      // day would prune recent days; restricting to today keeps the pruning reference = now. A
+      // replayed old daily still posts to highScores, just not the weekly-best trend.
+      const nextDailyBests = isTodaysDaily
+        ? recordDailyBest(s.progress.dailyBests ?? {}, todayKey, runScore)
+        : null;
+
       const nextProgress: PlayerProgress = {
         ...s.progress,
         bestHeight: Math.max(s.progress.bestHeight, h),
         bestScore: Math.max(s.progress.bestScore, runScore),
         highScores: updatedScores,
         ...(advanceStreak ? { dailyStreak: streak.streak, lastDailyKey: todayKey } : {}),
+        ...(nextDailyBests ? { dailyBests: nextDailyBests } : {}),
       };
 
       const { progress, run } = checkAndUnlock(nextProgress, nextRun);

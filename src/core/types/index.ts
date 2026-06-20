@@ -197,6 +197,10 @@ export interface PlayerProgress {
   dailyStreak?: number;
   /** UTC YYYY-MM-DD key of the last daily the player completed — the streak's continuity anchor. */
   lastDailyKey?: string;
+  /** Per-day daily-best scores (UTC day → best composite score), pruned to the recent week. Powers
+   *  the "this week" daily summary, which the top-5 highScores can't (they drop most days). Optional
+   *  for back-compat with progress saved before the weekly summary. */
+  dailyBests?: Record<string, number>;
 }
 
 /** User-tunable settings. */

@@ -44,6 +44,65 @@ export function daysBetweenKeys(a: string, b: string): number {
   return Math.round((Date.UTC(by, bm - 1, bd) - Date.UTC(ay, am - 1, ad)) / msPerDay);
 }
 
+/** Per-day daily-best scores, keyed by UTC day (YYYY-MM-DD → best composite score that day). Lets a
+ *  weekly summary show a trend the top-5 highScores can't (they only keep the 5 best EVER, dropping
+ *  most days). Stored on PlayerProgress; pruned to a recent window so it can't grow unbounded. */
+export type DailyBests = Record<string, number>;
+
+/** How many recent days the weekly summary + the pruning window span. */
+export const WEEK_DAYS = 7;
+
+/** Record a daily run's score into the per-day bests, keeping the BEST score for that day. Pure —
+ *  returns a NEW map (never mutates), pruned to entries within WEEK_DAYS of `dayKey` so it stays
+ *  bounded. `dayKey` is the run's daily key (the caller passes it; sim never reads the clock). */
+export function recordDailyBest(bests: DailyBests, dayKey: string, score: number): DailyBests {
+  const next: DailyBests = {};
+  // Keep only recent days (within the week window, measured back from this run's day), so old days
+  // age out and the map stays small.
+  for (const [k, v] of Object.entries(bests)) {
+    const age = daysBetweenKeys(k, dayKey);
+    if (age >= 0 && age < WEEK_DAYS) next[k] = v;
+  }
+  next[dayKey] = Math.max(next[dayKey] ?? 0, Math.max(0, Math.floor(score)));
+  return next;
+}
+
+/** One day in the weekly summary: its key, the player's best score that day (0 if unplayed), and
+ *  whether it's the BEST day of the window. */
+export interface DailySummaryDay {
+  key: string;
+  best: number;
+  played: boolean;
+  isWeekBest: boolean;
+}
+
+/** A 7-day daily summary ending at `today`: one entry per day (oldest→newest), the count of days
+ *  played, and the best single-day score across the week. Pure + date-injected. */
+export interface WeeklyDailySummary {
+  days: DailySummaryDay[];
+  daysPlayed: number;
+  weekBest: number;
+}
+
+/** Build the trailing-7-day daily summary from the per-day bests and today's key. Days with no
+ *  recorded best read as unplayed (best 0). Pure. */
+export function weeklyDailySummary(bests: DailyBests, todayKey: string): WeeklyDailySummary {
+  // The week is [today-6 … today]. Compute each day's key from today's parts via Date.UTC, which
+  // normalizes an out-of-range day (e.g. day 0 / negative) back across month + year boundaries — pure
+  // epoch arithmetic, no clock read. `dailyKey` formats the resulting Date back to YYYY-MM-DD.
+  const [ty, tm, td] = todayKey.split("-").map(Number);
+  const keyForOffset = (back: number): string =>
+    dailyKey(new Date(Date.UTC(ty, tm - 1, td - back)));
+  const raw = Array.from({ length: WEEK_DAYS }, (_, i) => {
+    const key = keyForOffset(WEEK_DAYS - 1 - i); // oldest first
+    const best = bests[key] ?? 0;
+    return { key, best, played: best > 0 };
+  });
+  const weekBest = raw.reduce((m, d) => Math.max(m, d.best), 0);
+  const days = raw.map((d) => ({ ...d, isWeekBest: weekBest > 0 && d.best === weekBest }));
+  return { days, daysPlayed: days.filter((d) => d.played).length, weekBest };
+}
+
 /** Result of advancing the daily streak when a daily run completes on `todayKey`, given the player's
  *  stored `prevStreak` and the `lastKey` they last completed a daily on (empty/undefined = none). */
 export interface DailyStreakUpdate {

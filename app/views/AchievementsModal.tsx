@@ -25,6 +25,7 @@ import {
 import type { HighScoreEntry } from "@/core/types";
 import { ACHIEVEMENTS, type AchievementStats, achievementProgress } from "@/sim/achievements";
 import { useGameStore } from "@/state";
+import { WeeklyDailySummary } from "./WeeklyDailySummary";
 
 // Map achievement IDs to high-quality Lucide icons for high-fidelity aesthetics
 const ACHIEVEMENT_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -213,6 +214,8 @@ export function AchievementsModal({
 
           {/* 2. Leaderboard Tab */}
           <TabsContent value="leaderboard" className="mt-4 flex flex-col gap-3">
+            {/* This-week daily trend (shows once at least one daily has been run). */}
+            <WeeklyDailySummary />
             {highScores.length === 0 ? (
               /* Beautiful Empty State */
               <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border/60 bg-bg/10 py-12 text-center">

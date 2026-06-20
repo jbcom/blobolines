@@ -1261,10 +1261,38 @@ N23). The rebalance keeps it BALANCE-CONSERVATIVE, not score-inflating.
       its 2 findings (full-range monotonic test + the stale GAME-DESIGN.md combo row). 0 threads; ci.yml
       run forced for the exact HEAD (coalescing trap hit). Wait CI green → squash-merge → sync main.
 
+## Queue — Milestone: N26 WEEKLY daily summary (branch feat/weekly-daily-summary)
+
+The "best daily this week" candidate, built with the per-day storage it needed (top-5 highScores
+drop most days). A 7-day daily-best trend in the Hall-of-Fame.
+
+### N26 Architecture
+- [x] N26.1 DONE. Pure src/sim/daily: DailyBests (UTC day → best score) + recordDailyBest(bests,
+      dayKey, score) (keeps the day's best, floors/clamps, prunes to the WEEK_DAYS=7 window, never
+      mutates) + weeklyDailySummary(bests, todayKey) → {days[7] oldest→newest, daysPlayed, weekBest}
+      (date-injected; month/year-boundary-safe via Date.UTC). PlayerProgress += dailyBests (persisted
+      in playerProgressSchema as z.record, tolerant). commitBestHeight records TODAY'S daily score
+      (gated like the streak — pruning reference stays = now; a replayed past daily still posts to
+      highScores, just not the weekly trend). UI: WeeklyDailySummary — a 7-day bar chart in the
+      Hall-of-Fame Leaderboard tab (S–S labels, per-day best bars, the week-best day glows GOLD, the
+      streak badge, "N/7 played · Best:"). Hidden until ≥1 daily is in. Tests: recordDailyBest (best-
+      keep, floor/clamp, no-mutate, prune) + weeklyDailySummary (7-day window, week-best flag, month/
+      year boundary) + a store commit test (today-only, best-keep, non-daily-skip) + a persistence
+      round-trip + 2 WeeklyDailySummary browser fixtures. 553 unit / 143 browser green; typecheck +
+      pinned lint clean. VISUAL-VERIFIED live: the "This Week's Dailies" bar chart renders with the
+      gold week-best day, streak badge, and "5/7 played · Best: 3,100".
+
+- [ ] [WAIT-REVIEW] PR #94 (N26 weekly daily summary) — babysit: local review + CI in flight (reviewer
+      checking the prune-reference gate + the 0-score-day division edge). Wait CI green, fold findings,
+      resolve threads, squash-merge, sync main.
+- [ ] [WAIT-CI] Release: PR #84 (release-please → blobolines 0.1.13) is open + accumulating all this
+      session's features. Once PR #94 is merged and #84's CI is green, squash-merge #84 to cut 0.1.13
+      (release.yml → cd.yml deploy). Verify the live deploy after.
+
 ## Notes
 - This is a living plan. After every stage, backward+forward sweep and edit the queue.
-- Next candidate milestones (surface, don't pre-commit): a "best daily this week" mini-summary (needs
-  per-day daily-best storage), a new pad-type behaviour, a cosmetic trail. Per-biome music + the base
-  pad/obstacle/combo systems are now SATURATED.
+- Next candidate milestones (surface, don't pre-commit): a new pad-type behaviour, a cosmetic trail,
+  a settings option. The daily-challenge system (standing + streak + share + replay + weekly) and the
+  base pad/obstacle/combo/skin systems are now richly built.
 - Lesson banked this session: the pre-push lint gate is `pnpm lint` (PINNED biome 2.5.0), NOT
   `npx biome` / global biome (older, gives false-clean) — see [[blobolines-biome-ci-stricter]].
