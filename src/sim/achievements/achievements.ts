@@ -21,6 +21,10 @@ export interface AchievementStats {
   runMaxCombo: number;
   /** This run's crystals. */
   runCrystals: number;
+  /** Current daily-challenge streak (consecutive UTC days). Drives the daily-devotion achievements;
+   *  advanced in the store on a today's-daily commit, so it's at its fresh value when achievements
+   *  evaluate that same run. 0 when no streak / undefined progress (back-compat). */
+  dailyStreak: number;
 }
 
 /** A locked achievement's progress toward unlocking — so the UI can show "640 / 1000 m". */
@@ -150,6 +154,20 @@ export const ACHIEVEMENTS: readonly Achievement[] = [
     stat: (s) => s.bestScore,
     target: 25000,
   },
+  {
+    id: "daily-streak-3",
+    title: "Daily Devotee",
+    description: "Keep a 3-day daily-challenge streak.",
+    stat: (s) => s.dailyStreak,
+    target: 3,
+  },
+  {
+    id: "daily-streak-7",
+    title: "Faithful",
+    description: "Keep a 7-day daily-challenge streak.",
+    stat: (s) => s.dailyStreak,
+    target: 7,
+  },
 ];
 
 const BY_ID: Record<string, Achievement> = Object.fromEntries(ACHIEVEMENTS.map((a) => [a.id, a]));
@@ -169,6 +187,7 @@ export const SKIN_ACHIEVEMENT: Partial<Record<BlobSkin, string>> = {
   ghost: "score-25k",
   ink: "height-1000",
   nebula: "height-2000",
+  aurora: "daily-streak-7",
 };
 
 /** Reverse map: achievement id → the skin it unlocks (for the grant-on-unlock path). */

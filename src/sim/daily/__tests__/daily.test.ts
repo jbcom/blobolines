@@ -5,6 +5,7 @@ import {
   dailySeed,
   dailySeedPhrase,
   dailyStanding,
+  dailyStreakStatus,
   daysBetweenKeys,
   nextDailyStreak,
   recordDailyBest,
@@ -170,6 +171,49 @@ describe("nextDailyStreak", () => {
     // streak must NOT be preserved (that would lock them out of extending until wall-clock catches up).
     const u = nextDailyStreak(5, "2026-06-25", "2026-06-20"); // gap = -5
     expect(u).toEqual({ streak: 1, extended: false, brokeStreak: true });
+  });
+});
+
+describe("dailyStreakStatus", () => {
+  it("reports `none` when there's no streak or no last key", () => {
+    expect(dailyStreakStatus(0, undefined, "2026-06-20")).toEqual({ streak: 0, state: "none" });
+    expect(dailyStreakStatus(0, "2026-06-19", "2026-06-20")).toEqual({ streak: 0, state: "none" });
+    expect(dailyStreakStatus(5, undefined, "2026-06-20")).toEqual({ streak: 0, state: "none" });
+  });
+
+  it("`secured` when today's daily is already in (gap 0)", () => {
+    expect(dailyStreakStatus(4, "2026-06-20", "2026-06-20")).toEqual({
+      streak: 4,
+      state: "secured",
+    });
+  });
+
+  it("`atRisk` when the streak is alive (played yesterday) but today isn't done yet", () => {
+    expect(dailyStreakStatus(4, "2026-06-19", "2026-06-20")).toEqual({
+      streak: 4,
+      state: "atRisk",
+    });
+  });
+
+  it("`expired` when a day was missed (gap ≥ 2)", () => {
+    expect(dailyStreakStatus(4, "2026-06-17", "2026-06-20")).toEqual({
+      streak: 4,
+      state: "expired",
+    });
+  });
+
+  it("`expired` for a corrected future-clock skew (gap < 0), matching nextDailyStreak's reset", () => {
+    expect(dailyStreakStatus(4, "2026-06-25", "2026-06-20")).toEqual({
+      streak: 4,
+      state: "expired",
+    });
+  });
+
+  it("agrees with nextDailyStreak: atRisk extends, secured holds, expired restarts", () => {
+    // The menu's preview must never contradict what the next commit does.
+    expect(nextDailyStreak(4, "2026-06-19", "2026-06-20").extended).toBe(true); // atRisk → grows
+    expect(nextDailyStreak(4, "2026-06-20", "2026-06-20").streak).toBe(4); // secured → unchanged
+    expect(nextDailyStreak(4, "2026-06-17", "2026-06-20").streak).toBe(1); // expired → restart
   });
 });
 

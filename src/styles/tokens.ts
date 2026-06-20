@@ -13,6 +13,10 @@ export const palette = {
     ghost: "#ffd95a",
     /** Cosmic violet — the 2000m "Voyager" reward skin (earned by the height-2000 achievement). */
     nebula: "#a06bff",
+    /** Dawn aurora teal — the daily-devotion reward skin (earned by the 7-day "Faithful" streak).
+     *  Cool cyan-teal fills the one gap in the otherwise warm skin palette, so it reads as a
+     *  distinct "kept the dawn vigil" cosmetic. */
+    aurora: "#2fe6c4",
   },
   tramp: {
     blue: "#ff6f61",
@@ -97,7 +101,7 @@ export const mixHex = (a: string, b: string, t: number): string => {
 };
 
 /** Blob skin identifiers (the playable characters from the cover art). */
-export type BlobSkin = "blue" | "slime" | "ghost" | "ink" | "nebula";
+export type BlobSkin = "blue" | "slime" | "ghost" | "ink" | "nebula" | "aurora";
 
 export const blobSkinColor: Record<BlobSkin, string> = {
   blue: palette.blob.blue,
@@ -105,6 +109,7 @@ export const blobSkinColor: Record<BlobSkin, string> = {
   ghost: palette.blob.ghost,
   ink: palette.blob.ink,
   nebula: palette.blob.nebula,
+  aurora: palette.blob.aurora,
 };
 
 /** Cloud-pad gameplay types. Kept as TrampType for compatibility with older world-store and

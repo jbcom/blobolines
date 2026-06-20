@@ -187,6 +187,28 @@ describe("useGameStore", () => {
     expect(p.dailyStreak).toBe(9); // streak unchanged — not inflated
   });
 
+  it("crossing a 7-day daily streak unlocks Faithful AND grants the aurora skin", () => {
+    // Seed a 6-day streak whose last completed daily was YESTERDAY, then commit TODAY'S daily run.
+    // The streak extends to 7, which crosses both daily-streak achievements; the 7-day one is tied
+    // to the aurora skin (SKIN_ACHIEVEMENT), so the same commit must grant aurora.
+    const today = new Date();
+    const yesterday = dailyKey(
+      new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate() - 1)),
+    );
+    useGameStore.setState((s) => ({
+      progress: { ...s.progress, dailyStreak: 6, lastDailyKey: yesterday },
+    }));
+    useGameStore.getState().setDailyRun(true);
+    useWorldStore.setState({ seedPhrase: dailySeedPhrase(today) });
+    useGameStore.getState().commitBestHeight(500);
+
+    const p = useGameStore.getState().progress;
+    expect(p.dailyStreak).toBe(7); // extended yesterday → today
+    expect(p.unlockedAchievements).toContain("daily-streak-3");
+    expect(p.unlockedAchievements).toContain("daily-streak-7");
+    expect(p.unlockedSkins).toContain("aurora"); // milestone cosmetic granted in the same pass
+  });
+
   it("unlockAchievements persists newly-met ids once and returns only the fresh ones", () => {
     // A 100m best unlocks "height-100"; the action returns it and stores it.
     const fresh = useGameStore.getState().unlockAchievements({
@@ -196,6 +218,7 @@ describe("useGameStore", () => {
       runHeight: 100,
       runMaxCombo: 0,
       runCrystals: 0,
+      dailyStreak: 0,
     });
     expect(fresh).toContain("height-100");
     expect(useGameStore.getState().progress.unlockedAchievements).toContain("height-100");
@@ -207,6 +230,7 @@ describe("useGameStore", () => {
       runHeight: 100,
       runMaxCombo: 0,
       runCrystals: 0,
+      dailyStreak: 0,
     });
     expect(again).toEqual([]);
     const ids = useGameStore.getState().progress.unlockedAchievements;
@@ -222,6 +246,7 @@ describe("useGameStore", () => {
       runHeight: 1000,
       runMaxCombo: 0,
       runCrystals: 0,
+      dailyStreak: 0,
     });
     expect(fresh).toContain("height-1000");
     expect(useGameStore.getState().progress.unlockedSkins).toContain("ink");

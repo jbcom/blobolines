@@ -2,8 +2,15 @@ import { describe, expect, it } from "vitest";
 import { blobSkinColor, hex, palette, rgbNorm, trampColor } from "./tokens";
 
 describe("design tokens", () => {
-  it("exposes the blob skins (cover-art four + the nebula 2000m Voyager reward)", () => {
-    expect(Object.keys(blobSkinColor).sort()).toEqual(["blue", "ghost", "ink", "nebula", "slime"]);
+  it("exposes the blob skins (cover-art four + the nebula 2000m & aurora daily-streak rewards)", () => {
+    expect(Object.keys(blobSkinColor).sort()).toEqual([
+      "aurora",
+      "blue",
+      "ghost",
+      "ink",
+      "nebula",
+      "slime",
+    ]);
   });
 
   it("exposes the trampoline gameplay types (incl. super/ice bonus + canted/wobbler nav pads)", () => {

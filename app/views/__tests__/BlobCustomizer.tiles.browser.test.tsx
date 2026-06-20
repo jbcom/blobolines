@@ -22,3 +22,21 @@ test("a locked but affordable tile shows an Unlock affordance", async () => {
   // At least one locked tile is now affordable → shows "Unlock".
   await expect.element(screen.getByText("Unlock").first()).toBeInTheDocument();
 });
+
+test("the aurora reward skin renders as an achievement-gated Earn tile (Faithful)", async () => {
+  // Aurora is earned by the 7-day Faithful streak, never bought — its tile must show the Earn path
+  // with the gating achievement's title, not a crystal price (even with crystals to spare).
+  useGameStore.setState((s) => ({ progress: { ...s.progress, crystals: 9999 } }));
+  const screen = await render(<BlobCustomizer open onOpenChange={() => {}} />);
+  await expect.element(screen.getByText("Aurora")).toBeInTheDocument();
+  await expect.element(screen.getByText("Faithful")).toBeInTheDocument();
+});
+
+test("an UNLOCKED aurora tile equips on tap (no crystal price)", async () => {
+  useGameStore.setState((s) => ({
+    progress: { ...s.progress, unlockedSkins: [...s.progress.unlockedSkins, "aurora"] },
+  }));
+  const screen = await render(<BlobCustomizer open onOpenChange={() => {}} />);
+  await screen.getByLabelText(/^Aurora — equip$/).click();
+  expect(useGameStore.getState().progress.skin).toBe("aurora");
+});

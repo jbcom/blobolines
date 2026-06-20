@@ -141,6 +141,41 @@ export function nextDailyStreak(
   return { streak: 1, extended: false, brokeStreak: prevStreak > 1 };
 }
 
+/** The menu's read of the player's daily streak RIGHT NOW (before they play today). Drives the
+ *  Daily-Challenge button's streak badge + the "keep it going" nudge. `none` covers no streak at
+ *  all. `secured` = today's daily is already in, the streak is safe. `atRisk` = the streak is alive
+ *  (last played yesterday) but today isn't done — play to keep it. `expired` = a day was missed, so
+ *  the displayed count is stale and the next daily will restart at 1. */
+export type DailyStreakState = "none" | "secured" | "atRisk" | "expired";
+
+export interface DailyStreakStatus {
+  /** The persisted streak length (what the badge shows). 0 when there's no streak. */
+  streak: number;
+  state: DailyStreakState;
+}
+
+/**
+ * Pure: classify the current daily streak for the menu, given the persisted streak/lastKey and
+ * today's key. Mirrors nextDailyStreak's gap rules so the menu's preview can never disagree with
+ * what the next commit will actually do:
+ *  - no streak / no last key → none
+ *  - gap 0 (played today) → secured
+ *  - gap 1 (played yesterday, not yet today) → atRisk (one play keeps it)
+ *  - any other gap (missed day, or a corrected future-clock skew) → expired
+ * Date-injected (todayKey from the caller) so it never reads the clock.
+ */
+export function dailyStreakStatus(
+  streak: number,
+  lastKey: string | undefined,
+  todayKey: string,
+): DailyStreakStatus {
+  if (streak < 1 || !lastKey) return { streak: 0, state: "none" };
+  const gap = daysBetweenKeys(lastKey, todayKey);
+  if (gap === 0) return { streak, state: "secured" };
+  if (gap === 1) return { streak, state: "atRisk" };
+  return { streak, state: "expired" };
+}
+
 /** The stats that define a run's outcome (what a leaderboard verifies). */
 export interface RunResult {
   seed: number;

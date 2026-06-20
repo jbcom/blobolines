@@ -1282,12 +1282,52 @@ drop most days). A 7-day daily-best trend in the Hall-of-Fame.
       pinned lint clean. VISUAL-VERIFIED live: the "This Week's Dailies" bar chart renders with the
       gold week-best day, streak badge, and "5/7 played · Best: 3,100".
 
-- [ ] [WAIT-REVIEW] PR #94 (N26 weekly daily summary) — babysit: local review + CI in flight (reviewer
-      checking the prune-reference gate + the 0-score-day division edge). Wait CI green, fold findings,
-      resolve threads, squash-merge, sync main.
-- [ ] [WAIT-CI] Release: PR #84 (release-please → blobolines 0.1.13) is open + accumulating all this
-      session's features. Once PR #94 is merged and #84's CI is green, squash-merge #84 to cut 0.1.13
-      (release.yml → cd.yml deploy). Verify the live deploy after.
+- [x] PR #94 (N26 weekly daily summary) MERGED (squash da970f2). 10th feature this session.
+- [x] Release 0.1.13 CUT + DEPLOYED: squash-merged release-please PR #84 (Analyze/CodeQL all green —
+      release chore PRs don't run ci.yml; each feature already passed it on its own merge). Tag
+      blobolines-v0.1.13 created → Release workflow (artifacts + Android APK) completed success → cd.yml
+      Pages deploy success. VISUAL-VERIFIED live: jonbogaty.com/blobolines/ serves the 0.1.13 menu clean
+      (blob, PLAY, Daily Challenge, "Best climb · 77m").
+
+### N27 daily-streak achievements + aurora reward skin
+- [x] N27: Two new achievements — *Daily Devotee* (3-day streak) + *Faithful* (7-day streak) — reward
+      the day-over-day daily-challenge return loop the streak counter already drives but nothing
+      rewarded. *Faithful* GRANTS a new 6th skin, **aurora** (#2fe6c4 teal — fills the palette's only
+      cool gap), via the existing SKIN_ACHIEVEMENT earned-skin path. Wiring: `dailyStreak` added to
+      AchievementStats (sourced from progress.dailyStreak, fresh at the same daily commit that advances
+      it → fires same run); CalendarDays icons; Aurora tile in the customizer's Earn path; persistence
+      enum + GAME-DESIGN doc. Tests: streak-threshold unlock + 7-day store-commit grants-aurora
+      integration + the self-deriving probe/skin guards extended. 555 unit / 143 browser green;
+      typecheck + pinned lint clean. VISUAL-VERIFIED: Aurora teal goo swatch renders distinct from
+      Nebula violet with the "Earn / Faithful" gated label.
+- [x] N27 local review (comprehensive-review:code-reviewer, scoped to f1a0996): CLEAN — no defects
+      across timing/real-time-misfire/purchase-exclusion/persistence/back-compat/test-quality. Nothing
+      to fold forward.
+
+### N28 daily-streak presence on the main menu (engagement hook)
+- [x] N28: Surface the live daily streak on the menu's Daily Challenge CTA — the streak drove
+      achievements + a skin (N27) but was invisible at the decision point. New pure
+      `dailyStreakStatus(streak, lastKey, todayKey)` → none|secured|atRisk|expired, mirroring
+      nextDailyStreak's gap rules so the preview can never contradict the next commit. The CTA shows a
+      🔥N flame badge when alive; an AT-RISK streak (played yesterday, not today) glows gold with a
+      "Play today to keep your streak!" nudge; a SECURED streak (played today) shows a check. Tests: 6
+      dailyStreakStatus unit (incl. a nextDailyStreak-agreement guard) + 3 TitleScreen browser
+      (at-risk nudge / secured / none). 561 unit / 148 browser green; typecheck + pinned lint clean
+      (hit + fixed the aria-label-on-span a11y rule again — sr-only span, not aria-label).
+      VISUAL-VERIFIED: the at-risk CTA renders "🔥4 · Play today to keep your streak!" with a gold border.
+- [x] N28 local review (comprehensive-review:code-reviewer, scoped to 4d78fff): found 2 REAL issues —
+      (1) Medium: the badge computed dailyKey(new Date()) once at render, going stale across a UTC
+      midnight; (2) Low: the `secured` browser test had two independent new Date() reads that could
+      flake at UTC midnight. Both FOLDED FORWARD in e5bb717: todayKey is now state refreshed on
+      visibilitychange + a 60s heartbeat; streak tests pin the clock (fake Date only) + a new test
+      proves the badge clears after a 2-day clock jump. 561 unit / 149 browser green.
+- Banked lesson: aria-label on a plain span fails biome a11y → [[blobolines-aria-label-on-span]].
+
+### Cutting point: PR for the daily-streak progression theme
+- [ ] [WAIT-CI] Open ONE PR for the cohesive daily-streak theme (N27 achievements+aurora, N28 menu
+      presence, N28-fix midnight-correctness — 3 commits on feat/post-013-polish). Push, open PR,
+      babysit CI green + CodeRabbit threads, resolve, squash-merge, reset main. Then fresh branch for
+      the next theme (gameplay/feel polish — NOT more daily meta; the daily system is saturated).
 
 ## Notes
 - This is a living plan. After every stage, backward+forward sweep and edit the queue.
