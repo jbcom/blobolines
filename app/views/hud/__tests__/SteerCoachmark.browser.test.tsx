@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, expect, test } from "vitest";
+import { afterEach, beforeEach, expect, test, vi } from "vitest";
 import { cleanup, render } from "vitest-browser-react";
 import { setAim, setBlobDiagnostics, useGameStore } from "@/state";
 import { SteerCoachmark } from "../SteerCoachmark";
@@ -26,6 +26,7 @@ beforeEach(() => {
 });
 afterEach(() => {
   cleanup();
+  vi.useRealTimers();
   setAim(null);
   airborne(false);
   useGameStore.setState({ phase: "menu" });
@@ -63,6 +64,19 @@ test("dismisses + persists the instant the player steers (a mid-air aim drag)", 
   await expect.element(screen.getByText(/Drag to steer/i)).toBeInTheDocument();
   // A mid-air drag sets the aim → the steer cue's teach signal fires.
   setAim({ dir: [1, 0, 0], charge: 0 });
+  await expect.element(screen.getByText(/Drag to steer/i).query()).not.toBeInTheDocument();
+  expect(useGameStore.getState().progress.steerTutorialSeen).toBe(true);
+});
+
+test("auto-dismisses + persists after the timeout even if the player never steers (safety net)", async () => {
+  // The 2.6s timeout is the safety net so the cue can't bleed into the descent. Keep the blob
+  // airborne and aim null, advance fake time past the timeout, and assert it clears once.
+  vi.useFakeTimers();
+  airborne(true);
+  const screen = await render(<SteerCoachmark />);
+  await expect.element(screen.getByText(/Drag to steer/i)).toBeInTheDocument();
+  // No steer input; the auto-dismiss timer (2600ms) fires on its own.
+  vi.advanceTimersByTime(2700);
   await expect.element(screen.getByText(/Drag to steer/i).query()).not.toBeInTheDocument();
   expect(useGameStore.getState().progress.steerTutorialSeen).toBe(true);
 });

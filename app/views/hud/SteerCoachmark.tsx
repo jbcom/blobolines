@@ -48,7 +48,15 @@ export function SteerCoachmark() {
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => {
     if (!show) return;
+    // Single-fire: whichever leg (a steer/land detection or the auto-timeout) reaches finish() first
+    // cancels the OTHER, so finish() never runs twice. (markSteerTutorialSeen is idempotent anyway,
+    // but keeping it single-fire avoids a redundant setState + keeps the intent obvious.)
     const finish = () => {
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+        timerRef.current = null;
+      }
+      cancelAnimationFrame(raf);
       setDismissed(true);
       markSteerTutorialSeen();
     };
