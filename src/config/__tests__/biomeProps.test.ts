@@ -64,9 +64,13 @@ describe("biomePropRegistry", () => {
     expect(propSetForBand("not-a-real-band")).toBeUndefined();
   });
 
-  it("gives every canonical band a non-empty, varied prop set", () => {
+  it("gives every canonical band a richly varied prop set (≥6 after the variety pass)", () => {
     for (const set of biomePropRegistry) {
-      expect(set.props.length, `${set.band} should have props`).toBeGreaterThanOrEqual(2);
+      // The variety enrichment curated ~2 more 3DLowPoly props per band on top of the original 4,
+      // so a long climb doesn't visibly repeat the same handful. Guard the floor.
+      expect(set.props.length, `${set.band} should have a varied prop set`).toBeGreaterThanOrEqual(
+        6,
+      );
     }
   });
 
