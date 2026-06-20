@@ -1144,9 +1144,28 @@ milestone; the other defers.
       NOTE: survey also flagged GameOver setDailyRun(false) lets a player replay today's tower unlimited
       times — that's acceptable as practice runs (the streak only counts the first daily/day), left as-is.
 
+## Queue — Milestone: N21 daily SHARE-CARD image (branch feat/daily-share-card)
+
+PRIOR MILESTONES SHIPPED THIS SESSION: N17 pause (#85), N18 upper-band sky/lighting + dev-teleport
+fix (#86), N19 off-route bounce obstacles (#87), N20 daily streak (#88). N20.1 survey found per-biome
+music SATURATED and flagged two remaining daily gaps: a share-card IMAGE export + a historical-daily
+view. Building the share card (higher viral value — the daily challenge's natural sharing loop; the
+share button was text-only).
+
+### N21 Architecture
+- [x] N21.1 DONE. app/views/shareCard.ts: pure renderShareCard(stats) → PNG Blob, drawn directly to an
+      offscreen <canvas> (NO html2canvas/extra dep — full control, deterministic): a 1200×630 OG-ratio
+      branded card (violet→ink gradient, gold frame, BLOBOLINES wordmark, Daily date sub-label, big gold
+      SCORE, height, a 💎/🔥/🗓️-streak stat row, footer URL). GameOver.share() now attaches it via
+      navigator.share({files}) guarded by canShare({files}), falling back to the existing text share /
+      clipboard where image share isn't supported. Tests: shareCard browser fixture (valid non-trivial
+      PNG magic-bytes for daily + normal runs). VISUAL-VERIFIED live: rendered the card in the dev tab +
+      READ the screenshot — wordmark/date/score/height/stat-row/URL all correct, emoji + Fredoka/Nunito
+      fonts load, gradient + gold frame crisp. 543 unit / 139 browser green; typecheck + pinned lint clean.
+
 ## Notes
 - This is a living plan. After every stage, backward+forward sweep and edit the queue.
-- Next candidate milestones AFTER N19 (surface, don't pre-commit): per-biome MUSIC layers (needs new
-  audio assets), daily-challenge leaderboard polish.
+- Next candidate milestones (surface, don't pre-commit): historical-daily view (the last N20.1 gap),
+  more obstacle/pad variety, a new cosmetic. Per-biome music is SATURATED — don't rebuild.
 - Lesson banked this session: the pre-push lint gate is `pnpm lint` (PINNED biome 2.5.0), NOT
   `npx biome` / global biome (older, gives false-clean) — see [[blobolines-biome-ci-stricter]].
