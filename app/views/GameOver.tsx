@@ -10,6 +10,7 @@ import { DAILY_NS, dailyStanding, runHash } from "@/sim/daily";
 import { comboMultiplier } from "@/sim/launch";
 import { SKIN_COST, useGameStore, useWorldStore } from "@/state";
 import { ROUTE_PROFILES } from "@/world";
+import { renderShareCard } from "./shareCard";
 
 /**
  * Game-over screen — shows the run's altitude + crystals against the all-time best, and
@@ -112,9 +113,35 @@ export function GameOver() {
       : `I scored ${runScore.toLocaleString()} (${height}m) in Blobolines (${runTag})! 🫧`;
     const url = "https://jbcom.github.io/blobolines/";
     try {
-      if (typeof navigator !== "undefined" && navigator.share) {
+      if (typeof navigator === "undefined") return;
+      // Best path: a branded PNG share card attached to the native share sheet — turns a daily
+      // result into something visually shareable. Guarded by canShare({files}) so we only try it
+      // where image share is actually supported (most mobile browsers); otherwise fall through.
+      const card = await renderShareCard({
+        score: runScore,
+        height,
+        dailyLabel: dailyRun ? `Daily ${dailyDateKey}` : null,
+        streakDays: dailyRun ? dailyStreak : 0,
+        crystals,
+        maxCombo,
+      }).catch(() => null);
+      if (card && navigator.canShare) {
+        const file = new File([card], "blobolines.png", { type: "image/png" });
+        if (navigator.canShare({ files: [file] })) {
+          try {
+            await navigator.share({ title: "Blobolines", text, url, files: [file] });
+            return;
+          } catch (err) {
+            // User cancelled → done. ANY OTHER failure (an OS-level image-share restriction) must
+            // fall through to the text share below, not abort the whole share.
+            if (err instanceof Error && err.name === "AbortError") return;
+          }
+        }
+      }
+      // Text share (no image support / image share failed), then clipboard as the last fallback.
+      if (navigator.share) {
         await navigator.share({ title: "Blobolines", text, url });
-      } else if (typeof navigator !== "undefined" && navigator.clipboard) {
+      } else if (navigator.clipboard) {
         await navigator.clipboard.writeText(`${text} ${url}`);
         setShared(true);
         if (sharedTimer.current) clearTimeout(sharedTimer.current);
