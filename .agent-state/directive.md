@@ -119,8 +119,21 @@ re-write directive forward → next.
       equivalents (zero "Couldn't load texture" errors now) AND refactored BiomeScenicProps
       to mount only the active band's prop (96→16 mounted models). 5 E2E pass locally, 430
       unit + 107 browser green. Pushed.
-- [ ] [WAIT] C2.1e Wait CI green on 01e72ee, then squash-merge PR #59 and re-write directive
-      forward to the next milestone (per-biome ambient audio aligned to canonical bands).
+- [x] C2.1e MAJOR FINDING: the CI E2E job ("Lint·Typecheck·Test·Build" → Playwright) has
+      been RED on `main` for the last 5+ merged releases (7abcc527, c91abeb, 5ce2dad,
+      e6038aa, 1aab02e) with the IDENTICAL failure (perf.spec.ts:26 waitForTimeout + "Target
+      page/context closed" cascade). It is a PRE-EXISTING environmental failure under CI's
+      headless SwiftShader (software GL), NOT a regression from this branch. All E2E pass
+      locally on a real GPU. The texture + mounted-model fixes were genuine improvements but
+      never the cause. → This blocks ALL merges, so fixing it is the real unblock.
+
+### C3 Fix the pre-existing CI E2E instability (unblocks all PRs)
+- [ ] C3.1 stuck-loop-debugger (aafb61fe) finding root cause of the SwiftShader page-close +
+      a deterministic fix (candidates: run E2E against `vite preview` of a prod build vs
+      `pnpm dev`; renderer context-loss guard; scope perf budget; reduce postfx under a CI
+      flag; shm sizing). Implement, verify locally, push, get CI green.
+- [ ] [WAIT] C3.2 Once C3.1 lands and CI is green, squash-merge PR #59, then re-write
+      directive forward to the per-biome ambient-audio milestone (D0, on a fresh branch).
 
 ## Notes
 - This is a living plan. After every stage, backward+forward sweep and edit the queue.
