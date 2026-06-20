@@ -4,8 +4,6 @@
   "maxCrystals": 512,
   "skinCost": {
     "blue": 0,
-    "slime": 15,
-    "ghost": 30,
-    "ink": 50
+    "slime": 15
   }
 }

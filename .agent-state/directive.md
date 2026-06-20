@@ -299,11 +299,38 @@ scenery, parallax, audio band, and particle grain.
 - [x] H2.1a Verified (typecheck/lint/445 unit/108 browser/e2e incl. teleport spec 3/3). Opening
       PR. (Visual QA was via E2E body-altitude assertions; claude-in-chrome's sim was unreliable
       here so the deterministic E2E proof stands in for manual screenshots.)
-- [ ] [WAIT-REVIEW] H2.1b Babysit PR: verify+e2e green → address feedback → resolve threads →
+- [x] H2.1b PR #65 SQUASH-MERGED (69f09ed, 2026-06-20). verify+e2e green; gemini caught the
+      snap fix wasn't actually committed (staging slip) — landed it + stabilized the teleport
+      E2E for software-GL CI. Teleport QA tooling now available.
+
+## Queue — Milestone: Achievement-gated cosmetic unlocks (branch feat/achievement-skins)
+
+Tie the two existing reward systems together for progression depth + fun: certain skins unlock
+by EARNING a specific achievement (a milestone reward), in addition to the existing crystal-spend
+path. Surfaces the achievement→cosmetic loop the toast already hints at. Data-driven; no new
+assets needed (uses the 4 existing skins + adds the gating data).
+
+### I0 Architecture
+- [x] I0.1 Decided (decisions.ndjson): SKIN_ACHIEVEMENT map (skin→achievement) in the pure
+      achievements sim; checkAndUnlock grants the tied skin in its pure pass; 2 skins
+      achievement-exclusive (ghost←score-25k, ink←height-1000), removed from crystal path.
+
+### I1 Implementation
+- [x] I1.1 SKIN_ACHIEVEMENT/ACHIEVEMENT_SKIN maps (ghost←score-25k, ink←height-1000); both store
+      achievement paths grant the tied skin (atomically, per review). Customizer shows gated tiles
+      with trophy + "Earn: <achievement>", refuses to buy them; ghost/ink removed from skinCost.
+- [x] I1.2 Tests: gating-map invariants (real achievements, exact inverse, no dup), store
+      grant-on-achievement flow, SKIN_COST exclusivity. 450 unit + 108 browser. Live customizer
+      screenshot verified the two "Earn" tiles (Apex Ascent / Deep Space). Local review folded
+      forward (9b7f726): atomic unlock + cost-type narrowing.
+
+### I2 PR cutting point
+- [x] I2.1a Verified + reviewed; opening PR.
+- [ ] [WAIT-REVIEW] I2.1b Babysit PR: verify+e2e green → address feedback → resolve threads →
       squash-merge → re-write directive forward to the next milestone.
 
 ## Notes
 - This is a living plan. After every stage, backward+forward sweep and edit the queue.
 - Next candidate milestones (surface, don't pre-commit): collectible variety/special pickups,
-  blob cosmetic unlocks tied to achievements, per-biome music layers, denser interactive props
-  that react to the blob, biome-reactive blob tinting.
+  per-biome music layers, denser interactive props that react to the blob, biome-reactive blob
+  tinting, USE the teleport tool to manually QA + polish each upper biome band's look.

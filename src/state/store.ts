@@ -7,7 +7,7 @@ import type {
   HighScoreEntry,
   PlayerProgress,
 } from "@/core/types";
-import { type AchievementStats, newlyUnlocked } from "@/sim/achievements";
+import { ACHIEVEMENT_SKIN, type AchievementStats, newlyUnlocked } from "@/sim/achievements";
 import { computeScore } from "@/sim/score";
 import { palette } from "@/styles/tokens";
 import { reportAchievementToast, resetAchievementToasts } from "./achievementToastBridge";
@@ -126,10 +126,20 @@ function checkAndUnlock(
     return { progress, run, fresh };
   }
 
+  // Grant any skin EARNED by a freshly-unlocked achievement (a milestone cosmetic reward) — the
+  // achievement is the only way to get these skins (they aren't crystal-buyable).
+  const earnedSkins = fresh
+    .map((id) => ACHIEVEMENT_SKIN[id])
+    .filter((skin): skin is BlobSkin => Boolean(skin) && !progress.unlockedSkins.includes(skin));
+
   return {
     progress: {
       ...progress,
       unlockedAchievements: [...progress.unlockedAchievements, ...fresh],
+      unlockedSkins:
+        earnedSkins.length > 0
+          ? [...progress.unlockedSkins, ...earnedSkins]
+          : progress.unlockedSkins,
     },
     run: {
       ...run,
@@ -177,18 +187,36 @@ export const useGameStore = create<GameState>((set) => ({
     set((s) => (s.progress.tutorialSeen ? s : { progress: { ...s.progress, tutorialSeen: true } })),
 
   unlockAchievements: (stats) => {
-    const fresh = newlyUnlocked(stats, useGameStore.getState().progress.unlockedAchievements);
-    if (fresh.length > 0) {
-      set((s) => ({
+    // Compute `fresh` INSIDE the set() updater so the read of the current unlocked set and the
+    // write are atomic — a concurrent set() (e.g. setRun's checkAndUnlock firing at run end)
+    // between an outside read and the write could otherwise re-append an already-unlocked id.
+    let fresh: string[] = [];
+    set((s) => {
+      fresh = newlyUnlocked(stats, s.progress.unlockedAchievements);
+      if (fresh.length === 0) return s;
+      // Grant any skin earned by a freshly-unlocked achievement (same milestone-reward path as
+      // checkAndUnlock — keep both achievement-evaluation paths consistent).
+      const earnedSkins = fresh
+        .map((id) => ACHIEVEMENT_SKIN[id])
+        .filter(
+          (skin): skin is BlobSkin => Boolean(skin) && !s.progress.unlockedSkins.includes(skin),
+        );
+      return {
         progress: {
           ...s.progress,
           unlockedAchievements: [...s.progress.unlockedAchievements, ...fresh],
+          unlockedSkins:
+            earnedSkins.length > 0
+              ? [...s.progress.unlockedSkins, ...earnedSkins]
+              : s.progress.unlockedSkins,
         },
         run: {
           ...s.run,
           unlockedAchievements: [...(s.run.unlockedAchievements || []), ...fresh],
         },
-      }));
+      };
+    });
+    if (fresh.length > 0) {
       // Toast each newly unlocked achievement!
       for (const id of fresh) {
         reportAchievementToast(id);
@@ -270,8 +298,10 @@ export const useGameStore = create<GameState>((set) => ({
     ),
 }));
 
-/** Cost (in crystals) per skin — data-driven from src/config/world.json. */
-export const SKIN_COST: Record<BlobSkin, number> = worldCfg.skinCost;
+/** Crystal cost per CRYSTAL-BUYABLE skin — data-driven from src/config/world.json. Only covers
+ *  skins on the crystal path; achievement-gated skins (see SKIN_ACHIEVEMENT) have no entry, so the
+ *  type is Partial — callers must treat a missing cost as "not buyable", not free. */
+export const SKIN_COST: Partial<Record<BlobSkin, number>> = worldCfg.skinCost;
 
 /** Convenience: the color for the currently equipped skin. */
 export const equippedSkinColor = (s: GameState): string => palette.blob[s.progress.skin];

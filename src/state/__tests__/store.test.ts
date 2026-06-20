@@ -59,6 +59,21 @@ describe("useGameStore", () => {
     expect(s.progress.crystals).toBe(5);
   });
 
+  it("grants the tied skin when its achievement is newly unlocked (height-1000 → ink)", () => {
+    expect(useGameStore.getState().progress.unlockedSkins).not.toContain("ink");
+    useGameStore.getState().setRun({ height: 1000 }); // meets height-1000 (bestHeight ≥ 1000)
+    const p = useGameStore.getState().progress;
+    expect(p.unlockedAchievements).toContain("height-1000");
+    expect(p.unlockedSkins, "ink is earned by the deep-space achievement").toContain("ink");
+  });
+
+  it("does not grant achievement-gated skins for an unrelated unlock", () => {
+    useGameStore.getState().setRun({ height: 100 }); // height-100, not tied to any skin
+    const p = useGameStore.getState().progress;
+    expect(p.unlockedAchievements).toContain("height-100");
+    expect(p.unlockedSkins).toEqual(["blue"]); // no cosmetic granted
+  });
+
   it("dailyRun flag toggles (default false) for the daily-challenge framing", () => {
     expect(useGameStore.getState().dailyRun).toBe(false);
     useGameStore.getState().setDailyRun(true);
@@ -180,9 +195,13 @@ describe("useGameStore", () => {
     expect(skins.filter((s) => s === "ghost").length).toBe(1);
   });
 
-  it("SKIN_COST keeps the warm Mango base free", () => {
+  it("SKIN_COST keeps the warm Mango base free and excludes achievement-gated skins", () => {
     expect(SKIN_COST.blue).toBe(0);
     expect(SKIN_COST.slime).toBe(15);
+    // ghost + ink are EARNED via achievements, never crystal-buyable — no cost entry exists, so a
+    // future SKIN_COST reader can't accidentally treat them as purchasable.
+    expect(SKIN_COST.ghost).toBeUndefined();
+    expect(SKIN_COST.ink).toBeUndefined();
   });
 
   it("equippedSkinColor returns token hex", () => {
