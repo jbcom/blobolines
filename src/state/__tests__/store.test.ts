@@ -98,6 +98,26 @@ describe("useGameStore", () => {
     expect(useGameStore.getState().dailyRun).toBe(false);
   });
 
+  it("commitBestHeight advances the daily streak ONLY on a daily run", () => {
+    // A non-daily run must not touch the streak.
+    useGameStore.getState().setDailyRun(false);
+    useGameStore.getState().commitBestHeight(200);
+    expect(useGameStore.getState().progress.dailyStreak ?? 0).toBe(0);
+    expect(useGameStore.getState().progress.lastDailyKey).toBeUndefined();
+
+    // A daily run starts the streak at 1 and stamps today's key. (The day-to-day progression is
+    // covered by the pure nextDailyStreak unit tests; here we lock the store wiring + the daily gate.)
+    useGameStore.getState().setDailyRun(true);
+    useGameStore.getState().commitBestHeight(300);
+    const p = useGameStore.getState().progress;
+    expect(p.dailyStreak).toBe(1);
+    expect(p.lastDailyKey).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+
+    // Replaying the SAME day's daily must NOT inflate the streak (still 1).
+    useGameStore.getState().commitBestHeight(350);
+    expect(useGameStore.getState().progress.dailyStreak).toBe(1);
+  });
+
   it("unlockAchievements persists newly-met ids once and returns only the fresh ones", () => {
     // A 100m best unlocks "height-100"; the action returns it and stores it.
     const fresh = useGameStore.getState().unlockAchievements({
@@ -327,6 +347,30 @@ describe("useGameStore", () => {
       if (parsed.success) {
         expect(parsed.data.highScores).toHaveLength(1);
         expect(parsed.data.highScores?.[0].score).toBe(0); // catches corrupt score and falls back to 0
+      }
+    });
+
+    it("round-trips the daily streak fields (so a streak survives a reload)", () => {
+      const save = {
+        bestHeight: 500,
+        dailyStreak: 7,
+        lastDailyKey: "2026-06-20",
+      };
+      const parsed = playerProgressSchema.safeParse(save);
+      expect(parsed.success).toBe(true);
+      if (parsed.success) {
+        expect(parsed.data.dailyStreak).toBe(7);
+        expect(parsed.data.lastDailyKey).toBe("2026-06-20");
+      }
+    });
+
+    it("loads progress saved BEFORE the streak feature without error (undefined streak)", () => {
+      const legacy = { bestHeight: 300, unlockedAchievements: ["height-100"] };
+      const parsed = playerProgressSchema.safeParse(legacy);
+      expect(parsed.success).toBe(true);
+      if (parsed.success) {
+        expect(parsed.data.dailyStreak).toBeUndefined();
+        expect(parsed.data.lastDailyKey).toBeUndefined();
       }
     });
   });

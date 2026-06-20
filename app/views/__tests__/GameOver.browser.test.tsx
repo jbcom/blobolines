@@ -120,6 +120,26 @@ test("a normal run shows its replay seed without the daily tag", async () => {
   await expect.element(screen.getByText("Seed bouncy-bright-blob")).toBeInTheDocument();
 });
 
+test("a DAILY run shows the daily streak badge", async () => {
+  // The streak badge renders inside the daily "Today's tower" section, which needs a high score on
+  // today's daily seed (the module-level todayPhrase matches what the card computes now).
+  useWorldStore.setState({ seed: 1, seedPhrase: todayPhrase });
+  useGameStore.setState((s) => ({
+    dailyRun: true,
+    progress: { ...s.progress, dailyStreak: 5, highScores: [dailyScore(1000)] },
+  }));
+  const screen = await render(<GameOver />);
+  await expect.element(screen.getByTestId("daily-streak")).toBeInTheDocument();
+  await expect.element(screen.getByText(/5-day streak/)).toBeInTheDocument();
+});
+
+test("a normal run shows NO daily streak badge", async () => {
+  useWorldStore.setState({ seed: 12345, seedPhrase: "bouncy-bright-blob" });
+  useGameStore.setState((s) => ({ dailyRun: false, progress: { ...s.progress, dailyStreak: 5 } }));
+  const screen = await render(<GameOver />);
+  await expect.element(screen.getByTestId("daily-streak").query()).not.toBeInTheDocument();
+});
+
 test("the seed line is a labelled copy-seed button that copies the seed + confirms", async () => {
   useWorldStore.setState({ seed: 12345, seedPhrase: "bouncy-bright-blob" });
   useGameStore.setState({ dailyRun: false });

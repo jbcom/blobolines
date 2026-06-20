@@ -1,6 +1,6 @@
 import { Button } from "@app/components/ui";
 import { Progress } from "@app/components/ui/progress";
-import { Check, Copy, RotateCcw, Share2 } from "lucide-react";
+import { Check, Copy, Flame, RotateCcw, Share2 } from "lucide-react";
 import { motion } from "motion/react";
 import { useEffect, useRef, useState } from "react";
 import { playRecord, startMusic, stopMusic } from "@/audio";
@@ -37,6 +37,9 @@ export function GameOver() {
   const difficulty = useWorldStore((s) => s.difficulty);
 
   const highScores = useGameStore((s) => s.progress.highScores) || [];
+  // Daily streak — consecutive UTC days with a completed daily, advanced by commitBestHeight on a
+  // daily run (so by the time this card renders it reflects this run). Shown only for daily runs.
+  const dailyStreak = useGameStore((s) => s.progress.dailyStreak) ?? 0;
 
   const freshAchievements = useGameStore((s) => s.run.unlockedAchievements) || [];
 
@@ -340,6 +343,18 @@ export function GameOver() {
             ) : (
               <span className="font-ui text-xs text-cream tabular-nums">
                 #{dailyStand.rank} of {dailyStand.attemptsToday} attempts today
+              </span>
+            )}
+            {/* Daily streak badge — consecutive days. Reads as a warm flame; the count grows with
+                the habit. Shown once the streak is a real run (≥1). */}
+            {dailyStreak >= 1 && (
+              <span
+                data-testid="daily-streak"
+                className="mt-0.5 flex items-center gap-1 font-ui text-xs font-semibold tabular-nums text-tramp-orange"
+              >
+                {/* The visible "N-day streak" text is the accessible name (the flame is decorative). */}
+                <Flame className="size-3.5" aria-hidden />
+                {dailyStreak}-day streak
               </span>
             )}
           </motion.div>

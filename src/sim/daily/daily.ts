@@ -33,6 +33,47 @@ export function dailySeedPhrase(date: Date): string {
   return `${DAILY_NS}-${dailyKey(date)}`;
 }
 
+/** Whole UTC days from key `a` to key `b` (both YYYY-MM-DD). Positive when b is later. Pure parse —
+ *  uses Date.UTC on the parsed parts, not `new Date()`, so it stays deterministic/timezone-free. */
+export function daysBetweenKeys(a: string, b: string): number {
+  const [ay, am, ad] = a.split("-").map(Number);
+  const [by, bm, bd] = b.split("-").map(Number);
+  const msPerDay = 86_400_000;
+  return Math.round((Date.UTC(by, bm - 1, bd) - Date.UTC(ay, am - 1, ad)) / msPerDay);
+}
+
+/** Result of advancing the daily streak when a daily run completes on `todayKey`, given the player's
+ *  stored `prevStreak` and the `lastKey` they last completed a daily on (empty/undefined = none). */
+export interface DailyStreakUpdate {
+  /** The new streak length (consecutive UTC days with a completed daily, including today). */
+  streak: number;
+  /** True when this completion EXTENDED the streak (yesterday → today) — drives a celebratory cue. */
+  extended: boolean;
+  /** True when a gap broke a prior streak before this one restarted it at 1. */
+  brokeStreak: boolean;
+}
+
+/**
+ * Advance the daily streak (pure). Rules, by the whole-UTC-day gap from the last completed daily to
+ * today:
+ *  - 0 (already played today): streak unchanged — replaying today's tower doesn't inflate it.
+ *  - 1 (yesterday → today): streak + 1 (extended).
+ *  - ≥ 2, or no prior daily: streak restarts at 1 (brokeStreak when a prior streak existed).
+ * The caller supplies todayKey = dailyKey(today) and the stored prevStreak/lastKey, so this never
+ * reads the clock itself.
+ */
+export function nextDailyStreak(
+  prevStreak: number,
+  lastKey: string | undefined,
+  todayKey: string,
+): DailyStreakUpdate {
+  if (!lastKey) return { streak: 1, extended: false, brokeStreak: false };
+  const gap = daysBetweenKeys(lastKey, todayKey);
+  if (gap <= 0) return { streak: Math.max(1, prevStreak), extended: false, brokeStreak: false };
+  if (gap === 1) return { streak: Math.max(1, prevStreak) + 1, extended: true, brokeStreak: false };
+  return { streak: 1, extended: false, brokeStreak: prevStreak > 1 };
+}
+
 /** The stats that define a run's outcome (what a leaderboard verifies). */
 export interface RunResult {
   seed: number;
