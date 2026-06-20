@@ -574,14 +574,36 @@ visual channel. No new assets.
       the glint's setRGB clobbered any baked emissive COLOR to black at glint=0 (only intensity was
       restored). Fixed in 8aff804: capture baseR/G/B in onGlintMaterials, add the glint on top of
       the baseline. 3 gemini threads replied + resolved. 499 unit + 120 browser green.
-- [ ] [WAIT-REVIEW] N5.3c Wait CI green on 8aff804, squash-merge PR #73, sync main, start N6.
+- [x] N5.3c-feedback CodeRabbit (valid, brand-token guideline): the glint tint factors were raw
+      RGB literals in scene code. Fixed in 532377f — moved to palette.scenery.glint (#ffd180) +
+      added rgbNorm(hex) helper in tokens.ts; BiomeScenicProps derives GLINT_TINT from the token.
+      rgbNorm/token unit tests added. Thread resolved. 501 unit + 120 browser green.
+- [x] N5.3d PR #73 SQUASH-MERGED (a5b5756, 2026-06-20). CLEAN, 0 threads. Flyby glint shipped.
+      Local main synced; cut feat/blob-trail (renamed → feat/biome-prop-variety, see N6). FOUR
+      feature PRs this session: #70 banner+daily, #71 reactive scenery, #72 flyby pulse, #73 glint.
 
-### N6 Next milestone (surface after #73 merges)
-- [ ] [WAIT-MERGE] N6.1 Pick the next polish unit (don't pre-commit). The scenery-reaction arc
-      (lean → pop → pulse → glint) is now rich; consider SHIFTING focus: per-biome MUSIC layers
-      (needs new owned audio via the itch pipeline), teleport-driven QA + polish of each upper biome
-      band's look, or a NEW system (e.g. blob trail/ribbon, dynamic camera shake on big bounces).
-      Enumerate use cases first, read own spec docs.
+## Queue — Milestone: Biome prop variety enrichment (branch feat/biome-prop-variety)
+
+DISCOVERY during N6.1 enumeration: the obvious "new VFX system" candidates are ALREADY shipped +
+polished — BlobTrail (tapered combo-igniting ribbon), CameraRig (FOV warp + decaying impact shake),
+LaunchRing (launch/land ground rings). Reinventing them = waste. The REAL gap, and the one the
+mandate explicitly points at ("the mounted assets server for props/scenery makes the game richer"):
+each biome band has only ~4 props (25 GLBs / 6 bands), so on a long climb the same handful repeats
+visibly. ENRICH per-band variety by curating MORE 3DLowPoly props from the NAS asset library.
+
+### N6 Architecture
+- [x] N6.1 ENUMERATED: NAS mounted (/Volumes/home/assets); current 4 props/band in
+      public/assets/models/biomes/<band>/ via biomeProps.ts PROP_FILES. Registry already supports
+      N props/band (deterministic per-instance pick mod props.length) — adding files is a pure data
+      edit, no code change to the resolver. DECISION: curate ~4 MORE 3DLowPoly props per band
+      (target ~8/band) from the asset-library MCP, matching the existing neon-soft low-poly style +
+      the mid-tier face/size budget (≤~1080 faces, self-contained GLBs, vertex-color or embedded —
+      NO external colormap.png refs, per the C2.1d lesson). Keep one visual style (3DLowPoly, not
+      PSX). Per-band thematic fit: ground=flora/rocks, sky=clouds/birds, upper-atmosphere=crystals,
+      stratosphere=fungal/spires, space=asteroids/satellites, deep-space=cosmic shards/stars.
+- [ ] N6.2 Curate + copy the new GLBs (asset-library search → vet faces/textures → copy_asset into
+      the band dirs), extend PROP_FILES, verify each loads with NO texture errors (the on-disk glob
+      test + a browser render pass), update the biomeProps on-disk count test, PR.
 
 ## Queue — Milestone: Daily-challenge results polish (branch feat/daily-results, NEXT)
 
