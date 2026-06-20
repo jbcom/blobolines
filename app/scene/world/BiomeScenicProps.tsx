@@ -148,26 +148,31 @@ function ScenicInstance({ spec }: { spec: PropSpec }) {
 
 export function BiomeScenicProps() {
   const specs = useMemo<PropSpec[]>(() => {
-    const rng = createRng(444);
+    // Two independent RNG streams so adding a biome band never reshuffles existing layout:
+    // `layoutRng` owns placement/animation, `pickRng` owns per-band model selection. If both
+    // shared one stream, every per-band pick would shift the subsequent layout draws.
+    const layoutRng = createRng(444);
+    const pickRng = createRng(445);
     return Array.from({ length: PROP_COUNT }, (_, i) => {
-      // Deterministic per-band model pick for this instance.
-      const pick: Record<string, number> = {};
-      for (const set of biomePropRegistry) {
-        pick[set.band] = set.props.length > 0 ? Math.floor(rng.next() * set.props.length) : 0;
-      }
-      return {
+      const spec: PropSpec = {
         id: i,
-        x: rng.range(-22, 22),
-        z: rng.range(-26, -10), // background depth layer (behind play field)
-        yFrac: rng.next(),
-        scale: rng.range(0.8, 1.3),
-        rotY: rng.range(0, Math.PI * 2),
-        rotSpeed: rng.range(0.15, 0.45) * rng.sign(),
-        phase: rng.range(0, Math.PI * 2),
-        bobAmplitude: rng.range(0.2, 0.5),
-        bobSpeed: rng.range(0.6, 1.1),
-        pick,
+        x: layoutRng.range(-22, 22),
+        z: layoutRng.range(-26, -10), // background depth layer (behind play field)
+        yFrac: layoutRng.next(),
+        scale: layoutRng.range(0.8, 1.3),
+        rotY: layoutRng.range(0, Math.PI * 2),
+        rotSpeed: layoutRng.range(0.15, 0.45) * layoutRng.sign(),
+        phase: layoutRng.range(0, Math.PI * 2),
+        bobAmplitude: layoutRng.range(0.2, 0.5),
+        bobSpeed: layoutRng.range(0.6, 1.1),
+        pick: {},
       };
+      // Deterministic per-band model pick for this instance (separate stream).
+      for (const set of biomePropRegistry) {
+        spec.pick[set.band] =
+          set.props.length > 0 ? Math.floor(pickRng.next() * set.props.length) : 0;
+      }
+      return spec;
     });
   }, []);
 

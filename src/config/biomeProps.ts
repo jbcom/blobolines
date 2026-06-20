@@ -104,12 +104,21 @@ const PROP_FILES: Record<string, BiomePropSpec[]> = {
  * The biome prop registry: one entry per canonical band, in band order. Built from
  * `biomeBands` so a band that exists in biomes.json but lacks props surfaces loudly
  * (empty `props`) rather than silently — no silent fallbacks (see [[blobolines-no-fallbacks]]).
+ *
+ * A missing SHELF throws rather than falling back: a band without a defined seat would
+ * otherwise render the wrong shelf color/kind (e.g. a ground disc where a cosmic ring
+ * belongs), exactly the silent-wrong-render the doctrine forbids. Empty `props` is allowed
+ * (the renderer skips empty sets); a missing shelf is a config error to surface loudly.
  */
-export const biomePropRegistry: BiomePropSet[] = biomeBands.map((band) => ({
-  band: band.name,
-  props: PROP_FILES[band.name] ?? [],
-  shelf: SHELVES[band.name] ?? SHELVES.ground,
-}));
+export const biomePropRegistry: BiomePropSet[] = biomeBands.map((band) => {
+  const shelf = SHELVES[band.name];
+  if (!shelf) {
+    throw new Error(
+      `biomePropRegistry: no shelf defined for biome band "${band.name}" — add one to SHELVES.`,
+    );
+  }
+  return { band: band.name, props: PROP_FILES[band.name] ?? [], shelf };
+});
 
 /** Lookup the prop set for a canonical band name. Returns undefined for unknown bands. */
 export function propSetForBand(bandName: string): BiomePropSet | undefined {

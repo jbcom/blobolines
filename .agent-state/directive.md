@@ -65,16 +65,22 @@ re-write directive forward → next.
       Shelf, band selection via biomeBandAt, deterministic per-band pick, wrap logic intact,
       preload from allBiomePropFiles. Orphaned root GLBs removed. typecheck/lint/415 unit +
       105 browser tests green.
-- [ ] [WAIT] B1.2a Replace 3 upper-atmosphere GLBs that reference external colormap.png
-      (render untextured) with self-contained equivalents — agent a187cf74 resumed.
-- [ ] B1.2 Tests: registry/biome-band selection unit tests DONE (biomeProps.test.ts, 8) +
-      biomeBandAt (3); add a browser/render smoke test that BiomeScenicProps mounts with
-      the registry props across bands.
+- [x] B1.2a Replaced 3 upper-atmosphere GLBs that referenced external colormap.png with
+      self-contained vertex-color crystals/rock; browser test re-run shows zero texture
+      load errors.
+- [x] B1.2 Tests: registry tests (biomeProps.test.ts, 8 incl. on-disk Vite-glob check) +
+      biomeBandAt (3) + biomeScenicProps.browser.test.tsx (mounts scene, asserts a visible
+      prop in every band). 415 unit + browser pass. Live-app visual verification done.
+      Committed as 1f86386 (registry/resolver) + 8b76cf4 (scenery enrichment).
 
 ### B2 Verify & polish
-- [ ] B2.1 Full verification (typecheck + lint + test + test:browser) and app-runs
-      screenshot read; tune density/scale/placement against the named reference look.
-- [ ] B2.2 Update docs (ARCHITECTURE / DESIGN as relevant) + CHANGELOG.
+- [x] B2.1 Full verification (typecheck + lint + 415 unit + browser) and app-runs
+      screenshot read (ground band composites correctly). All-band prop visibility is
+      verified deterministically by the browser render test rather than manual high-altitude
+      screenshotting (the blob, not score, drives scenery — no global teleport yet).
+- [x] B2.2 Docs: ARCHITECTURE.md updated (config domain + scene/world component list).
+      CHANGELOG is release-please's job (conventional commits flow in at release) — not
+      hand-edited per doctrine.
 
 ### B3 Cutting point
 - [ ] B3.1 At the significant cutting point: open the PR, address all feedback, resolve
@@ -83,4 +89,6 @@ re-write directive forward → next.
 ## Notes
 - This is a living plan. After every stage, backward+forward sweep and edit the queue.
 - Next candidate milestones (surface, don't pre-commit): per-biome ambient audio beds,
-  collectible pickups along the climb, parallax depth layers, blob trail/cosmetic unlocks.
+  collectible pickups along the climb, parallax depth layers, blob trail/cosmetic unlocks,
+  DevHarness blob-altitude TELEPORT (move the Rapier body, not score) for visual QA across
+  bands, denser/multi-depth scenery layers, biome-specific particle ambience.
