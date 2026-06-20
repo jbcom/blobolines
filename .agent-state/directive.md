@@ -918,14 +918,32 @@ milestones, so a 2000m crossing LOOKS as grand as it sounds.
       boundaries, the modal run-axis=0 snapshot + the 0<f<1 render guard (suppressing both 0-progress
       run medals and the f≥1 met-but-uncommitted edge) are correctly reasoned, zero stale .met
       callers, helpers pure. No forward fixes.
-- [ ] [WAIT-REVIEW] N16.3c Wait the ci.yml run on HEAD green + any gemini/CodeRabbit threads, squash-
-      merge PR #83, sync main, start N17.
+- [x] N16.3c-feedback gemini: Math.round on the bar width could round 99.6%→100% (a full bar on a
+      locked medal). Switched to Math.floor (773e2fd); the f≥1 guard already hides it once met.
+      Thread resolved.
+- [x] N16.3d PR #83 SQUASH-MERGED (011d526, 2026-06-20) — clean review + gemini floor-fix folded,
+      genuine green on HEAD. Achievement progress bars shipped. THIRTEEN PRs this session + v0.1.12
+      live. Local main synced; cut feat/pause.
 
-### N17 Next milestone (surface after #83 merges)
-- [ ] [WAIT-MERGE] N17.1 Keep adding. Probe another not-yet-examined corner for a genuine beat:
-      the Onboarding/first-run coachmark polish, the Leaderboard tab presentation, the in-run pause/
-      settings access, the customizer, or a NAS-asset enrichment. Enumerate + survey first; no
-      reinvention.
+## Queue — Milestone: In-run PAUSE (branch feat/pause)
+
+### N17 Architecture
+- [x] N17.1 SURVEYED: Leaderboard tab (built: empty state + podium ranks), Onboarding (built). REAL
+      GAP: GamePhase is "menu"|"playing"|"gameover" — there is NO pause. A player mid-climb can't
+      take a break / mute / check settings without dying. The architecture is pause-FRIENDLY:
+      <Physics paused> is always paused and PhysicsStepDriver steps it manually each frame; GameScene
+      already gates the world subtree on `playing`. DECISION: add "paused" to GamePhase; keep the
+      world MOUNTED for playing||paused (so the run survives — do NOT unmount, that'd lose the run)
+      but PhysicsStepDriver steps ONLY when playing (sim freezes, render continues); a HUD pause
+      button + Escape/P toggles playing↔paused; a PauseOverlay (Resume / Settings / Quit-to-menu)
+      shows over the frozen scene with music ducked. Determinism: pausing just stops advancing the
+      sim clock — no reach math touched, no RNG.
+- [x] N17.2 DONE (1d7cabf): GamePhase += "paused"; togglePause action (playing↔paused only); GameScene
+      mounts world for playing||paused, PhysicsStepDriver gates step on playing; HudOverlay shows Hud
+      for playing||paused + PauseOverlay when paused; a pause button in the Hud + an Escape/P key
+      handler; duckMusic on pause. Tests: store togglePause transitions (only from playing/paused,
+      no-op elsewhere) + a PauseOverlay browser fixture (shows when paused, resume returns to
+      playing). typecheck/biome-ci/unit/browser; visual-verify; PR.
 
 ## Queue — Milestone: Daily-challenge results polish (branch feat/daily-results, NEXT)
 

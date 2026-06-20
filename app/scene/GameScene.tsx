@@ -43,19 +43,23 @@ export function GameScene() {
   const phase = useGameStore((s) => s.phase);
   const skin = useGameStore((s) => s.progress.skin);
   const playing = phase === "playing";
+  // The in-run world stays MOUNTED while paused (the run must survive a pause), but the physics
+  // stepper freezes — so `active` gates what's on screen, `playing` gates what advances.
+  const active = playing || phase === "paused";
 
   return (
     <>
       <SkyDome />
       <Lighting />
-      <CameraRig active={playing} />
+      <CameraRig active={active} />
 
       <Suspense fallback={null}>
-        {playing ? (
+        {active ? (
           // `paused` — PhysicsStepDriver steps the world manually with a slow-mo-scaled dt
-          // (true bullet-time; the auto-loop can't dilate sim-time vs real-time).
+          // (true bullet-time; the auto-loop can't dilate sim-time vs real-time). When the game is
+          // PAUSED the world stays mounted (so the run survives) but the driver stops advancing it.
           <Physics gravity={GRAVITY} paused>
-            <PhysicsStepDriver />
+            <PhysicsStepDriver stepping={playing} />
             <TrampolineField />
             <PlayerBlob />
             <SplatChunks skin={skin} />
@@ -69,21 +73,21 @@ export function GameScene() {
 
       {/* Crystals + power-ups are not physics bodies and have no async deps — render
           outside the Physics Suspense boundary so they can never unmount the blob/pads. */}
-      {playing && <BiomeGeometry />}
-      {playing && <BiomeProps />}
-      {playing && <BiomeScenicProps />}
-      {playing && <BlobFollowLight />}
-      {playing && <BlobShadow />}
-      {playing && <BlobCaustic skin={skin} />}
-      {playing && <CrystalField />}
-      {playing && <TreasureChests />}
-      {playing && <PowerUpField />}
-      {playing && <RouteGateField />}
-      {playing && <LaunchRing />}
-      {playing && <BlobTrail skin={skin} />}
-      {playing && <SplitBlobEchoes skin={skin} />}
-      {playing && <TrajectoryPreview />}
-      {playing && <GoldenRoutePreview />}
+      {active && <BiomeGeometry />}
+      {active && <BiomeProps />}
+      {active && <BiomeScenicProps />}
+      {active && <BlobFollowLight />}
+      {active && <BlobShadow />}
+      {active && <BlobCaustic skin={skin} />}
+      {active && <CrystalField />}
+      {active && <TreasureChests />}
+      {active && <PowerUpField />}
+      {active && <RouteGateField />}
+      {active && <LaunchRing />}
+      {active && <BlobTrail skin={skin} />}
+      {active && <SplitBlobEchoes skin={skin} />}
+      {active && <TrajectoryPreview />}
+      {active && <GoldenRoutePreview />}
 
       <PostFX playing={playing} />
     </>

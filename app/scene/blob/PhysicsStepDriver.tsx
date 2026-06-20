@@ -16,10 +16,14 @@ import { timeScale } from "@/state";
  *
  * Priority -10 runs this BEFORE PlayerBlob's default-priority frame loop, so the blob reads a
  * freshly-stepped body each frame (no one-frame lag between the step and the read).
+ *
+ * `stepping` gates whether the world advances: when the game is PAUSED it's false, so the sim
+ * clock freezes (the run is held mid-air) while the rest of the scene keeps rendering.
  */
-export function PhysicsStepDriver() {
+export function PhysicsStepDriver({ stepping = true }: { stepping?: boolean }) {
   const { step } = useRapier();
   useFrame((_state, rawDt) => {
+    if (!stepping) return; // paused — freeze the sim clock
     // Clamp the real delta (a tab-refocus / GC pause can spike it to 1–2s) so a stall never
     // fast-forwards the sim, then scale by the active time dilation (1 = normal, <1 = slow-mo).
     const dt = Math.min(rawDt, 0.1) * timeScale();

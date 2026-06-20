@@ -148,7 +148,10 @@ export function setSfxVolume(v: number): void {
 /** Set the MUSIC bus level [0,1] and re-level the live music bed (no fade — immediate). */
 export function setMusicVolume(v: number): void {
   musicVolume = Math.max(0, Math.min(1, v));
-  if (music) music.volume(musicTarget());
+  // Re-level the live bed. While a pause holds it ducked, re-level to the DUCKED target (25%) so a
+  // slider drag in the pause Settings panel still takes effect immediately (e.g. dragging to mute) —
+  // resumeMusic() then restores to the full target. Outside pause, re-level to the full target.
+  if (music) music.volume(musicPaused ? musicTarget() * 0.25 : musicTarget());
 }
 
 /** Set the AMBIENT bus level [0,1] and re-level the live ambient bed. */
@@ -384,6 +387,8 @@ export function stopMusic(): void {
 
 /** Pending un-duck timer, so overlapping ducks don't restore early. */
 let unduckTimer: ReturnType<typeof setTimeout> | null = null;
+/** True while an in-run PAUSE holds the music ducked indefinitely (see pauseMusic/resumeMusic). */
+let musicPaused = false;
 
 /**
  * Duck (sidechain) the music under a big moment — quickly drop its volume, hold, then fade it
@@ -398,11 +403,36 @@ export function duckMusic(ms = 700): void {
   if (unduckTimer) clearTimeout(unduckTimer);
   unduckTimer = setTimeout(() => {
     unduckTimer = null;
+    if (musicPaused) return; // a pause took over during the dip — stay ducked until resumeMusic()
     // Restore ONLY if the same bed is still the live music (not a stop, not a restarted bed) —
     // otherwise we'd yank the volume of a freshly-started track. Re-read musicTarget() so a
     // slider drag DURING the duck restores to the new level, not a stale captured one.
     if (music === bed && !muted) bed.fade(bed.volume(), musicTarget(), ms);
   }, 180);
+}
+
+/**
+ * Hold the music ducked for an in-run PAUSE — an INDEFINITE duck (no auto-restore), so the quiet
+ * break reads for as long as the player is paused, however long that is. Cancels any in-flight
+ * timed unduck so a `duckMusic()` started on the way into pause can't restore mid-pause. Paired
+ * with `resumeMusic()`. The `musicPaused` flag also tells `setMusicVolume`/`setMusicAltitude` to
+ * leave the bed at its ducked level while paused. No-op if music isn't playing or is muted.
+ */
+export function pauseMusic(): void {
+  if (!music || muted) return;
+  musicPaused = true;
+  if (unduckTimer) {
+    clearTimeout(unduckTimer);
+    unduckTimer = null;
+  }
+  music.fade(music.volume(), musicTarget() * 0.25, 200);
+}
+
+/** Restore the music to full from a `pauseMusic()` hold when the run resumes. No-op if not paused. */
+export function resumeMusic(): void {
+  if (!musicPaused) return;
+  musicPaused = false;
+  if (music && !muted) music.fade(music.volume(), musicTarget(), 400);
 }
 
 /** Drive the in-game MUSIC + ambient BIOME from altitude (called as the blob climbs, throttled by
