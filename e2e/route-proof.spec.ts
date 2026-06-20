@@ -96,7 +96,9 @@ function analyzeProofPixels(file: string): { proof: number; blobOrange: number }
 test("dev route proof sequence emits visible certified parabola evidence", async ({ page }) => {
   cleanRouteProofArtifacts();
 
-  await page.goto("/?dev");
+  // ?capture opts INTO the canvas.toDataURL PNG readback this test asserts on; the other specs
+  // use plain ?dev so they skip the SwiftShader-stalling readback. (See DevHarness captureEnabled.)
+  await page.goto("/?dev&capture");
   await page.getByRole("button", { name: "DEV" }).click();
   await page.getByRole("button", { name: /start run/ }).click();
   await page.waitForTimeout(1500); // Rapier WASM init + generated starter tower.

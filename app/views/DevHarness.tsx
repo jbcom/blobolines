@@ -26,6 +26,27 @@ import {
 
 const isDev = import.meta.env.DEV;
 
+/**
+ * Whether to perform the `canvas.toDataURL` PNG capture after each harness action. This GPU→CPU
+ * framebuffer readback STALLS for tens of seconds under SwiftShader (software GL), which is what
+ * CI runs on — long enough that a Playwright click on a capture button never settles and the E2E
+ * test times out. It is purely a build-agent diagnostic, so gate it behind an explicit `?capture`
+ * URL param: only the route-proof E2E (which asserts on the emitted PNGs) opts in; perf/playable/
+ * scenarios drive the harness without paying the readback. The cheap `/__diagnostics` POST (no
+ * readback) stays unconditional. Defaults ON for normal local dev (no search params at all).
+ */
+const captureEnabled = (): boolean => {
+  if (typeof window === "undefined") return false;
+  const params = new URLSearchParams(window.location.search);
+  // Opt out only when explicitly disabled via ?capture=0/false, OR when ?dev is present without
+  // ?capture (the E2E perf/scenarios path). Plain local dev (no params) keeps captures on.
+  if (params.has("capture")) {
+    const v = params.get("capture");
+    return v !== "0" && v !== "false";
+  }
+  return !params.has("dev");
+};
+
 const SKINS: BlobSkin[] = ["blue", "slime", "ghost", "ink"];
 
 export function DevHarness() {
@@ -98,6 +119,7 @@ export function DevHarness() {
           const after = envSnapshot();
           // Diagnostics first + independent, so a canvas-read failure can't suppress it.
           void post("/__diagnostics", { label, before, after });
+          if (!captureEnabled()) return; // skip the SwiftShader-stalling readback unless opted in
           requestAnimationFrame(() => {
             try {
               const canvas = document.querySelector("canvas");
@@ -112,6 +134,7 @@ export function DevHarness() {
   };
 
   const captureCanvas = (label: string) => {
+    if (!captureEnabled()) return; // skip the SwiftShader-stalling readback unless opted in
     requestAnimationFrame(() => {
       try {
         const canvas = document.querySelector("canvas");
