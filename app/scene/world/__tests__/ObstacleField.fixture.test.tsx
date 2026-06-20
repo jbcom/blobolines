@@ -3,7 +3,16 @@ import { Physics } from "@react-three/rapier";
 import { afterEach, expect, test, vi } from "vitest";
 import { render } from "vitest-browser-react";
 import { consumeObstacleBounce, setBlobDiagnostics, useWorldStore } from "@/state";
+import type { ObstacleSpec } from "@/world";
 import { ObstacleField } from "../ObstacleField";
+
+/** A test obstacle at the origin with NO bob (amplitude 0), so the static contact assertions hold. */
+const obs = (radius = 2): ObstacleSpec => ({
+  id: 0,
+  position: [0, 0, 0],
+  radius,
+  bob: { amplitude: 0, speed: 1, phase: 0 },
+});
 
 function setBlob(position: [number, number, number], speed: number) {
   setBlobDiagnostics({
@@ -28,7 +37,7 @@ afterEach(() => {
 // FAST blob entering its contact shell fires the bounce feedback (the actual rebound is Rapier's;
 // this asserts the cosmetic/feedback trigger). A SLOW brush must NOT fire (slow brushes stay quiet).
 test("ObstacleField renders an obstacle and fires a bounce on a fast contact", async () => {
-  useWorldStore.setState({ obstacles: [{ id: 0, position: [0, 0, 0], radius: 2 }] });
+  useWorldStore.setState({ obstacles: [obs()] });
   // Blob arriving fast, inside the contact shell (radius 2 + ~1 pad).
   setBlob([1.5, 0, 0], 20);
 
@@ -57,7 +66,7 @@ test("ObstacleField renders an obstacle and fires a bounce on a fast contact", a
 });
 
 test("a SLOW brush does not fire a bounce", async () => {
-  useWorldStore.setState({ obstacles: [{ id: 0, position: [0, 0, 0], radius: 2 }] });
+  useWorldStore.setState({ obstacles: [obs()] });
   setBlob([1.5, 0, 0], 1); // inside the shell but barely moving
 
   await render(
@@ -74,7 +83,7 @@ test("a SLOW brush does not fire a bounce", async () => {
 });
 
 test("a fast blob LINGERING inside the shell fires the bounce ONCE, not every PULSE_LIFE", async () => {
-  useWorldStore.setState({ obstacles: [{ id: 0, position: [0, 0, 0], radius: 2 }] });
+  useWorldStore.setState({ obstacles: [obs()] });
   setBlob([1.5, 0, 0], 20); // fast + inside the shell, and it stays there (no movement out)
 
   await render(

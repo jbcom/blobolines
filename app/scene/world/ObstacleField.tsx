@@ -1,11 +1,11 @@
 import { useGLTF } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
-import { BallCollider, RigidBody } from "@react-three/rapier";
+import { BallCollider, type RapierRigidBody, RigidBody } from "@react-three/rapier";
 import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { Color, type Group, type Mesh, type Object3D } from "three";
 import { playThump } from "@/audio";
 import { biomeBandAt } from "@/config";
-import { getBlobDiagnostics, reportObstacleBounce, useWorldStore } from "@/state";
+import { getBlobDiagnostics, reportObstacleBounce, useGameStore, useWorldStore } from "@/state";
 import { hex, palette } from "@/styles/tokens";
 import type { ObstacleSpec } from "@/world";
 
@@ -92,7 +92,12 @@ function ObstacleModel({ band, radius }: { band: string; radius: number }) {
 }
 
 function ObstacleBody({ spec }: { spec: ObstacleSpec }) {
+  const bodyRef = useRef<RapierRigidBody>(null);
   const visualRef = useRef<Group>(null);
+  /** Accumulated bob clock (seeded at the spec phase). Advanced by dt only while PLAYING — so the
+   *  bob FREEZES on pause (matching the frozen sim) and never teleports on resume / after a
+   *  backgrounded-tab clock jump (which using state.clock.elapsedTime directly would cause). */
+  const bobTime = useRef(spec.bob.phase);
   /** Seconds since the last bounce pulse, or null when idle. */
   const pulse = useRef<number | null>(null);
   /** Whether the blob is currently inside the contact shell — the bounce fires ONCE on ENTRY and
@@ -104,11 +109,21 @@ function ObstacleBody({ spec }: { spec: ObstacleSpec }) {
   const colorHex = BAND_COLOR[band];
   if (!colorHex) throw new Error(`No obstacle color configured for biome band "${band}"`);
   const baseColor = useMemo(() => new Color(hex(colorHex)), [colorHex]);
+  const [cx, cy, cz] = spec.position;
 
   useFrame((_state, delta) => {
     const visual = visualRef.current;
     if (!visual) return;
     const dt = Math.min(delta, 1 / 30);
+
+    // VERTICAL BOB: the obstacle drifts up/down a small amount around its rest center. Driven on the
+    // KINEMATIC body so Rapier resolves the bounce against the moving collider (a fixed body wouldn't
+    // impart the bob). The bob travel was verified clear of the route at generation, so this can never
+    // intrude on the climb. Time is ACCUMULATED via dt only while playing (not the raw render clock),
+    // so the bob freezes on pause + never teleports on resume / after a backgrounded-tab clock jump.
+    if (useGameStore.getState().phase === "playing") bobTime.current += dt * spec.bob.speed;
+    const obsY = cy + Math.sin(bobTime.current) * spec.bob.amplitude;
+    bodyRef.current?.setNextKinematicTranslation({ x: cx, y: obsY, z: cz });
 
     // Cosmetic contact pulse: when the blob ENTERS the shell fast, fire a quick scale POP on the
     // visual. The REBOUND itself is resolved by Rapier (this collider is solid) — this is the juice.
@@ -116,9 +131,9 @@ function ObstacleBody({ spec }: { spec: ObstacleSpec }) {
     // that lingers/slides inside it doesn't machine-gun the thump + event.
     const diag = getBlobDiagnostics();
     const [bx, by, bz] = diag.position;
-    const dx = bx - spec.position[0];
-    const dy = by - spec.position[1];
-    const dz = bz - spec.position[2];
+    const dx = bx - cx;
+    const dy = by - obsY;
+    const dz = bz - cz;
     const d2 = dx * dx + dy * dy + dz * dz;
     const contactR = spec.radius + CONTACT_PAD;
     const isInside = d2 <= contactR * contactR;
@@ -129,7 +144,7 @@ function ObstacleBody({ spec }: { spec: ObstacleSpec }) {
       pulse.current = 0;
       // A low thud scaled by impact speed + the bridge event (drained by HUD/vfx if they want it).
       playThump(Math.min(1, diag.speed / 28));
-      reportObstacleBounce({ position: spec.position, speed: diag.speed });
+      reportObstacleBounce({ position: [cx, obsY, cz], speed: diag.speed });
     }
 
     if (pulse.current !== null) {
@@ -147,7 +162,8 @@ function ObstacleBody({ spec }: { spec: ObstacleSpec }) {
 
   return (
     <RigidBody
-      type="fixed"
+      ref={bodyRef}
+      type="kinematicPosition"
       colliders={false}
       position={spec.position}
       restitution={OBSTACLE_RESTITUTION}
