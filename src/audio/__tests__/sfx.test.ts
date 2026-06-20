@@ -173,9 +173,8 @@ describe("music + ambient lifecycle", () => {
   it("pause/resumeMusic hold an indefinite duck and restore it without throwing", () => {
     // The live looping music bed, if any.
     const liveBed = () => {
-      const hs = (
-        Howler as unknown as { _howls: Array<{ _loop: boolean; volume(): number }> }
-      )._howls;
+      const hs = (Howler as unknown as { _howls: Array<{ _loop: boolean; volume(): number }> })
+        ._howls;
       return hs.find((h) => h._loop);
     };
 
