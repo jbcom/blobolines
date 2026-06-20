@@ -326,11 +326,33 @@ assets needed (uses the 4 existing skins + adds the gating data).
 
 ### I2 PR cutting point
 - [x] I2.1a Verified + reviewed; opening PR.
-- [ ] [WAIT-REVIEW] I2.1b Babysit PR: verify+e2e green → address feedback → resolve threads →
-      squash-merge → re-write directive forward to the next milestone.
+- [x] I2.1b PR #66 SQUASH-MERGED (4072b5e, 2026-06-20). verify+e2e green; addressed gemini's
+      3 MEDIUM (canonical BlobSkin import + key gated-skin UI on gate presence not resolved
+      object). Achievement→cosmetic reward loop shipped.
+
+## Queue — Milestone: Rare treasure collectible (branch feat/treasure-pickup)
+
+Add excitement variety to the climb: a RARE special "treasure" pickup (a GLB chest/gem from the
+NAS asset server) that spawns infrequently, drifts/glints to draw the eye, and on collection
+rewards a big crystal burst + a celebratory flash/stinger. Ties into the existing crystal +
+audio + (optionally) achievement systems. Data-driven rarity; deterministic spawn; mid-tier budget.
+
+### J0 Architecture
+- [ ] J0.1 Read the crystal/collectible spawn + collect pipeline (src/world generator, src/sim/
+      collect, CrystalField/PowerUpField) + crystal tiers. Decide whether treasure is a new
+      collectible type or a top crystal tier; where it spawns + how collection rewards. Record
+      decision + curate a treasure GLB from the asset server.
+
+### J1 Implementation
+- [ ] J1.1 Spawn rare treasure (seeded, altitude-weighted), render the GLB with a glint/draw-eye
+      VFX, collect → crystal burst + celebratory flash + stinger. Visual-verify (screenshot).
+- [ ] J1.2 Tests: rarity/spawn config + collect-reward unit tests; render/browser + audio per gates.
+
+### J2 PR cutting point
+- [ ] J2.1 Verify + screenshot; open PR; babysit to squash-merge; re-write directive forward.
 
 ## Notes
 - This is a living plan. After every stage, backward+forward sweep and edit the queue.
-- Next candidate milestones (surface, don't pre-commit): collectible variety/special pickups,
-  per-biome music layers, denser interactive props that react to the blob, biome-reactive blob
-  tinting, USE the teleport tool to manually QA + polish each upper biome band's look.
+- Next candidate milestones (surface, don't pre-commit): per-biome music layers, denser
+  interactive props that react to the blob, biome-reactive blob tinting, USE the teleport tool to
+  manually QA + polish each upper biome band's look, daily-challenge leaderboard polish.
