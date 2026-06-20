@@ -1082,9 +1082,8 @@ uniquely suited to.
       position is computed. NEXT: N19.2 design the spawn unit (where in src/world/ off-route positions
       come from), N19.3 the collider + bounce + contact feedback, N19.4 visuals (mine an assets-server
       GLB — boulder/asteroid/crystal-spire per band), tests + visual-verify.
-- [ ] [WAIT-CI] PR #86 (N18 upper-band polish) — waiting on Playwright E2E to finish (verify·typecheck·
-      test·build + Android + CodeQL/Analyze/Amazon-Q already green, 0 unresolved threads). Squash-merge
-      when the ci.yml run for HEAD is fully green, then cut feat/interactive-scenery for N19.2+.
+- [x] PR #86 (N18 upper-band polish) MERGED (squash 337a40c) — 2 review findings folded (gemini
+      teleport-anchor identity-clear + CodeRabbit decisions dedup), all threads resolved, fully green.
 - [x] N19.2 DONE. Pure src/world/obstacles.ts: generateObstacles(rng, pads, fromY, toY)→ObstacleSpec[],
       offset off-route + rejected unless ≥ ROUTE_CLEARANCE from every golden-arc SAMPLE (clearOfRoute
       reads the proofs — single source of truth, no reach math duplicated), pad footprints, and other
