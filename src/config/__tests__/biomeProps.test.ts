@@ -1,10 +1,14 @@
 import { describe, expect, it } from "vitest";
+import { allBiomePropFiles, biomePropRegistry, propSetForBand } from "../biomeProps";
 import { biomeBands } from "../biomes";
-import {
-  allBiomePropFiles,
-  biomePropRegistry,
-  propSetForBand,
-} from "../biomeProps";
+
+/** The GLBs that actually exist on disk, enumerated by Vite at import time. Keyed by path
+ *  relative to the models dir (e.g. "biomes/ground/cactus-tall.glb") to match registry files. */
+const onDiskGlbs = new Set(
+  Object.keys(
+    import.meta.glob("../../../public/assets/models/biomes/**/*.glb", { eager: false }),
+  ).map((p) => p.replace(/^.*\/assets\/models\//, "")),
+);
 
 describe("biomePropRegistry", () => {
   it("has exactly one entry per canonical biome band, in band order", () => {
@@ -26,7 +30,9 @@ describe("biomePropRegistry", () => {
   it("references prop files under the band's own models subdirectory with a positive scale", () => {
     for (const set of biomePropRegistry) {
       for (const prop of set.props) {
-        expect(prop.file, `${set.band} prop path`).toBe(`biomes/${set.band}/${prop.file.split("/").pop()}`);
+        expect(prop.file, `${set.band} prop path`).toBe(
+          `biomes/${set.band}/${prop.file.split("/").pop()}`,
+        );
         expect(prop.file.endsWith(".glb"), `${prop.file} is a glb`).toBe(true);
         expect(prop.scale).toBeGreaterThan(0);
       }
@@ -49,5 +55,18 @@ describe("biomePropRegistry", () => {
   it("resolves a known band and returns undefined for an unknown one", () => {
     expect(propSetForBand(biomeBands[0].name)?.band).toBe(biomeBands[0].name);
     expect(propSetForBand("not-a-real-band")).toBeUndefined();
+  });
+
+  it("gives every canonical band a non-empty, varied prop set", () => {
+    for (const set of biomePropRegistry) {
+      expect(set.props.length, `${set.band} should have props`).toBeGreaterThanOrEqual(2);
+    }
+  });
+
+  it("references GLB files that actually exist on disk under public/", () => {
+    expect(onDiskGlbs.size, "expected biome GLBs to be discovered on disk").toBeGreaterThan(0);
+    for (const file of allBiomePropFiles) {
+      expect(onDiskGlbs.has(file), `${file} missing on disk`).toBe(true);
+    }
   });
 });

@@ -46,7 +46,12 @@ export interface BiomePropSet {
 const SHELVES: Record<string, PropShelf> = {
   ground: { kind: "disc", color: palette.cloud.warm, opacity: 0.28, scale: [2.0, 1.4] },
   sky: { kind: "disc", color: palette.cloud.puff, opacity: 0.3, scale: [2.4, 1.8] },
-  "upper-atmosphere": { kind: "disc", color: palette.cloud.bubble, opacity: 0.26, scale: [2.0, 1.5] },
+  "upper-atmosphere": {
+    kind: "disc",
+    color: palette.cloud.bubble,
+    opacity: 0.26,
+    scale: [2.0, 1.5],
+  },
   stratosphere: { kind: "disc", color: palette.cloud.blush, opacity: 0.28, scale: [2.0, 1.5] },
   space: { kind: "ring", color: palette.cloud.glow, opacity: 0.32 },
   "deep-space": { kind: "ring", color: palette.cloud.gold, opacity: 0.34 },
@@ -75,9 +80,24 @@ const PROP_FILES: Record<string, BiomePropSpec[]> = {
     { file: "biomes/upper-atmosphere/snowy-rock.glb", scale: 1.2 },
     { file: "biomes/upper-atmosphere/snow-crystal.glb", scale: 1.1 },
   ],
-  stratosphere: [],
-  space: [],
-  "deep-space": [],
+  stratosphere: [
+    { file: "biomes/stratosphere/mushroom-giant.glb", scale: 1.3 },
+    { file: "biomes/stratosphere/mushroom-cluster.glb", scale: 1.2 },
+    { file: "biomes/stratosphere/mushroom-toadstool.glb", scale: 1.1 },
+    { file: "biomes/stratosphere/exotic-bloom.glb", scale: 1.2 },
+  ],
+  space: [
+    { file: "biomes/space/asteroid-large.glb", scale: 1.5 },
+    { file: "biomes/space/meteor-chunk.glb", scale: 1.2 },
+    { file: "biomes/space/crystal-asteroid.glb", scale: 1.3 },
+    { file: "biomes/space/crystal-shard.glb", scale: 1.1 },
+  ],
+  "deep-space": [
+    { file: "biomes/deep-space/alien-crystal-cluster.glb", scale: 1.4 },
+    { file: "biomes/deep-space/alien-undercrystal.glb", scale: 1.3 },
+    { file: "biomes/deep-space/crystal-spire.glb", scale: 1.3 },
+    { file: "biomes/deep-space/alien-crystal-rock.glb", scale: 1.3 },
+  ],
 };
 
 /**

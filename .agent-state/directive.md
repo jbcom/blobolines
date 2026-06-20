@@ -56,15 +56,20 @@ re-write directive forward → next.
       hardcoded model components with a registry keyed by biome band) + record decision.
       → Decision in decisions.ndjson; `biomeBandAt(h)` added to src/config/biomes.ts as
       single-source-of-truth band resolver (+3 tests, suite 10 pass).
-- [ ] [WAIT] B0.2 Curate 3DLowPoly props per biome band from the asset library (background
-      agent a187cf74 running) — copies GLBs into public/assets/models/biomes/<band>/ and
-      returns a JSON manifest; verify file sizes & poly budgets fit a mid-tier budget.
+- [x] B0.2 Curate 3DLowPoly props per biome band from the asset library — 24 GLBs (4 per
+      band × 6 bands) copied into public/assets/models/biomes/<band>/; all static, max
+      1080 faces / 52KB, well under mid-tier budget. Registry populated + on-disk test green.
 
 ### B1 Implementation
-- [ ] B1.1 Refactor BiomeScenicProps to the data-driven registry; each band shows a
-      varied set (not one model), deterministic placement preserved, wrap logic intact.
-- [ ] B1.2 Tests: registry/biome-band selection unit tests; visual/browser test for the
-      enriched scene; preload coverage.
+- [x] B1.1 Refactor BiomeScenicProps to the data-driven registry; generic PropModel +
+      Shelf, band selection via biomeBandAt, deterministic per-band pick, wrap logic intact,
+      preload from allBiomePropFiles. Orphaned root GLBs removed. typecheck/lint/415 unit +
+      105 browser tests green.
+- [ ] [WAIT] B1.2a Replace 3 upper-atmosphere GLBs that reference external colormap.png
+      (render untextured) with self-contained equivalents — agent a187cf74 resumed.
+- [ ] B1.2 Tests: registry/biome-band selection unit tests DONE (biomeProps.test.ts, 8) +
+      biomeBandAt (3); add a browser/render smoke test that BiomeScenicProps mounts with
+      the registry props across bands.
 
 ### B2 Verify & polish
 - [ ] B2.1 Full verification (typecheck + lint + test + test:browser) and app-runs

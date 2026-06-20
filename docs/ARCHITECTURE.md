@@ -34,7 +34,7 @@ public surface; modules stay small and single-responsibility — no monolithic s
 |---------|--------|----------------|
 | `src/core/math` | ✓ | `createRng` (seedrandom-backed), seed phrases, clock facade, vec/lerp/spring helpers |
 | `src/core/types` | ✓ | shared domain types (ids, enums, golden-path proof data) |
-| `src/config` | ✓ | all tunables as per-domain JSON + typed barrel (physics/blob/launch/trampoline/collect/goo/world/biomes/audio) |
+| `src/config` | ✓ | all tunables as per-domain JSON + typed barrel (physics/blob/launch/trampoline/collect/goo/world/biomes/audio). `biomes.ts` owns `biomeBandAt` (the single-source-of-truth altitude→band resolver) and `biomeProps.ts` the data-driven scenery registry (per-band curated GLB sets + shelf styling) |
 | `src/sim/physics` | ✓ | Rapier config, collision categories, spring/depress math (pure where possible) |
 | `src/sim/blob` | ✓ | blob state: squash/stretch springs, expression state machine (eyes), velocity model |
 | `src/sim/cloudPad` | ✓ | pass-through cloud catch/adherence tests and footprint math |
@@ -59,7 +59,7 @@ public surface; modules stay small and single-responsibility — no monolithic s
 | `app/scene` | ✓ | composes small scene components inside `<Canvas>` |
 | `app/scene/blob` | ✓ | `<PlayerBlob>` (Rapier body + diagnostics bridge), `<GooCsg>` (three-bvh-csg merged goo), `<BlobActor>` (menu hero), `<BlobEyes>`, `<SplatChunks>`, `<TrajectoryPreview>` |
 | `app/scene/trampoline` | ✓ | cloud-pad renderer behind compatibility `<Trampoline>`, `<TrampolineField>` imports |
-| `app/scene/world` | ✓ | `<SkyDome>`, `<Lighting>`, `<BiomeProps>`, `<BlobFollowLight>`, `<CrystalField>`, `<PowerUpField>`, `<GoldenRoutePreview>` |
+| `app/scene/world` | ✓ | `<SkyDome>`, `<Lighting>`, `<BiomeProps>` (procedural strata: clouds/stars/motes), `<BiomeScenicProps>` (registry-driven GLB scenery per biome band), `<BlobFollowLight>`, `<CrystalField>`, `<PowerUpField>`, `<GoldenRoutePreview>` |
 | `app/scene/postfx` | ✓ | `<PostFX>` (N8AO ambient occlusion, bloom, vignette, speed-reactive chromatic) |
 | `app/views` | ✓ | DOM overlay: `<HudOverlay>`, `<MainMenu>`, `<GameOver>`, modals |
 | `app/components/ui` | ✓ | shadcn primitives (button, dialog, slider, switch, tabs, tooltip, progress) |
