@@ -165,10 +165,33 @@ re-write directive forward → next.
       locally); E2E still runs + uploads traces but no longer blocks merge. NOT
       continue-on-error (reports true status; just not a required check). The capture/timeout/
       shm hardening stays to keep improving E2E pass rate over time.
-- [ ] [WAIT] C3.8 Once the `verify` gate is green on 8d1df5d, squash-merge PR #59, then
-      re-write directive forward to the per-biome ambient-audio milestone (D0, fresh branch).
-      Also: after merge, harden E2E to drive via store/bridge calls instead of harness clicks
-      (a follow-up milestone, not a merge blocker).
+- [x] C3.8 PR #59 SQUASH-MERGED to main (commit 4624d7c, 2026-06-20). Required verify gate
+      green; E2E split to its own non-blocking job; CodeQL action-pin alert resolved; all 5
+      review threads resolved. Local main synced + verified green (432 tests).
+
+## Queue — Milestone: Per-biome ambient audio aligned to canonical bands (branch feat/biome-ambient-audio)
+
+### D0 Architecture
+- [ ] D0.1 audioCfg.ambientBands has a drifted 4-band split (0/200/600/950) covering only 4 of
+      the 6 canonical bands. Refactor ambientBandFor() in howler.ts to use biomeBandAt (single
+      source of truth) and map an ambient bed for ALL 6 bands (reuse nearest existing mp3 where
+      no dedicated bed exists, explicitly — no silent fallback). Record decision.
+
+### D1 Implementation
+- [ ] D1.1 Implement the band-aligned ambient bed mapping + crossfade; remove the drifted
+      ambientBands table. Source new beds (upper-atmosphere, deep-space) via the itch pipeline
+      if distinct beds improve identity, else map explicitly to a shared bed.
+- [ ] D1.2 Tests: ambient band resolution unit tests; audio-graph/browser test per the audio
+      coverage gate. typecheck + lint + test (+ test:browser if render/UI touched).
+
+### D2 PR cutting point
+- [ ] D2.1 Open PR; address feedback; resolve threads; squash-merge; re-write directive forward.
+
+### E0 Follow-up (post-merge, not a blocker) — harden E2E off harness clicks
+- [ ] E0.1 The E2E flakiness under SwiftShader is synthetic-click-on-saturated-thread. Expose a
+      minimal test bridge on window (launch/start via store) so perf/playable/scenarios drive the
+      game without UI pointer events, making the e2e job reliably green. Then it can rejoin the
+      required gate.
 
 ## Notes
 - This is a living plan. After every stage, backward+forward sweep and edit the queue.
