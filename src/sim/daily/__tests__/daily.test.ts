@@ -160,4 +160,11 @@ describe("nextDailyStreak", () => {
   it("never returns a streak below 1 even from a corrupt 0 prev on a same-day replay", () => {
     expect(nextDailyStreak(0, "2026-06-20", "2026-06-20").streak).toBe(1);
   });
+
+  it("treats a FUTURE lastKey (forward clock skew) as a missed day — resets, no inflated streak", () => {
+    // lastKey is days AHEAD of today (a player set the clock forward, played, then corrected it). The
+    // streak must NOT be preserved (that would lock them out of extending until wall-clock catches up).
+    const u = nextDailyStreak(5, "2026-06-25", "2026-06-20"); // gap = -5
+    expect(u).toEqual({ streak: 1, extended: false, brokeStreak: true });
+  });
 });

@@ -69,8 +69,14 @@ export function nextDailyStreak(
 ): DailyStreakUpdate {
   if (!lastKey) return { streak: 1, extended: false, brokeStreak: false };
   const gap = daysBetweenKeys(lastKey, todayKey);
-  if (gap <= 0) return { streak: Math.max(1, prevStreak), extended: false, brokeStreak: false };
+  // Same day: already counted today — leave the streak as-is.
+  if (gap === 0) return { streak: Math.max(1, prevStreak), extended: false, brokeStreak: false };
+  // Yesterday → today: the streak grows.
   if (gap === 1) return { streak: Math.max(1, prevStreak) + 1, extended: true, brokeStreak: false };
+  // Any OTHER gap restarts the streak at 1: a missed day (gap ≥ 2), OR a FUTURE lastKey (gap < 0,
+  // from a forward clock skew the player later corrected) — a future key must NOT preserve an
+  // inflated streak, or the player is silently locked out of extending until wall-clock catches up
+  // to the stored future date. The caller overwrites lastDailyKey with todayKey, healing the skew.
   return { streak: 1, extended: false, brokeStreak: prevStreak > 1 };
 }
 
