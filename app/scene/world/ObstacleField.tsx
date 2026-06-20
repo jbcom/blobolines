@@ -1,7 +1,8 @@
+import { useGLTF } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
 import { BallCollider, RigidBody } from "@react-three/rapier";
-import { useMemo, useRef, useState } from "react";
-import { Color, type Mesh, type MeshStandardMaterial } from "three";
+import { Suspense, useMemo, useRef, useState } from "react";
+import { Color, type Group } from "three";
 import { playThump } from "@/audio";
 import { biomeBandAt } from "@/config";
 import { getBlobDiagnostics, reportObstacleBounce, useWorldStore } from "@/state";
@@ -38,8 +39,8 @@ function windowed(obstacles: readonly ObstacleSpec[], centerY: number): Obstacle
   );
 }
 
-/** Per-band obstacle tint, so an obstacle reads as belonging to its biome (warm rock low, icy
- *  crystal mid, dark asteroid in space). Keyed by the canonical biome band. */
+/** Per-band obstacle tint for the procedural fallback, so an obstacle reads as belonging to its
+ *  biome (warm rock low, icy crystal mid, dark asteroid in space). Keyed by the canonical band. */
 const BAND_COLOR: Record<string, string> = {
   ground: palette.scenery.rock,
   sky: palette.scenery.rock,
@@ -49,21 +50,46 @@ const BAND_COLOR: Record<string, string> = {
   "deep-space": palette.scenery.asteroid,
 };
 
+/** Per-band obstacle GLB — a SOLID rounded prop from the band's own asset set (reusing the vetted
+ *  biome GLBs, so obstacles read coherent with the decorative scenery and no new assets are added).
+ *  The procedural icosahedron is the Suspense fallback so an obstacle never blanks while streaming. */
+const BAND_MODEL: Record<string, string> = {
+  ground: "biomes/ground/desert-rock.glb",
+  sky: "biomes/sky/round-pine.glb",
+  "upper-atmosphere": "biomes/upper-atmosphere/snowy-rock.glb",
+  stratosphere: "biomes/stratosphere/mushroom-giant.glb",
+  space: "biomes/space/asteroid-large.glb",
+  "deep-space": "biomes/deep-space/alien-crystal-rock.glb",
+};
+
+const modelUrl = (file: string) => `${import.meta.env.BASE_URL}assets/models/${file}`;
+
+/** The band's GLB obstacle prop, scaled to roughly fill the collider radius. Clones the cached scene
+ *  so each instance is independent. */
+function ObstacleModel({ band, radius }: { band: string; radius: number }) {
+  const file = BAND_MODEL[band] ?? BAND_MODEL.space;
+  const { scene } = useGLTF(modelUrl(file));
+  const model = useMemo(() => scene.clone(true), [scene]);
+  // The source props vary in native size; a uniform scale tied to the radius reads as a boulder of
+  // about the collider's size. (Exact silhouette differs per prop — that's the point: variety.)
+  return <primitive object={model} scale={radius * 1.15} />;
+}
+
 function ObstacleBody({ spec }: { spec: ObstacleSpec }) {
-  const meshRef = useRef<Mesh>(null);
+  const visualRef = useRef<Group>(null);
   /** Seconds since the last bounce pulse, or null when idle. */
   const pulse = useRef<number | null>(null);
   const band = biomeBandAt(spec.position[1]);
   const baseColor = useMemo(() => new Color(hex(BAND_COLOR[band] ?? palette.scenery.rock)), [band]);
 
   useFrame((_state, delta) => {
-    const mesh = meshRef.current;
-    if (!mesh) return;
+    const visual = visualRef.current;
+    if (!visual) return;
     const dt = Math.min(delta, 1 / 30);
 
-    // Cosmetic contact pulse: when the blob is close + fast, fire a quick scale pop + emissive
-    // flash. The REBOUND itself is resolved by Rapier (this collider is solid) — this is only the
-    // juice. Fire at most one pulse per approach (re-arms once the blob leaves the contact shell).
+    // Cosmetic contact pulse: when the blob is close + fast, fire a quick scale POP on the visual.
+    // The REBOUND itself is resolved by Rapier (this collider is solid) — this is only the juice.
+    // Fire at most one pulse per approach (re-arms once the blob leaves the contact shell).
     const diag = getBlobDiagnostics();
     const [bx, by, bz] = diag.position;
     const dx = bx - spec.position[0];
@@ -78,19 +104,15 @@ function ObstacleBody({ spec }: { spec: ObstacleSpec }) {
       reportObstacleBounce({ position: spec.position, speed: diag.speed });
     }
 
-    const mat = mesh.material as MeshStandardMaterial;
     if (pulse.current !== null) {
       pulse.current += dt;
       const f = pulse.current / PULSE_LIFE;
       if (f >= 1) {
         pulse.current = null;
-        mesh.scale.setScalar(1);
-        mat.emissiveIntensity = 0;
+        visual.scale.setScalar(1);
       } else {
         const pop = Math.sin(f * Math.PI); // 0→1→0
-        mesh.scale.setScalar(1 + pop * 0.22);
-        mat.emissive.copy(baseColor);
-        mat.emissiveIntensity = pop * 0.6;
+        visual.scale.setScalar(1 + pop * 0.22);
       }
     }
   });
@@ -104,10 +126,25 @@ function ObstacleBody({ spec }: { spec: ObstacleSpec }) {
       friction={0.4}
     >
       <BallCollider args={[spec.radius]} />
-      <mesh ref={meshRef} castShadow>
-        <icosahedronGeometry args={[spec.radius, 1]} />
-        <meshStandardMaterial color={baseColor} roughness={0.85} metalness={0.05} flatShading />
-      </mesh>
+      {/* The visual (GLB prop from the band's asset set, or the procedural fallback while it streams)
+          lives under a group the pulse scales. Rotated by a fixed per-instance angle for variety. */}
+      <group ref={visualRef} rotation={[0, spec.id % 6, 0]}>
+        <Suspense
+          fallback={
+            <mesh castShadow>
+              <icosahedronGeometry args={[spec.radius, 1]} />
+              <meshStandardMaterial
+                color={baseColor}
+                roughness={0.85}
+                metalness={0.05}
+                flatShading
+              />
+            </mesh>
+          }
+        >
+          <ObstacleModel band={band} radius={spec.radius} />
+        </Suspense>
+      </group>
     </RigidBody>
   );
 }
@@ -134,4 +171,11 @@ export function ObstacleField() {
       ))}
     </>
   );
+}
+
+// Preload every band's obstacle GLB for stutter-free band transitions (skipped under vitest).
+if (!import.meta.env.VITEST) {
+  for (const file of Object.values(BAND_MODEL)) {
+    useGLTF.preload(modelUrl(file));
+  }
 }

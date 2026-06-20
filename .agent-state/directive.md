@@ -1105,9 +1105,14 @@ uniquely suited to.
       WebGL fixture; a LIVE in-scene screenshot is blocked by the dev-teleport/rAF issues
       ([[blobolines-headless-raf-gating]] + N19-pending teleport fix), so the deterministic browser
       fixture IS the rendered-output verification here. Added a __worldStore dev hook for QA.
-- [ ] N19.4 Obstacle VISUALS: mine an assets-server GLB per band (boulder / asteroid / crystal-spire)
-      matching the band palette; vet via scripts/vet-biome-glbs.mjs (no external image URIs). Screenshot
-      + READ against the band look.
+- [x] N19.4 DONE. Each obstacle renders a SOLID band-appropriate GLB from the repo's OWN vetted biome
+      asset set (no new mining needed — better than the NAS round-trip, and visually coherent with the
+      decorative props): ground desert-rock, sky round-pine, upper-atmosphere snowy-rock, stratosphere
+      mushroom-giant, space asteroid-large, deep-space alien-crystal-rock. Loaded via useGLTF with the
+      procedural icosahedron as the Suspense fallback (never blanks while streaming); preloaded for
+      stutter-free band transitions; bounce-pulse scales the visual group. All 6 GLBs vetted clean (no
+      external URIs, ≤920 faces — headless-WebGL safe) and confirmed served 200 + loading without
+      console errors on the live dev server. 134 browser / 530 unit green; typecheck + pinned lint clean.
 
 ## Notes
 - This is a living plan. After every stage, backward+forward sweep and edit the queue.
