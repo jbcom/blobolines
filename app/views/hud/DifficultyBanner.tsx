@@ -34,7 +34,10 @@ export function DifficultyBanner() {
     if (difficultyRank(current) > difficultyRank(previous)) {
       setShown(current);
       flash("gold", 0.9);
-      playMilestone();
+      // Escalate the stinger with the altitude at the difficulty-up (like the 100m milestone). Read
+      // the height at fire time so this effect stays keyed on the DISCRETE difficulty, not the
+      // continuous height (which would re-run it every frame).
+      playMilestone(useGameStore.getState().run.height);
       duckMusic(800);
     }
     last.current = current;

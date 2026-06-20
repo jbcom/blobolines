@@ -765,8 +765,20 @@ mandate explicitly includes keeping docs aligned (no end-of-project catch-up).
       browser green; typecheck + biome ci + build clean. Committed; reviewer to dispatch.
 
 ### N10.3 PR cutting point
-- [ ] N10.3 Commit, dispatch reviewer, fold findings forward, open PR, babysit to squash-merge,
-      sync main, re-write directive forward to N11.
+- [x] N10.3a Committed (0700994), dispatched reviewer (background, focused on milestoneTierFor
+      boundaries + the playMilestone default), pushed, opened PR #78. Monitor armed. Ran
+      `npx biome ci .` as the LAST step before push (per the hardened lesson).
+- [ ] [WAIT-REVIEW] N10.3b Babysit PR #78: wait CI green, fold reviewer + gemini/CodeRabbit findings
+      forward, resolve threads, squash-merge once green, sync main, then start N11.
+
+### N11 Next milestone (surface after #78 merges)
+- [ ] [WAIT-MERGE] N11.1 Pick the next polish unit (don't pre-commit). Audio identity is now deep
+      (per-biome music + ambient + escalating milestone stingers + distinct record fanfare). Strong
+      candidates to SHIFT axis back toward GAMEPLAY/FEEL or VISUALS: a new climber-fitting pad
+      behaviour/hazard (read the reachability-invariant memory FIRST — must stay constructively
+      climbable), richer mid-air steer feedback, or a fresh visual beat (e.g. milestone screen-burst
+      tied to the new stinger tiers — the audio escalates but the visual milestone banner doesn't).
+      Enumerate use cases first; read own spec docs.
 
 ### N9 Next milestone (surface after #76 merges)
 - [ ] [WAIT-MERGE] N9.1 Pick the next polish unit (don't pre-commit). Biome identity + docs are now
