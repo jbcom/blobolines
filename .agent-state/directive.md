@@ -83,11 +83,10 @@ re-write directive forward → next.
       hand-edited per doctrine.
 
 ### B3 Cutting point
-- [ ] B3.1 Biome milestone (B0–B2) DONE: registry + resolver + 24 curated props + refactor
+- [x] B3.1 Biome milestone (B0–B2) DONE: registry + resolver + 24 curated props + refactor
       + tests + docs + review folded forward, all green (3 commits c608a0e/8b76cf4/4b474f0).
-      DECISION: layer ONE more cohesive richness milestone (per-biome ambient particle
-      ambience — see C0 below) before the PR, so the branch ships as a complete
-      "world richness" story, then open the PR. Not a scope-flip; same theme.
+      DECISION (acted on): layered the per-biome ambience milestone (C0–C1), then opened the
+      PR (#59) as a complete "world richness" story. Same theme, not a scope-flip.
 
 ## Queue — Milestone: Per-biome atmospheric ambience
 
