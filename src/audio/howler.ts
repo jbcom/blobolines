@@ -238,6 +238,18 @@ interface MilestoneTier {
   sfx: SfxId;
 }
 const milestoneTiers = audioCfg.milestoneTiers as MilestoneTier[];
+// Validate at module load (no silent fallback): the tier resolver indexes milestoneTiers[0], and a
+// missing/empty config would otherwise throw an opaque runtime error mid-climb. Surface it loudly.
+if (!Array.isArray(milestoneTiers) || milestoneTiers.length === 0) {
+  throw new Error(
+    "audio config: `milestoneTiers` must be a non-empty array of { minHeight, sfx }.",
+  );
+}
+if (milestoneTiers[0].minHeight !== 0) {
+  throw new Error(
+    "audio config: the first `milestoneTiers` entry must have minHeight 0 (the floor).",
+  );
+}
 
 /** The milestone-stinger SFX key for a crossing at world height `h` — escalates with altitude so a
  *  higher milestone sounds grander (bright → triumph → epic → mega). Pure: scans the descending
