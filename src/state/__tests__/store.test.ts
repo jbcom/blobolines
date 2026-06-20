@@ -25,6 +25,7 @@ beforeEach(() => {
       stylePoints: 0,
       scoreDelta: 0,
       unlockedAchievements: [],
+      streakExtended: 0,
     },
   });
 });
@@ -207,6 +208,54 @@ describe("useGameStore", () => {
     expect(p.unlockedAchievements).toContain("daily-streak-3");
     expect(p.unlockedAchievements).toContain("daily-streak-7");
     expect(p.unlockedSkins).toContain("aurora"); // milestone cosmetic granted in the same pass
+  });
+
+  it("flags run.streakExtended only on a genuine extension, not a same-day replay or non-daily run", () => {
+    const today = new Date();
+    const yesterday = dailyKey(
+      new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate() - 1)),
+    );
+    // Seed a 2-day streak last played YESTERDAY, then commit TODAY'S daily → extends to 3.
+    useGameStore.setState((s) => ({
+      progress: { ...s.progress, dailyStreak: 2, lastDailyKey: yesterday },
+    }));
+    useGameStore.getState().setDailyRun(true);
+    useWorldStore.setState({ seedPhrase: dailySeedPhrase(today) });
+    useGameStore.getState().commitBestHeight(400);
+    expect(useGameStore.getState().progress.dailyStreak).toBe(3);
+    expect(useGameStore.getState().run.streakExtended).toBe(3); // celebrate the extension to 3
+
+    // A SAME-DAY replay must NOT re-flag an extension (the streak didn't grow).
+    useGameStore.getState().commitBestHeight(450);
+    expect(useGameStore.getState().run.streakExtended).toBe(0);
+  });
+
+  it("does NOT flag streakExtended on the FIRST-EVER daily (a START is not an extension)", () => {
+    // No prior streak/key → nextDailyStreak starts at 1 with extended:false. The streak begins but
+    // nothing was EXTENDED, so the card shows the calm count, not the celebration.
+    useGameStore.getState().setDailyRun(true);
+    useWorldStore.setState({ seedPhrase: dailySeedPhrase(new Date()) });
+    useGameStore.getState().commitBestHeight(300);
+    expect(useGameStore.getState().progress.dailyStreak).toBe(1);
+    expect(useGameStore.getState().run.streakExtended).toBe(0);
+  });
+
+  it("does NOT flag streakExtended on a backward-clock no-op (anti-exploit guard holds)", () => {
+    // A stored FUTURE anchor (clock was set forward, then back) makes todayKey < lastDailyKey, so
+    // advanceStreak is false — the streak isn't moved AND no celebration fires.
+    useGameStore.setState((s) => ({
+      progress: { ...s.progress, dailyStreak: 7, lastDailyKey: "3000-01-01" },
+    }));
+    useGameStore.getState().setDailyRun(true);
+    useWorldStore.setState({ seedPhrase: dailySeedPhrase(new Date()) });
+    useGameStore.getState().commitBestHeight(400);
+    expect(useGameStore.getState().run.streakExtended).toBe(0);
+  });
+
+  it("does not flag streakExtended on a non-daily run", () => {
+    useGameStore.getState().setDailyRun(false);
+    useGameStore.getState().commitBestHeight(500);
+    expect(useGameStore.getState().run.streakExtended).toBe(0);
   });
 
   it("unlockAchievements persists newly-met ids once and returns only the fresh ones", () => {

@@ -1,7 +1,7 @@
 import { Button } from "@app/components/ui";
 import { Progress } from "@app/components/ui/progress";
 import { Check, Copy, Flame, RotateCcw, Share2 } from "lucide-react";
-import { motion } from "motion/react";
+import { motion, useReducedMotion } from "motion/react";
 import { useEffect, useRef, useState } from "react";
 import { playRecord, startMusic, stopMusic } from "@/audio";
 import type { BlobSkin } from "@/core/types";
@@ -41,6 +41,10 @@ export function GameOver() {
   // Daily streak — consecutive UTC days with a completed daily, advanced by commitBestHeight on a
   // daily run (so by the time this card renders it reflects this run). Shown only for daily runs.
   const dailyStreak = useGameStore((s) => s.progress.dailyStreak) ?? 0;
+  // The new streak length IFF this run extended it (yesterday → today) — drives a celebratory
+  // "Streak extended!" flourish vs. the plain count. 0 on a same-day replay or non-daily run.
+  const streakExtended = useGameStore((s) => s.run.streakExtended) ?? 0;
+  const reducedMotion = useReducedMotion();
 
   const freshAchievements = useGameStore((s) => s.run.unlockedAchievements) || [];
 
@@ -375,17 +379,31 @@ export function GameOver() {
               </span>
             )}
             {/* Daily streak badge — consecutive days. Reads as a warm flame; the count grows with
-                the habit. Shown once the streak is a real run (≥1). */}
-            {dailyStreak >= 1 && (
-              <span
-                data-testid="daily-streak"
-                className="mt-0.5 flex items-center gap-1 font-ui text-xs font-semibold tabular-nums text-tramp-orange"
-              >
-                {/* The visible "N-day streak" text is the accessible name (the flame is decorative). */}
-                <Flame className="size-3.5" aria-hidden />
-                {dailyStreak}-day streak
-              </span>
-            )}
+                the habit. Shown once the streak is a real run (≥1). When THIS run EXTENDED the streak
+                (yesterday → today), it celebrates the moment ("Streak extended to N!") in a brighter
+                gold with a pop; a same-day replay shows the calm "N-day streak" count. */}
+            {dailyStreak >= 1 &&
+              (streakExtended > 0 ? (
+                <motion.span
+                  data-testid="daily-streak"
+                  initial={reducedMotion ? false : { scale: 0.7, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ type: "spring", stiffness: 420, damping: 16, delay: 0.15 }}
+                  className="mt-0.5 flex items-center gap-1 font-display text-sm font-bold tabular-nums text-tramp-gold"
+                >
+                  <Flame className="size-4" aria-hidden />
+                  Streak extended to {streakExtended}!
+                </motion.span>
+              ) : (
+                <span
+                  data-testid="daily-streak"
+                  className="mt-0.5 flex items-center gap-1 font-ui text-xs font-semibold tabular-nums text-tramp-orange"
+                >
+                  {/* The visible "N-day streak" text is the accessible name (the flame is decorative). */}
+                  <Flame className="size-3.5" aria-hidden />
+                  {dailyStreak}-day streak
+                </span>
+              ))}
           </motion.div>
         )}
 
