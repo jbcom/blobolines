@@ -194,11 +194,52 @@ describe("music + ambient lifecycle", () => {
     stopMusic();
   });
 
-  it("ambient bed follows the biome bands (ground → space) without throwing", () => {
+  it("ambient bed follows ALL 6 canonical biome bands without throwing", () => {
+    const loopPaths = () => {
+      const hs = (Howler as unknown as { _howls: Array<{ _loop: boolean; _src: string[] }> })
+        ._howls;
+      return hs
+        .filter((h) => h._loop)
+        .flatMap((h) => h._src)
+        .join(" ");
+    };
     startMusic();
+    // A representative altitude inside each canonical band (ground/sky/upper-atmosphere/
+    // stratosphere/space/deep-space). Every band must map to a bed — setAmbientBand throws
+    // on an unmapped band, so reaching all of them without throwing proves full coverage.
+    const bandAltitudes = [10, 150, 400, 700, 1000, 1500];
     expect(() => {
-      for (const y of [0, 250, 700, 1200, 100]) setMusicAltitude(y);
+      for (const y of bandAltitudes) setMusicAltitude(y);
     }).not.toThrow();
+    // Deep-space shares the space bed; confirm the cosmic bed is live up high.
+    setMusicAltitude(1500);
+    expect(loopPaths()).toContain("space.mp3");
+    // Returning to the ground band swaps back to the warm forest bed.
+    setMusicAltitude(0);
+    expect(loopPaths()).toContain("forest.mp3");
+    stopMusic();
+  });
+
+  it("does not spawn a duplicate ambient loop when adjacent bands share a bed", () => {
+    // sky and upper-atmosphere both map to wind.mp3 — crossing between them must keep the SAME
+    // single loop, not stop+restart (or double-play) the shared bed. Count actively-PLAYING
+    // wind sounds (a double-play would leave two playing at once) rather than cached instances.
+    const windPlaying = () => {
+      const hs = (
+        Howler as unknown as {
+          _howls: Array<{ _loop: boolean; _src: string[]; playing(): boolean }>;
+        }
+      )._howls;
+      return hs.filter((h) => h._loop && h._src.some((s) => s.includes("wind.mp3")) && h.playing())
+        .length;
+    };
+    startMusic();
+    setMusicAltitude(150); // sky → wind bed
+    const afterSky = windPlaying();
+    setMusicAltitude(400); // upper-atmosphere → same wind bed (must not start a 2nd loop)
+    setMusicAltitude(150); // back to sky → still the same wind bed
+    // No additional wind loop began playing across the shared-bed crossings.
+    expect(windPlaying()).toBeLessThanOrEqual(afterSky);
     stopMusic();
   });
 

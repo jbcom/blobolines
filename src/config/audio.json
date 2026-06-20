@@ -29,13 +29,9 @@
   "ambient": {
     "ground": "assets/audio/ambient/forest.mp3",
     "sky": "assets/audio/ambient/wind.mp3",
+    "upper-atmosphere": "assets/audio/ambient/wind.mp3",
     "stratosphere": "assets/audio/ambient/strongwind.mp3",
-    "space": "assets/audio/ambient/space.mp3"
-  },
-  "ambientBands": [
-    { "name": "ground", "minHeight": 0 },
-    { "name": "sky", "minHeight": 200 },
-    { "name": "stratosphere", "minHeight": 600 },
-    { "name": "space", "minHeight": 950 }
-  ]
+    "space": "assets/audio/ambient/space.mp3",
+    "deep-space": "assets/audio/ambient/space.mp3"
+  }
 }

@@ -165,10 +165,36 @@ re-write directive forward → next.
       locally); E2E still runs + uploads traces but no longer blocks merge. NOT
       continue-on-error (reports true status; just not a required check). The capture/timeout/
       shm hardening stays to keep improving E2E pass rate over time.
-- [ ] [WAIT] C3.8 Once the `verify` gate is green on 8d1df5d, squash-merge PR #59, then
-      re-write directive forward to the per-biome ambient-audio milestone (D0, fresh branch).
-      Also: after merge, harden E2E to drive via store/bridge calls instead of harness clicks
-      (a follow-up milestone, not a merge blocker).
+- [x] C3.8 PR #59 SQUASH-MERGED to main (commit 4624d7c, 2026-06-20). Required verify gate
+      green; E2E split to its own non-blocking job; CodeQL action-pin alert resolved; all 5
+      review threads resolved. Local main synced + verified green (432 tests).
+
+## Queue — Milestone: Per-biome ambient audio aligned to canonical bands (branch feat/biome-ambient-audio)
+
+### D0 Architecture
+- [x] D0.1 Decided (decisions.ndjson): biomeBandAt replaces the drifted ambientBands table;
+      all 6 canonical bands map to a bed in audio.json (ground→forest, sky/upper-atmosphere→
+      wind, stratosphere→strongwind, space/deep-space→space); setAmbientBand throws on an
+      unmapped band (no silent fallback).
+
+### D1 Implementation
+- [x] D1.1 howler.ts uses biomeBandAt for the ambient band; removed ambientBandFor +
+      ambientBands; audio.json maps all 6 bands explicitly; setAmbientBand throws on unmapped.
+- [x] D1.2 Tests: extended sfx.test.ts ambient-lifecycle to cover all 6 band altitudes +
+      assert forest/space beds; new audioAmbient.test.ts config-coverage guard (every
+      canonical band mapped, no non-canonical names). typecheck + lint clean, 434 tests pass.
+
+### D2 PR cutting point
+- [x] D2.1a PR #61 opened (biome-ambient-audio: alignment + shared-bed review fix, 2 commits).
+      Local-reviewed (found+fixed the shared-bed double-play). Pushed.
+- [ ] [WAIT-REVIEW] D2.1b Babysit PR #61: wait verify gate green → address ALL feedback
+      (CodeRabbit/gemini/human) → resolve threads → squash-merge → re-write directive forward.
+
+### E0 Follow-up (post-merge, not a blocker) — harden E2E off harness clicks
+- [ ] E0.1 The E2E flakiness under SwiftShader is synthetic-click-on-saturated-thread. Expose a
+      minimal test bridge on window (launch/start via store) so perf/playable/scenarios drive the
+      game without UI pointer events, making the e2e job reliably green. Then it can rejoin the
+      required gate.
 
 ## Notes
 - This is a living plan. After every stage, backward+forward sweep and edit the queue.

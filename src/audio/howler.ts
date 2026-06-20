@@ -1,5 +1,6 @@
 import { Howl, Howler } from "howler";
 import audioCfg from "@/config/audio.json";
+import { biomeBandAt } from "@/config/biomes";
 import type { TrampType } from "@/core/types";
 import { MAX_COMBO } from "@/sim/combo";
 import { padVoice } from "./padVoice";
@@ -23,7 +24,10 @@ const vol = audioCfg.volumes;
 const howls = new Map<string, Howl>();
 let music: Howl | null = null;
 let ambient: Howl | null = null;
-let ambientBand = "";
+/** Path of the currently-playing ambient bed. Adjacent biome bands deliberately share a bed
+ *  (sky + upper-atmosphere → wind, space + deep-space → space), so the live-bed identity is
+ *  tracked by PATH (not band name) — a band change that keeps the same bed must not restart it. */
+let ambientBed = "";
 /** Current music track key ("menu" | "ingame" | "highspace"), so an altitude/phase change only
  *  crossfades when the target track actually differs. */
 let musicKey = "";
@@ -81,8 +85,16 @@ function startBed(path: string, volume: number): Howl {
   }
   const h = howlFor(path, true, 0, true); // beds stream (html5) — long loops, not low-latency SFX
   h.mute(muted);
-  h.play();
-  h.fade(0, volume, vol.themeFadeMs);
+  // `howlFor` returns a CACHED Howl per path, so this bed may already be playing (e.g. a swap
+  // back to a still-fading-out bed, or two biome bands sharing one mp3). Calling play() again
+  // would spawn a second overlapping loop (doubled/phasing audio). Re-fade the live loop to the
+  // target instead; only play() a bed that isn't already sounding.
+  if (h.playing()) {
+    h.fade(h.volume(), volume, vol.themeFadeMs);
+  } else {
+    h.play();
+    h.fade(0, volume, vol.themeFadeMs);
+  }
   return h;
 }
 
@@ -232,18 +244,8 @@ export function playRecord(): void {
 // ── Music + ambient ────────────────────────────────────────────────────────────
 const musicTracks = audioCfg.music as Record<string, string>;
 const ambientBeds = audioCfg.ambient as Record<string, string>;
-const ambientBands = audioCfg.ambientBands;
 /** Above this altitude the in-game music swaps to the tense "high/space" track. */
 const MUSIC_HIGH_START = audioCfg.musicHighStart;
-
-/** The ambient-bed band name for a height (highest band whose minHeight is met). */
-function ambientBandFor(height: number): string {
-  let band = ambientBands[0].name;
-  for (const b of ambientBands) {
-    if (height >= b.minHeight) band = b.name;
-  }
-  return band;
-}
 
 /** Crossfade the music to `key` (a track in audioCfg.music); no-op if already on it. The old
  *  track fades out (scheduleStop) while the new one fades in (startBed). */
@@ -256,13 +258,21 @@ function setMusicTrack(key: string): void {
   music = startBed(path, musicTarget());
 }
 
-/** Swap the ambient bed to the band for `height` (per-biome bed); no-op if unchanged. */
+/** Swap the ambient bed to `band` (a canonical biome band, from biomeBandAt). Throws if the
+ *  band has no bed mapped in audio.json — every canonical band must map to a bed (no silent
+ *  fallback; see [[blobolines-no-fallbacks]]). No-ops when the resolved BED is unchanged, even
+ *  across a band name change: adjacent bands deliberately share a bed (sky + upper-atmosphere →
+ *  wind, space + deep-space → space), so guarding on the path keeps that crossing seamless
+ *  instead of restarting the same loop with an audible gap. */
 function setAmbientBand(band: string): void {
-  if (band === ambientBand) return;
   const path = ambientBeds[band];
-  if (!path) return;
-  if (ambient && ambientBeds[ambientBand]) scheduleStop(ambientBeds[ambientBand], ambient);
-  ambientBand = band;
+  if (!path) {
+    throw new Error(`setAmbientBand: no ambient bed mapped for biome band "${band}".`);
+  }
+  const currentPath = ambientBed;
+  if (path === currentPath) return; // same bed (possibly a different band) — keep it playing
+  if (ambient && currentPath) scheduleStop(currentPath, ambient);
+  ambientBed = path;
   ambient = startBed(path, ambientTarget());
 }
 
@@ -282,19 +292,19 @@ export function startMenuMusic(): void {
   started = true;
   setMusicTrack("menu");
   // No ambient bed on the menu — just the music.
-  if (ambient && ambientBeds[ambientBand]) scheduleStop(ambientBeds[ambientBand], ambient);
+  if (ambient && ambientBed) scheduleStop(ambientBed, ambient);
   ambient = null;
-  ambientBand = "";
+  ambientBed = "";
 }
 
 export function stopMusic(): void {
   if (!started) return;
   started = false;
   if (music && musicTracks[musicKey]) scheduleStop(musicTracks[musicKey], music);
-  if (ambient && ambientBeds[ambientBand]) scheduleStop(ambientBeds[ambientBand], ambient);
+  if (ambient && ambientBed) scheduleStop(ambientBed, ambient);
   music = null;
   ambient = null;
-  ambientBand = "";
+  ambientBed = "";
   musicKey = "";
 }
 
@@ -330,7 +340,7 @@ export function setMusicAltitude(height: number): void {
   if (musicKey === "ingame" || musicKey === "highspace") {
     setMusicTrack(height >= MUSIC_HIGH_START ? "highspace" : "ingame");
   }
-  setAmbientBand(ambientBandFor(height));
+  setAmbientBand(biomeBandAt(height));
 }
 
 // ── Settings ─────────────────────────────────────────────────────────────────
