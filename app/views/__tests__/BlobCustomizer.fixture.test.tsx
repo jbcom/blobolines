@@ -11,8 +11,9 @@ test("BlobCustomizer renders open with the skin grid visible", async () => {
   const panel = screen.getByTestId("customizer");
   await expect.element(panel).toBeInTheDocument();
   await expect.element(panel).toBeVisible();
-  // The four skins + the heading are present.
+  // The skin tiles + the heading are present (incl. the Nebula apex-reward skin).
   await expect.element(screen.getByText("Goo Customizer")).toBeVisible();
   await expect.element(screen.getByText("Mango")).toBeVisible();
   await expect.element(screen.getByText("Berry")).toBeVisible();
+  await expect.element(screen.getByText("Nebula")).toBeVisible();
 });
