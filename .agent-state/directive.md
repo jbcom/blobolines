@@ -618,14 +618,27 @@ visibly. ENRICH per-band variety by curating MORE 3DLowPoly props from the NAS a
       armed. (Verified no test asserts a specific prop pick/layout — the props.length 4→6 reshuffle
       of which decorative model shows where is cosmetic + uncontested; parallax positions stay
       seeded-stable.) Ran `npx biome ci .` before push per the lesson.
-- [ ] [WAIT-REVIEW] N6.3b Babysit PR #74: wait CI green, fold reviewer + gemini/CodeRabbit findings
-      forward, resolve threads, squash-merge once green, sync main, then start N7.
+- [x] N6.3b-feedback Folded forward: my reviewer flagged a vet-script false positive (data: PNG
+      URI mis-classed external) → fixed 66c6707. gemini's 3 MEDIUM (bounds-check + JSON-chunk verify,
+      spec-driven external detection, non-indexed face fallback) → hardened in e056598; re-vetted
+      every biome prop clean. All threads resolved.
+- [x] N6.3c PR #74 SQUASH-MERGED (3a2597a, 2026-06-20). CLEAN, 0 threads. Prop variety shipped.
+      Local main synced; cut feat/biome-landmarks. FIVE feature PRs this session (#70–#74).
 
-### N7 Next milestone (surface after #74 merges)
-- [ ] [WAIT-MERGE] N7.1 Pick the next polish unit (don't pre-commit). Candidates: continue prop
-      variety (more per band / per-band hero LANDMARK props), per-biome MUSIC layers (needs new
-      owned audio via the itch pipeline), or teleport-driven QA + polish of each upper biome band's
-      look + sky/fog tuning. Enumerate use cases first; read own spec docs.
+## Queue — Milestone: Upper-biome visual QA + polish (branch feat/biome-landmarks)
+
+The upper bands (stratosphere/space/deep-space) have only ever been verified via the browser
+fixture — never visually inspected LIVE at altitude. The mandate explicitly says "use the teleport
+tool to QA + polish each upper biome band's look." Drive the blob up through every band with the
+teleport bridge + claude-in-chrome, READ each screenshot, and fix any real look problems surfaced
+(sky/fog tuning, prop scale/density, scenery composition) before adding more. Polish-from-observation,
+not feature-bolting. (Branch named for landmarks but the QA pass leads; landmark props only if the
+QA shows a band reads empty/flat.)
+
+### N7 QA pass
+- [ ] N7.1 Teleport through ground→sky→upper-atmosphere→stratosphere→space→deep-space; screenshot +
+      READ each; note concrete look issues (named per band). Then fix the highest-value ones
+      (config/tuning edits + any needed prop scale fixes), re-verify by screenshot, PR.
 
 ## Queue — Milestone: Daily-challenge results polish (branch feat/daily-results, NEXT)
 
