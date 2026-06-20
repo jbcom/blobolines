@@ -884,17 +884,19 @@ milestones, so a 2000m crossing LOOKS as grand as it sounds.
       checks (CodeQL/Analyze) green = mergeable → safe to merge (no unverified code ships). release.yml
       → cd.yml deploy triggered; watching it.
 
-### N15 Next milestone (surface after v0.1.12 deploys)
-- [ ] [WAIT-DEPLOY] N15.1 Verify the live v0.1.12 game RUNS (deploy chain green, then load the Pages
-      site + confirm it boots). Then resume the KEEP-ADDING loop — survey for the next genuine small
-      player-facing beat or polish (no reinvention).
+### N15 Release verification
+- [x] N15.1 v0.1.12 DEPLOY VERIFIED LIVE. release.yml + cd.yml both green for the release commit
+      2d1d928; the github-pages deployment is 2d1d928. Loaded https://jbcom.github.io/blobolines/
+      (redirects to the jonbogaty.com custom domain) — the game RUNS: R3F canvas mounted, the title
+      screen renders (gooey blob actor + "Blobolines" + tagline + PLAY + menu options) on the
+      daylight sky. v0.1.12 shipping the session's twelve PRs is LIVE.
 
-### N9 Next milestone (surface after #76 merges)
-- [ ] [WAIT-MERGE] N9.1 Pick the next polish unit (don't pre-commit). Biome identity + docs are now
-      current. Strong candidates: per-biome MUSIC layers (needs new owned audio via the itch
-      pipeline — scripts/), or a gameplay/FEEL system (combo/score juice, a new pad behaviour/hazard
-      that fits the climber, richer launch/landing feedback). Enumerate use cases first; read own
-      spec docs (esp. the reachability invariant + audio-identity memory before touching pads/audio).
+### N16 Next milestone (resume the keep-adding loop)
+- [ ] [WAIT-MERGE] N16.1 With v0.1.12 shipped + verified, resume KEEP-ADDING. Every feature surface
+      surveyed so far is saturated, so probe a NOT-yet-examined corner for a genuine small beat:
+      e.g. the Onboarding/first-run coachmark, the AchievementsModal/leaderboard presentation, the
+      pause/in-run UX, or a NAS-asset enrichment (more landmark/prop variety, a menu-blob prop).
+      Enumerate + survey first; no reinvention.
 
 ## Queue — Milestone: Daily-challenge results polish (branch feat/daily-results, NEXT)
 
