@@ -70,7 +70,9 @@ const modelUrl = (file: string) => `${import.meta.env.BASE_URL}assets/models/${f
  *  instances; their materials are SHARED with the useGLTF cache, so only the geometries are disposed
  *  (matching BiomeScenicProps' cleanup discipline). */
 function ObstacleModel({ band, radius }: { band: string; radius: number }) {
-  const file = BAND_MODEL[band] ?? BAND_MODEL.space;
+  // No silent fallback (project doctrine): every band MUST have a model, or surface it loudly.
+  const file = BAND_MODEL[band];
+  if (!file) throw new Error(`No obstacle model configured for biome band "${band}"`);
   const { scene } = useGLTF(modelUrl(file));
   const [model, setModel] = useState<Object3D | null>(null);
   useEffect(() => {
@@ -93,17 +95,25 @@ function ObstacleBody({ spec }: { spec: ObstacleSpec }) {
   const visualRef = useRef<Group>(null);
   /** Seconds since the last bounce pulse, or null when idle. */
   const pulse = useRef<number | null>(null);
+  /** Whether the blob is currently inside the contact shell — the bounce fires ONCE on ENTRY and
+   *  only re-arms after the blob has LEFT the shell, so lingering/sliding inside it can't re-trigger
+   *  the thump + event every PULSE_LIFE. */
+  const insideContact = useRef(false);
   const band = biomeBandAt(spec.position[1]);
-  const baseColor = useMemo(() => new Color(hex(BAND_COLOR[band] ?? palette.scenery.rock)), [band]);
+  // No silent fallback (project doctrine): every band MUST be configured, or surface it loudly.
+  const colorHex = BAND_COLOR[band];
+  if (!colorHex) throw new Error(`No obstacle color configured for biome band "${band}"`);
+  const baseColor = useMemo(() => new Color(hex(colorHex)), [colorHex]);
 
   useFrame((_state, delta) => {
     const visual = visualRef.current;
     if (!visual) return;
     const dt = Math.min(delta, 1 / 30);
 
-    // Cosmetic contact pulse: when the blob is close + fast, fire a quick scale POP on the visual.
-    // The REBOUND itself is resolved by Rapier (this collider is solid) — this is only the juice.
-    // Fire at most one pulse per approach (re-arms once the blob leaves the contact shell).
+    // Cosmetic contact pulse: when the blob ENTERS the shell fast, fire a quick scale POP on the
+    // visual. The REBOUND itself is resolved by Rapier (this collider is solid) — this is the juice.
+    // Latched on entry: it fires once and only re-arms once the blob has left the shell, so a body
+    // that lingers/slides inside it doesn't machine-gun the thump + event.
     const diag = getBlobDiagnostics();
     const [bx, by, bz] = diag.position;
     const dx = bx - spec.position[0];
@@ -111,7 +121,11 @@ function ObstacleBody({ spec }: { spec: ObstacleSpec }) {
     const dz = bz - spec.position[2];
     const d2 = dx * dx + dy * dy + dz * dz;
     const contactR = spec.radius + CONTACT_PAD;
-    if (pulse.current === null && d2 <= contactR * contactR && diag.speed >= MIN_BOUNCE_SPEED) {
+    const isInside = d2 <= contactR * contactR;
+    if (!isInside) {
+      insideContact.current = false; // left the shell — re-arm
+    } else if (!insideContact.current && diag.speed >= MIN_BOUNCE_SPEED) {
+      insideContact.current = true;
       pulse.current = 0;
       // A low thud scaled by impact speed + the bridge event (drained by HUD/vfx if they want it).
       playThump(Math.min(1, diag.speed / 28));

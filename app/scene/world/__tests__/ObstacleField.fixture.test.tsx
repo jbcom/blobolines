@@ -72,3 +72,28 @@ test("a SLOW brush does not fire a bounce", async () => {
   await new Promise((r) => setTimeout(r, 250));
   expect(consumeObstacleBounce(), "a slow brush must stay silent").toBeNull();
 });
+
+test("a fast blob LINGERING inside the shell fires the bounce ONCE, not every PULSE_LIFE", async () => {
+  useWorldStore.setState({ obstacles: [{ id: 0, position: [0, 0, 0], radius: 2 }] });
+  setBlob([1.5, 0, 0], 20); // fast + inside the shell, and it stays there (no movement out)
+
+  await render(
+    <FixtureStage testId="obstacle-linger" cameraDistance={10}>
+      <Physics gravity={[0, 0, 0]} paused>
+        <ObstacleField />
+      </Physics>
+    </FixtureStage>,
+  );
+
+  // Wait well past PULSE_LIFE (0.32s) so a re-triggering bug would fire a SECOND bounce.
+  await new Promise((r) => setTimeout(r, 600));
+  // Exactly one bounce should have been reported the whole time the blob lingered: drain it once,
+  // then confirm no further bounce was queued (the latch only re-arms when the blob LEAVES the shell).
+  const first = consumeObstacleBounce();
+  expect(first, "the entry must fire one bounce").toBeTruthy();
+  await new Promise((r) => setTimeout(r, 400)); // another PULSE_LIFE+ while still lingering
+  expect(
+    consumeObstacleBounce(),
+    "lingering inside the shell must NOT re-fire the bounce",
+  ).toBeNull();
+});
