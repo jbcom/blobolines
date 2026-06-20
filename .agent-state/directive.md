@@ -938,7 +938,7 @@ milestones, so a 2000m crossing LOOKS as grand as it sounds.
       button + Escape/P toggles playing↔paused; a PauseOverlay (Resume / Settings / Quit-to-menu)
       shows over the frozen scene with music ducked. Determinism: pausing just stops advancing the
       sim clock — no reach math touched, no RNG.
-- [ ] N17.2 Implement: GamePhase += "paused"; togglePause action (playing↔paused only); GameScene
+- [x] N17.2 DONE (1d7cabf): GamePhase += "paused"; togglePause action (playing↔paused only); GameScene
       mounts world for playing||paused, PhysicsStepDriver gates step on playing; HudOverlay shows Hud
       for playing||paused + PauseOverlay when paused; a pause button in the Hud + an Escape/P key
       handler; duckMusic on pause. Tests: store togglePause transitions (only from playing/paused,
