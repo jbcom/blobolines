@@ -353,8 +353,31 @@ audio + (optionally) achievement systems. Data-driven rarity; deterministic spaw
 
 ### J2 PR cutting point
 - [x] J2.1a Verified + reviewed (2 bugs fixed); opening PR.
-- [ ] [WAIT-REVIEW] J2.1b Babysit PR: verify+e2e green → address feedback → resolve threads →
-      squash-merge → re-write directive forward.
+- [x] J2.1b PR #67 SQUASH-MERGED (4dee63f, 2026-06-20). verify+e2e green, 0 review threads.
+      Treasure jackpot pickup shipped.
+
+## Queue — Milestone: Docs refresh (branch docs/refresh-after-session)
+
+8 feature PRs shipped this session (biome scenery/parallax/audio/particles, achievement-gated
+cosmetics, treasure jackpot, E2E-infra + teleport QA). The docs have drifted — STATE.md is dated
+2026-06-16 and NO doc mentions treasure/teleport/parallax/particles/achievement-skins. Refresh
+them so the docs match the code (the mandate explicitly includes improving docs; keep them aligned
+rather than letting end-of-project catch-up accrue).
+
+### K0 Pass
+- [x] K0.1 STATE.md rewritten (dropped stale Phase-2/feat-goo-polish framing; current systems +
+      the session's biome/progression richness); ARCHITECTURE.md updated (parallaxLayers/
+      biomeAmbience/treasure config, launchBridge-teleport + crystalCollectBridge, TreasureChests +
+      parallax + particle scene components); GAME-DESIGN.md gained a Rewards & progression section.
+      Frontmatter dates bumped to 2026-06-20.
+- [x] K0.2 All cited symbols verified to exist on disk (biomeBandAt/parallaxLayers/biomeAmbience/
+      crystalTier/TreasureChests/crystalCollectBridge/SKIN_ACHIEVEMENT/requestTeleport/__blobtest).
+      lint + typecheck + 455 unit green.
+
+### K2 PR cutting point
+- [x] K2.1a Opening PR.
+- [ ] [WAIT-REVIEW] K2.1b Babysit PR: gates green → address feedback → squash-merge → re-write
+      directive forward.
 
 ## Notes
 - This is a living plan. After every stage, backward+forward sweep and edit the queue.

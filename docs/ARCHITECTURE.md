@@ -1,6 +1,6 @@
 ---
 title: Architecture
-updated: 2026-06-17
+updated: 2026-06-20
 status: current
 domain: technical
 ---
@@ -34,19 +34,19 @@ public surface; modules stay small and single-responsibility — no monolithic s
 |---------|--------|----------------|
 | `src/core/math` | ✓ | `createRng` (seedrandom-backed), seed phrases, clock facade, vec/lerp/spring helpers |
 | `src/core/types` | ✓ | shared domain types (ids, enums, golden-path proof data) |
-| `src/config` | ✓ | all tunables as per-domain JSON + typed barrel (physics/blob/launch/trampoline/collect/goo/world/biomes/audio). `biomes.ts` owns `biomeBandAt` (the single-source-of-truth altitude→band resolver) and `biomeProps.ts` the data-driven scenery registry (per-band curated GLB sets + shelf styling) |
+| `src/config` | ✓ | all tunables as per-domain JSON + typed barrel (physics/blob/launch/trampoline/collect/goo/world/biomes/audio). `biomes.ts` owns `biomeBandAt` (the single-source-of-truth altitude→band resolver); `biomeProps.ts` owns the data-driven scenery registry (per-band GLB sets + shelf styling), the `parallaxLayers` far/mid/near depth table, and the `biomeAmbience` per-band mote tint/size/drift |
 | `src/sim/physics` | ✓ | Rapier config, collision categories, spring/depress math (pure where possible) |
 | `src/sim/blob` | ✓ | blob state: squash/stretch springs, expression state machine (eyes), velocity model |
 | `src/sim/cloudPad` | ✓ | pass-through cloud catch/adherence tests and footprint math |
 | `src/sim/trampoline` | ✓ | compatibility package for cloud catch spring + tilt model, type behaviors (standard/booster/moving/fragile) |
 | `src/sim/launch` | ✓ | route charge→velocity, combo/multiplier, 3D air-steer model |
-| `src/world` | ✓ | seeded procedural vertical generator, route difficulty profiles, certified golden-path parabolas |
+| `src/world` | ✓ | seeded procedural vertical generator, route difficulty profiles, certified golden-path parabolas. `crystalTier.ts` owns the crystal rarity tiers incl. the rare `treasure` jackpot (value/scale/altitude-ramped odds) |
 | `src/engine` | ✓ | fixed-timestep accumulator (`advance`/`createStepLoop`) — deterministic sim stepping |
 | `src/audio` | ✓ | Howler.js engine playing the itch.io sample library (config/audio.json); music/ambient/sfx channels |
 | `src/render/materials` | ✓ | wet goo material (GooMaterial), eye materials, cloud-pad material reuse |
 | `src/render/goo` | ✓ | CSG merge selection (`selectMerges`) and intrinsic body lobes feeding the three-bvh-csg goo union |
 | `src/render/vfx` | ✓ | goo splash/launch/trail droplet kinematics, splat |
-| `src/state` | ✓ | game store (menu/playing/gameover), settings, persistence bridge |
+| `src/state` | ✓ | game store (menu/playing/gameover), settings, persistence; imperative bridges read each frame by the scene — `launchBridge` (launch/nudge/teleport requests), `crystalCollectBridge` (collected-crystal indices, so TreasureChests drops a gathered treasure's chest), diagnostics, flash, achievement-toast |
 | `src/platform` | ✓ | Capacitor haptics/orientation/keep-awake/preferences wrappers (web fallbacks) |
 | `src/input` | ✓ | @use-gesture unified pointer/touch + keyboard → intents |
 | `src/styles` | — | tokens.css / tokens.ts / fonts.css / index.css |
@@ -59,7 +59,7 @@ public surface; modules stay small and single-responsibility — no monolithic s
 | `app/scene` | ✓ | composes small scene components inside `<Canvas>` |
 | `app/scene/blob` | ✓ | `<PlayerBlob>` (Rapier body + diagnostics bridge), `<GooCsg>` (three-bvh-csg merged goo), `<BlobActor>` (menu hero), `<BlobEyes>`, `<SplatChunks>`, `<TrajectoryPreview>` |
 | `app/scene/trampoline` | ✓ | cloud-pad renderer behind compatibility `<Trampoline>`, `<TrampolineField>` imports |
-| `app/scene/world` | ✓ | `<SkyDome>`, `<Lighting>`, `<BiomeProps>` (procedural strata: clouds/stars/motes), `<BiomeScenicProps>` (registry-driven GLB scenery per biome band), `<BlobFollowLight>`, `<CrystalField>`, `<PowerUpField>`, `<GoldenRoutePreview>` |
+| `app/scene/world` | ✓ | `<SkyDome>`, `<Lighting>`, `<BiomeGeometry>`, `<BiomeProps>` (procedural strata: clouds/stars + per-band particle motes), `<BiomeScenicProps>` (registry-driven GLB scenery across far/mid/near **parallax depth layers** per biome band), `<CrystalField>` (instanced tiered crystals incl. treasure), `<TreasureChests>` (chest GLB beneath rare treasure gems), `<PowerUpField>`, `<RouteGateField>`, `<GoldenRoutePreview>`, `<LaunchRing>`, `<BlobFollowLight>`, `<BlobShadow>`, `<BlobCaustic>` (the full set exported from `app/scene/world/index.ts`) |
 | `app/scene/postfx` | ✓ | `<PostFX>` (N8AO ambient occlusion, bloom, vignette, speed-reactive chromatic) |
 | `app/views` | ✓ | DOM overlay: `<HudOverlay>`, `<MainMenu>`, `<GameOver>`, modals |
 | `app/components/ui` | ✓ | shadcn primitives (button, dialog, slider, switch, tabs, tooltip, progress) |

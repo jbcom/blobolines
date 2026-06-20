@@ -1,6 +1,6 @@
 ---
 title: Game Design
-updated: 2026-06-18
+updated: 2026-06-20
 status: current
 domain: product
 ---
@@ -27,6 +27,17 @@ the harder it gets — smaller clouds, faster layers, trickier cloud types, long
 
 The whole game serves making that climb feel amazing: juicy goo, squash-stretch,
 expressive eyes, splats.
+
+## Rewards & progression
+
+- **Crystals** float along the climb in four rarity tiers (`src/world/crystalTier.ts`): common,
+  rare, radiant, and the very-rare **treasure** jackpot (worth 25, a big golden chest with a
+  celebratory gold-flash collect). Rarer tiers ramp in with altitude, so climbing higher pays out.
+- **Skins** are unlocked two ways: most with crystals in the customizer, but two are
+  **achievement-gated** — earning *Apex Ascent* (25k score) or *Deep Space* (1000m) grants its
+  exclusive skin. The customizer shows those tiles as "Earn: <achievement>".
+- **Achievements** evaluate at run end + in real time; newly-met ones toast and persist, and a
+  local high-scores leaderboard + achievements gallery track lifetime progress.
 
 ## Spatial awareness
 

@@ -1,47 +1,61 @@
 ---
 title: State
-updated: 2026-06-16
+updated: 2026-06-20
 status: current
 domain: context
 ---
 
 # Blobolines — Current State
 
-## Shipped (Phase 1, on `main`, live)
+## Shipped (on `main`, live)
 
 The game is **playable and live** at https://jonbogaty.com/blobolines/
 (jbcom.github.io/blobolines/ redirects there). Loop: hold-charge launch → climb (altimeter)
-→ cloud catch/adherence + clean-catch combo → 3D mid-air steering → fall → game over →
-replay. Rapier 3D physics, deterministic seeded sim, design-token system, shadcn+Motion
-UI, persistence, CI/CD (incl. Android debug APK), e2e "is it playable" gate.
+→ cloud catch/adherence + clean-catch combo → 3D mid-air steering + air-nudge redirect → fall
+→ game over → replay. Rapier 3D physics, deterministic seeded sim, design-token system,
+shadcn+Motion UI, persistence, CI/CD (incl. Android debug APK).
 
-## In progress (Phase 2, branch `feat/goo-polish`)
+Core systems shipped: the merged goo body (`GooCsg`, wet shader + deformation + droplets +
+eyes), splash/splat/trail VFX, the Howler audio library (per-pad bounce voices, music,
+ambient beds, stingers, buses), the postfx stack (N8AO, bloom, grade, vignette, speed
+chromatic), crystals + power-ups (magnet/thruster/shield/slowmo/doubler/multi-bounce), the
+full cloud-pad behaviour set with reachability guarantees + catch adherence, the local
+leaderboard + achievements gallery, and real-time air-nudge + achievement toasts.
 
-- **Goo skin** — three-bvh-csg merged goo body (`GooCsg`) with wet shader, deformation,
-  droplets, and expressive eyes. ✅
-- **Splash / splat / trail** — impact droplets, physical splat chunks, pad splat decals,
-  launch rings, and wet airborne trail. ✅
-- **Audio** — Howler sample library with per-pad bounce voices, music, altitude ambience,
-  stingers, and volume buses. ✅
-- **Post-processing** — N8AO, bloom, grade, vignette, and speed-reactive chromatic. ✅
-- **Crystals + power-ups** — instanced crystals, magnet/thruster/shield/slowmo/doubler/
-  multi-bounce pickups, HUD badges, and 3D models/fallbacks. ✅
-- **Cloud behaviors** — standard, booster, drifting, fragile, super, slick, canted, and wobbler
-  cloud pads with reachability guarantees and catch adherence. ✅
+## Recently shipped (biome + progression richness)
+
+- **Biome identity across four sensory dimensions**, all keyed off the canonical biome bands
+  (`src/config/biomes.ts` → `biomeBandAt`): data-driven per-band scenery props
+  (`biomePropRegistry`), **parallax depth layers** (far/mid/near) in `BiomeScenicProps`,
+  per-band **ambient audio beds**, and per-band **particle grain** (mote size/drift/tint via
+  `biomeAmbience`).
+- **Treasure jackpot** — a rare top crystal tier (`treasure`) worth a crystal burst with a
+  celebratory gold-flash collect + a chest GLB (`TreasureChests`).
+- **Achievement-gated cosmetics** — earning an achievement unlocks an exclusive skin
+  (`SKIN_ACHIEVEMENT`); the customizer shows "Earn: <achievement>" tiles.
+- **Dev teleport** — jump the Rapier body to any altitude (`requestTeleport` / DevHarness /
+  `window.__blobtest.teleport`) for QA across the whole climb.
+- **E2E reliability** — specs drive the game via the `window.__blobtest` test bridge (store
+  calls, not synthetic clicks) so the Playwright suite is green under CI's SwiftShader software
+  GL; the chronic CI E2E red was a 64MB-/dev/shm renderer crash + click stalls, now fixed.
 
 ## Next
 
-- Continue balance and feel passes with real browser playthroughs: cloud spacing, adherence
-  strength, charge feel, air-steer sensitivity, hazard pressure, and altitude pacing.
-- Keep screenshot/diagnostic reads in the loop for camera framing, blob readability, and
-  3D spatial awareness.
-- Track upstream dependency warnings separately from app-owned warnings; do not hide console
+- Continue richness + feel passes: per-biome music layers, interactive props that react to the
+  blob, biome-reactive blob tinting. Use the teleport tool to QA each upper band's look.
+- Keep screenshot/diagnostic reads + the e2e bridge in the loop for camera framing, blob
+  readability, and 3D spatial awareness.
+- Track upstream dependency warnings separately from app-owned warnings; never hide console
   noise by suppressing real app errors.
 
 ## Key facts for contributors
 
-- Enter a run via **PLAY** to verify (reliable physics + audio gesture); the dev-harness
-  `start run` reseeds each press. Read `artifacts/*.json` for deterministic blob state.
+- Drive the game in tests/QA via `window.__blobtest` (dev-only, tree-shaken from prod):
+  `startRun` / `launchUp` / `gameOver` / `teleport(y)` / `altitude` / `phase`. E2E specs use it
+  instead of clicking DevHarness buttons (synthetic clicks stall under software GL).
 - The in-game goo body follows diagnostics in world space; avoid parenting it under the
   Rapier body unless the world-space CSG alignment is preserved.
 - Rapier must stay un-pre-bundled + in the `three` chunk (WASM init).
+- Curated GLBs must be self-contained (no external texture refs) — an external `colormap.png`
+  reference fails to decode under headless Chromium and broke CI; verify with a grep for
+  `Textures/` / `colormap` / `image/png` before committing a new model.
