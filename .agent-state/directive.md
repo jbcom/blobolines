@@ -1206,6 +1206,11 @@ apex gap is HEIGHT (uncapped): height-1000 was the top tier.
       to drift); tokens test updated to 5 skins. 545 unit / 140 browser green; typecheck + pinned lint
       clean. VISUAL-VERIFIED live: the Customizer shows the violet Nebula tile with "🏆 Earn · Voyager".
 
+- [ ] [WAIT-REVIEW] PR #91 (N23 Nebula skin + Voyager achievement) — babysit: local review + CI in
+      flight (reviewer checking enum-completeness across every BlobSkin map/schema + the brand-hex gate +
+      height-2000 reachability). Wait CI green, fold findings forward, resolve threads, squash-merge, sync
+      main. Then the next corner.
+
 ## Notes
 - This is a living plan. After every stage, backward+forward sweep and edit the queue.
 - Next candidate milestones (surface, don't pre-commit): more obstacle/pad variety, a "best daily this
