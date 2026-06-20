@@ -120,9 +120,17 @@ test("BiomeScenicProps renders props across multiple parallax depth layers", asy
         }
       });
       expect(zs.length).toBeGreaterThan(3);
-      // Span from the nearest to the furthest prop must cross more than one layer's depth band.
-      const span = Math.max(...zs) - Math.min(...zs);
-      expect(span, "props should span multiple parallax depth layers").toBeGreaterThan(20);
+      // Assert explicit presence in distinct depth bands so a regression that drops ONE layer
+      // fails deterministically (a wide span alone could pass with a single stretched layer).
+      // Far props sit at z ≲ -40, near props at z ≳ -8 — require at least one of each.
+      expect(
+        zs.some((z) => z < -38),
+        "expected a far-layer prop (z ≲ -40)",
+      ).toBe(true);
+      expect(
+        zs.some((z) => z > -10),
+        "expected a near-layer prop (z ≳ -8)",
+      ).toBe(true);
     },
     { timeout: 10000, interval: 100 },
   );

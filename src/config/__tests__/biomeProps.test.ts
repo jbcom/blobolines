@@ -137,6 +137,8 @@ describe("parallaxLayers", () => {
       expect(l.column).toBeGreaterThan(0);
       expect(l.opacity).toBeGreaterThan(0);
       expect(l.opacity).toBeLessThanOrEqual(1);
+      // xRange feeds createRng.range like zRange, so inverted bounds would break placement.
+      expect(l.xRange[0]).toBeLessThan(l.xRange[1]);
     }
   });
 });
