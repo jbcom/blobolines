@@ -524,8 +524,16 @@ a fast climb feel kinetic. No new assets; pure extension of sceneryReaction + Sc
       typecheck + lint clean. Committed; reviewer to be dispatched.
 
 ### N4.3 PR cutting point
-- [ ] N4.3 Commit, dispatch reviewer, fold findings forward, open PR, babysit to squash-merge,
-      sync main, re-write directive forward.
+- [x] N4.3a Committed (a29f622), dispatched comprehensive reviewer (background), pushed, opened
+      PR #72. Monitor armed on #72 CI. (Do NOT push extra state commits — let CI settle on HEAD.)
+- [ ] [WAIT-REVIEW] N4.3b Babysit PR #72: wait CI green, fold reviewer + gemini/CodeRabbit findings
+      forward, resolve threads, squash-merge once green, sync main, then start N5.
+
+### N5 Next milestone (surface after #72 merges)
+- [ ] [WAIT-MERGE] N5.1 Pick the next polish unit (don't pre-commit): strong candidates — extend
+      the flyby pulse to a brightness/emissive GLINT (not just scale) on the prop material at peak;
+      per-biome MUSIC layers (needs new owned audio via the itch pipeline); or teleport-driven QA +
+      polish of each upper biome band's look. Enumerate use cases first, read own spec docs.
 
 ## Queue — Milestone: Daily-challenge results polish (branch feat/daily-results, NEXT)
 

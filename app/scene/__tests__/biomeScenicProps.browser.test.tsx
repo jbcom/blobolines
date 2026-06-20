@@ -245,9 +245,10 @@ test("a near prop FLYBY PULSE spikes its scale as the blob passes closest", asyn
 
   // The flyby pulse adds up to ~0.16 on top of the ≤0.12 proximity pop, so a real pulse drives the
   // scale clearly past what proximity alone (≤1.12) could reach.
-  expect(peakScale, "the flyby pulse should spike the prop's scale past its steady pop").toBeGreaterThan(
-    1.13,
-  );
+  expect(
+    peakScale,
+    "the flyby pulse should spike the prop's scale past its steady pop",
+  ).toBeGreaterThan(1.13);
 });
 
 const _tmp = new Vector3();
