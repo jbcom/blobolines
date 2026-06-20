@@ -1188,9 +1188,28 @@ covers the daily-history gap: daily seeds are date-stamped phrases right there i
       dailyRun flag, with a regression test. Confirmed clean: run reset, bridge clearing, no circular
       import, button a11y. Waiting on CI green for the new HEAD → resolve any threads → squash-merge.
 
+## Queue — Milestone: N23 NEW SKIN + apex achievement (branch feat/new-skin-achievement)
+
+The "new cosmetic" candidate. Surveyed the skin/achievement system: 4 skins (blue/slime/ghost/ink),
+ghost←score-25k + ink←height-1000 achievement-gated, slime crystal-buyable. The combo axis caps at
+MAX_COMBO=8 (a 12× combo achievement would be UNREACHABLE — abandoned that idea), so the reachable
+apex gap is HEIGHT (uncapped): height-1000 was the top tier.
+
+### N23 Architecture
+- [x] N23.1 DONE. New "nebula" cosmic-violet skin (#a06bff) earned by a new "height-2000" achievement
+      ("Voyager" — reach 2,000m, double the prior top tier; reachable since worldgen is unbounded).
+      Wired end-to-end: BlobSkin type + blobSkinColor + palette.blob.nebula (TS) + --blob-nebula/
+      --color-blob-nebula (CSS mirror); ACHIEVEMENTS += height-2000; SKIN_ACHIEVEMENT nebula←height-2000;
+      persistence blobSkinSchema enum += nebula (survives reload); AchievementsModal icon (Sparkles) +
+      BlobCustomizer "Nebula" tile. Tests: height-2000 unlock thresholds + nebula skin-map; the
+      skin-validation test now DERIVES the valid set from blobSkinColor (no more hardcoded 4-skin list
+      to drift); tokens test updated to 5 skins. 545 unit / 140 browser green; typecheck + pinned lint
+      clean. VISUAL-VERIFIED live: the Customizer shows the violet Nebula tile with "🏆 Earn · Voyager".
+
 ## Notes
 - This is a living plan. After every stage, backward+forward sweep and edit the queue.
-- Next candidate milestones (surface, don't pre-commit): more obstacle/pad variety, a new cosmetic,
-  a "best daily this week" mini-summary. Per-biome music + base gameplay mechanics are SATURATED.
+- Next candidate milestones (surface, don't pre-commit): more obstacle/pad variety, a "best daily this
+  week" mini-summary, raise MAX_COMBO for higher-combo skill headroom (needs scoring rebalance).
+  Per-biome music + base gameplay mechanics are SATURATED.
 - Lesson banked this session: the pre-push lint gate is `pnpm lint` (PINNED biome 2.5.0), NOT
   `npx biome` / global biome (older, gives false-clean) — see [[blobolines-biome-ci-stricter]].
