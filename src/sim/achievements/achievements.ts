@@ -5,7 +5,7 @@
  * persisted unlocked set and the UI shows the toast/list.
  */
 
-import type { BlobSkin } from "@/styles/tokens";
+import type { BlobSkin } from "@/core/types";
 
 /** The stats an achievement predicate can test: lifetime progress + this run's peaks. */
 export interface AchievementStats {

@@ -95,4 +95,11 @@ describe("achievement-gated skins", () => {
     const achievementIds = Object.values(SKIN_ACHIEVEMENT);
     expect(new Set(achievementIds).size).toBe(achievementIds.length);
   });
+
+  it("gates only valid blob skin ids", () => {
+    const VALID_SKINS = ["blue", "slime", "ghost", "ink"];
+    for (const skin of Object.keys(SKIN_ACHIEVEMENT)) {
+      expect(VALID_SKINS, `${skin} is a real blob skin`).toContain(skin);
+    }
+  });
 });

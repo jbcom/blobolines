@@ -127,15 +127,15 @@ export function BlobCustomizer({
               tabIndex={i === focusIdx ? 0 : -1}
               onFocus={() => setFocusIdx(i)}
               onClick={() => pick(s.id)}
-              disabled={!isUnlocked && (gatedAchievement ? true : !affordable)}
+              disabled={!isUnlocked && (gateId ? true : !affordable)}
               aria-pressed={isEquipped}
               aria-label={`${s.name} — ${
                 isEquipped
                   ? "equipped"
                   : isUnlocked
                     ? "equip"
-                    : gatedAchievement
-                      ? `locked, earn by: ${gatedAchievement.title}`
+                    : gateId
+                      ? `locked, earn by: ${gatedAchievement?.title ?? "an achievement"}`
                       : affordable
                         ? `unlock for ${cost} crystals`
                         : `locked, needs ${cost} crystals`
@@ -144,7 +144,7 @@ export function BlobCustomizer({
                 isEquipped
                   ? "border-accent bg-accent/10"
                   : "border-border bg-surface hover:border-border-strong"
-              } ${!isUnlocked && (gatedAchievement || !affordable) ? "opacity-50" : ""}`}
+              } ${!isUnlocked && (gateId || !affordable) ? "opacity-50" : ""}`}
             >
               {/* Wet-goo preview swatch: a radial gradient + glossy highlight that reads as
                   a 3D goo droplet (not a flat disc), tinted to the skin — cheaper than 4
@@ -171,14 +171,16 @@ export function BlobCustomizer({
                 <span aria-hidden className="font-ui text-[11px] font-semibold text-fg-subtle">
                   Equip
                 </span>
-              ) : gatedAchievement ? (
-                // Achievement-gated skin: earned by the milestone, not buyable. Show how to earn it.
+              ) : gateId ? (
+                // Achievement-gated skin: earned by the milestone, not buyable. Keyed on gateId
+                // (the gate's PRESENCE) so a mistyped/unknown achievement id still shows the Earn
+                // path rather than falling through to the crystal-purchase layout.
                 <span aria-hidden className="flex w-full flex-col items-center gap-1">
                   <span className="flex items-center gap-1 font-ui text-[11px] font-bold text-tramp-gold">
                     <Trophy className="size-3" /> Earn
                   </span>
                   <span className="text-center font-ui text-[10px] text-fg-subtle leading-tight">
-                    {gatedAchievement.title}
+                    {gatedAchievement?.title ?? "Special achievement"}
                   </span>
                 </span>
               ) : (
