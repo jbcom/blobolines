@@ -22,7 +22,7 @@ import { DEFAULT_PROGRESS, DEFAULT_SETTINGS, type GameState, useGameStore } from
 const KEY_PROGRESS = "blobolines.progress";
 const KEY_SETTINGS = "blobolines.settings";
 
-const blobSkinSchema = z.enum(["blue", "slime", "ghost", "ink", "nebula"]);
+const blobSkinSchema = z.enum(["blue", "slime", "ghost", "ink", "nebula", "aurora"]);
 
 const highScoreEntrySchema = z.object({
   score: z.number().catch(0),

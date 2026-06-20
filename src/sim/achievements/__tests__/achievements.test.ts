@@ -19,6 +19,7 @@ const ZERO: AchievementStats = {
   runHeight: 0,
   runMaxCombo: 0,
   runCrystals: 0,
+  dailyStreak: 0,
 };
 
 describe("achievements", () => {
@@ -75,6 +76,16 @@ describe("achievements", () => {
     expect(newlyUnlocked({ ...ZERO, runCrystals: 25 }, [])).toContain("crystals-run-25");
   });
 
+  it("unlocks the daily-streak achievements off the persisted streak", () => {
+    expect(newlyUnlocked({ ...ZERO, dailyStreak: 2 }, [])).not.toContain("daily-streak-3");
+    expect(newlyUnlocked({ ...ZERO, dailyStreak: 3 }, [])).toContain("daily-streak-3");
+    // A 7-day streak crosses BOTH the 3- and 7-day thresholds in one evaluation.
+    expect(newlyUnlocked({ ...ZERO, dailyStreak: 6 }, [])).not.toContain("daily-streak-7");
+    const at7 = newlyUnlocked({ ...ZERO, dailyStreak: 7 }, []);
+    expect(at7).toContain("daily-streak-3");
+    expect(at7).toContain("daily-streak-7");
+  });
+
   it("every combo achievement target is within reach of MAX_COMBO", () => {
     // A combo achievement above the gameplay cap could NEVER unlock (the streak clamps at MAX_COMBO).
     for (const a of ACHIEVEMENTS) {
@@ -124,6 +135,7 @@ describe("isMet", () => {
         "lifetimeCrystals",
         "runMaxCombo",
         "runCrystals",
+        "dailyStreak",
       ] as const) {
         const probe = { ...ZERO, [axis]: a.target } as AchievementStats;
         if (a.stat(probe) === a.target) {

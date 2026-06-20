@@ -130,6 +130,7 @@ function checkAndUnlock(
     runHeight: Math.floor(run.height),
     runMaxCombo: run.maxCombo,
     runCrystals: run.crystals,
+    dailyStreak: progress.dailyStreak ?? 0,
   };
 
   const fresh = newlyUnlocked(stats, progress.unlockedAchievements);

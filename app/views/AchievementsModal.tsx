@@ -42,6 +42,8 @@ const ACHIEVEMENT_ICONS: Record<string, React.ComponentType<{ className?: string
   "crystals-total-500": Sparkles,
   "score-10k": Crown,
   "score-25k": Trophy,
+  "daily-streak-3": CalendarDays,
+  "daily-streak-7": CalendarDays,
 };
 
 export function AchievementsModal({
@@ -73,6 +75,9 @@ export function AchievementsModal({
     runHeight: 0,
     runMaxCombo: 0,
     runCrystals: 0,
+    // Daily streak is persisted all-time progress, so the locked daily-devotion bars read its real
+    // value (e.g. "2 / 3 day streak"), not the per-run 0s.
+    dailyStreak: progress.dailyStreak ?? 0,
   };
 
   const unlockedCount = unlockedAchievements.length;

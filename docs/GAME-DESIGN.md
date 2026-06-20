@@ -33,11 +33,16 @@ expressive eyes, splats.
 - **Crystals** float along the climb in four rarity tiers (`src/world/crystalTier.ts`): common,
   rare, radiant, and the very-rare **treasure** jackpot (worth 25, a big golden chest with a
   celebratory gold-flash collect). Rarer tiers ramp in with altitude, so climbing higher pays out.
-- **Skins** are unlocked two ways: most with crystals in the customizer, but two are
-  **achievement-gated** — earning *Apex Ascent* (25k score) or *Deep Space* (1000m) grants its
+- **Skins** are unlocked two ways: most with crystals in the customizer, but several are
+  **achievement-gated** — earning *Apex Ascent* (25k score → ghost), *Deep Space* (1000m → ink),
+  *Voyager* (2000m → nebula), or *Faithful* (a 7-day daily streak → **aurora**) grants its
   exclusive skin. The customizer shows those tiles as "Earn: <achievement>".
 - **Achievements** evaluate at run end + in real time; newly-met ones toast and persist, and a
   local high-scores leaderboard + achievements gallery track lifetime progress.
+- **Daily-streak achievements** reward returning for the shared daily challenge on consecutive
+  UTC days: *Daily Devotee* (a 3-day streak) and *Faithful* (a 7-day streak, which grants the
+  aurora skin). The streak only advances on TODAY'S daily tower (not a replayed past one), so
+  these reward genuine day-over-day return — the engagement loop the streak counter already drives.
 
 ## Spatial awareness
 
