@@ -44,8 +44,10 @@ export function BiomeProps() {
   const cloudRef = useRef<InstancedMesh>(null);
   const starRef = useRef<InstancedMesh>(null);
   const moteRef = useRef<InstancedMesh>(null);
-  // Eased per-band mote size + drift so they crossfade across band edges (not a hard pop).
-  const eased = useRef({ size: 1, drift: 1 });
+  // Eased per-band mote size + drift so they crossfade across band edges (not a hard pop). Seed
+  // from the ground band (where every run starts) so the first second shows the right grain
+  // instead of easing in from a neutral 1.0.
+  const eased = useRef({ size: biomeAmbienceAt(0).size, drift: biomeAmbienceAt(0).drift });
 
   // Deterministic offsets for each instance (placement within the column).
   const clouds = useMemo(() => {
@@ -140,8 +142,13 @@ export function BiomeProps() {
       const bandSize = eased.current.size;
       const bandDrift = eased.current.drift;
       motes.forEach((mo, i) => {
+        // Sideways motion is two BOUNDED sine sways (a fast small wobble + a slower wider drift)
+        // scaled by the band's drift feel — NOT a `t * driftX` accumulation, which grew without
+        // bound and walked motes permanently off-screen over a long session.
+        const sway =
+          Math.sin(t * 0.5 + mo.phase) * 2 + Math.sin(t * mo.driftX * 0.15 + mo.phase + 1.3) * 3;
         tmpPos.set(
-          mo.x + (Math.sin(t * 0.5 + mo.phase) * 2 + t * mo.driftX * 0.4) * bandDrift,
+          mo.x + sway * bandDrift,
           wrapY(mo.yFrac, h) + Math.sin(t * 0.7 + mo.phase) * 1.5,
           mo.z,
         );
