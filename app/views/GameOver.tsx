@@ -6,7 +6,7 @@ import { useEffect, useRef, useState } from "react";
 import { playRecord, startMusic, stopMusic } from "@/audio";
 import type { BlobSkin } from "@/core/types";
 import { achievementById } from "@/sim/achievements";
-import { dailyKey, runHash } from "@/sim/daily";
+import { dailyKey, dailySeedPhrase, dailyStanding, runHash } from "@/sim/daily";
 import { comboMultiplier } from "@/sim/launch";
 import { SKIN_COST, useGameStore, useWorldStore } from "@/state";
 import { ROUTE_PROFILES } from "@/world";
@@ -36,7 +36,16 @@ export function GameOver() {
   const seedPhrase = useWorldStore((s) => s.seedPhrase);
   const difficulty = useWorldStore((s) => s.difficulty);
 
+  const highScores = useGameStore((s) => s.progress.highScores) || [];
+
   const freshAchievements = useGameStore((s) => s.run.unlockedAchievements) || [];
+
+  // Daily-results standing: where this run places among the player's OWN prior attempts at today's
+  // daily tower (the store commits this run into highScores before game-over, so it's counted).
+  // Computed at the UI edge so the daily sim stays pure (it never reads the clock).
+  const dailyStand = dailyRun
+    ? dailyStanding(highScores, dailySeedPhrase(new Date()), runScore)
+    : null;
 
   // Daily run → a shareable verification hash binding this result to today's seed (so a
   // leaderboard can spot a score that doesn't match its seed). Only shown for a daily run.
@@ -256,6 +265,37 @@ export function GameOver() {
           <p className="text-center font-ui text-xs font-semibold text-fg-subtle tabular-nums">
             {runTag}
           </p>
+        )}
+
+        {/* Daily-only "Today's tower" standing — how this run placed among the player's own
+            attempts at today's shared seed (the daily's results payoff). */}
+        {dailyStand && (
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.15 }}
+            data-testid="daily-standing"
+            className={`flex w-full flex-col items-center gap-0.5 rounded-xl border px-3 py-2 ${
+              dailyStand.isPersonalDailyBest
+                ? "border-tramp-gold/50 bg-tramp-gold/10"
+                : "border-border/60 bg-bg/30"
+            }`}
+          >
+            <span className="font-display text-[11px] font-bold uppercase tracking-wide text-fg-subtle">
+              Today's tower
+            </span>
+            {dailyStand.isFirstAttempt ? (
+              <span className="font-ui text-xs text-cream">Your first climb on today's tower</span>
+            ) : dailyStand.isPersonalDailyBest ? (
+              <span className="font-ui text-xs font-semibold text-tramp-gold">
+                Best on today's tower yet! — {dailyStand.attemptsToday} attempts
+              </span>
+            ) : (
+              <span className="font-ui text-xs text-cream tabular-nums">
+                #{dailyStand.rank} of {dailyStand.attemptsToday} attempts today
+              </span>
+            )}
+          </motion.div>
         )}
 
         {/* Newly-unlocked achievements this run — a small celebratory list. */}

@@ -1,7 +1,21 @@
 import { afterEach, beforeEach, expect, test } from "vitest";
 import { cleanup, render } from "vitest-browser-react";
+import { dailySeedPhrase } from "@/sim/daily";
 import { useGameStore, useWorldStore } from "@/state";
 import { GameOver } from "../GameOver";
+
+// The GameOver card derives "today" via dailySeedPhrase(new Date()) at the UI edge, so a daily
+// fixture's stored attempts must use the SAME phrase the component will compute right now.
+const todayPhrase = dailySeedPhrase(new Date());
+const dailyScore = (score: number) => ({
+  score,
+  height: 0,
+  crystals: 0,
+  maxCombo: 0,
+  date: "2026-06-20",
+  seedPhrase: todayPhrase,
+  difficulty: "ready",
+});
 
 beforeEach(() => {
   useGameStore.setState({
@@ -15,6 +29,7 @@ beforeEach(() => {
       score: 1200,
       stylePoints: 0,
       scoreDelta: 0,
+      unlockedAchievements: [],
     },
     progress: {
       ...useGameStore.getState().progress,
@@ -105,6 +120,58 @@ test("a normal run shows its replay seed without the daily tag", async () => {
   await expect.element(screen.getByText("Seed bouncy-bright-blob")).toBeInTheDocument();
 });
 
+test("daily run, first attempt → 'first climb' standing", async () => {
+  useWorldStore.setState({ seed: 12345, seedPhrase: todayPhrase });
+  // Only this run's entry on today's seed → first attempt.
+  useGameStore.setState((s) => ({
+    dailyRun: true,
+    run: { ...s.run, score: 1200 },
+    progress: { ...s.progress, highScores: [dailyScore(1200)] },
+  }));
+  const screen = await render(<GameOver />);
+  await expect.element(screen.getByText("Today's tower", { exact: true })).toBeInTheDocument();
+  await expect.element(screen.getByText(/first climb on today's tower/i)).toBeInTheDocument();
+});
+
+test("daily run, a worse repeat attempt → ranked '#N of M'", async () => {
+  useWorldStore.setState({ seed: 12345, seedPhrase: todayPhrase });
+  useGameStore.setState((s) => ({
+    dailyRun: true,
+    run: { ...s.run, score: 1000 },
+    // Two prior better runs + this one (1000) → rank #3 of 3.
+    progress: {
+      ...s.progress,
+      highScores: [dailyScore(2500), dailyScore(1800), dailyScore(1000)],
+    },
+  }));
+  const screen = await render(<GameOver />);
+  await expect.element(screen.getByText("#3 of 3 attempts today")).toBeInTheDocument();
+});
+
+test("daily run, a new personal daily best → celebratory standing", async () => {
+  useWorldStore.setState({ seed: 12345, seedPhrase: todayPhrase });
+  useGameStore.setState((s) => ({
+    dailyRun: true,
+    run: { ...s.run, score: 3000 },
+    progress: {
+      ...s.progress,
+      highScores: [dailyScore(900), dailyScore(1500), dailyScore(3000)],
+    },
+  }));
+  const screen = await render(<GameOver />);
+  await expect.element(screen.getByText(/Best on today's tower yet!/i)).toBeInTheDocument();
+});
+
+test("a normal (non-daily) run does NOT show the daily standing section", async () => {
+  useWorldStore.setState({ seed: 12345, seedPhrase: "bouncy-bright-blob" });
+  useGameStore.setState((s) => ({
+    dailyRun: false,
+    progress: { ...s.progress, highScores: [dailyScore(2500)] },
+  }));
+  const screen = await render(<GameOver />);
+  await expect.element(screen.getByText("Today's tower").query()).not.toBeInTheDocument();
+});
+
 test("celebrates a height record instead of a short-by delta", async () => {
   useGameStore.setState({
     run: {
@@ -116,6 +183,7 @@ test("celebrates a height record instead of a short-by delta", async () => {
       score: 1600,
       stylePoints: 0,
       scoreDelta: 0,
+      unlockedAchievements: [],
     },
     progress: { ...useGameStore.getState().progress, bestHeight: 150, bestScore: 9000 },
   });
@@ -137,6 +205,7 @@ test("celebrates a SCORE record even without a height record", async () => {
       score: 7200,
       stylePoints: 0,
       scoreDelta: 450,
+      unlockedAchievements: [],
     },
     progress: { ...useGameStore.getState().progress, bestHeight: 134, bestScore: 7200 },
   });
