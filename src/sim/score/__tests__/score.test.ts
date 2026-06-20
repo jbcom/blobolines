@@ -61,7 +61,9 @@ describe("computeScore", () => {
   it("combo bonus is monotonic and zero at zero", () => {
     expect(comboStyleBonus(0)).toBe(0);
     let prev = -1;
-    for (let c = 0; c <= 10; c++) {
+    // Cover the FULL combo range up to (and one past) the cap, derived from MAX_COMBO so the raise
+    // to 12 doesn't leave 11/12 unchecked.
+    for (let c = 0; c <= MAX_COMBO + 1; c++) {
       const b = comboStyleBonus(c);
       expect(b).toBeGreaterThanOrEqual(prev);
       prev = b;
