@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from "./fixtures";
 
 /**
  * The "is it playable?" gate. Drives the real game through the dev harness: enters a

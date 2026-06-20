@@ -17,7 +17,9 @@ export default defineConfig({
   reporter: process.env.CI ? "github" : "list",
   use: {
     baseURL: "http://localhost:5173",
-    trace: "on-first-retry",
+    // Keep the trace for every failing attempt (and its retries) so the CI post-mortem has the
+    // page console + network + the frame where the renderer dies, uploaded as an artifact below.
+    trace: "retain-on-failure",
     // WebGL needs a GPU path in headless Chromium.
     launchOptions: {
       args: [

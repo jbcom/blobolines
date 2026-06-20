@@ -1,7 +1,7 @@
 import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync } from "node:fs";
 import { join } from "node:path";
-import { expect, test } from "@playwright/test";
 import { PNG } from "pngjs";
+import { expect, test } from "./fixtures";
 
 test.setTimeout(45_000);
 
