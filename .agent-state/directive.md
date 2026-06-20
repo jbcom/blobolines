@@ -388,16 +388,18 @@ critical ones with focused, real-assertion tests — protecting the new systems 
 latent edge bugs. No new behavior; pure test additions (+ tiny fixes if a test reveals a real bug).
 
 ### L0 Audit
-- [ ] L0.1 Run `pnpm test:coverage` (or vitest --coverage) over the session's new modules
-      (crystalTier, biomeProps registry/ambience/parallax helpers, launchBridge teleport,
-      crystalCollectBridge, achievements SKIN maps, store achievement-skin grant, ambient band
-      resolution). Identify the thinnest-covered logic with real branches worth pinning. Record the
-      gap list.
+- [x] L0.1 Coverage tooling (@vitest/coverage-v8) not installed; audited by inspection instead.
+      Most new modules HAD direct tests (crystalTier, biomeProps, biomes, crystalCollectBridge,
+      achievements, achievementToastBridge, teleportBridge). The BIG gap: src/state/launchBridge.ts
+      — the core renderer↔UI bridge (~15 request/consume pairs + resetBridges) had NO direct test;
+      and unlockAchievements' skin-grant path (the atomic-fix path) was untested.
 
 ### L1 Implementation
-- [ ] L1.1 Add focused unit tests for the identified gaps — real assertions on branch behavior +
-      edge cases (boundary altitudes, empty/edge inputs, determinism), not coverage-padding. Fix
-      any real bug a new test reveals (forward commit).
+- [x] L1.1 Added launchBridge.test.ts (10 tests: launch/route-gate/landing-strongest/impact-max/
+      mid-air-bounce/air-nudge once-semantics, splat/burst/split queue caps, persistent aim+steer
+      getters, resetBridges clears everything) + a store test for unlockAchievements granting the
+      tied skin. 466 unit (+11), typecheck/lint green. No bugs surfaced — the bridge behaves as
+      designed.
 
 ### L2 PR cutting point
 - [ ] L2.1 Verify (typecheck+lint+test+browser+e2e); open PR; babysit to squash-merge; re-write
