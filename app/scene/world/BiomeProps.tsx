@@ -44,6 +44,8 @@ export function BiomeProps() {
   const cloudRef = useRef<InstancedMesh>(null);
   const starRef = useRef<InstancedMesh>(null);
   const moteRef = useRef<InstancedMesh>(null);
+  // Eased per-band mote size + drift so they crossfade across band edges (not a hard pop).
+  const eased = useRef({ size: 1, drift: 1 });
 
   // Deterministic offsets for each instance (placement within the column).
   const clouds = useMemo(() => {
@@ -131,13 +133,19 @@ export function BiomeProps() {
       const ambience = biomeAmbienceAt(h);
       m.color.lerp(tmpColor.set(ambience.mote), 0.05); // ease the recolor across band crossings
       m.opacity = ambience.opacity;
+      // Ease the per-band size + drift so each biome's particles take on their own grain (heavy
+      // slow dust low → fine quick sparkle high) without a hard pop at a band edge.
+      eased.current.size += (ambience.size - eased.current.size) * 0.05;
+      eased.current.drift += (ambience.drift - eased.current.drift) * 0.05;
+      const bandSize = eased.current.size;
+      const bandDrift = eased.current.drift;
       motes.forEach((mo, i) => {
         tmpPos.set(
-          mo.x + Math.sin(t * 0.5 + mo.phase) * 2 + t * mo.driftX * 0.4,
+          mo.x + (Math.sin(t * 0.5 + mo.phase) * 2 + t * mo.driftX * 0.4) * bandDrift,
           wrapY(mo.yFrac, h) + Math.sin(t * 0.7 + mo.phase) * 1.5,
           mo.z,
         );
-        tmpScale.setScalar(mo.s);
+        tmpScale.setScalar(mo.s * bandSize);
         tmpMat.compose(tmpPos, tmpQuat, tmpScale);
         mote.setMatrixAt(i, tmpMat);
       });
