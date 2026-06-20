@@ -52,6 +52,12 @@ export const ACHIEVEMENTS: readonly Achievement[] = [
     met: (s) => s.bestHeight >= 500,
   },
   {
+    id: "height-1000",
+    title: "Deep Space",
+    description: "Reach 1,000 m in a single run.",
+    met: (s) => s.bestHeight >= 1000,
+  },
+  {
     id: "combo-5",
     title: "On a Roll",
     description: "Chain a 5× clean-bounce combo.",
@@ -76,10 +82,22 @@ export const ACHIEVEMENTS: readonly Achievement[] = [
     met: (s) => s.lifetimeCrystals >= 250,
   },
   {
+    id: "crystals-total-500",
+    title: "Treasure Hunter",
+    description: "Collect 500 crystals all-time.",
+    met: (s) => s.lifetimeCrystals >= 500,
+  },
+  {
     id: "score-10k",
     title: "High Roller",
     description: "Post a 10,000-point run.",
     met: (s) => s.bestScore >= 10000,
+  },
+  {
+    id: "score-25k",
+    title: "Apex Ascent",
+    description: "Post a 25,000-point run.",
+    met: (s) => s.bestScore >= 25000,
   },
 ];
 

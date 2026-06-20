@@ -15,6 +15,7 @@ import {
   Flame,
   Gem,
   Lock,
+  Rocket,
   Sparkles,
   Star,
   Trophy,
@@ -28,11 +29,14 @@ const ACHIEVEMENT_ICONS: Record<string, React.ComponentType<{ className?: string
   "height-100": Star,
   "height-250": Award,
   "height-500": Trophy,
+  "height-1000": Rocket,
   "combo-5": Flame,
   "combo-8": Zap,
   "crystals-run-25": Gem,
   "crystals-total-250": Sparkles,
+  "crystals-total-500": Sparkles,
   "score-10k": Crown,
+  "score-25k": Trophy,
 };
 
 export function AchievementsModal({
