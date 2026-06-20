@@ -768,17 +768,60 @@ mandate explicitly includes keeping docs aligned (no end-of-project catch-up).
 - [x] N10.3a Committed (0700994), dispatched reviewer (background, focused on milestoneTierFor
       boundaries + the playMilestone default), pushed, opened PR #78. Monitor armed. Ran
       `npx biome ci .` as the LAST step before push (per the hardened lesson).
-- [ ] [WAIT-REVIEW] N10.3b Babysit PR #78: wait CI green, fold reviewer + gemini/CodeRabbit findings
-      forward, resolve threads, squash-merge once green, sync main, then start N11.
+- [x] N10.3b-feedback Folded forward: my reviewer found DifficultyBanner played the BASE stinger
+      (didn't escalate with altitude) → pass run.height (read via getState at fire time to keep the
+      effect keyed on the discrete difficulty), 2863a71. gemini (no-fallbacks): validate
+      milestoneTiers at module load → throw on empty/non-zero-floor, bcf858a. Threads resolved. 513
+      unit + 120 browser green. (Hit the biome format check once on the config-guard line — caught it
+      with the now-mandatory pre-commit `biome ci`, fixed before push.)
+- [x] N10.3c PR #78 SQUASH-MERGED (31ce694, 2026-06-20). CLEAN, 0 threads. Escalating stingers
+      shipped. Local main synced; cut feat/milestone-burst-tiers. NINE PRs this session (#70–#78).
 
-### N11 Next milestone (surface after #78 merges)
-- [ ] [WAIT-MERGE] N11.1 Pick the next polish unit (don't pre-commit). Audio identity is now deep
-      (per-biome music + ambient + escalating milestone stingers + distinct record fanfare). Strong
-      candidates to SHIFT axis back toward GAMEPLAY/FEEL or VISUALS: a new climber-fitting pad
-      behaviour/hazard (read the reachability-invariant memory FIRST — must stay constructively
-      climbable), richer mid-air steer feedback, or a fresh visual beat (e.g. milestone screen-burst
-      tied to the new stinger tiers — the audio escalates but the visual milestone banner doesn't).
-      Enumerate use cases first; read own spec docs.
+## Queue — Milestone: Milestone banner tier escalation (branch feat/milestone-burst-tiers)
+
+The milestone STINGER now escalates (bright→triumph→epic→mega) but the visual MilestoneBanner shows
+the same gold number + "New height!" at every tier — audio and visual are out of sync. Make the
+banner ESCALATE to match: a tier-appropriate label + brighter flash + bigger pop at higher
+milestones, so a 2000m crossing LOOKS as grand as it sounds.
+
+### N11 Architecture
+- [x] N11.1 ENUMERATED + DECIDED. The audio tiers live in audio.json (sfx keys). To avoid TWO
+      threshold sources drifting, extract the THRESHOLDS as the shared truth: a pure
+      `milestoneTierIndex(height): 0..3` (the tier ordinal) that BOTH the audio resolver and the new
+      visual map key off. milestoneTierFor becomes `milestoneTiers[milestoneTierIndex(h)].sfx`. New
+      pure `milestoneVisualTier(index)` → { label, flashIntensity, scale, accent token } in the HUD
+      layer (or a tokens-driven table). MilestoneBanner reads the index from the milestone height,
+      shows the tier label ("NEW HEIGHT!" → "TRIUMPH!" → "EPIC!" → "MEGA!"), flashes gold scaled by
+      tier, and pops bigger at higher tiers. Determinism: pure index from height; no new RNG.
+- [x] N11.2 DONE. Extracted the shared pure `milestoneTierIndex(h): 0..3` in howler.ts (the SINGLE
+      threshold source) + `MILESTONE_TIER_COUNT`; milestoneTierFor is now just
+      `milestoneTiers[milestoneTierIndex(h)].sfx`. New pure `milestoneVisual(tierIndex)` table in
+      app/views/hud (label/flash/scale per tier — throws at load if its count ≠ the audio tier
+      count, no silent mismatch; clamps out-of-range). MilestoneBanner reads the tier index from the
+      milestone height → escalated label ("New height!" → "Triumph!" → "Epic climb!" → "Mega
+      height!"), a gold flash scaled by tier, and a bigger pop. Tests: milestoneTierIndex boundaries
+      + the milestoneTierFor==index contract (audio sfx test) + milestoneVisual table coverage/
+      escalation/clamp + a MilestoneBanner browser fixture asserting 2000m shows "Mega height!".
+      518 unit + 121 browser green; typecheck + biome ci + build clean. Committed; reviewer to dispatch.
+
+### N11.3 PR cutting point
+- [x] N11.3a Committed (912c737), dispatched reviewer (background, focused on the milestoneTierFor
+      refactor equivalence + the setShown/setTier batching), pushed, opened PR #79. Monitor armed.
+      Ran `npx biome ci .` as the last step before push.
+- [x] N11.3b-review Background reviewer returned FULLY CLEAN: milestoneTierFor refactor is
+      behavior-identical (tests confirm), no circular import (audio one-directional), the load-time
+      count guard is real, the clamp is correct, React 18 batching eliminates the setShown/setTier
+      stale-tier risk, coincident gold flash resolves winner-takes-all. No forward fixes.
+- [ ] [WAIT-REVIEW] N11.3c Wait CI green + any gemini/CodeRabbit threads on PR #79, squash-merge,
+      sync main, start N12.
+
+### N12 Next milestone (surface after #79 merges)
+- [ ] [WAIT-MERGE] N12.1 Pick the next polish unit (don't pre-commit). The reward-moment loop
+      (milestone audio+visual tiers, record fanfare, biome banner) and biome identity are now deep.
+      Strong candidates to SHIFT axis toward GAMEPLAY: a new climber-fitting pad behaviour/hazard
+      (read [[blobolines-reachability-invariant]] FIRST — must stay constructively climbable via
+      reaches()), richer mid-air steer/nudge feedback, or a power-up variety pass. Enumerate use
+      cases first; read own spec docs + reachability/navigability memories before touching pads.
 
 ### N9 Next milestone (surface after #76 merges)
 - [ ] [WAIT-MERGE] N9.1 Pick the next polish unit (don't pre-commit). Biome identity + docs are now

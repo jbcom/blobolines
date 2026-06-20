@@ -251,17 +251,27 @@ if (milestoneTiers[0].minHeight !== 0) {
   );
 }
 
-/** The milestone-stinger SFX key for a crossing at world height `h` — escalates with altitude so a
- *  higher milestone sounds grander (bright → triumph → epic → mega). Pure: scans the descending
- *  thresholds and returns the highest tier whose minHeight is met. Falls to the FIRST tier below the
- *  lowest threshold (the lowest tier's minHeight is 0, so every non-negative height is covered).
- *  Exported for unit testing the tier boundaries. */
-export function milestoneTierFor(h: number): SfxId {
+/** The milestone TIER INDEX (0-based ordinal) for a crossing at world height `h` — escalates with
+ *  altitude (0 = first/bright … last = mega). Pure: scans the ascending thresholds from the top and
+ *  returns the highest tier whose minHeight is met; falls to 0 below the lowest threshold (tier 0's
+ *  minHeight is 0, so every non-negative height is covered). This is the SINGLE source of the
+ *  milestone thresholds — both the audio stinger AND the visual banner tier key off it, so they
+ *  can't drift apart. Exported for the HUD + unit tests. */
+export function milestoneTierIndex(h: number): number {
   for (let i = milestoneTiers.length - 1; i >= 0; i--) {
-    if (h >= milestoneTiers[i].minHeight) return milestoneTiers[i].sfx;
+    if (h >= milestoneTiers[i].minHeight) return i;
   }
-  return milestoneTiers[0].sfx;
+  return 0;
 }
+
+/** The milestone-stinger SFX key for a crossing at height `h` — the audio side of the shared tier
+ *  index (a higher milestone sounds grander: bright → triumph → epic → mega). */
+export function milestoneTierFor(h: number): SfxId {
+  return milestoneTiers[milestoneTierIndex(h)].sfx;
+}
+
+/** How many milestone tiers exist — so the HUD's visual-tier table can assert it covers them all. */
+export const MILESTONE_TIER_COUNT = milestoneTiers.length;
 
 /** Celebratory arcade stinger when the blob crosses a 100m milestone — ESCALATES with the
  *  milestone height (a higher climb earns a grander fanfare). `height` is the milestone just

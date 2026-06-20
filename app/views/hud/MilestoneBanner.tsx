@@ -1,7 +1,8 @@
 import { AnimatePresence, motion } from "motion/react";
 import { useEffect, useRef, useState } from "react";
-import { duckMusic, playMilestone } from "@/audio";
-import { useGameStore } from "@/state";
+import { duckMusic, milestoneTierIndex, playMilestone } from "@/audio";
+import { flash, useGameStore } from "@/state";
+import { milestoneVisual } from "./milestoneVisual";
 
 /** Altitude band size that triggers a celebration (every this-many metres). */
 const MILESTONE_STEP = 100;
@@ -33,8 +34,12 @@ export function MilestoneBanner() {
       lastMilestone.current = milestone;
       if (milestone > 0) {
         const milestoneHeight = milestone * MILESTONE_STEP;
+        // Shared audio+visual tier source; the banner derives its visual from `shown` at render, so
+        // we only need the flash intensity here at fire time.
+        const visual = milestoneVisual(milestoneTierIndex(milestoneHeight));
         setShown(milestoneHeight);
         playMilestone(milestoneHeight); // escalating stinger — higher milestones sound grander
+        if (visual.flash > 0) flash("gold", visual.flash); // visual matches the audio escalation
         duckMusic(700); // sidechain so the milestone stinger reads over the music
       }
     }
@@ -54,24 +59,30 @@ export function MilestoneBanner() {
       aria-live="polite"
     >
       <AnimatePresence>
-        {shown !== null && (
-          <motion.div
-            key={shown}
-            initial={{ scale: 0.3, opacity: 0, y: 16 }}
-            animate={{ scale: 1, opacity: 1, y: 0 }}
-            exit={{ scale: 1.15, opacity: 0, y: -12 }}
-            transition={{ type: "spring", stiffness: 420, damping: 18 }}
-            className="flex flex-col items-center"
-          >
-            <span className="font-display text-6xl font-bold text-cream drop-shadow-[0_2px_12px_rgba(0,0,0,0.35)]">
-              {shown}
-              <span className="ml-1 text-3xl text-accent">m</span>
-            </span>
-            <span className="mt-1 text-sm font-bold uppercase tracking-[0.2em] text-tramp-gold">
-              New height!
-            </span>
-          </motion.div>
-        )}
+        {shown !== null &&
+          // Derive the visual tier from the shown milestone height — no separate state to sync.
+          (() => {
+            const visual = milestoneVisual(milestoneTierIndex(shown));
+            return (
+              <motion.div
+                key={shown}
+                initial={{ scale: 0.3, opacity: 0, y: 16 }}
+                // Higher milestone tiers punch BIGGER (the visual escalation matching the stinger).
+                animate={{ scale: visual.scale, opacity: 1, y: 0 }}
+                exit={{ scale: 1.15, opacity: 0, y: -12 }}
+                transition={{ type: "spring", stiffness: 420, damping: 18 }}
+                className="flex flex-col items-center"
+              >
+                <span className="font-display text-6xl font-bold text-cream drop-shadow-[0_2px_12px_rgba(0,0,0,0.35)]">
+                  {shown}
+                  <span className="ml-1 text-3xl text-accent">m</span>
+                </span>
+                <span className="mt-1 text-sm font-bold uppercase tracking-[0.2em] text-tramp-gold">
+                  {visual.label}
+                </span>
+              </motion.div>
+            );
+          })()}
       </AnimatePresence>
     </div>
   );

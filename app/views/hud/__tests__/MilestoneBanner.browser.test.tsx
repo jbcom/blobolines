@@ -29,3 +29,14 @@ test("does not celebrate before the first 100m", async () => {
   useGameStore.setState((s) => ({ run: { ...s.run, height: 80 } }));
   await expect.element(screen.getByText("New height!").query()).not.toBeInTheDocument();
 });
+
+test("escalates the banner LABEL at a high milestone tier (2000m → Mega height!)", async () => {
+  const screen = await render(<MilestoneBanner />);
+  // Cross a top-tier milestone (2000m). The banner must read the ESCALATED label, not the base one —
+  // the visual matching the audio stinger's mega tier.
+  useGameStore.setState((s) => ({ run: { ...s.run, height: 2010 } }));
+  await expect.element(screen.getByText("Mega height!")).toBeInTheDocument();
+  await expect.element(screen.getByText("2000")).toBeInTheDocument();
+  // The base-tier label must NOT show for a top-tier crossing.
+  await expect.element(screen.getByText("New height!").query()).not.toBeInTheDocument();
+});
