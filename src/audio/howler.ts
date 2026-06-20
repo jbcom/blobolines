@@ -364,14 +364,17 @@ export function duckMusic(ms = 700): void {
 }
 
 /** Drive the in-game MUSIC + ambient BIOME from altitude (called as the blob climbs, throttled by
- *  the caller). Both the music track AND the ambient bed now follow the canonical biome bands via
+ *  the caller). Both the music track AND the ambient bed follow the canonical biome bands via
  *  biomeBandAt — each biome has its own upbeat loop, so the climb has real sonic progression
- *  (ground → sky → … → deep-space). Both crossfade. No-op on the menu track (`musicKey` is "menu"
- *  there, which isn't a band, so we leave the music alone and only move the ambient bed). */
+ *  (ground → sky → … → deep-space). Both crossfade. FULL no-op on the menu: the menu is
+ *  deliberately music-only (startMenuMusic stops the ambient bed), so neither the music NOR the
+ *  ambient is touched while `musicKey === "menu"` — otherwise a stray altitude tick would restart
+ *  an ambient bed the menu intentionally silenced. (In practice the caller only ticks while
+ *  playing, but the guard keeps the contract honest.) */
 export function setMusicAltitude(height: number): void {
-  if (!started) return;
+  if (!started || musicKey === "menu") return;
   const band = biomeBandAt(height);
-  if (musicKey !== "menu") setMusicBand(band);
+  setMusicBand(band);
   setAmbientBand(band);
 }
 

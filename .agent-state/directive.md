@@ -726,8 +726,13 @@ mandate explicitly includes keeping docs aligned (no end-of-project catch-up).
 ### N9.3 PR cutting point
 - [x] N9.3a Committed (d7731b0), dispatched reviewer (background, focused on crossfade/stale-Howl +
       menu↔band transition), pushed, opened PR #77. Monitor armed. Ran `npx biome ci .` before push.
-- [ ] [WAIT-REVIEW] N9.3b Babysit PR #77: wait CI green, fold reviewer + gemini/CodeRabbit findings
-      forward, resolve threads, squash-merge once green, sync main, then start N10.
+- [x] N9.3b-feedback Folded forward: my reviewer's main "bug" (stopMusic leaving musicKey stale →
+      silent replay) was a FALSE positive — stopMusic already resets musicKey="" (reset was outside
+      the diff it read); verified + added a same-band-replay regression test + cleaned the dead
+      "ingame" comment (0bec5d7). gemini's 3 MEDIUM (double currentMusicPath lookup + `as string`
+      cast) → factored a fadeOutCurrentMusic() helper (41985be); 3 threads resolved. 507 unit + 120
+      browser green.
+- [ ] [WAIT-REVIEW] N9.3c Wait CI green on 41985be, squash-merge PR #77, sync main, start N10.
 
 ### N10 Next milestone (surface after #77 merges)
 - [ ] [WAIT-MERGE] N10.1 Pick the next polish unit (don't pre-commit). Biome identity is now

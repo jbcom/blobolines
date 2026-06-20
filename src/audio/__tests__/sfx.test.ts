@@ -219,6 +219,21 @@ describe("music + ambient lifecycle", () => {
     stopMusic();
   });
 
+  it("setMusicAltitude is a FULL no-op on the menu (starts no new music/ambient bed)", () => {
+    const liveLoops = () => {
+      const hs = (Howler as unknown as { _howls: Array<{ _loop: boolean; playing(): boolean }> })
+        ._howls;
+      return hs.filter((h) => h._loop && h.playing()).length;
+    };
+    startMenuMusic(); // music-only menu (musicKey === "menu")
+    const before = liveLoops();
+    // A stray altitude tick while on the menu must start NOTHING — neither a band music track nor
+    // an ambient bed (the menu is deliberately music-only). The live-loop count must not grow.
+    setMusicAltitude(900);
+    expect(liveLoops(), "menu altitude tick must not start any new bed").toBeLessThanOrEqual(before);
+    stopMusic();
+  });
+
   it("ambient bed follows ALL 6 canonical biome bands without throwing", () => {
     const loopPaths = () => {
       const hs = (Howler as unknown as { _howls: Array<{ _loop: boolean; _src: string[] }> })
