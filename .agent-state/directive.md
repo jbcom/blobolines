@@ -199,7 +199,10 @@ re-write directive forward → next.
       "(non-blocking)" — it's a real gate again. typecheck + lint + 435 unit + build green.
 
 ### E2 PR cutting point
-- [ ] E2.1 Open PR; address feedback; resolve threads; squash-merge; re-write directive forward.
+- [x] E2.1a PR #62 opened (e2e test bridge). This run is also the real-CI validation that the
+      bridge makes the e2e job green under SwiftShader.
+- [ ] [WAIT-REVIEW] E2.1b Babysit PR #62: confirm e2e job goes GREEN in real CI + verify gate
+      green → address feedback → resolve threads → squash-merge → re-write directive forward.
 
 ## Notes
 - This is a living plan. After every stage, backward+forward sweep and edit the queue.
