@@ -439,8 +439,12 @@ biomeBandAt + the banner pattern.
 ### M2 PR cutting point
 - [x] M2.1a Reviewer returned CLEAN (every flagged concern self-resolved). PR #70 opened
       (feat/biome-banner pushed, body written). Monitor armed on PR #70 CI checks.
-- [ ] [WAIT-REVIEW] M2.1b Babysit PR #70: wait CI green, address any gemini/CodeRabbit threads
-      (fold forward + resolve), squash-merge once green, sync local main. Then start N0.
+- [x] M2.1b PR #70 CI ALL GREEN (verify + Playwright E2E + Android APK + CodeRabbit pass).
+      DECISION: the daily-results work (N1.1) is pure + self-contained UI polish and the PR was
+      still open, so it was folded into #70 as a second feature rather than a separate branch —
+      same player-facing-polish theme, not a scope-flip.
+- [ ] [WAIT-REVIEW] M2.1c Babysit PR #70 (now biome banner + daily standing): re-wait CI on the
+      folded-in commit, address any gemini/CodeRabbit threads, squash-merge once green, sync main.
 
 ## Queue — Milestone: Daily-challenge results polish (branch feat/daily-results, NEXT)
 
@@ -470,10 +474,12 @@ use cases (first daily of the day vs. repeat attempt vs. new personal daily best
       fixture.
 
 ### N1 Implementation
-- [ ] N1.1 [BLOCKED-ON-MERGE] After PR #70 merges, on a fresh branch feat/daily-results: add the
-      pure `dailyStanding` selector + unit tests (the three use cases + tie handling); wire the
-      GameOver "Today's tower" section (rank / first-run / personal-best) keyed on dailyRun;
-      browser fixture asserting the section shows for a daily run and hides for a random run.
+- [x] N1.1 DONE (commit 457eec9, folded into PR #70). Pure `dailyStanding(highScores,
+      todaySeedPhrase, thisRunScore)` selector in src/sim/daily/ → { attemptsToday, rank,
+      isPersonalDailyBest, isFirstAttempt } (ties share the better rank; counts this run
+      defensively). GameOver renders a daily-only "Today's tower" section: first climb / ranked
+      "#N of M" / gold personal-daily-best, hidden for random runs. 6 selector unit tests + 4
+      GameOver browser fixtures. 479 unit + 117 browser green; typecheck + lint clean.
 
 ## Notes
 - This is a living plan. After every stage, backward+forward sweep and edit the queue.
