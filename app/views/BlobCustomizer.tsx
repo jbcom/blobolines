@@ -2,7 +2,9 @@ import { Button, Dialog } from "@app/components/ui";
 import { usePunchOnChange } from "@app/hooks";
 import { Check, Gem, Lock, Trophy } from "lucide-react";
 import { useRef, useState } from "react";
+import { playPowerup, playUi } from "@/audio";
 import type { BlobSkin } from "@/core/types";
+import { ImpactStyle, impact, NotificationType, notify } from "@/platform";
 import { achievementById, SKIN_ACHIEVEMENT } from "@/sim/achievements";
 import { SKIN_COST, useGameStore } from "@/state";
 import { mixHex, palette } from "@/styles/tokens";
@@ -64,9 +66,19 @@ export function BlobCustomizer({
     tileRefs.current[next]?.focus();
   };
 
+  const haptic = (kind: "equip" | "unlock") => {
+    if (!useGameStore.getState().settings.haptics) return;
+    if (kind === "unlock") void notify(NotificationType.Success);
+    else void impact(ImpactStyle.Light);
+  };
+
   const pick = (id: BlobSkin) => {
     if (unlocked.includes(id)) {
+      // Equipping an already-owned goo — a confirming tap (no-op feel if it's already equipped, but
+      // re-selecting is harmless and the cue reinforces the choice).
       setSkin(id);
+      playUi("confirm");
+      haptic("equip");
       return;
     }
     // Achievement-gated skins can't be bought — they're earned by meeting their achievement.
@@ -77,6 +89,11 @@ export function BlobCustomizer({
       addCrystals(-cost);
       unlockSkin(id);
       setSkin(id);
+      // A crystal purchase — coin spend + the powerup unlock chime + a success haptic, so buying a
+      // new goo feels like the reward it is.
+      playUi("coin");
+      playPowerup();
+      haptic("unlock");
     }
   };
 
