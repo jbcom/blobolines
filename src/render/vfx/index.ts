@@ -13,6 +13,8 @@ export {
   DEFAULT_SCENERY_REACTION,
   type FlybyPulseConfig,
   flybyPeaked,
+  GLINT_PEAK_INTENSITY,
+  glintEmissive,
   type SceneryReaction,
   type SceneryReactionConfig,
   sceneryReaction,

@@ -131,3 +131,16 @@ export function stepFlybyPulse(
   const attacked = triggered ? Math.max(decayed, Math.min(1, peakStrength)) : decayed;
   return attacked;
 }
+
+/** Peak extra `emissiveIntensity` a full flyby pulse adds to a near prop's material — the brightness
+ *  "glint" as the blob catches it. Kept modest so it reads as a flicker of light, not a flashbang. */
+export const GLINT_PEAK_INTENSITY = 0.9;
+
+/**
+ * Map a flyby pulse envelope value [0,1] to the extra emissive intensity the prop's material should
+ * carry this frame (added on TOP of the material's original emissiveIntensity). Pure + linear — the
+ * envelope already carries the attack/decay shape, so the glint rises and fades with it.
+ */
+export function glintEmissive(pulse: number, peak: number = GLINT_PEAK_INTENSITY): number {
+  return Math.max(0, Math.min(1, pulse)) * peak;
+}

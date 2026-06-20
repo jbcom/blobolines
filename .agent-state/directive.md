@@ -532,14 +532,56 @@ a fast climb feel kinetic. No new assets; pure extension of sceneryReaction + Sc
       frame-0 false positive — flyby pulse could fire spuriously on frame 2 for a prop the blob
       STARTS near (prevInfluence seeds at 0); fixed by seeding prevInfluence on the first observed
       frame + a `seeded` gate. 494 unit + 119 browser green.
-- [ ] [WAIT-REVIEW] N4.3c Wait CI green on 77716c1, address any gemini/CodeRabbit threads,
-      squash-merge PR #72 once green, sync main, then start N5.
+- [x] N4.3c-feedback gemini HIGH (real bug): the 2-point flybyPeaked fired on EVERY recession
+      frame (now<prev holds the whole way down), re-snapping the envelope continuously. Fixed in
+      4c7b016 with 3-point local-peak detection (prevPrev<prev && now<prev) + a mid-recession
+      regression test; this also subsumed the frame-0 fix (first two frames prevPrev==prev==0).
+      4 threads replied + resolved. 495 unit + 119 browser green.
+- [x] N4.3d PR #72 SQUASH-MERGED (8d5e875, 2026-06-20). CLEAN, 0 threads. Flyby pulse shipped.
+      Local main synced; cut feat/scenery-glint for N5. (Three feature PRs this session: banner+
+      daily #70, reactive scenery #71, flyby pulse #72.)
 
-### N5 Next milestone (surface after #72 merges)
-- [ ] [WAIT-MERGE] N5.1 Pick the next polish unit (don't pre-commit): strong candidates — extend
-      the flyby pulse to a brightness/emissive GLINT (not just scale) on the prop material at peak;
-      per-biome MUSIC layers (needs new owned audio via the itch pipeline); or teleport-driven QA +
-      polish of each upper biome band's look. Enumerate use cases first, read own spec docs.
+## Queue — Milestone: Scenery flyby GLINT (branch feat/scenery-glint)
+
+Extend the flyby pulse one more sensory step: at the moment of closest approach, the near prop
+doesn't just scale-pop — it briefly BRIGHTENS (emissive glint), like catching the light as the blob
+whooshes past. Reuses the existing pulse envelope (r.pulse) — no new trigger logic, just a second
+visual channel. No new assets.
+
+### N5 Architecture
+- [x] N5.1 ENUMERATED + DECIDED (read PropModel + the ScenicInstance pulse block). The pulse
+      envelope lives in ScenicInstance (parent group); the material lives in PropModel (child,
+      remounts on band crossings). DECISION: PropModel clones its mesh materials for NEAR props
+      (today it only clones for opacity<1 hazy layers) and registers them via an onMaterials
+      callback ref; ScinicInstance drives each material's emissiveIntensity (+ a warm emissive
+      tint) from r.pulse each frame, restoring the original emissive on dispose. Glint is
+      near-layer only, deterministic (pure function of r.pulse), and reuses the existing 3-point
+      peak → envelope (no new detector). Materials must be CLONED (never mutate the shared cached
+      GLB material) + disposed on unmount, mirroring the existing haze-clone discipline.
+- [x] N5.2 DONE. Pure `glintEmissive(pulse)` + GLINT_PEAK_INTENSITY (0.9) in sceneryReaction.ts
+      (linear, clamped). PropModel now clones materials for NEAR props too (not just hazy opacity<1)
+      and hands them up via onMaterials; ScenicInstance filters to lit materials (emissive present),
+      stores baseline emissiveIntensity, and drives emissiveIntensity + a warm gold emissive tint
+      from r.pulse each frame (restored on dispose). 4 glint unit tests + a browser fixture sweeping
+      the blob through a near prop and asserting emissiveIntensity spikes. 499 unit + 120 browser
+      green; typecheck + biome ci clean. Committed; reviewer to dispatch.
+
+### N5.3 PR cutting point
+- [x] N5.3a Committed (06b3dea), dispatched reviewer (background, focused on material lifecycle),
+      pushed, opened PR #73. Monitor armed. (Ran `npx biome ci .` before push per the lesson — caught
+      + fixed a format diff locally. Do NOT push extra state commits; let CI settle on HEAD.)
+- [x] N5.3b-feedback Both my reviewer AND gemini (3 threads) flagged the SAME real (latent) bug:
+      the glint's setRGB clobbered any baked emissive COLOR to black at glint=0 (only intensity was
+      restored). Fixed in 8aff804: capture baseR/G/B in onGlintMaterials, add the glint on top of
+      the baseline. 3 gemini threads replied + resolved. 499 unit + 120 browser green.
+- [ ] [WAIT-REVIEW] N5.3c Wait CI green on 8aff804, squash-merge PR #73, sync main, start N6.
+
+### N6 Next milestone (surface after #73 merges)
+- [ ] [WAIT-MERGE] N6.1 Pick the next polish unit (don't pre-commit). The scenery-reaction arc
+      (lean → pop → pulse → glint) is now rich; consider SHIFTING focus: per-biome MUSIC layers
+      (needs new owned audio via the itch pipeline), teleport-driven QA + polish of each upper biome
+      band's look, or a NEW system (e.g. blob trail/ribbon, dynamic camera shake on big bounces).
+      Enumerate use cases first, read own spec docs.
 
 ## Queue — Milestone: Daily-challenge results polish (branch feat/daily-results, NEXT)
 

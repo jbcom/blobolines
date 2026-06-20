@@ -58,10 +58,22 @@ export const palette = {
   },
   /** Danger red — near-death screen-edge pulse / warning feedback. */
   danger: "#ff3b4e",
+  /** Scenery feedback colors. `glint` is the warm-gold flash a near prop emits as the blob rushes
+   *  past (the flyby glint) — owned here so the emissive tint isn't a raw RGB literal in scene code. */
+  scenery: {
+    glint: "#ffd180",
+  },
 } as const;
 
 /** Hex string → 0xRRGGBB int for three.js Color/material constructors. */
 export const hex = (s: string): number => Number.parseInt(s.replace("#", ""), 16);
+
+/** Hex string → normalized [0,1] RGB triple, for driving three.js emissive/Color channels directly
+ *  (e.g. scaling a token color by an intensity) without a raw `0.82`-style literal in scene code. */
+export const rgbNorm = (s: string): [number, number, number] => {
+  const n = hex(s);
+  return [((n >> 16) & 0xff) / 255, ((n >> 8) & 0xff) / 255, (n & 0xff) / 255];
+};
 
 /** Blend two hex colors by `t` (0 = a, 1 = b) → "#rrggbb". For tinting tokens together. */
 export const mixHex = (a: string, b: string, t: number): string => {

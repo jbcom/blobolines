@@ -1,6 +1,6 @@
 import { useGLTF } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { Group, Object3D } from "three";
 import {
   allBiomePropFiles,
@@ -12,8 +12,9 @@ import {
 } from "@/config/biomeProps";
 import { biomeBandAt } from "@/config/biomes";
 import { createRng } from "@/core/math";
-import { flybyPeaked, sceneryReaction, stepFlybyPulse } from "@/render/vfx";
+import { flybyPeaked, glintEmissive, sceneryReaction, stepFlybyPulse } from "@/render/vfx";
 import { getBlobDiagnostics } from "@/state";
+import { palette, rgbNorm } from "@/styles/tokens";
 
 /**
  * BiomeScenicProps — data-driven low-poly scenery scattered across the climb. Each prop
@@ -41,23 +42,43 @@ const url = (file: string) => `${import.meta.env.BASE_URL}assets/models/${file}`
  *  "whoosh past" flourish. Kept small so it reads as a quick beat, not a jarring jump. */
 const DEFAULT_FLYBY_PULSE_POP = 0.16;
 
-/** Generic GLB prop. Clones the loaded scene so each instance is independent. When `opacity` is
- *  below 1 (far/near parallax layers read hazier), each material is cloned + made transparent so
- *  the layer recedes without mutating the shared cached GLB — and the clones are DISPOSED on
- *  unmount/dep-change (band crossings unmount this often), so they don't leak GPU memory. */
-function PropModel({ file, scale, opacity }: { file: string; scale: number; opacity: number }) {
+/** Normalized RGB of the warm-gold flyby glint tint, derived from the design token (not a raw RGB
+ *  literal). Scaled by the pulse envelope and added on top of each near prop's baseline emissive. */
+const GLINT_TINT = rgbNorm(palette.scenery.glint);
+
+/** Generic GLB prop. Clones the loaded scene so each instance is independent. Materials are cloned
+ *  (never the shared cached GLB material) when EITHER the layer is hazy (`opacity` below 1, far/near
+ *  parallax) OR `glint` is on (near layer wants per-frame emissive control) — the clones are
+ *  collected, handed to `onMaterials` for the parent to drive, and DISPOSED on unmount/dep-change
+ *  (band crossings unmount this often) so they don't leak GPU memory. */
+function PropModel({
+  file,
+  scale,
+  opacity,
+  glint = false,
+  onMaterials,
+}: {
+  file: string;
+  scale: number;
+  opacity: number;
+  glint?: boolean;
+  onMaterials?: (mats: MeshMaterial[]) => void;
+}) {
   const { scene } = useGLTF(url(file));
   const [model, setModel] = useState<Object3D | null>(null);
 
   useEffect(() => {
     const clone = scene.clone(true);
     const clonedMaterials: MeshMaterial[] = [];
-    if (opacity < 1) {
-      const haze = (src: MeshMaterial): MeshMaterial => {
+    const needsClone = opacity < 1 || glint;
+    if (needsClone) {
+      const prep = (src: MeshMaterial): MeshMaterial => {
         const m = src.clone();
-        m.transparent = true;
-        m.opacity = opacity;
-        m.depthWrite = false;
+        if (opacity < 1) {
+          m.transparent = true;
+          m.opacity = opacity;
+          m.depthWrite = false;
+        }
         clonedMaterials.push(m);
         return m;
       };
@@ -66,15 +87,17 @@ function PropModel({ file, scale, opacity }: { file: string; scale: number; opac
         if (!mesh.material) return;
         // A mesh may carry an array of materials (multi-material geometry); clone each.
         mesh.material = Array.isArray(mesh.material)
-          ? mesh.material.map(haze)
-          : haze(mesh.material);
+          ? mesh.material.map(prep)
+          : prep(mesh.material);
       });
     }
     setModel(clone);
+    onMaterials?.(clonedMaterials);
     return () => {
+      onMaterials?.([]);
       for (const m of clonedMaterials) m.dispose();
     };
-  }, [scene, opacity]);
+  }, [scene, opacity, glint, onMaterials]);
 
   if (!model) return null;
   return <primitive object={model} scale={scale} />;
@@ -84,6 +107,11 @@ interface MeshMaterial {
   transparent: boolean;
   opacity: number;
   depthWrite: boolean;
+  /** Present on lit materials (MeshStandard/Physical/Lambert/Phong) — the glint drives these.
+   *  Absent on MeshBasicMaterial; the glint guards on their presence so it never throws. The
+   *  r/g/b are read at capture time so the baseline emissive color is preserved + restored. */
+  emissive?: { r: number; g: number; b: number; setRGB(r: number, g: number, b: number): void };
+  emissiveIntensity?: number;
   clone(): MeshMaterial;
   dispose(): void;
 }
@@ -157,6 +185,24 @@ function ScenicInstance({ spec }: { spec: PropSpec }) {
   const reactRef = useRef({ lean: 0, pop: 0, prevPrevInfluence: 0, prevInfluence: 0, pulse: 0 });
   const propPosRef = useRef<[number, number, number]>([0, 0, 0]);
   const isNear = spec.layer.id === "near";
+  // Near props' cloned materials + their baseline emissive intensity AND color, so the flyby glint
+  // can be added ON TOP and fully restored (intensity + tint). PropModel hands these up via
+  // onGlintMaterials when it (re)clones.
+  const glintMatsRef = useRef<
+    { mat: MeshMaterial; baseIntensity: number; baseR: number; baseG: number; baseB: number }[]
+  >([]);
+  const onGlintMaterials = useCallback((mats: MeshMaterial[]) => {
+    glintMatsRef.current = mats
+      .filter((m) => m.emissive !== undefined && m.emissiveIntensity !== undefined)
+      .map((m) => ({
+        mat: m,
+        baseIntensity: m.emissiveIntensity ?? 0,
+        // Capture the baked emissive color so the glint adds to it instead of clobbering it.
+        baseR: m.emissive?.r ?? 0,
+        baseG: m.emissive?.g ?? 0,
+        baseB: m.emissive?.b ?? 0,
+      }));
+  }, []);
 
   useFrame((state, delta) => {
     const group = groupRef.current;
@@ -217,6 +263,21 @@ function ScenicInstance({ spec }: { spec: PropSpec }) {
 
       const s = 1 + r.pop + r.pulse * DEFAULT_FLYBY_PULSE_POP;
       group.scale.set(s, s, s);
+
+      // GLINT: drive the cloned near-prop materials' emissive from the same pulse envelope, so the
+      // prop catches a warm flash of light at closest approach. Added on top of the baseline and
+      // restored to it as the pulse decays. Guarded on emissive presence (set by onGlintMaterials).
+      const glint = glintEmissive(r.pulse);
+      for (const g of glintMatsRef.current) {
+        g.mat.emissiveIntensity = g.baseIntensity + glint;
+        // Add the warm-gold glint tint (from the design token) ON TOP of the baked baseline color,
+        // scaled by the pulse, so at glint=0 the material returns exactly to its baseline.
+        g.mat.emissive?.setRGB(
+          g.baseR + glint * GLINT_TINT[0],
+          g.baseG + glint * GLINT_TINT[1],
+          g.baseB + glint * GLINT_TINT[2],
+        );
+      }
     }
   });
 
@@ -233,6 +294,8 @@ function ScenicInstance({ spec }: { spec: PropSpec }) {
             file={set.props[spec.pick[set.band] % set.props.length].file}
             scale={spec.scale * set.props[spec.pick[set.band] % set.props.length].scale}
             opacity={spec.layer.opacity}
+            glint={isNear}
+            onMaterials={isNear ? onGlintMaterials : undefined}
           />
           {/* Only the mid layer plants a shelf; far silhouettes + near accents float free. */}
           {spec.layer.id === "mid" && <Shelf shelf={set.shelf} />}
