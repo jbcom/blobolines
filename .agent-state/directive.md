@@ -218,15 +218,18 @@ as deep, not flat — the mandate's "richer and more fun". Reuse the biome scene
 assets; keep determinism + mid-tier budget.
 
 ### F0 Architecture
-- [ ] F0.1 Enumerate depth-layer use cases (far backdrop silhouettes / mid scenery / near
-      foreground accents); read BiomeProps + BiomeScenicProps + camera setup; decide whether
-      parallax is per-instance depth-scaled drift or discrete layers. Record decision.
+- [x] F0.1 Decided (decisions.ndjson): discrete far/mid/near depth layers as a data-only
+      parallaxLayers table; each reuses the per-band registry + biomeBandAt, varying z/drift/
+      scale/density/wrap-column/opacity.
 
 ### F1 Implementation
-- [ ] F1.1 Implement parallax depth layers (deterministic placement, biome-band-aware, wrap
-      logic intact). Far layers drift slower; near layers faster. Visual-verify against a
-      named reference (read the screenshot).
-- [ ] F1.2 Tests: layer/parallax unit + render/browser test per the visual gate.
+- [x] F1.1 BiomeScenicProps renders 3 parallax layers (far slow+hazy+large, mid detailed, near
+      fast accents); per-layer RNG seeds (mid keeps 444/445 → unchanged layout); driftX sideways
+      parallax; PropModel clones materials for hazy layers. Live-app screenshot verified
+      (layered scenery renders, no errors).
+- [x] F1.2 Tests: parallaxLayers config tests (front-to-back depth/drift/scale ordering, sane
+      ranges) + browser test asserting props span multiple depth bands. 438 unit + 108 browser.
+      Reviewer (ae30c8) dispatched on the commit — fold findings forward.
 
 ### F2 PR cutting point
 - [ ] F2.1 Verify (typecheck + lint + test + test:browser + e2e) + app-runs screenshot; open
