@@ -1393,9 +1393,22 @@ drop most days). A 7-day daily-best trend in the Hall-of-Fame.
       physics death trigger is rAF-gated for headless QA — deterministic tests are the QA path here.)
 
 ### Cutting point: PR for the death/clutch-save feedback
-- [ ] [WAIT-CI] PR for feat/feel-polish-2 (N31 death + shield-save feedback). Push, open PR, babysit
-      CI green (ci-coalescing guard: confirm ci.yml run for HEAD) + bot threads, resolve, squash-merge,
-      reset main. Then fresh branch; keep surveying for genuine feel gaps.
+- [x] PR #99 (N31 death + shield-save feedback) MERGED (squash 22cceaf). 9/9 CI green; ci-coalescing
+      guard confirmed ci.yml run for HEAD d2c5b3c success; bots clean, 0 threads. Local review CLEAN
+      (fire-once both paths, position consistent, fresh-state gating, real contract test). cd.yml
+      deployed on main push (completed/success). Accumulating into release PR #96 (0.1.14).
+
+### N32 customizer equip/purchase feedback (the menu side of the feel layer)
+- [x] N32: The BlobCustomizer equipped + bought skins SILENTLY — no audio or haptic (it imported
+      neither @/audio nor @/platform). Wired: equip an owned goo → playUi("confirm") + a Light impact
+      haptic; BUY a skin with crystals → playUi("coin") + playPowerup() + a Success haptic (buying a
+      goo now feels like the reward it is). All gated on settings.haptics. Tests: purchase deducts/
+      unlocks/equips + the unaffordable tile is DOM-disabled (no-op enforced structurally). 566 unit /
+      155 browser green; typecheck + pinned lint clean.
+
+### Cutting point: PR for the customizer feedback
+- [ ] [WAIT-CI] PR for feat/customizer-feel (N32). Push, open PR, babysit CI green (ci-coalescing
+      guard) + bot threads, resolve, squash-merge, reset main. Then keep surveying for feel gaps.
 
 ## Notes
 - This is a living plan. After every stage, backward+forward sweep and edit the queue.

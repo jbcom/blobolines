@@ -40,3 +40,29 @@ test("an UNLOCKED aurora tile equips on tap (no crystal price)", async () => {
   await screen.getByLabelText(/^Aurora — equip$/).click();
   expect(useGameStore.getState().progress.skin).toBe("aurora");
 });
+
+test("buying an affordable skin deducts crystals, unlocks + equips it (the purchase feedback path)", async () => {
+  // Berry (slime) costs 15. With 20 crystals, tapping it spends 15 → unlocked + equipped + 5 left.
+  // This drives the pick() purchase branch that now also fires the coin/powerup/success feedback.
+  useGameStore.setState((s) => ({
+    progress: { ...s.progress, crystals: 20, unlockedSkins: ["blue"], skin: "blue" },
+  }));
+  const screen = await render(<BlobCustomizer open onOpenChange={() => {}} />);
+  await screen.getByLabelText(/^Berry — unlock for 15 crystals$/).click();
+  const p = useGameStore.getState().progress;
+  expect(p.unlockedSkins).toContain("slime");
+  expect(p.skin).toBe("slime");
+  expect(p.crystals).toBe(5);
+});
+
+test("an UNAFFORDABLE skin tile is disabled so the purchase path can't fire", async () => {
+  // Berry costs 15; with 10 the tile must be disabled (the no-op is enforced at the DOM, not just
+  // inside pick()) so the purchase + its feedback can never run when you can't afford it.
+  useGameStore.setState((s) => ({
+    progress: { ...s.progress, crystals: 10, unlockedSkins: ["blue"], skin: "blue" },
+  }));
+  const screen = await render(<BlobCustomizer open onOpenChange={() => {}} />);
+  const tile = screen.getByLabelText(/^Berry — locked, needs 15 crystals$/);
+  await expect.element(tile).toBeDisabled();
+  expect(useGameStore.getState().progress.unlockedSkins).not.toContain("slime");
+});
