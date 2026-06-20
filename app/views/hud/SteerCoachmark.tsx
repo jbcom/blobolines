@@ -48,33 +48,43 @@ export function SteerCoachmark() {
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => {
     if (!show) return;
-    // Single-fire: whichever leg (a steer/land detection or the auto-timeout) reaches finish() first
-    // cancels the OTHER, so finish() never runs twice. (markSteerTutorialSeen is idempotent anyway,
-    // but keeping it single-fire avoids a redundant setState + keeps the intent obvious.)
-    const finish = () => {
+    let raf = 0;
+    const clearTimers = () => {
       if (timerRef.current) {
         clearTimeout(timerRef.current);
         timerRef.current = null;
       }
       cancelAnimationFrame(raf);
+    };
+    // The player LEARNED it (steered) or the safety-net timeout elapsed → persist so it never shows
+    // again. Single-fire: clear both legs first so finish() can't run twice.
+    const finish = () => {
+      clearTimers();
       setDismissed(true);
       markSteerTutorialSeen();
     };
-    let raf = 0;
+    // The blob landed WITHOUT steering (a short hop) → end THIS display window but do NOT persist, so
+    // the cue re-arms and shows again on the next airborne moment. Resetting airborneOnce drops `show`
+    // → this effect's cleanup runs → the arm effect re-fires on the next airborne frame. Persisting
+    // here (the old behavior) would permanently skip the teach for anyone whose first launch is a hop.
+    const endWindowWithoutTeaching = () => {
+      clearTimers();
+      setAirborneOnce(false);
+    };
     const tick = () => {
-      // A mid-air aim drag is the steer input; landing (no longer airborne) also ends the window.
-      if (getAim() != null || !getBlobDiagnostics().airborne) {
-        finish();
+      if (getAim() != null) {
+        finish(); // a mid-air aim drag IS the steer — taught.
+        return;
+      }
+      if (!getBlobDiagnostics().airborne) {
+        endWindowWithoutTeaching(); // landed before steering — try again next hop.
         return;
       }
       raf = requestAnimationFrame(tick);
     };
     raf = requestAnimationFrame(tick);
     timerRef.current = setTimeout(finish, AUTO_DISMISS_MS);
-    return () => {
-      cancelAnimationFrame(raf);
-      if (timerRef.current) clearTimeout(timerRef.current);
-    };
+    return clearTimers;
   }, [show, markSteerTutorialSeen]);
 
   return (
