@@ -103,8 +103,9 @@ interface MeshMaterial {
   opacity: number;
   depthWrite: boolean;
   /** Present on lit materials (MeshStandard/Physical/Lambert/Phong) — the glint drives these.
-   *  Absent on MeshBasicMaterial; the glint guards on their presence so it never throws. */
-  emissive?: { setRGB(r: number, g: number, b: number): void };
+   *  Absent on MeshBasicMaterial; the glint guards on their presence so it never throws. The
+   *  r/g/b are read at capture time so the baseline emissive color is preserved + restored. */
+  emissive?: { r: number; g: number; b: number; setRGB(r: number, g: number, b: number): void };
   emissiveIntensity?: number;
   clone(): MeshMaterial;
   dispose(): void;
@@ -179,13 +180,23 @@ function ScenicInstance({ spec }: { spec: PropSpec }) {
   const reactRef = useRef({ lean: 0, pop: 0, prevPrevInfluence: 0, prevInfluence: 0, pulse: 0 });
   const propPosRef = useRef<[number, number, number]>([0, 0, 0]);
   const isNear = spec.layer.id === "near";
-  // Near props' cloned materials + their baseline emissiveIntensity, so the flyby glint can be added
-  // ON TOP and fully restored. PropModel hands these up via onGlintMaterials when it (re)clones.
-  const glintMatsRef = useRef<{ mat: MeshMaterial; baseIntensity: number }[]>([]);
+  // Near props' cloned materials + their baseline emissive intensity AND color, so the flyby glint
+  // can be added ON TOP and fully restored (intensity + tint). PropModel hands these up via
+  // onGlintMaterials when it (re)clones.
+  const glintMatsRef = useRef<
+    { mat: MeshMaterial; baseIntensity: number; baseR: number; baseG: number; baseB: number }[]
+  >([]);
   const onGlintMaterials = useCallback((mats: MeshMaterial[]) => {
     glintMatsRef.current = mats
       .filter((m) => m.emissive !== undefined && m.emissiveIntensity !== undefined)
-      .map((m) => ({ mat: m, baseIntensity: m.emissiveIntensity ?? 0 }));
+      .map((m) => ({
+        mat: m,
+        baseIntensity: m.emissiveIntensity ?? 0,
+        // Capture the baked emissive color so the glint adds to it instead of clobbering it.
+        baseR: m.emissive?.r ?? 0,
+        baseG: m.emissive?.g ?? 0,
+        baseB: m.emissive?.b ?? 0,
+      }));
   }, []);
 
   useFrame((state, delta) => {
@@ -254,8 +265,9 @@ function ScenicInstance({ spec }: { spec: PropSpec }) {
       const glint = glintEmissive(r.pulse);
       for (const g of glintMatsRef.current) {
         g.mat.emissiveIntensity = g.baseIntensity + glint;
-        // Warm the emissive tint toward a soft gold while glinting (subtle; scales with the pulse).
-        g.mat.emissive?.setRGB(glint, glint * 0.82, glint * 0.5);
+        // Add a warm gold glint ON TOP of the baked baseline color (scales with the pulse), so at
+        // glint=0 the material returns exactly to its baseline — never clobbered to black.
+        g.mat.emissive?.setRGB(g.baseR + glint, g.baseG + glint * 0.82, g.baseB + glint * 0.5);
       }
     }
   });

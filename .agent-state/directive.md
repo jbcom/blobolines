@@ -567,8 +567,18 @@ visual channel. No new assets.
       green; typecheck + biome ci clean. Committed; reviewer to dispatch.
 
 ### N5.3 PR cutting point
-- [ ] N5.3 Commit, dispatch reviewer, fold findings forward, open PR, babysit to squash-merge,
-      sync main, re-write directive forward.
+- [x] N5.3a Committed (06b3dea), dispatched reviewer (background, focused on material lifecycle),
+      pushed, opened PR #73. Monitor armed. (Ran `npx biome ci .` before push per the lesson — caught
+      + fixed a format diff locally. Do NOT push extra state commits; let CI settle on HEAD.)
+- [ ] [WAIT-REVIEW] N5.3b Babysit PR #73: wait CI green, fold reviewer + gemini/CodeRabbit findings
+      forward, resolve threads, squash-merge once green, sync main, then start N6.
+
+### N6 Next milestone (surface after #73 merges)
+- [ ] [WAIT-MERGE] N6.1 Pick the next polish unit (don't pre-commit). The scenery-reaction arc
+      (lean → pop → pulse → glint) is now rich; consider SHIFTING focus: per-biome MUSIC layers
+      (needs new owned audio via the itch pipeline), teleport-driven QA + polish of each upper biome
+      band's look, or a NEW system (e.g. blob trail/ribbon, dynamic camera shake on big bounces).
+      Enumerate use cases first, read own spec docs.
 
 ## Queue — Milestone: Daily-challenge results polish (branch feat/daily-results, NEXT)
 
