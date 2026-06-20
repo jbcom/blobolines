@@ -256,15 +256,22 @@ function setMusicTrack(key: string): void {
   if (key === musicKey) return;
   const path = musicTracks[key];
   if (!path) return;
-  if (music && currentMusicPath()) scheduleStop(currentMusicPath() as string, music);
+  fadeOutCurrentMusic();
   musicKey = key;
   music = startBed(path, musicTarget());
 }
 
-/** The path of the live music track, whether it came from the static `music` map (menu/ingame)
- *  or the per-band `bandMusic` map — so a crossfade always fades the RIGHT outgoing bed out. */
+/** The path of the live music track, whether it came from the static `music` map (menu) or the
+ *  per-band `bandMusic` map — so a crossfade always fades the RIGHT outgoing bed out. */
 function currentMusicPath(): string | undefined {
   return musicTracks[musicKey] ?? bandMusic[musicKey];
+}
+
+/** Schedule the currently-live music track to fade out, if any — the outgoing half of every
+ *  crossfade. Resolves the path once (no double lookup, no unsafe cast). */
+function fadeOutCurrentMusic(): void {
+  const path = currentMusicPath();
+  if (music && path) scheduleStop(path, music);
 }
 
 /** Crossfade the in-game music to the track for canonical biome `band` (from biomeBandAt). Throws
@@ -277,7 +284,7 @@ function setMusicBand(band: string): void {
   if (!path) {
     throw new Error(`setMusicBand: no in-game music mapped for biome band "${band}".`);
   }
-  if (music && currentMusicPath()) scheduleStop(currentMusicPath() as string, music);
+  fadeOutCurrentMusic();
   musicKey = band;
   music = startBed(path, musicTarget());
 }
@@ -325,7 +332,7 @@ export function startMenuMusic(): void {
 export function stopMusic(): void {
   if (!started) return;
   started = false;
-  if (music && currentMusicPath()) scheduleStop(currentMusicPath() as string, music);
+  fadeOutCurrentMusic();
   if (ambient && ambientBed) scheduleStop(ambientBed, ambient);
   music = null;
   ambient = null;
