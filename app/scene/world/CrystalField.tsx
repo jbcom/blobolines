@@ -10,6 +10,8 @@ import {
   flash,
   getBlobDiagnostics,
   isPowerupActive,
+  markCrystalCollected,
+  resetCollectedCrystals,
   scoreMultiplier,
   useGameStore,
   useWorldStore,
@@ -63,6 +65,7 @@ export function CrystalField() {
     positions.current = [];
     tiers.current = [];
     collected.current.clear();
+    resetCollectedCrystals(); // clear the shared set TreasureChests reads
     popping.current.clear();
   }, [crystals]);
 
@@ -126,6 +129,7 @@ export function CrystalField() {
       // order correct at the integration boundary (it was previously swapped here).
       if (stepCrystal(blobPos, pos[i], dt, magnet)) {
         collected.current.add(i);
+        markCrystalCollected(i); // shared so TreasureChests drops a collected treasure's chest
         popping.current.set(i, 0); // start the collect burst
         gathered += CRYSTAL_VALUE[tier[i]];
         if (tier[i] === "treasure") treasureHit = true; // jackpot — celebrate this frame

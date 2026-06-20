@@ -4,11 +4,17 @@ import { useEffect } from "react";
 import type { Object3D } from "three";
 import { afterEach, expect, test, vi } from "vitest";
 import { render } from "vitest-browser-react";
-import { setBlobDiagnostics, useWorldStore } from "@/state";
+import {
+  markCrystalCollected,
+  resetCollectedCrystals,
+  setBlobDiagnostics,
+  useWorldStore,
+} from "@/state";
 import { TreasureChests } from "../TreasureChests";
 
 afterEach(() => {
   useWorldStore.setState({ crystals: [], seed: 1, seedPhrase: "seed-1", runId: 0 });
+  resetCollectedCrystals();
 });
 
 function CaptureScene({ onScene }: { onScene: (root: Object3D) => void }) {
@@ -77,4 +83,33 @@ test("TreasureChests shows a chest only for a treasure-tier crystal in range", a
     },
     { timeout: 4000, interval: 100 },
   );
+});
+
+test("a collected treasure crystal leaves no ghost chest", async () => {
+  useWorldStore.setState({ crystals: [{ position: [0, 5, 0], tier: "treasure" }] });
+  markCrystalCollected(0); // the gem was already gathered
+  setBlobDiagnostics({
+    position: [0, 5, 0],
+    velocity: [0, 0, 0],
+    speed: 0,
+    airborne: true,
+    expression: "idle",
+    squash: 1,
+    maxHeight: 5,
+    groundY: 0,
+  });
+
+  let root: Object3D | null = null;
+  const screen = await render(
+    <FixtureStage testId="treasure-collected-fixture" cameraDistance={8}>
+      <ambientLight intensity={1} />
+      <CaptureScene onScene={(s) => (root = s)} />
+      <TreasureChests />
+    </FixtureStage>,
+  );
+  await expect.element(screen.getByTestId("treasure-collected-fixture")).toBeInTheDocument();
+
+  // Let several frames run; a collected treasure must NOT show a chest.
+  await new Promise((r) => setTimeout(r, 500));
+  expect(visibleMeshCount(root as unknown as Object3D)).toBe(0);
 });

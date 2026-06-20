@@ -2,7 +2,7 @@ import { useGLTF } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
 import { useMemo, useRef } from "react";
 import type { Group } from "three";
-import { getBlobDiagnostics, useWorldStore } from "@/state";
+import { getBlobDiagnostics, isCrystalCollected, useWorldStore } from "@/state";
 
 /**
  * Renders a low-poly treasure CHEST GLB beneath each rare treasure-tier crystal, so the jackpot
@@ -34,6 +34,7 @@ export function TreasureChests() {
     for (let i = 0; i < crystals.length && n < MAX_CHESTS; i++) {
       const c = crystals[i];
       if (c.tier !== "treasure") continue;
+      if (isCrystalCollected(i)) continue; // the gem was gathered — don't leave a ghost chest
       if (Math.abs(c.position[1] - h) > WINDOW) continue;
       const g = refs.current[n];
       if (g) {

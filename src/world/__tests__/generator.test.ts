@@ -259,7 +259,7 @@ describe("world generator", () => {
     const chunk = generateUpTo(createRng(9), 0, 600);
     expect(chunk.crystals.length).toBeGreaterThan(0);
     for (const c of chunk.crystals) {
-      expect(["common", "rare", "radiant"]).toContain(c.tier);
+      expect(["common", "rare", "radiant", "treasure"]).toContain(c.tier);
       expect(c.position).toHaveLength(3);
     }
   });
