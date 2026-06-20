@@ -24,7 +24,10 @@ const vol = audioCfg.volumes;
 const howls = new Map<string, Howl>();
 let music: Howl | null = null;
 let ambient: Howl | null = null;
-let ambientBand = "";
+/** Path of the currently-playing ambient bed. Adjacent biome bands deliberately share a bed
+ *  (sky + upper-atmosphere → wind, space + deep-space → space), so the live-bed identity is
+ *  tracked by PATH (not band name) — a band change that keeps the same bed must not restart it. */
+let ambientBed = "";
 /** Current music track key ("menu" | "ingame" | "highspace"), so an altitude/phase change only
  *  crossfades when the target track actually differs. */
 let musicKey = "";
@@ -82,8 +85,16 @@ function startBed(path: string, volume: number): Howl {
   }
   const h = howlFor(path, true, 0, true); // beds stream (html5) — long loops, not low-latency SFX
   h.mute(muted);
-  h.play();
-  h.fade(0, volume, vol.themeFadeMs);
+  // `howlFor` returns a CACHED Howl per path, so this bed may already be playing (e.g. a swap
+  // back to a still-fading-out bed, or two biome bands sharing one mp3). Calling play() again
+  // would spawn a second overlapping loop (doubled/phasing audio). Re-fade the live loop to the
+  // target instead; only play() a bed that isn't already sounding.
+  if (h.playing()) {
+    h.fade(h.volume(), volume, vol.themeFadeMs);
+  } else {
+    h.play();
+    h.fade(0, volume, vol.themeFadeMs);
+  }
   return h;
 }
 
@@ -247,17 +258,21 @@ function setMusicTrack(key: string): void {
   music = startBed(path, musicTarget());
 }
 
-/** Swap the ambient bed to `band` (a canonical biome band, from biomeBandAt); no-op if
- *  unchanged. Throws if the band has no bed mapped in audio.json — every canonical band must
- *  map to a bed (no silent fallback; see [[blobolines-no-fallbacks]]). */
+/** Swap the ambient bed to `band` (a canonical biome band, from biomeBandAt). Throws if the
+ *  band has no bed mapped in audio.json — every canonical band must map to a bed (no silent
+ *  fallback; see [[blobolines-no-fallbacks]]). No-ops when the resolved BED is unchanged, even
+ *  across a band name change: adjacent bands deliberately share a bed (sky + upper-atmosphere →
+ *  wind, space + deep-space → space), so guarding on the path keeps that crossing seamless
+ *  instead of restarting the same loop with an audible gap. */
 function setAmbientBand(band: string): void {
-  if (band === ambientBand) return;
   const path = ambientBeds[band];
   if (!path) {
     throw new Error(`setAmbientBand: no ambient bed mapped for biome band "${band}".`);
   }
-  if (ambient && ambientBeds[ambientBand]) scheduleStop(ambientBeds[ambientBand], ambient);
-  ambientBand = band;
+  const currentPath = ambientBed;
+  if (path === currentPath) return; // same bed (possibly a different band) — keep it playing
+  if (ambient && currentPath) scheduleStop(currentPath, ambient);
+  ambientBed = path;
   ambient = startBed(path, ambientTarget());
 }
 
@@ -277,19 +292,19 @@ export function startMenuMusic(): void {
   started = true;
   setMusicTrack("menu");
   // No ambient bed on the menu — just the music.
-  if (ambient && ambientBeds[ambientBand]) scheduleStop(ambientBeds[ambientBand], ambient);
+  if (ambient && ambientBed) scheduleStop(ambientBed, ambient);
   ambient = null;
-  ambientBand = "";
+  ambientBed = "";
 }
 
 export function stopMusic(): void {
   if (!started) return;
   started = false;
   if (music && musicTracks[musicKey]) scheduleStop(musicTracks[musicKey], music);
-  if (ambient && ambientBeds[ambientBand]) scheduleStop(ambientBeds[ambientBand], ambient);
+  if (ambient && ambientBed) scheduleStop(ambientBed, ambient);
   music = null;
   ambient = null;
-  ambientBand = "";
+  ambientBed = "";
   musicKey = "";
 }
 

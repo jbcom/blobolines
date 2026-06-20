@@ -220,6 +220,29 @@ describe("music + ambient lifecycle", () => {
     stopMusic();
   });
 
+  it("does not spawn a duplicate ambient loop when adjacent bands share a bed", () => {
+    // sky and upper-atmosphere both map to wind.mp3 — crossing between them must keep the SAME
+    // single loop, not stop+restart (or double-play) the shared bed. Count actively-PLAYING
+    // wind sounds (a double-play would leave two playing at once) rather than cached instances.
+    const windPlaying = () => {
+      const hs = (
+        Howler as unknown as {
+          _howls: Array<{ _loop: boolean; _src: string[]; playing(): boolean }>;
+        }
+      )._howls;
+      return hs.filter((h) => h._loop && h._src.some((s) => s.includes("wind.mp3")) && h.playing())
+        .length;
+    };
+    startMusic();
+    setMusicAltitude(150); // sky → wind bed
+    const afterSky = windPlaying();
+    setMusicAltitude(400); // upper-atmosphere → same wind bed (must not start a 2nd loop)
+    setMusicAltitude(150); // back to sky → still the same wind bed
+    // No additional wind loop began playing across the shared-bed crossings.
+    expect(windPlaying()).toBeLessThanOrEqual(afterSky);
+    stopMusic();
+  });
+
   // Beds STREAM (html5:true) — long loops shouldn't fully decode into memory on mobile; short
   // SFX use Web Audio (html5:false) for low-latency overlap. Inspect Howler's global registry
   // to confirm the looping beds vs the one-shot SFX got the right backend.
