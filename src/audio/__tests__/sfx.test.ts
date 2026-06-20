@@ -121,6 +121,27 @@ describe("music + ambient lifecycle", () => {
     stopMusic();
   });
 
+  it("a replay on the SAME band restarts the ground track (stopMusic resets musicKey)", () => {
+    const liveTrack = () => {
+      const hs = (Howler as unknown as { _howls: Array<{ _loop: boolean; _src: string[] }> })
+        ._howls;
+      return hs
+        .filter((h) => h._loop)
+        .flatMap((h) => h._src)
+        .join(" ");
+    };
+    // play → menu → play, never leaving the ground band: the second climb must NOT start silent
+    // (regression: if stopMusic left musicKey="ground", setMusicBand("ground") would no-op).
+    startMusic();
+    expect(liveTrack()).toContain("music/biomes/ground.mp3");
+    stopMusic();
+    startMusic();
+    expect(liveTrack(), "the ground track must restart on a same-band replay").toContain(
+      "music/biomes/ground.mp3",
+    );
+    stopMusic();
+  });
+
   it("the three mix buses (music/ambient/sfx) clamp + re-level live beds without throwing", () => {
     startMusic();
     for (const set of [setMusicVolume, setAmbientVolume, setSfxVolume]) {

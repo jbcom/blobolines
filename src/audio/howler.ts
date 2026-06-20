@@ -249,9 +249,9 @@ const musicTracks = audioCfg.music as Record<string, string>;
 const bandMusic = audioCfg.bandMusic as Record<string, string>;
 const ambientBeds = audioCfg.ambient as Record<string, string>;
 
-/** Crossfade the music to `key` (a track in audioCfg.music); no-op if already on it. The old
- *  track fades out (scheduleStop) while the new one fades in (startBed). Used for the menu track
- *  + the initial ingame track; the per-band climb music goes through setMusicBand. */
+/** Crossfade the music to `key` (a STATIC track in audioCfg.music — currently just "menu"); no-op
+ *  if already on it. The old track fades out (scheduleStop) while the new one fades in (startBed).
+ *  The per-band CLIMB music goes through setMusicBand instead. */
 function setMusicTrack(key: string): void {
   if (key === musicKey) return;
   const path = musicTracks[key];

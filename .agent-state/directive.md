@@ -724,8 +724,20 @@ mandate explicitly includes keeping docs aligned (no end-of-project catch-up).
       bands. 506 unit + 120 browser green; typecheck + biome ci + build clean.
 
 ### N9.3 PR cutting point
-- [ ] N9.3 Commit, dispatch reviewer, fold findings forward, open PR, babysit to squash-merge,
-      sync main, re-write directive forward to N10.
+- [x] N9.3a Committed (d7731b0), dispatched reviewer (background, focused on crossfade/stale-Howl +
+      menu↔band transition), pushed, opened PR #77. Monitor armed. Ran `npx biome ci .` before push.
+- [ ] [WAIT-REVIEW] N9.3b Babysit PR #77: wait CI green, fold reviewer + gemini/CodeRabbit findings
+      forward, resolve threads, squash-merge once green, sync main, then start N10.
+
+### N10 Next milestone (surface after #77 merges)
+- [ ] [WAIT-MERGE] N10.1 Pick the next polish unit (don't pre-commit). Biome identity is now
+      complete across ALL senses (visual scenery/parallax/landmarks/reactions + audio ambient +
+      MUSIC + particles + banner). Candidates to SHIFT axis: a gameplay/FEEL beat that's genuinely
+      missing (survey showed combo/score/landing-quality/toast/shake/trail/speedlines/powerups all
+      exist — look for a NEW pad type/hazard fitting the climber, or richer mid-air control feedback),
+      OR more owned-audio polish (victory-stinger variety per milestone tier, menu-music variety).
+      Enumerate use cases first; read own spec docs + the reachability-invariant + audio-identity
+      memories before touching pads/audio.
 
 ### N9 Next milestone (surface after #76 merges)
 - [ ] [WAIT-MERGE] N9.1 Pick the next polish unit (don't pre-commit). Biome identity + docs are now
