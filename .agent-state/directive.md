@@ -136,8 +136,15 @@ re-write directive forward → next.
       test. Local Docker repro was unreliable (QEMU amd64 segfaults, flaky arm64 webServer)
       so CI is the verifier; fix is the canonical, evidence-matched shm fix. 432 unit + 5
       local E2E green.
-- [ ] [WAIT] C3.2 Once C3.1 lands and CI is green, squash-merge PR #59, then re-write
-      directive forward to the per-biome ambient-audio milestone (D0, on a fresh branch).
+- [x] C3.1b shm fix did NOT resolve it — identical "Target page closed" at perf.spec:26.
+      3rd wrong hypothesis (textures, model-count, shm). STOPPED guessing per debug-loop rule.
+- [ ] [WAIT] C3.2 DIAGNOSTIC run pushed (66b1c4b): e2e/fixtures.ts prints page
+      console/pageerror/crash/close to CI stdout + trace artifact upload. Read the actual
+      crash reason from the next CI log, THEN fix the real cause. Strong fallback hypothesis:
+      dev-server-specific (rolldown-vite `pnpm dev` instability / preserveDrawingBuffer gated
+      to DEV) — candidate fix = run E2E against `vite preview` of a prod build.
+- [ ] [WAIT] C3.3 Once CI is green, squash-merge PR #59, then re-write directive forward to
+      the per-biome ambient-audio milestone (D0, fresh branch).
 
 ## Notes
 - This is a living plan. After every stage, backward+forward sweep and edit the queue.
