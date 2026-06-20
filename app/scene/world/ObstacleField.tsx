@@ -1,8 +1,8 @@
 import { useGLTF } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
 import { BallCollider, RigidBody } from "@react-three/rapier";
-import { Suspense, useMemo, useRef, useState } from "react";
-import { Color, type Group } from "three";
+import { Suspense, useEffect, useMemo, useRef, useState } from "react";
+import { Color, type Group, type Mesh, type Object3D } from "three";
 import { playThump } from "@/audio";
 import { biomeBandAt } from "@/config";
 import { getBlobDiagnostics, reportObstacleBounce, useWorldStore } from "@/state";
@@ -65,11 +65,25 @@ const BAND_MODEL: Record<string, string> = {
 const modelUrl = (file: string) => `${import.meta.env.BASE_URL}assets/models/${file}`;
 
 /** The band's GLB obstacle prop, scaled to roughly fill the collider radius. Clones the cached scene
- *  so each instance is independent. */
+ *  so each instance is independent, and DISPOSES the cloned geometries on unmount (band crossings
+ *  unmount these often as the render window scrolls) — scene.clone(true) makes fresh geometry
+ *  instances; their materials are SHARED with the useGLTF cache, so only the geometries are disposed
+ *  (matching BiomeScenicProps' cleanup discipline). */
 function ObstacleModel({ band, radius }: { band: string; radius: number }) {
   const file = BAND_MODEL[band] ?? BAND_MODEL.space;
   const { scene } = useGLTF(modelUrl(file));
-  const model = useMemo(() => scene.clone(true), [scene]);
+  const [model, setModel] = useState<Object3D | null>(null);
+  useEffect(() => {
+    const clone = scene.clone(true);
+    setModel(clone);
+    return () => {
+      clone.traverse((o) => {
+        const mesh = o as Mesh;
+        if (mesh.isMesh) mesh.geometry?.dispose();
+      });
+    };
+  }, [scene]);
+  if (!model) return null;
   // The source props vary in native size; a uniform scale tied to the radius reads as a boulder of
   // about the collider's size. (Exact silhouette differs per prop — that's the point: variety.)
   return <primitive object={model} scale={radius * 1.15} />;
