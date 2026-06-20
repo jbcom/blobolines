@@ -452,10 +452,28 @@ store (dailyRun + highScores + seedPhrase); no new assets; pure UI + a small sel
 use cases (first daily of the day vs. repeat attempt vs. new personal daily best) before building.
 
 ### N0 Architecture
-- [ ] N0.1 Read GameOver card + daily store fields (dailyRun, seedPhrase, highScores schema) +
-      the existing leaderboard render. Enumerate the daily-results use cases; decide a pure
-      selector (daily placement / personal-best-for-seed) + the GameOver daily section shape.
-      Record decision in decisions.ndjson.
+- [x] N0.1 DONE (read GameOver.tsx + daily.ts + persistence highScoreEntrySchema + store
+      commitBestHeight). FINDINGS: GameOver already shows a daily `runTag`
+      (`Daily <key> · <difficulty> · <hash>`) but NO placement — the daily results moment is
+      flavour text, no comparison. Each HighScoreEntry stores its `seedPhrase`; a daily run's
+      phrase is `dailySeedPhrase(today)` = `blobolines-daily-<YYYY-MM-DD>`, so the player's prior
+      attempts at TODAY's seed are exactly `highScores.filter(e => e.seedPhrase === todayPhrase)`.
+      USE CASES enumerated: (a) first daily attempt today (no prior entry → "Your first run on
+      today's tower"); (b) repeat attempt, not a personal daily best (show rank: "#2 of 3 today");
+      (c) NEW personal daily best (rank #1, celebratory "Best on today's tower yet!").
+      DECISION (to record in decisions.ndjson): add a PURE, date-injected selector
+      `dailyStanding(highScores, todaySeedPhrase, thisRunScore)` in src/sim/daily/ returning
+      `{ attemptsToday, rank, isPersonalDailyBest }` (sim stays pure — caller passes today's
+      phrase, no new Date() in sim). GameOver computes `dailySeedPhrase(new Date())` (UI side) and
+      renders a daily-only "Today's tower" sub-section under runTag. No new assets; pure selector +
+      UI. NEXT: N1.1 implement the selector + tests, N1.2 wire the GameOver section + browser
+      fixture.
+
+### N1 Implementation
+- [ ] N1.1 [BLOCKED-ON-MERGE] After PR #70 merges, on a fresh branch feat/daily-results: add the
+      pure `dailyStanding` selector + unit tests (the three use cases + tie handling); wire the
+      GameOver "Today's tower" section (rank / first-run / personal-best) keyed on dailyRun;
+      browser fixture asserting the section shows for a daily run and hides for a random run.
 
 ## Notes
 - This is a living plan. After every stage, backward+forward sweep and edit the queue.
