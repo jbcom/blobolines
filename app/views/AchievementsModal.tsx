@@ -175,7 +175,9 @@ export function AchievementsModal({
                               <div className="h-1 w-full overflow-hidden rounded-full bg-border/30">
                                 <div
                                   className="h-full rounded-full bg-tramp-gold/60"
-                                  style={{ width: `${Math.round(p.fraction * 100)}%` }}
+                                  // floor (not round) so a 99.6% never reads as a FULL bar on a
+                                  // still-locked medal — the bar only fills completely when actually met.
+                                  style={{ width: `${Math.floor(p.fraction * 100)}%` }}
                                 />
                               </div>
                               <span className="font-ui text-[10px] tabular-nums text-fg-subtle">

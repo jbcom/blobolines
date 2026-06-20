@@ -910,8 +910,22 @@ milestones, so a 2000m crossing LOOKS as grand as it sounds.
       Committed; reviewer to dispatch.
 
 ### N16.3 PR cutting point
-- [ ] N16.3 Commit, dispatch reviewer, fold findings forward, open PR, babysit to squash-merge,
-      sync main, re-write directive forward to N17.
+- [x] N16.3a Committed (07f2ce0), dispatched reviewer (background, focused on the met→stat/target
+      refactor equivalence + the fraction guard), pushed, opened PR #83. Monitor armed (ci-coalescing-
+      aware — waits for the ci.yml run on the exact HEAD sha). Ran `npx biome ci .` as the last step.
+- [x] N16.3b-review Background reviewer returned FULLY CLEAN: the met→stat/target refactor is
+      provably behavior-identical (every predicate was `>= N`), the fraction math is correct at all
+      boundaries, the modal run-axis=0 snapshot + the 0<f<1 render guard (suppressing both 0-progress
+      run medals and the f≥1 met-but-uncommitted edge) are correctly reasoned, zero stale .met
+      callers, helpers pure. No forward fixes.
+- [ ] [WAIT-REVIEW] N16.3c Wait the ci.yml run on HEAD green + any gemini/CodeRabbit threads, squash-
+      merge PR #83, sync main, start N17.
+
+### N17 Next milestone (surface after #83 merges)
+- [ ] [WAIT-MERGE] N17.1 Keep adding. Probe another not-yet-examined corner for a genuine beat:
+      the Onboarding/first-run coachmark polish, the Leaderboard tab presentation, the in-run pause/
+      settings access, the customizer, or a NAS-asset enrichment. Enumerate + survey first; no
+      reinvention.
 
 ## Queue — Milestone: Daily-challenge results polish (branch feat/daily-results, NEXT)
 
