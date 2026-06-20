@@ -736,17 +736,29 @@ mandate explicitly includes keeping docs aligned (no end-of-project catch-up).
       restart the ambient the music-only menu silenced). Fixed in b6a4ab4 — full early-return on
       the menu + a regression test (a menu altitude tick starts no new bed). Thread resolved. 508
       unit + 120 browser green.
-- [ ] [WAIT-REVIEW] N9.3d Wait CI green on b6a4ab4, squash-merge PR #77, sync main, start N10.
+- [x] N9.3d-ci CI verify gate FAILED on b6a4ab4 (biome format check — the menu-no-op test's
+      wrapping). 2nd time this bit me; HARDENED memory [[blobolines-biome-ci-stricter]]: run
+      `npx biome ci .` as the LAST step before push, after the final edit. Fixed (8c19f64).
+- [x] N9.3e PR #77 SQUASH-MERGED (be54b08, 2026-06-20). CLEAN, 0 threads. Per-biome music shipped.
+      Local main synced; cut feat/victory-stinger-variety. EIGHT PRs this session (#70–#77).
 
-### N10 Next milestone (surface after #77 merges)
-- [ ] [WAIT-MERGE] N10.1 Pick the next polish unit (don't pre-commit). Biome identity is now
-      complete across ALL senses (visual scenery/parallax/landmarks/reactions + audio ambient +
-      MUSIC + particles + banner). Candidates to SHIFT axis: a gameplay/FEEL beat that's genuinely
-      missing (survey showed combo/score/landing-quality/toast/shake/trail/speedlines/powerups all
-      exist — look for a NEW pad type/hazard fitting the climber, or richer mid-air control feedback),
-      OR more owned-audio polish (victory-stinger variety per milestone tier, menu-music variety).
-      Enumerate use cases first; read own spec docs + the reachability-invariant + audio-identity
-      memories before touching pads/audio.
+## Queue — Milestone: Escalating victory stingers (branch feat/victory-stinger-variety)
+
+### N10 Architecture
+- [x] N10.1 SURVEY + DECISION. MilestoneBanner fires playMilestone() at EVERY 100m crossing with
+      the SAME single stinger — climbing higher sounds identical. The owned "Victory & Level
+      Complete" itch pack (already extracted) has 24 distinct celebration stingers. DECISION:
+      playMilestone(height) ESCALATES the stinger by altitude tier so higher milestones feel
+      grander — tier ramp from the owned pack: ≥100m bright → ≥500m triumph → ≥1000m epic → ≥2000m
+      mega. Pure audio-mapping: add a per-tier milestone stinger map to audio.json keyed by a
+      `milestoneTierFor(height)` (a tiny pure helper with explicit thresholds — throws/falls to the
+      lowest tier deliberately, documented); MilestoneBanner already has the height at fire time.
+      Keep playRecord (personal-best) distinct. Owned casual/celebratory audio only (audio-identity).
+- [ ] N10.2 Implement: vet+promote 4 tier stingers into public/assets/audio/sfx/milestones/; add a
+      milestoneTiers map + pure milestoneTierFor(height) (src/sim or src/audio); playMilestone takes
+      an optional height → tier stinger; MilestoneBanner passes the milestone height. Tests: tier
+      thresholds (boundaries + below-first + very-high) + audio no-throw across tiers. typecheck/
+      biome-ci/unit/browser; PR.
 
 ### N9 Next milestone (surface after #76 merges)
 - [ ] [WAIT-MERGE] N9.1 Pick the next polish unit (don't pre-commit). Biome identity + docs are now
