@@ -2,13 +2,16 @@ import { useFrame } from "@react-three/fiber";
 import { useEffect, useRef } from "react";
 import type { InstancedMesh } from "three";
 import { AdditiveBlending, Color, DoubleSide, Matrix4, Quaternion, Vector3 } from "three";
-import { playChime } from "@/audio";
+import { playChime, playMilestone } from "@/audio";
 import { world as worldCfg } from "@/config";
 import type { CrystalTier } from "@/core/types";
 import { stepCrystal } from "@/sim/collect";
 import {
+  flash,
   getBlobDiagnostics,
   isPowerupActive,
+  markCrystalCollected,
+  resetCollectedCrystals,
   scoreMultiplier,
   useGameStore,
   useWorldStore,
@@ -36,6 +39,9 @@ const TIER_COLOR: Record<CrystalTier, Color> = {
   common: new Color(hex(palette.blob.slime)),
   rare: new Color(hex(palette.tramp.violet)),
   radiant: new Color(hex(palette.tramp.gold)),
+  // Treasure: the brightest, warmest gold — it's the jackpot. (The chest GLB renders separately;
+  // this color drives its instanced halo + collect-burst flash so it reads as the richest tier.)
+  treasure: new Color(hex(palette.sun)),
 };
 
 export function CrystalField() {
@@ -59,6 +65,7 @@ export function CrystalField() {
     positions.current = [];
     tiers.current = [];
     collected.current.clear();
+    resetCollectedCrystals(); // clear the shared set TreasureChests reads
     popping.current.clear();
   }, [crystals]);
 
@@ -87,6 +94,7 @@ export function CrystalField() {
     // ones (no per-frame allocations). Gathered VALUE sums each crystal's tier worth.
     let visible = 0;
     let gathered = 0;
+    let treasureHit = false; // set when a treasure-tier gem is collected this frame
     for (let i = 0; i < count; i++) {
       const popAge = popping.current.get(i);
       if (popAge !== undefined) {
@@ -121,8 +129,10 @@ export function CrystalField() {
       // order correct at the integration boundary (it was previously swapped here).
       if (stepCrystal(blobPos, pos[i], dt, magnet)) {
         collected.current.add(i);
+        markCrystalCollected(i); // shared so TreasureChests drops a collected treasure's chest
         popping.current.set(i, 0); // start the collect burst
         gathered += CRYSTAL_VALUE[tier[i]];
+        if (tier[i] === "treasure") treasureHit = true; // jackpot — celebrate this frame
         continue;
       }
       const p = pos[i];
@@ -158,7 +168,14 @@ export function CrystalField() {
       // Score-doubler: each gem collected while the buff is active is worth double (rounded so
       // the crystal total stays an integer). scoreMultiplier() is 1 when inactive.
       addCrystals(Math.round(gathered * scoreMultiplier()));
-      playChime();
+      // A treasure-tier pickup is the jackpot — a celebratory gold flash + milestone stinger over
+      // the usual collect chime. Otherwise the normal gather chime.
+      if (treasureHit) {
+        flash("gold", 0.9);
+        playMilestone();
+      } else {
+        playChime();
+      }
     }
   });
 

@@ -28,6 +28,7 @@ import {
   PowerUpField,
   RouteGateField,
   SkyDome,
+  TreasureChests,
 } from "./world";
 
 /**
@@ -75,6 +76,7 @@ export function GameScene() {
       {playing && <BlobShadow />}
       {playing && <BlobCaustic skin={skin} />}
       {playing && <CrystalField />}
+      {playing && <TreasureChests />}
       {playing && <PowerUpField />}
       {playing && <RouteGateField />}
       {playing && <LaunchRing />}

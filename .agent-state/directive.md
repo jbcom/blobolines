@@ -326,11 +326,38 @@ assets needed (uses the 4 existing skins + adds the gating data).
 
 ### I2 PR cutting point
 - [x] I2.1a Verified + reviewed; opening PR.
-- [ ] [WAIT-REVIEW] I2.1b Babysit PR: verify+e2e green → address feedback → resolve threads →
-      squash-merge → re-write directive forward to the next milestone.
+- [x] I2.1b PR #66 SQUASH-MERGED (4072b5e, 2026-06-20). verify+e2e green; addressed gemini's
+      3 MEDIUM (canonical BlobSkin import + key gated-skin UI on gate presence not resolved
+      object). Achievement→cosmetic reward loop shipped.
+
+## Queue — Milestone: Rare treasure collectible (branch feat/treasure-pickup)
+
+Add excitement variety to the climb: a RARE special "treasure" pickup (a GLB chest/gem from the
+NAS asset server) that spawns infrequently, drifts/glints to draw the eye, and on collection
+rewards a big crystal burst + a celebratory flash/stinger. Ties into the existing crystal +
+audio + (optionally) achievement systems. Data-driven rarity; deterministic spawn; mid-tier budget.
+
+### J0 Architecture
+- [x] J0.1 Decided (decisions.ndjson): treasure is a NEW TOP CRYSTAL TIER, not a new type —
+      reuses the whole crystal pipeline. Curated a self-contained chest GLB from the NAS library.
+
+### J1 Implementation
+- [x] J1.1 'treasure' tier (value 25, scale 2.4, 0.5→3% odds) in crystalTier; CrystalField
+      renders it gold + jackpot collect (gold flash + milestone stinger); TreasureChests seats the
+      chest GLB beneath treasure gems. Visual: TreasureChests browser fixture proves render (chest
+      for treasure, hides otherwise + when collected) — claude-in-chrome sim unreliable for a live
+      screenshot, fixture is the authoritative proof.
+- [x] J1.2 Tests: tier value/scale/rarity, generator allowlist, crystalCollectBridge, TreasureChests
+      fixtures. 455 unit + browser. Review folded forward: missing generator allowlist + ghost-chest-
+      after-collect (shared crystalCollectBridge).
+
+### J2 PR cutting point
+- [x] J2.1a Verified + reviewed (2 bugs fixed); opening PR.
+- [ ] [WAIT-REVIEW] J2.1b Babysit PR: verify+e2e green → address feedback → resolve threads →
+      squash-merge → re-write directive forward.
 
 ## Notes
 - This is a living plan. After every stage, backward+forward sweep and edit the queue.
-- Next candidate milestones (surface, don't pre-commit): collectible variety/special pickups,
-  per-biome music layers, denser interactive props that react to the blob, biome-reactive blob
-  tinting, USE the teleport tool to manually QA + polish each upper biome band's look.
+- Next candidate milestones (surface, don't pre-commit): per-biome music layers, denser
+  interactive props that react to the blob, biome-reactive blob tinting, USE the teleport tool to
+  manually QA + polish each upper biome band's look, daily-challenge leaderboard polish.

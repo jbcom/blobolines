@@ -17,6 +17,11 @@ export {
   resetAchievementToasts,
   subscribeAchievementToast,
 } from "./achievementToastBridge";
+export {
+  isCrystalCollected,
+  markCrystalCollected,
+  resetCollectedCrystals,
+} from "./crystalCollectBridge";
 export { type BlobDiagnostics, getBlobDiagnostics, setBlobDiagnostics } from "./diagnostics";
 export {
   consumeFlash,
