@@ -17,6 +17,7 @@ import { blob } from "@/config";
 import type { TrampolineSpec } from "@/core/types";
 import { ImpactStyle, impact as impact_, vibrate } from "@/platform";
 import { classifyExpression, stepIdlePatience } from "@/sim/blob";
+import { CLOUD_BODY_HALF_HEIGHT, CLOUD_SETTLE_Y } from "@/sim/cloudPad";
 import { MAX_COMBO } from "@/sim/combo";
 import { downdraftAt, windAt } from "@/sim/hazard";
 import { isPerfectRelease, launchVelocity } from "@/sim/launch";
@@ -30,6 +31,7 @@ import {
 } from "@/sim/physics";
 import { goldenPathLandingBonus, goldenPathLandingQuality } from "@/sim/score";
 import {
+  type CloudAdherenceRequest,
   consumeAirNudge,
   consumeBounceCharge,
   consumeCloudAdherence,
@@ -46,6 +48,7 @@ import {
   isPowerupActive,
   isRouteProofSequenceActive,
   reportBlobSplit,
+  reportCloudAdherence,
   reportLaunchBurst,
   reportRouteLandingFeedback,
   reportSplat,
@@ -124,6 +127,15 @@ export function PlayerBlob() {
   const bubbleRemaining = useRef(0);
   /** Whether the player has a mid-air redirect/nudge charge available to use. */
   const nudgeAvailable = useRef(true);
+  /**
+   * Dev-teleport bootstrap anchor. When a teleport places the body on a pad whose
+   * Trampoline sensor may not yet be mounted (TrampolineField window is React state —
+   * it lags 1–2 render cycles), this injects cloud adherence directly from the blob's
+   * own useFrame so the soft-settle force fires every frame until the real sensor takes
+   * over. Cleared as soon as a genuine reportCloudAdherence() arrives from a mounted
+   * Trampoline, which means the sensor window has caught up and the anchor is redundant.
+   */
+  const teleportAnchor = useRef<CloudAdherenceRequest | null>(null);
 
   // Reset body to the starter pad whenever a run begins. PlayerBlob remounts on each
   // run (GameScene mounts <Physics> only while playing), so [] is correct; the refs
@@ -152,6 +164,7 @@ export function PlayerBlob() {
     playerControlStarted.current = false;
     bubbleRemaining.current = 0;
     nudgeAvailable.current = true;
+    teleportAnchor.current = null;
     setBlobDiagnostics({
       position: [0, STARTER_BLOB_Y, 0],
       velocity: [0, 0, 0],
@@ -393,6 +406,26 @@ export function PlayerBlob() {
       p = body.translation();
       v = body.linvel();
       airborne = false;
+      // Seed the teleport anchor so the soft-settle force fires every frame from THIS
+      // useFrame until the Trampoline sensor for the landing pad mounts and takes over.
+      // The TrampolineField window is React state (async): it may lag 1–2 render cycles
+      // before the Trampoline component for padY=629 is mounted. Without the anchor, the
+      // body free-falls during that gap and dies (DEATH_FALL_DISTANCE = 24m hit quickly
+      // because safeY is set to the teleport restY and no cloud sensor is present yet).
+      if (landingPad) {
+        const padY = landingPad.position[1];
+        teleportAnchor.current = {
+          padId: landingPad.id,
+          type: landingPad.type,
+          position: [restX, padY + CLOUD_BODY_HALF_HEIGHT, restZ],
+          settleY: padY + CLOUD_SETTLE_Y,
+          relX: 0,
+          relZ: 0,
+          strength: 1.0,
+        };
+      } else {
+        teleportAnchor.current = null;
+      }
     }
 
     if (bubbleRemaining.current > 0) {
@@ -497,8 +530,29 @@ export function PlayerBlob() {
       }
     }
 
+    // If the teleport anchor is still active, inject it so the settle force fires this
+    // frame even if the Trampoline sensor for the landing pad isn't mounted yet. The
+    // anchor is cleared as soon as a REAL adherence arrives (Trampoline sensor live),
+    // but a launch clears it immediately (player lifted off intentionally).
+    if (teleportAnchor.current) {
+      reportCloudAdherence(teleportAnchor.current);
+    }
+
     const adherence = consumeCloudAdherence();
     if (adherence) {
+      // A real adherence from the now-mounted Trampoline sensor means the pad window has caught up —
+      // the anchor is no longer needed. Guard on object IDENTITY: the anchor we just injected via
+      // reportCloudAdherence() is what consumeCloudAdherence() returns until the real sensor reports
+      // (last-stronger-wins, and the anchor is strength 1.0), so a padId-only check would clear the
+      // anchor on its OWN frame-1 echo and defeat the lag bridge. Only a DIFFERENT object (the real
+      // sensor's report for the same pad) releases it.
+      if (
+        teleportAnchor.current &&
+        adherence !== teleportAnchor.current &&
+        adherence.padId === teleportAnchor.current.padId
+      ) {
+        teleportAnchor.current = null;
+      }
       body.wakeUp();
       const live = body.linvel();
       const pos = body.translation();
@@ -549,6 +603,7 @@ export function PlayerBlob() {
         kind: "launch",
       });
       cloudCling.current.strength = 0;
+      teleportAnchor.current = null; // player launched — no longer resting on the teleport pad
       if (isPerfectRelease(req.charge)) {
         flash("gold", 1);
         playComboFanfare();

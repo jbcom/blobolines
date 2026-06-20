@@ -938,7 +938,13 @@ milestones, so a 2000m crossing LOOKS as grand as it sounds.
       button + Escape/P toggles playing↔paused; a PauseOverlay (Resume / Settings / Quit-to-menu)
       shows over the frozen scene with music ducked. Determinism: pausing just stops advancing the
       sim clock — no reach math touched, no RNG.
-- [x] N17.2 DONE (1d7cabf): GamePhase += "paused"; togglePause action (playing↔paused only); GameScene
+- [x] N17.2 DONE + MERGED (PR #85, squash d15c1e5): GamePhase += "paused"; togglePause action
+      (playing↔paused only); GameScene mounts world for playing||paused, PhysicsStepDriver gates step
+      on playing; PauseOverlay + HUD PauseButton; Escape/P OWNERSHIP SPLIT (PauseButton enters,
+      PauseOverlay resumes guarded on !settingsOpen — gemini review); pauseMusic/resumeMusic
+      indefinite duck-hold; GamePhase derived from GAME_PHASES (no drift). 6 review findings folded
+      (3 local + 3 gemini), all threads resolved, 130 browser tests green. ORIGINAL N17.2 spec below:
+- [x] N17.2 spec: GamePhase += "paused"; togglePause action (playing↔paused only); GameScene
       mounts world for playing||paused, PhysicsStepDriver gates step on playing; HudOverlay shows Hud
       for playing||paused + PauseOverlay when paused; a pause button in the Hud + an Escape/P key
       handler; duckMusic on pause. Tests: store togglePause transitions (only from playing/paused,
@@ -980,8 +986,72 @@ use cases (first daily of the day vs. repeat attempt vs. new personal daily best
       "#N of M" / gold personal-daily-best, hidden for random runs. 6 selector unit tests + 4
       GameOver browser fixtures. 479 unit + 117 browser green; typecheck + lint clean.
 
+## Queue — Milestone: Upper-band visual QA + polish (branch feat/upper-band-polish, ACTIVE)
+
+The scenery system (BiomeScenicProps, 4 parallax layers, 6 props + 1 landmark per band) and the
+biome geometry are mature and dense. What has NOT been done is a deliberate eyes-on QA of how each
+UPPER band actually LOOKS in-game — the bands a typical run rarely reaches (stratosphere ~600m,
+space ~950m, deep-space ~1400m). The `__blobtest.teleport(y)` dev hook puts the blob at any height;
+drive it through each band, screenshot, READ the screenshot against the band's intended palette/mood
+(see src/config/biomes.ts band colors + docs/DESIGN.md), and fix spec drift (washed-out fog, prop
+scale wrong for the band, landmark clipping, lighting flat, sky gradient off). This is the "you own
+quality, especially visuals" doctrine applied to the bands the dev rarely sees.
+
+### N18 Architecture
+- [x] N18.1 SURVEY DONE. Tool: a Playwright FOREGROUND-Chromium spec (e2e/upper-band-survey.spec.ts,
+      a throwaway) teleporting band→band + screenshotting to /tmp — rAF-immune (vs the backgrounded
+      claude-in-chrome stepper-freeze). FINDINGS:
+      • F1 (VISUAL, data fix): upper-atmosphere @340m live screenshot shows a near-WHITE washed-out
+        sky/fog. The band name "Upper Atmosphere" implies thin icy-blue air; instead it's a flat pale
+        cream-white with NO gradient and no depth — the far parallax props vanish against the white.
+        Fix is DATA: the sky/fog color + density for the upper bands in biomes.ts (and/or SkyDome /
+        fog tuning). Likely all upper bands trend too white. NEEDS the other bands surveyed too (see
+        F2 — they died before screenshotting).
+      • F2 (DEV-TOOL BUG, not player-facing): the teleport dev hook kills the run on a second
+        consecutive up-teleport, which blocked screenshotting space/deep-space live. Root-caused +
+        descoped — see the [WAIT-INVESTIGATE] N18.2 item below. (The survey + a throwaway debug spec
+        were deleted after they served their finding purpose; F1 is locked by a deterministic SkyDome
+        fixture that needs no teleport.)
+- [x] N18.3 Fix F1 (washed-out upper bands) DONE. ROOT CAUSE: a bright STATIC drei <Sky> + a fixed
+      warm-cream LIGHT rig washed the upper bands toward white/tan regardless of the per-band color
+      data. FIX (render, not data — the band data was already right): (1) SkyDome crossfades the drei
+      <Sky> OUT with altitude (gone by ~600m / stratosphere) and ramps the per-band gradient-wash
+      alpha 0.82→1.0, so the band's true color owns the upper backdrop. (2) Lighting is now
+      height-reactive — ambient/hemisphere/key/fill tint toward the band colors and DIM toward space
+      (SPACE_LIGHT_Y=950), so the foreground stops reading warm-cream in the airless dark. Locked by a
+      new SkyDome fixture: renders the space band via setBlobDiagnostics(1000) and asserts the center
+      luminance < 0.35 (the pre-fix washed render sat ≳0.6). typecheck + browser fixture green.
+- [x] N18.2 Fix F2 (dev-teleport death) DONE (cherry-picked dde6a72 from a worktree debugger). FIX:
+      a `teleportAnchor` ref in PlayerBlob — on a cloud-pad teleport it seeds a full-strength
+      CloudAdherenceRequest (settleY = padY + CLOUD_SETTLE_Y) and `reportCloudAdherence`s it every
+      frame from the blob's own useFrame, so the existing soft-settle spring holds the body at the
+      pad until the real Trampoline sensor mounts (TrampolineField's window is async React state and
+      lags 1–2 commits) and takes over — then the anchor clears (also cleared on launch / run reset).
+      Deterministic (no timeouts/frame-counts). Confirmed by the new e2e lock (rest-at-340 →
+      teleport(640) stays "playing", bodyY>560) — both teleport e2e tests pass. typecheck + pinned
+      lint + full suite (525 unit / 132 browser) green. See [[blobolines-cloud-pads-are-soft-sensors]].
+      ORIGINAL root-cause notes (kept for the record):
+      `__blobtest.teleport(y)` killed the run on a second consecutive up-teleport (340→640).
+      DEFINITIVE ROOT CAUSE (found via instrumented Playwright trace, all 5 inline fix attempts
+      reverted to clean baseline): cloud pads are NOT hard colliders — `cloudCatch` (src/sim/cloudPad/
+      catch.ts) is a SOFT sensor that only adheres a body that is DESCENDING (vy ≤ 0.05) AND already
+      inside the catch volume [padY − bodyHalf, padY + CLOUD_SETTLE_Y + headroom]. The teleport parks
+      the body at padY + BLOB.radius with zero velocity — ABOVE the catch volume — so cloudCatch never
+      fires and the body free-falls to death. (The earlier "window-mount race" theory was a red
+      herring: the instrumented trace confirmed restY=630 on a real pad-at-629 in-store, highestY=680
+      — the body IS placed correctly; it falls because nothing CATCHES it.) THE FIX (for a focused
+      follow-up, not inline — this loop hit the 3-probe architectural-stop rule): land the teleport
+      body INSIDE the catch volume (at padY + CLOUD_SETTLE_Y) with a small DOWNWARD velocity so
+      cloudCatch engages — AND verify against the instrumented trace, since a naive version of exactly
+      this still died (likely the pad sensor wasn't mounted yet at that altitude OR settleY math). This
+      is dev-tooling only (real players climb continuously and never teleport), so it does not gate the
+      game. Promote the rest-then-up case (teleport 340 → rest 1400ms → teleport 640, assert phase
+      stays "playing") into e2e/teleport.spec.ts as the lock once fixed. This item is a WAIT because it
+      needs a fresh focused debugging pass, not more inline probing.
+
 ## Notes
 - This is a living plan. After every stage, backward+forward sweep and edit the queue.
-- Next candidate milestones (surface, don't pre-commit): per-biome MUSIC layers (needs new audio
-  assets), daily-challenge leaderboard polish, interactive scenery, USE the teleport tool to QA +
-  polish each upper biome band's look.
+- Next candidate milestones AFTER N18 (surface, don't pre-commit): per-biome MUSIC layers (needs new
+  audio assets), daily-challenge leaderboard polish, interactive scenery enrichment.
+- Lesson banked this session: the pre-push lint gate is `pnpm lint` (PINNED biome 2.5.0), NOT
+  `npx biome` / global biome (older, gives false-clean) — see [[blobolines-biome-ci-stricter]].
