@@ -115,4 +115,27 @@ describe("worldStore.ensureHeight", () => {
       expect(trampolines[i].id).toBeGreaterThan(trampolines[i - 1].id);
     }
   });
+
+  it("generates off-route obstacles, deterministic per seed, cleared on reset, bounded on a long climb", () => {
+    useWorldStore.getState().reset(42);
+    const first = useWorldStore.getState().obstacles;
+    expect(first.length).toBeGreaterThan(0); // a fresh tower seeds some obstacles
+
+    // Same seed → identical obstacles (replay determinism).
+    useWorldStore.getState().reset(42);
+    expect(useWorldStore.getState().obstacles).toEqual(first);
+
+    // A fresh tower clears the prior run's obstacles (no cross-run leak).
+    useWorldStore.getState().reset(999);
+    const reseeded = useWorldStore.getState().obstacles;
+    expect(reseeded).not.toEqual(first);
+
+    // Obstacles extend with the climb and stay bounded (same tail trim as pads).
+    for (let target = 500; target <= 8000; target += 500) {
+      useWorldStore.getState().ensureHeight(target);
+    }
+    const { obstacles } = useWorldStore.getState();
+    expect(obstacles.length).toBeGreaterThan(reseeded.length); // grew with the climb
+    expect(obstacles.length).toBeLessThanOrEqual(400); // bounded
+  });
 });

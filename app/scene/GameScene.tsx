@@ -25,6 +25,7 @@ import {
   GoldenRoutePreview,
   LaunchRing,
   Lighting,
+  ObstacleField,
   PowerUpField,
   RouteGateField,
   SkyDome,
@@ -61,6 +62,9 @@ export function GameScene() {
           <Physics gravity={GRAVITY} paused>
             <PhysicsStepDriver stepping={playing} />
             <TrampolineField />
+            {/* Off-route bounce obstacles: solid fixed colliders the blob ricochets off (inside
+                Physics so Rapier resolves the rebound against the blob's collider). */}
+            <ObstacleField />
             <PlayerBlob />
             <SplatChunks skin={skin} />
           </Physics>

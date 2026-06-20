@@ -1049,9 +1049,80 @@ quality, especially visuals" doctrine applied to the bands the dev rarely sees.
       stays "playing") into e2e/teleport.spec.ts as the lock once fixed. This item is a WAIT because it
       needs a fresh focused debugging pass, not more inline probing.
 
+## Queue — Milestone: Interactive scenery enrichment (branch feat/interactive-scenery, NEXT)
+
+The scenery (BiomeScenicProps) is dense + reactive (parallax, flyby glint, blob-lean) but PURELY
+DECORATIVE — props never affect play. The mounted assets server ("props/scenery makes the game
+richer") + the climber-feature mandate point to making SOME scenery interactive: a prop the blob can
+bounce off, brush to trigger a reward, or that reacts mechanically (not just visually). This must be
+SURVEYED first — every prior corner turned out saturated, and the existing interactive surface is
+already broad (CrystalField, PowerUpField, TreasureChests, RouteGateField, LaunchRing, hazards). The
+risk is rebuilding something that exists; the opportunity is a NEW interaction class scenery is
+uniquely suited to.
+
+### N19 Architecture
+- [x] N19.1 SURVEY DONE. Existing interaction CLASSES (all confirmed, file-cited): (1) collect-on-touch
+      = CrystalField (markCrystalCollected→store, addCrystals→gameStore) + PowerUpField
+      (activatePowerup→powerupBridge); (2) pass-through trigger = RouteGateField (reportRouteGateHit);
+      (3) environmental force = wind/downdraft hazards (getAirSteer/setAirSteer, applied in blob step);
+      (4) Rapier rigid bounce = Trampoline cloud pads (the ONLY solid physics scenery — reportImpact/
+      reportLanding/reportCloudAdherence); (5) decorative-only = TreasureChests + BiomeScenicProps
+      (zero collision, no bridge). GAP FOUND (genuine, not saturated): a SOLID BOUNCE-OFF OBSTACLE — a
+      fixed Rapier collider the blob RICOCHETS off (not collect, not pass-through, not a force field,
+      distinct from landing pads), spawned OFF the certified golden route so it never breaks the
+      reachability invariant. CORROBORATED: commit 1983a87 explicitly deferred this ("a proper off-path
+      obstacle hazard needs its own spawn+collision unit; noted for later"). This is a real intended-but-
+      unbuilt feature, not a forced add.
+      DECISION (record in decisions.ndjson): build an off-route bounce-obstacle system. CONSTRAINTS
+      (from [[blobolines-reachability-invariant]]): obstacles spawn ONLY off the golden path
+      (reaches()/reachable.ts stays the single tuning source — obstacles must NOT sit on or block any
+      certified pad-to-pad reach, or they'd break climbability); use a Rapier collider that bounces but
+      never traps; light feedback on contact (sound + visual), no failure state, no score requirement.
+      Determinism: placement seeded via createRng off the world seed; pure sim where the off-route
+      position is computed. NEXT: N19.2 design the spawn unit (where in src/world/ off-route positions
+      come from), N19.3 the collider + bounce + contact feedback, N19.4 visuals (mine an assets-server
+      GLB — boulder/asteroid/crystal-spire per band), tests + visual-verify.
+- [x] PR #86 (N18 upper-band polish) MERGED (squash 337a40c) — 2 review findings folded (gemini
+      teleport-anchor identity-clear + CodeRabbit decisions dedup), all threads resolved, fully green.
+- [x] N19.2 DONE. Pure src/world/obstacles.ts: generateObstacles(rng, pads, fromY, toY)→ObstacleSpec[],
+      offset off-route + rejected unless ≥ ROUTE_CLEARANCE from every golden-arc SAMPLE (clearOfRoute
+      reads the proofs — single source of truth, no reach math duplicated), pad footprints, and other
+      obstacles. Wired into useWorldStore (freshTower + ensureHeight) on a SEPARATE obstacleRng so it
+      never perturbs pad/crystal/powerup placement; bounded by the same tail trim. Tests: obstacles.test
+      (4 — determinism + the INVARIANT across 7 seeds: no obstacle in any golden-arc corridor + obstacles
+      actually placed) + a worldStore obstacle test (generated/deterministic/cleared-on-reset/bounded).
+      typecheck + pinned lint clean.
+- [x] N19.3 DONE. app/scene/world/ObstacleField.tsx: render-windowed (pad-window match), each obstacle
+      a FIXED RigidBody + BallCollider (restitution 0.55 — springy, not a launch pad) so Rapier resolves
+      the rebound against the blob's collider; mounted INSIDE <Physics> in GameScene. A per-frame
+      proximity check fires the cosmetic feedback on a FAST contact (≥ MIN_BOUNCE_SPEED): a speed-scaled
+      playThump + a scale-pop/emissive pulse + a reportObstacleBounce bridge event (new — for any HUD/
+      vfx). Per-band tint (warm rock low → icy/violet mid → dark asteroid space) via new palette tokens
+      scenery.rock/asteroid. No failure state, no trap. Tests: ObstacleField browser fixture (renders in
+      WebGL + fires a bounce on fast contact + stays SILENT on a slow brush) + the obstacle-bounce bridge.
+      typecheck + pinned lint + 134 browser / 530 unit green. VISUAL-VERIFY NOTE: confirmed obstacles
+      generate off-route in-store (4 at y=101–169, 11–32u lateral offset, r1.5–1.8) and render in the
+      WebGL fixture; a LIVE in-scene screenshot is blocked by the dev-teleport/rAF issues
+      ([[blobolines-headless-raf-gating]] + N19-pending teleport fix), so the deterministic browser
+      fixture IS the rendered-output verification here. Added a __worldStore dev hook for QA.
+- [x] N19.4 DONE. Each obstacle renders a SOLID band-appropriate GLB from the repo's OWN vetted biome
+      asset set (no new mining needed — better than the NAS round-trip, and visually coherent with the
+      decorative props): ground desert-rock, sky round-pine, upper-atmosphere snowy-rock, stratosphere
+      mushroom-giant, space asteroid-large, deep-space alien-crystal-rock. Loaded via useGLTF with the
+      procedural icosahedron as the Suspense fallback (never blanks while streaming); preloaded for
+      stutter-free band transitions; bounce-pulse scales the visual group. All 6 GLBs vetted clean (no
+      external URIs, ≤920 faces — headless-WebGL safe) and confirmed served 200 + loading without
+      console errors on the live dev server. 134 browser / 530 unit green; typecheck + pinned lint clean.
+
+- [ ] [WAIT-CI-REVIEW] PR #87 (N19 off-route obstacles) — babysit: a local comprehensive-review is
+      running over the branch diff (the key risk it checks: an obstacle slipping BETWEEN discrete
+      golden-arc samples — sample spacing ~0.6m over a ~15m arc vs ROUTE_CLEARANCE 6.5, so covered,
+      but confirm). Wait CI green for HEAD, fold any review/CodeRabbit/gemini findings forward, resolve
+      threads, squash-merge. Then cut the next milestone branch.
+
 ## Notes
 - This is a living plan. After every stage, backward+forward sweep and edit the queue.
-- Next candidate milestones AFTER N18 (surface, don't pre-commit): per-biome MUSIC layers (needs new
-  audio assets), daily-challenge leaderboard polish, interactive scenery enrichment.
+- Next candidate milestones AFTER N19 (surface, don't pre-commit): per-biome MUSIC layers (needs new
+  audio assets), daily-challenge leaderboard polish.
 - Lesson banked this session: the pre-push lint gate is `pnpm lint` (PINNED biome 2.5.0), NOT
   `npx biome` / global biome (older, gives false-clean) — see [[blobolines-biome-ci-stricter]].
