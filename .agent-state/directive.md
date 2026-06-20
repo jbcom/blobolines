@@ -1021,8 +1021,17 @@ quality, especially visuals" doctrine applied to the bands the dev rarely sees.
       (SPACE_LIGHT_Y=950), so the foreground stops reading warm-cream in the airless dark. Locked by a
       new SkyDome fixture: renders the space band via setBlobDiagnostics(1000) and asserts the center
       luminance < 0.35 (the pre-fix washed render sat ≳0.6). typecheck + browser fixture green.
-- [ ] [WAIT-INVESTIGATE] N18.2 (teleport death — DESCOPED, dev-tool-only, NOT player-facing). The
-      `__blobtest.teleport(y)` dev hook kills the run on a second consecutive up-teleport (340→640).
+- [x] N18.2 Fix F2 (dev-teleport death) DONE (cherry-picked dde6a72 from a worktree debugger). FIX:
+      a `teleportAnchor` ref in PlayerBlob — on a cloud-pad teleport it seeds a full-strength
+      CloudAdherenceRequest (settleY = padY + CLOUD_SETTLE_Y) and `reportCloudAdherence`s it every
+      frame from the blob's own useFrame, so the existing soft-settle spring holds the body at the
+      pad until the real Trampoline sensor mounts (TrampolineField's window is async React state and
+      lags 1–2 commits) and takes over — then the anchor clears (also cleared on launch / run reset).
+      Deterministic (no timeouts/frame-counts). Confirmed by the new e2e lock (rest-at-340 →
+      teleport(640) stays "playing", bodyY>560) — both teleport e2e tests pass. typecheck + pinned
+      lint + full suite (525 unit / 132 browser) green. See [[blobolines-cloud-pads-are-soft-sensors]].
+      ORIGINAL root-cause notes (kept for the record):
+      `__blobtest.teleport(y)` killed the run on a second consecutive up-teleport (340→640).
       DEFINITIVE ROOT CAUSE (found via instrumented Playwright trace, all 5 inline fix attempts
       reverted to clean baseline): cloud pads are NOT hard colliders — `cloudCatch` (src/sim/cloudPad/
       catch.ts) is a SOFT sensor that only adheres a body that is DESCENDING (vy ≤ 0.05) AND already
