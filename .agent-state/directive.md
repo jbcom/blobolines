@@ -449,11 +449,36 @@ biomeBandAt + the banner pattern.
 - [ ] [WAIT-REVIEW] M2.1d Wait CI green on e87e280, then squash-merge PR #70 + sync local main.
       Then start the next milestone (N2 below).
 
-### N2 Next milestone (surface after #70 merges)
-- [ ] [BLOCKED-ON-MERGE] N2.1 Pick + enumerate the next polish unit on a fresh branch. Candidates
-      (don't pre-commit): interactive scenery that reacts to the blob (NAS props), per-biome MUSIC
-      layers (needs new owned audio), or USE the teleport tool to QA + polish each upper biome
-      band's look. Enumerate use cases first, read own spec docs, then build.
+## Queue — Milestone: Interactive scenery (blob-reactive props) (branch feat/reactive-scenery)
+
+Picked the next polish unit: scenery that REACTS to the blob, per the mandate ("the mounted
+assets server for props/scenery makes the game richer and more fun"). Today the parallax props
+(BiomeScenicProps) float/bob/drift on a purely deterministic path — pretty, but inert; they
+ignore the blob entirely. Make the NEAR layer come alive when the blob rushes past.
+
+### N2 Architecture
+- [x] N2.1 ENUMERATED (read BiomeScenicProps.tsx + biomeProps.ts parallaxLayers + diagnostics).
+      FINDINGS: props render in 3 parallax layers; the blob plays at z≈0 and the NEAR layer sits
+      at z −6..1 — close enough to plausibly react; far/mid are distant backdrop (leave calm).
+      Each ScenicInstance already reads getBlobDiagnostics().position every frame (position +
+      velocity available). USE CASES for "reacts to the blob": (a) PROXIMITY SWAY — a near prop
+      the blob passes close to (small |dx|,|dy|) leans away from the blob like it's shoved by the
+      rushing air, then eases back (spring); (b) FLYBY PULSE — a quick scale-pop/glint when the
+      blob's y crosses the prop's y at close x; (c) VELOCITY-SCALED — a faster blob shoves harder
+      than a slow drift-by. DECISION: implement as a NEAR-LAYER-ONLY reaction inside the existing
+      ScenicInstance useFrame (no new component, no new draw call): compute a normalized influence
+      = clamp(1 - dist/REACT_RADIUS) * speedScale, drive a lean (rotation.z away from the blob) +
+      a small scale-pop, eased back each frame (ref-lerp, deterministic — no Math.random, no new
+      state). Gate strictly to layer.id === "near" so the calm backdrop is untouched and the
+      budget cost is ~16 near instances doing a couple of cheap vector ops/frame. Determinism:
+      reaction is a pure function of blob position + the instance's own seeded x/y/z, so the sim
+      stays reproducible. NEXT: N2.2 implement the reaction in ScenicInstance + a unit test for
+      the pure influence/lean math (extract it as a tiny pure helper) + a browser fixture; visual
+      QA via teleport + claude-in-chrome.
+- [ ] [BLOCKED-ON-MERGE] N2.2 After PR #70 merges, on fresh branch feat/reactive-scenery: extract
+      a pure `sceneryReaction(blobPos, blobVel, propPos)` helper (lean angle + scale-pop +
+      influence), unit-test it, wire it into ScenicInstance's near-layer useFrame, add a browser
+      fixture, visual-verify, PR.
 
 ## Queue — Milestone: Daily-challenge results polish (branch feat/daily-results, NEXT)
 
