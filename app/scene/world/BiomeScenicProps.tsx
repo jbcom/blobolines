@@ -14,6 +14,7 @@ import { biomeBandAt } from "@/config/biomes";
 import { createRng } from "@/core/math";
 import { flybyPeaked, glintEmissive, sceneryReaction, stepFlybyPulse } from "@/render/vfx";
 import { getBlobDiagnostics } from "@/state";
+import { palette, rgbNorm } from "@/styles/tokens";
 
 /**
  * BiomeScenicProps — data-driven low-poly scenery scattered across the climb. Each prop
@@ -40,6 +41,10 @@ const url = (file: string) => `${import.meta.env.BASE_URL}assets/models/${file}`
 /** Extra scale a full flyby pulse adds on top of the continuous proximity pop — the discrete
  *  "whoosh past" flourish. Kept small so it reads as a quick beat, not a jarring jump. */
 const DEFAULT_FLYBY_PULSE_POP = 0.16;
+
+/** Normalized RGB of the warm-gold flyby glint tint, derived from the design token (not a raw RGB
+ *  literal). Scaled by the pulse envelope and added on top of each near prop's baseline emissive. */
+const GLINT_TINT = rgbNorm(palette.scenery.glint);
 
 /** Generic GLB prop. Clones the loaded scene so each instance is independent. Materials are cloned
  *  (never the shared cached GLB material) when EITHER the layer is hazy (`opacity` below 1, far/near
@@ -265,9 +270,13 @@ function ScenicInstance({ spec }: { spec: PropSpec }) {
       const glint = glintEmissive(r.pulse);
       for (const g of glintMatsRef.current) {
         g.mat.emissiveIntensity = g.baseIntensity + glint;
-        // Add a warm gold glint ON TOP of the baked baseline color (scales with the pulse), so at
-        // glint=0 the material returns exactly to its baseline — never clobbered to black.
-        g.mat.emissive?.setRGB(g.baseR + glint, g.baseG + glint * 0.82, g.baseB + glint * 0.5);
+        // Add the warm-gold glint tint (from the design token) ON TOP of the baked baseline color,
+        // scaled by the pulse, so at glint=0 the material returns exactly to its baseline.
+        g.mat.emissive?.setRGB(
+          g.baseR + glint * GLINT_TINT[0],
+          g.baseG + glint * GLINT_TINT[1],
+          g.baseB + glint * GLINT_TINT[2],
+        );
       }
     }
   });

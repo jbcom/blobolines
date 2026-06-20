@@ -570,8 +570,11 @@ visual channel. No new assets.
 - [x] N5.3a Committed (06b3dea), dispatched reviewer (background, focused on material lifecycle),
       pushed, opened PR #73. Monitor armed. (Ran `npx biome ci .` before push per the lesson — caught
       + fixed a format diff locally. Do NOT push extra state commits; let CI settle on HEAD.)
-- [ ] [WAIT-REVIEW] N5.3b Babysit PR #73: wait CI green, fold reviewer + gemini/CodeRabbit findings
-      forward, resolve threads, squash-merge once green, sync main, then start N6.
+- [x] N5.3b-feedback Both my reviewer AND gemini (3 threads) flagged the SAME real (latent) bug:
+      the glint's setRGB clobbered any baked emissive COLOR to black at glint=0 (only intensity was
+      restored). Fixed in 8aff804: capture baseR/G/B in onGlintMaterials, add the glint on top of
+      the baseline. 3 gemini threads replied + resolved. 499 unit + 120 browser green.
+- [ ] [WAIT-REVIEW] N5.3c Wait CI green on 8aff804, squash-merge PR #73, sync main, start N6.
 
 ### N6 Next milestone (surface after #73 merges)
 - [ ] [WAIT-MERGE] N6.1 Pick the next polish unit (don't pre-commit). The scenery-reaction arc
