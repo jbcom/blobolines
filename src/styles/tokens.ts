@@ -11,7 +11,7 @@ export const palette = {
     blue: "#ff7a3d",
     slime: "#ff4f7b",
     ghost: "#ffd95a",
-    /** Cosmic violet — the combo-mastery reward skin (earned by a 12× clean combo). */
+    /** Cosmic violet — the 2000m "Voyager" reward skin (earned by the height-2000 achievement). */
     nebula: "#a06bff",
   },
   tramp: {
