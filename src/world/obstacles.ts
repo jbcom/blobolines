@@ -18,10 +18,16 @@ import type { TrampolineSpec, Vec3 } from "@/core/types";
 export interface ObstacleSpec {
   /** Stable id (its generation Y), mirroring the pad id scheme so render windows can key by it. */
   id: number;
-  /** World position of the obstacle center. */
+  /** World position of the obstacle's bob CENTER (the rest position it oscillates around). */
   position: Vec3;
   /** Collision/visual radius (a sphere — simple, predictable bounce). */
   radius: number;
+  /** Gentle VERTICAL bob so an obstacle drifts up/down rather than sitting dead-still — more alive,
+   *  and a slightly trickier (but still optional) bounce. The bob is on the Y axis ONLY and its full
+   *  travel (`position.y ± amplitude`) is verified clear of the golden route at generation time, so a
+   *  bobbing obstacle can NEVER drift into the climb corridor (the reachability invariant holds across
+   *  the whole oscillation). Horizontal position never changes — only vertical, only within amplitude. */
+  bob: { amplitude: number; speed: number; phase: number };
 }
 
 /** Clearance (world units) every obstacle keeps from any golden-arc sample point — the blob's
@@ -36,6 +42,13 @@ const OBSTACLE_SEPARATION = 8.0;
 /** Obstacle sphere radius range. */
 const MIN_RADIUS = 1.4;
 const MAX_RADIUS = 2.6;
+/** Vertical bob amplitude range (world units) — kept small so the full travel still fits in the
+ *  off-route negative space and the bounce stays predictable. */
+const MIN_BOB = 0.6;
+const MAX_BOB = 2.2;
+/** Bob speed range (radians/sec for the sine). */
+const MIN_BOB_SPEED = 0.5;
+const MAX_BOB_SPEED = 1.1;
 /** At most this many obstacles per pad considered — keeps density sane + the count bounded. */
 const SPAWN_CHANCE = 0.5;
 /** Lateral offset range from a pad, out into the negative space beside the route. */
@@ -104,19 +117,35 @@ export function generateObstacles(
     const angle = rng.next() * Math.PI * 2;
     const offset = MIN_OFFSET + rng.next() * (MAX_OFFSET - MIN_OFFSET);
     const radius = MIN_RADIUS + rng.next() * (MAX_RADIUS - MIN_RADIUS);
-    const candidate: Vec3 = [
-      pad.position[0] + Math.cos(angle) * offset,
-      py + (rng.next() - 0.5) * 6, // small vertical jitter so they don't band at pad heights
-      pad.position[2] + Math.sin(angle) * offset,
-    ];
+    const cx = pad.position[0] + Math.cos(angle) * offset;
+    const cy = py + (rng.next() - 0.5) * 6; // bob-center Y; jitter so they don't band at pad heights
+    const cz = pad.position[2] + Math.sin(angle) * offset;
+    const candidate: Vec3 = [cx, cy, cz];
+    const amplitude = MIN_BOB + rng.next() * (MAX_BOB - MIN_BOB);
 
+    // Clear the WHOLE bob travel from the route: the center AND both vertical extremes
+    // (cy ± amplitude) must stay outside the corridor, so the obstacle can never drift into a
+    // certified reach over its oscillation. (Pad/obstacle spacing checks the center — pads are wide
+    // and the bob is small, so the small vertical wiggle can't crowd a pad it already cleared.)
+    const top: Vec3 = [cx, cy + amplitude, cz];
+    const bottom: Vec3 = [cx, cy - amplitude, cz];
     if (!clearOfRoute(candidate, pads)) continue;
+    if (!clearOfRoute(top, pads) || !clearOfRoute(bottom, pads)) continue;
     if (!clearOfPads(candidate, pads)) continue;
     // Keep obstacles apart from each other.
     const sep2 = OBSTACLE_SEPARATION * OBSTACLE_SEPARATION;
     if (out.some((o) => dist2(o.position, candidate) < sep2)) continue;
 
-    out.push({ id: py, position: candidate, radius });
+    out.push({
+      id: py,
+      position: candidate,
+      radius,
+      bob: {
+        amplitude,
+        speed: MIN_BOB_SPEED + rng.next() * (MAX_BOB_SPEED - MIN_BOB_SPEED),
+        phase: rng.next() * Math.PI * 2,
+      },
+    });
   }
   return out;
 }

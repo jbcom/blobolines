@@ -1211,10 +1211,31 @@ apex gap is HEIGHT (uncapped): height-1000 was the top tier.
       height-2000 reachability). Wait CI green, fold findings forward, resolve threads, squash-merge, sync
       main. Then the next corner.
 
+## Queue — Milestone: N24 BOBBING obstacles (branch feat/drifting-obstacles)
+
+The "more obstacle variety" candidate, done SAFELY. Considered drifting (horizontal) obstacles but
+rejected — a horizontally-moving obstacle could drift into the golden corridor and break the
+reachability invariant. A VERTICAL bob is safe: the bounded travel can be fully verified clear of the
+route at generation. (Also surveyed raising MAX_COMBO: comboStyleBonus is geometric — growth 1.38, so
+8→12 would 3.8× the top-end bonus, needing a careful scoring rebalance; deferred as a balance task.)
+
+### N24 Architecture
+- [x] N24.1 DONE. ObstacleSpec += bob{amplitude,speed,phase}: each obstacle gently bobs VERTICALLY
+      around its rest center (amp 0.6–2.2, speed 0.5–1.1, random phase) — more alive, a slightly
+      trickier optional bounce. The body is now a kinematicPosition RigidBody driven by
+      setNextKinematicTranslation each frame (so Rapier resolves the bounce against the MOVING
+      collider; a fixed body wouldn't impart the bob); the live Y feeds the contact check + visual.
+      REACHABILITY INVARIANT PRESERVED: generateObstacles verifies the WHOLE travel (center ±
+      amplitude) clears the route, not just the center — a bobbing obstacle can never drift into the
+      climb corridor. Tests: the obstacle INVARIANT test now also asserts both bob extremes clear the
+      route across 5 seeds; fixtures updated (bob-free helper). 545 unit / 140 browser + 2 e2e teleport
+      green (kinematic bodies don't disrupt physics); typecheck + pinned lint clean. Live-confirmed 9
+      obstacles each carry a distinct bob (amp/speed/phase).
+
 ## Notes
 - This is a living plan. After every stage, backward+forward sweep and edit the queue.
-- Next candidate milestones (surface, don't pre-commit): more obstacle/pad variety, a "best daily this
-  week" mini-summary, raise MAX_COMBO for higher-combo skill headroom (needs scoring rebalance).
-  Per-biome music + base gameplay mechanics are SATURATED.
+- Next candidate milestones (surface, don't pre-commit): a "best daily this week" mini-summary (needs
+  per-day daily-best storage, not just top-5), raise MAX_COMBO + rebalance comboStyleBonus geometric
+  growth. Per-biome music + base gameplay mechanics are SATURATED.
 - Lesson banked this session: the pre-push lint gate is `pnpm lint` (PINNED biome 2.5.0), NOT
   `npx biome` / global biome (older, gives false-clean) — see [[blobolines-biome-ci-stricter]].

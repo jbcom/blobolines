@@ -58,6 +58,19 @@ describe("off-route obstacles", () => {
           `seed ${seed}: obstacle ${obs.id} too close to a golden arc`,
         ).toBeGreaterThanOrEqual(ROUTE_CLEARANCE);
         expect(clearOfRoute(obs.position, pads)).toBe(true);
+        // BOB invariant: the WHOLE vertical travel (center ± amplitude) must also clear the route —
+        // a bobbing obstacle can never drift into the climb corridor over its oscillation.
+        const [x, y, z] = obs.position;
+        const top: [number, number, number] = [x, y + obs.bob.amplitude, z];
+        const bottom: [number, number, number] = [x, y - obs.bob.amplitude, z];
+        expect(
+          clearOfRoute(top, pads),
+          `seed ${seed}: obstacle ${obs.id} bob-top clips a route`,
+        ).toBe(true);
+        expect(
+          clearOfRoute(bottom, pads),
+          `seed ${seed}: obstacle ${obs.id} bob-bottom clips a route`,
+        ).toBe(true);
       }
     }
   });
