@@ -33,8 +33,9 @@ export const POWERUP_TYPES = [
 export type PowerUpType = (typeof POWERUP_TYPES)[number];
 
 /** Crystal rarity tiers. Higher tiers are worth more crystals (and so more score), rarer,
- *  larger, and brighter — the reward for ranging off the safe line + climbing higher. */
-export type CrystalTier = "common" | "rare" | "radiant";
+ *  larger, and brighter — the reward for ranging off the safe line + climbing higher. `treasure`
+ *  is the rare jackpot: a big golden chest/gem worth a crystal burst, with a celebratory collect. */
+export type CrystalTier = "common" | "rare" | "radiant" | "treasure";
 
 /** Route-generation difficulty. Higher difficulties allow more precision flat arcs; lower
  *  difficulties bias the tower toward larger, slower, readable cloud catches. */

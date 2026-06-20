@@ -11,3 +11,4 @@ export { Lighting } from "./Lighting";
 export { PowerUpField } from "./PowerUpField";
 export { RouteGateField } from "./RouteGateField";
 export { SkyDome } from "./SkyDome";
+export { TreasureChests } from "./TreasureChests";
