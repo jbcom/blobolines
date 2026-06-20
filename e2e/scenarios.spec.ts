@@ -23,9 +23,10 @@ test("gameover → Climb again cleanly remounts into a fresh playable run", asyn
   await expect(climbAgain).toBeVisible({ timeout: 5000 });
   await climbAgain.click();
 
-  // The new run remounted: a fresh launch climbs again — proving Physics + PlayerBlob tore down
-  // and re-initialised without suspending.
-  await startRun(page);
+  // The "Climb again" CARD button (clicked above) — not the bridge — is what must remount the
+  // run; calling startRun here would mask that. launchUp already waits for phase==="playing" +
+  // the blob to settle, so a fresh launch climbing again proves Physics + PlayerBlob tore down
+  // and re-initialised cleanly via the real retry path.
   await page.waitForTimeout(1500);
   await launchUp(page);
   await expect.poll(() => altitude(page), { timeout: 10_000 }).toBeGreaterThan(0);
