@@ -38,6 +38,7 @@ import {
   consumeMidAirBounce,
   consumeRouteGateHit,
   consumeShield,
+  consumeTeleport,
   flash,
   getAim,
   getAirSteer,
@@ -357,6 +358,25 @@ export function PlayerBlob() {
     let p = body.translation();
     let v = body.linvel();
     let airborne = Math.abs(v.y) > 0.5;
+
+    // Dev teleport: jump the body to a target altitude (DevHarness / test bridge). Extend
+    // world-gen there first so pads + scenery exist, then place the body, zero its velocity, wake
+    // it, and resync the climb/death tracking refs so a mid-fall teleport doesn't read as a death.
+    const teleY = consumeTeleport();
+    if (teleY !== null) {
+      ensureHeight(teleY + 40);
+      body.setTranslation({ x: 0, y: teleY, z: 0 }, true);
+      body.setLinvel({ x: 0, y: 0, z: 0 }, true);
+      body.wakeUp();
+      maxY.current = Math.max(maxY.current, teleY);
+      safeY.current = teleY;
+      prevY.current = teleY;
+      lastEnsureY.current = teleY;
+      dead.current = false;
+      p = body.translation();
+      v = body.linvel();
+      airborne = false;
+    }
 
     if (bubbleRemaining.current > 0) {
       bubbleRemaining.current -= dt;

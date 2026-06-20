@@ -28,6 +28,21 @@ export function consumeLaunch(): LaunchRequest | null {
   return r;
 }
 
+/** Pending dev teleport target altitude (world Y). DevHarness / test bridge requests it; the
+ *  PlayerBlob frame loop consumes it once to jump the Rapier body to that band. Dev/test only. */
+let pendingTeleport: number | null = null;
+
+export function requestTeleport(y: number): void {
+  pendingTeleport = y;
+}
+
+/** Consume the pending teleport target (returns it once, then clears). */
+export function consumeTeleport(): number | null {
+  const y = pendingTeleport;
+  pendingTeleport = null;
+  return y;
+}
+
 export interface RouteGateHitEvent {
   gateId: string;
   kind: RouteGateKind;
@@ -274,6 +289,7 @@ export function resetBridges(): void {
   landing = null;
   midAirBounce = false;
   pendingNudge = null;
+  pendingTeleport = null;
   setRouteProofTarget(null);
   clearRouteLandingFeedback();
 }

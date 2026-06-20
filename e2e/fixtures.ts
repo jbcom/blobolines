@@ -8,6 +8,7 @@ declare global {
       gameOver(): void;
       altitude(): number;
       phase(): string;
+      teleport(y: number): void;
     };
   }
 }
@@ -29,6 +30,10 @@ export async function launchUp(page: Page): Promise<void> {
 
 export async function gameOver(page: Page): Promise<void> {
   await page.evaluate(() => window.__blobtest.gameOver());
+}
+
+export async function teleport(page: Page, y: number): Promise<void> {
+  await page.evaluate((target) => window.__blobtest.teleport(target), y);
 }
 
 /** Poll the altimeter HUD readout (the same value a player sees). */

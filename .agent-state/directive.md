@@ -281,10 +281,15 @@ scenery, parallax, audio band, and particle grain.
       reset world to match). Record decision.
 
 ### H1 Implementation
-- [ ] H1.1 Add a teleport to the launch bridge / PlayerBlob (consume a pending teleport like
-      requestLaunch), DevHarness buttons (jump to each band), and a window.__blobtest.teleport(y).
-- [ ] H1.2 Use it to screenshot-verify EACH biome band (ground→deep-space) and read the shots —
-      fixing any band that doesn't read right. Tests for the teleport bridge.
+- [x] H1.1 Teleport wired: requestTeleport/consumeTeleport in launchBridge (+reset, +index
+      export), PlayerBlob frame-loop consume (ensureHeight + setTranslation + zero vel + wake +
+      ref sync), DevHarness per-band buttons, window.__blobtest.teleport(y). 5 teleport-bridge
+      unit tests. typecheck/lint/444 unit green.
+- [ ] [WAIT] H1.1b BUG: a SINGLE teleport works (→600 settles at 295) but SEQUENTIAL teleports
+      all settle at ~60 — debugger (a2c04a58) root-causing the death/respawn or world-gen
+      interaction. On its return: fix + the teleport.spec E2E asserting each band is reached.
+- [ ] H1.2 Visual QA each band via teleport (E2E proves it; claude-in-chrome browser unreliable
+      for the sim here). Fix any band that doesn't read right.
 
 ### H2 PR cutting point
 - [ ] H2.1 Verify + screenshots of all bands; open PR; babysit to squash-merge; re-write forward.
