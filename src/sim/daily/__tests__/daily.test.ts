@@ -1,13 +1,17 @@
 import { describe, expect, it } from "vitest";
 import {
+  type DailyBests,
   dailyKey,
   dailySeed,
   dailySeedPhrase,
   dailyStanding,
   daysBetweenKeys,
   nextDailyStreak,
+  recordDailyBest,
   runHash,
   type SeededScore,
+  WEEK_DAYS,
+  weeklyDailySummary,
 } from "../daily";
 
 // Fixed UTC dates (date is injected — sim never calls new Date()).
@@ -166,5 +170,67 @@ describe("nextDailyStreak", () => {
     // streak must NOT be preserved (that would lock them out of extending until wall-clock catches up).
     const u = nextDailyStreak(5, "2026-06-25", "2026-06-20"); // gap = -5
     expect(u).toEqual({ streak: 1, extended: false, brokeStreak: true });
+  });
+});
+
+describe("recordDailyBest", () => {
+  it("keeps the BEST score for a day and adds new days", () => {
+    let m: DailyBests = {};
+    m = recordDailyBest(m, "2026-06-20", 1000);
+    expect(m["2026-06-20"]).toBe(1000);
+    m = recordDailyBest(m, "2026-06-20", 800); // worse — ignored
+    expect(m["2026-06-20"]).toBe(1000);
+    m = recordDailyBest(m, "2026-06-20", 1500); // better — kept
+    expect(m["2026-06-20"]).toBe(1500);
+    m = recordDailyBest(m, "2026-06-21", 200);
+    expect(m["2026-06-21"]).toBe(200);
+  });
+
+  it("floors the score + clamps negatives, and never mutates the input", () => {
+    const input: DailyBests = { "2026-06-20": 500 };
+    const out = recordDailyBest(input, "2026-06-21", 333.9);
+    expect(out["2026-06-21"]).toBe(333);
+    expect(input).toEqual({ "2026-06-20": 500 }); // unmutated
+    expect(recordDailyBest({}, "2026-06-21", -5)["2026-06-21"]).toBe(0);
+  });
+
+  it("prunes days older than the week window from the run's day", () => {
+    let m: DailyBests = {
+      "2026-06-01": 999, // way old → pruned
+      "2026-06-14": 100, // 6 days before the 20th → just inside the 7-day window
+    };
+    m = recordDailyBest(m, "2026-06-20", 400);
+    expect(m["2026-06-01"]).toBeUndefined();
+    expect(m["2026-06-14"]).toBe(100);
+    expect(m["2026-06-20"]).toBe(400);
+  });
+});
+
+describe("weeklyDailySummary", () => {
+  it("returns 7 days oldest→newest with bests, played count, and the week best flagged", () => {
+    const bests: DailyBests = {
+      "2026-06-20": 1500, // today
+      "2026-06-18": 900,
+      "2026-06-15": 3000, // the week best
+    };
+    const s = weeklyDailySummary(bests, "2026-06-20");
+    expect(s.days).toHaveLength(WEEK_DAYS);
+    expect(s.days[s.days.length - 1].key).toBe("2026-06-20"); // newest last
+    expect(s.days[0].key).toBe("2026-06-14"); // oldest first (today - 6)
+    expect(s.daysPlayed).toBe(3);
+    expect(s.weekBest).toBe(3000);
+    const best = s.days.find((d) => d.isWeekBest);
+    expect(best?.key).toBe("2026-06-15");
+    // Unplayed days read as best 0 / played false / not the week best.
+    const unplayed = s.days.find((d) => d.key === "2026-06-19");
+    expect(unplayed).toMatchObject({ best: 0, played: false, isWeekBest: false });
+  });
+
+  it("spans month/year boundaries when stepping back 7 days", () => {
+    const s = weeklyDailySummary({}, "2026-01-03");
+    expect(s.days[0].key).toBe("2025-12-28"); // Jan 3 minus 6 days → late December prior year
+    expect(s.days[s.days.length - 1].key).toBe("2026-01-03");
+    expect(s.daysPlayed).toBe(0);
+    expect(s.weekBest).toBe(0);
   });
 });

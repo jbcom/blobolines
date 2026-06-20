@@ -138,6 +138,25 @@ describe("useGameStore", () => {
     expect(useGameStore.getState().progress.lastDailyKey).toBe(anchor);
   });
 
+  it("records today's daily best into dailyBests (and keeps the higher of two runs)", () => {
+    const today = dailyKey(new Date());
+    useGameStore.getState().setDailyRun(true);
+    useWorldStore.setState({ seedPhrase: dailySeedPhrase(new Date()) });
+    useGameStore.getState().commitBestHeight(300);
+    const first = useGameStore.getState().progress.dailyBests?.[today];
+    expect(first, "today's daily best is recorded").toBeGreaterThan(0);
+    // A higher second run on today's daily raises the day's best; a lower one leaves it.
+    useGameStore.getState().commitBestHeight(900);
+    const better = useGameStore.getState().progress.dailyBests?.[today] ?? 0;
+    expect(better).toBeGreaterThan(first ?? 0);
+    useGameStore.getState().commitBestHeight(50);
+    expect(useGameStore.getState().progress.dailyBests?.[today]).toBe(better);
+    // A NON-daily run doesn't touch dailyBests.
+    useGameStore.getState().setDailyRun(false);
+    useGameStore.getState().commitBestHeight(5000);
+    expect(useGameStore.getState().progress.dailyBests?.[today]).toBe(better);
+  });
+
   it("replaySeed regenerates the tower, starts playing, and flags daily iff a daily seed", () => {
     // A normal seed replays as a non-daily run.
     useGameStore.getState().setDailyRun(true); // stale flag from a prior run
@@ -400,17 +419,19 @@ describe("useGameStore", () => {
       }
     });
 
-    it("round-trips the daily streak fields (so a streak survives a reload)", () => {
+    it("round-trips the daily streak + per-day bests (so the weekly summary survives a reload)", () => {
       const save = {
         bestHeight: 500,
         dailyStreak: 7,
         lastDailyKey: "2026-06-20",
+        dailyBests: { "2026-06-20": 1500, "2026-06-19": 900 },
       };
       const parsed = playerProgressSchema.safeParse(save);
       expect(parsed.success).toBe(true);
       if (parsed.success) {
         expect(parsed.data.dailyStreak).toBe(7);
         expect(parsed.data.lastDailyKey).toBe("2026-06-20");
+        expect(parsed.data.dailyBests).toEqual({ "2026-06-20": 1500, "2026-06-19": 900 });
       }
     });
 
