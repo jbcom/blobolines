@@ -5,6 +5,8 @@
  * persisted unlocked set and the UI shows the toast/list.
  */
 
+import type { BlobSkin } from "@/styles/tokens";
+
 /** The stats an achievement predicate can test: lifetime progress + this run's peaks. */
 export interface AchievementStats {
   /** All-time best height (m). */
@@ -107,6 +109,22 @@ const BY_ID: Record<string, Achievement> = Object.fromEntries(ACHIEVEMENTS.map((
 export function achievementById(id: string): Achievement | undefined {
   return BY_ID[id];
 }
+
+/**
+ * Skins that are EARNED by meeting an achievement (not buyable with crystals). When the achievement
+ * is newly unlocked the tied skin is granted too — a milestone cosmetic reward. Keyed by skin id
+ * so the customizer can show "Earn: <achievement>" on those tiles, and the store grants them in the
+ * same pure pass that unlocks the achievement. Skins NOT listed here remain crystal-buyable.
+ */
+export const SKIN_ACHIEVEMENT: Partial<Record<BlobSkin, string>> = {
+  ghost: "score-25k",
+  ink: "height-1000",
+};
+
+/** Reverse map: achievement id → the skin it unlocks (for the grant-on-unlock path). */
+export const ACHIEVEMENT_SKIN: Record<string, BlobSkin> = Object.fromEntries(
+  Object.entries(SKIN_ACHIEVEMENT).map(([skin, achievement]) => [achievement, skin as BlobSkin]),
+);
 
 /**
  * Evaluate the achievement set against a stats snapshot and the already-unlocked ids; return

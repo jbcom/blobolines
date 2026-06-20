@@ -1,8 +1,9 @@
 import { Button, Dialog } from "@app/components/ui";
 import { usePunchOnChange } from "@app/hooks";
-import { Check, Gem, Lock } from "lucide-react";
+import { Check, Gem, Lock, Trophy } from "lucide-react";
 import { useRef, useState } from "react";
 import type { BlobSkin } from "@/core/types";
+import { achievementById, SKIN_ACHIEVEMENT } from "@/sim/achievements";
 import { SKIN_COST, useGameStore } from "@/state";
 import { mixHex, palette } from "@/styles/tokens";
 
@@ -66,6 +67,8 @@ export function BlobCustomizer({
       setSkin(id);
       return;
     }
+    // Achievement-gated skins can't be bought — they're earned by meeting their achievement.
+    if (SKIN_ACHIEVEMENT[id]) return;
     const cost = SKIN_COST[id];
     if (crystals >= cost) {
       addCrystals(-cost);
@@ -107,6 +110,10 @@ export function BlobCustomizer({
           const isEquipped = equipped === s.id;
           const cost = SKIN_COST[s.id];
           const affordable = crystals >= cost;
+          // Achievement-gated skins are earned, not bought — show the achievement to earn instead
+          // of a crystal price, and never let them be clicked-to-buy.
+          const gateId = SKIN_ACHIEVEMENT[s.id];
+          const gatedAchievement = gateId ? achievementById(gateId) : undefined;
           return (
             <button
               key={s.id}
@@ -117,22 +124,24 @@ export function BlobCustomizer({
               tabIndex={i === focusIdx ? 0 : -1}
               onFocus={() => setFocusIdx(i)}
               onClick={() => pick(s.id)}
-              disabled={!isUnlocked && !affordable}
+              disabled={!isUnlocked && (gatedAchievement ? true : !affordable)}
               aria-pressed={isEquipped}
               aria-label={`${s.name} — ${
                 isEquipped
                   ? "equipped"
                   : isUnlocked
                     ? "equip"
-                    : affordable
-                      ? `unlock for ${cost} crystals`
-                      : `locked, needs ${cost} crystals`
+                    : gatedAchievement
+                      ? `locked, earn by: ${gatedAchievement.title}`
+                      : affordable
+                        ? `unlock for ${cost} crystals`
+                        : `locked, needs ${cost} crystals`
               }`}
               className={`flex flex-col items-center gap-2 rounded-xl border p-3 transition-colors ${
                 isEquipped
                   ? "border-accent bg-accent/10"
                   : "border-border bg-surface hover:border-border-strong"
-              } ${!isUnlocked && !affordable ? "opacity-50" : ""}`}
+              } ${!isUnlocked && (gatedAchievement || !affordable) ? "opacity-50" : ""}`}
             >
               {/* Wet-goo preview swatch: a radial gradient + glossy highlight that reads as
                   a 3D goo droplet (not a flat disc), tinted to the skin — cheaper than 4
@@ -158,6 +167,16 @@ export function BlobCustomizer({
               ) : isUnlocked ? (
                 <span aria-hidden className="font-ui text-[11px] font-semibold text-fg-subtle">
                   Equip
+                </span>
+              ) : gatedAchievement ? (
+                // Achievement-gated skin: earned by the milestone, not buyable. Show how to earn it.
+                <span aria-hidden className="flex w-full flex-col items-center gap-1">
+                  <span className="flex items-center gap-1 font-ui text-[11px] font-bold text-tramp-gold">
+                    <Trophy className="size-3" /> Earn
+                  </span>
+                  <span className="text-center font-ui text-[10px] text-fg-subtle leading-tight">
+                    {gatedAchievement.title}
+                  </span>
                 </span>
               ) : (
                 <span aria-hidden className="flex w-full flex-col items-center gap-1">

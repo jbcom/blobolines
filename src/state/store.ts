@@ -7,7 +7,7 @@ import type {
   HighScoreEntry,
   PlayerProgress,
 } from "@/core/types";
-import { type AchievementStats, newlyUnlocked } from "@/sim/achievements";
+import { ACHIEVEMENT_SKIN, type AchievementStats, newlyUnlocked } from "@/sim/achievements";
 import { computeScore } from "@/sim/score";
 import { palette } from "@/styles/tokens";
 import { reportAchievementToast, resetAchievementToasts } from "./achievementToastBridge";
@@ -126,10 +126,20 @@ function checkAndUnlock(
     return { progress, run, fresh };
   }
 
+  // Grant any skin EARNED by a freshly-unlocked achievement (a milestone cosmetic reward) — the
+  // achievement is the only way to get these skins (they aren't crystal-buyable).
+  const earnedSkins = fresh
+    .map((id) => ACHIEVEMENT_SKIN[id])
+    .filter((skin): skin is BlobSkin => Boolean(skin) && !progress.unlockedSkins.includes(skin));
+
   return {
     progress: {
       ...progress,
       unlockedAchievements: [...progress.unlockedAchievements, ...fresh],
+      unlockedSkins:
+        earnedSkins.length > 0
+          ? [...progress.unlockedSkins, ...earnedSkins]
+          : progress.unlockedSkins,
     },
     run: {
       ...run,
@@ -179,16 +189,29 @@ export const useGameStore = create<GameState>((set) => ({
   unlockAchievements: (stats) => {
     const fresh = newlyUnlocked(stats, useGameStore.getState().progress.unlockedAchievements);
     if (fresh.length > 0) {
-      set((s) => ({
-        progress: {
-          ...s.progress,
-          unlockedAchievements: [...s.progress.unlockedAchievements, ...fresh],
-        },
-        run: {
-          ...s.run,
-          unlockedAchievements: [...(s.run.unlockedAchievements || []), ...fresh],
-        },
-      }));
+      set((s) => {
+        // Grant any skin earned by a freshly-unlocked achievement (same milestone-reward path as
+        // checkAndUnlock — keep both achievement-evaluation paths consistent).
+        const earnedSkins = fresh
+          .map((id) => ACHIEVEMENT_SKIN[id])
+          .filter(
+            (skin): skin is BlobSkin => Boolean(skin) && !s.progress.unlockedSkins.includes(skin),
+          );
+        return {
+          progress: {
+            ...s.progress,
+            unlockedAchievements: [...s.progress.unlockedAchievements, ...fresh],
+            unlockedSkins:
+              earnedSkins.length > 0
+                ? [...s.progress.unlockedSkins, ...earnedSkins]
+                : s.progress.unlockedSkins,
+          },
+          run: {
+            ...s.run,
+            unlockedAchievements: [...(s.run.unlockedAchievements || []), ...fresh],
+          },
+        };
+      });
       // Toast each newly unlocked achievement!
       for (const id of fresh) {
         reportAchievementToast(id);

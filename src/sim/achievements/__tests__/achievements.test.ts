@@ -1,9 +1,11 @@
 import { describe, expect, it } from "vitest";
 import {
+  ACHIEVEMENT_SKIN,
   ACHIEVEMENTS,
   type AchievementStats,
   achievementById,
   newlyUnlocked,
+  SKIN_ACHIEVEMENT,
 } from "../achievements";
 
 const ZERO: AchievementStats = {
@@ -72,5 +74,25 @@ describe("achievements", () => {
     const fresh = newlyUnlocked({ ...ZERO, bestHeight: 260 }, ["height-100"]);
     expect(fresh).toContain("height-250");
     expect(fresh).not.toContain("height-100");
+  });
+});
+
+describe("achievement-gated skins", () => {
+  it("maps each gated skin to a REAL achievement id", () => {
+    for (const [skin, achievementId] of Object.entries(SKIN_ACHIEVEMENT)) {
+      expect(achievementById(achievementId), `${skin} gates on a real achievement`).toBeDefined();
+    }
+  });
+
+  it("ACHIEVEMENT_SKIN is the exact inverse of SKIN_ACHIEVEMENT", () => {
+    for (const [skin, achievementId] of Object.entries(SKIN_ACHIEVEMENT)) {
+      expect(ACHIEVEMENT_SKIN[achievementId]).toBe(skin);
+    }
+    expect(Object.keys(ACHIEVEMENT_SKIN)).toHaveLength(Object.keys(SKIN_ACHIEVEMENT).length);
+  });
+
+  it("each gated achievement appears at most once (no two skins share one achievement)", () => {
+    const achievementIds = Object.values(SKIN_ACHIEVEMENT);
+    expect(new Set(achievementIds).size).toBe(achievementIds.length);
   });
 });

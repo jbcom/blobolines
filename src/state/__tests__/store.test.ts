@@ -59,6 +59,21 @@ describe("useGameStore", () => {
     expect(s.progress.crystals).toBe(5);
   });
 
+  it("grants the tied skin when its achievement is newly unlocked (height-1000 → ink)", () => {
+    expect(useGameStore.getState().progress.unlockedSkins).not.toContain("ink");
+    useGameStore.getState().setRun({ height: 1000 }); // meets height-1000 (bestHeight ≥ 1000)
+    const p = useGameStore.getState().progress;
+    expect(p.unlockedAchievements).toContain("height-1000");
+    expect(p.unlockedSkins, "ink is earned by the deep-space achievement").toContain("ink");
+  });
+
+  it("does not grant achievement-gated skins for an unrelated unlock", () => {
+    useGameStore.getState().setRun({ height: 100 }); // height-100, not tied to any skin
+    const p = useGameStore.getState().progress;
+    expect(p.unlockedAchievements).toContain("height-100");
+    expect(p.unlockedSkins).toEqual(["blue"]); // no cosmetic granted
+  });
+
   it("dailyRun flag toggles (default false) for the daily-challenge framing", () => {
     expect(useGameStore.getState().dailyRun).toBe(false);
     useGameStore.getState().setDailyRun(true);
