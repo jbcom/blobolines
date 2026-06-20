@@ -645,13 +645,27 @@ QA shows a band reads empty/flat.)
       band currently has only scattered small accents with no signature anchor.
 
 ### N7 Architecture — per-band hero landmarks
-- [ ] N7.2 Enumerate: read BiomeScenicProps (the parallax-instance system) + the registry. Decide
-      how a LANDMARK differs from a regular prop: ONE large signature structure per band, placed on
-      a dedicated far/back layer, sparse (one visible at a time, wide vertical spacing) so it reads
-      as a monument not clutter. Curate 6 distinctive 3DLowPoly landmark GLBs (one per band) from
-      the NAS (vet with scripts/vet-biome-glbs.mjs). Decide data shape (extend the registry with an
-      optional per-band `landmark` + a landmark layer in parallaxLayers, OR a separate component).
-      Record decision; then N7.3 implement + fixture + PR.
+- [x] N7.2 DONE (decision in commit body). 6 landmark GLBs curated + vetted clean into
+      public/assets/models/landmarks/<band>/ (obelisk/great-pine/ice-spire/monolith-spire/
+      ringed-planet/gas-giant). Data shape: a per-band `landmark` BiomePropSpec on the registry +
+      a "landmark" ParallaxLayer (count 1, big scale, far z, tall column = slow monument scroll);
+      ScenicInstance renders the band's landmark file when its layer is the landmark layer.
+
+### N7.3 Implementation
+- [x] N7.3 DONE. Added `landmark` BiomePropSpec to BiomePropSet + LANDMARK_FILES (throws on a
+      missing band — no silent fallback); a "landmark" ParallaxLayer (count 1, scale 4, z −78..−64
+      behind far, column 240 = slow monument scroll, opacity 0.78); ScenicInstance renders the
+      band's landmark file when its layer is the landmark layer (else the prop pool). allBiomePropFiles
+      preloads landmarks too; LAYER_SEED/RENDER_ORDER gained the landmark id. Tests: landmark
+      path/scale/not-in-pool + the sparse-far-slow layer invariants + updated the layer-id + preload
+      + on-disk glob (now scans landmarks/). 503 unit + 120 browser green; typecheck + biome ci +
+      build clean. (Visual: deterministic browser fixture mounts every band incl. the landmark layer
+      in real WebGL — the authoritative check, since live teleport QA is headless-blocked.) Committed;
+      reviewer to dispatch.
+
+### N7.4 PR cutting point
+- [ ] N7.4 Commit, dispatch reviewer, fold findings forward, open PR, babysit to squash-merge,
+      sync main, re-write directive forward.
 
 ## Queue — Milestone: Daily-challenge results polish (branch feat/daily-results, NEXT)
 

@@ -40,6 +40,9 @@ export interface BiomePropSet {
   props: BiomePropSpec[];
   /** Decorative seat rendered beneath each prop in this band. */
   shelf: PropShelf;
+  /** ONE large signature structure that anchors this band's identity — rendered sparse + far on the
+   *  landmark parallax layer (a monument, not an accent). One per band. */
+  landmark: BiomePropSpec;
 }
 
 /** Soft seat styling per band — warm shelves low, mystical mid, glowing rings in space. */
@@ -112,6 +115,19 @@ const PROP_FILES: Record<string, BiomePropSpec[]> = {
   ],
 };
 
+/** One hero LANDMARK per canonical band — a large signature structure on the far landmark layer
+ *  that anchors each band's identity. Scales are tuned per native size to read monumentally large
+ *  against the scattered accents (the planets are big meshes, so a modest scale; the small obelisk
+ *  is scaled up). A missing landmark throws at registry build (no silent fallback). */
+const LANDMARK_FILES: Record<string, BiomePropSpec> = {
+  ground: { file: "landmarks/ground/obelisk.glb", scale: 3.4 },
+  sky: { file: "landmarks/sky/great-pine.glb", scale: 2.6 },
+  "upper-atmosphere": { file: "landmarks/upper-atmosphere/ice-spire.glb", scale: 3.0 },
+  stratosphere: { file: "landmarks/stratosphere/monolith-spire.glb", scale: 3.0 },
+  space: { file: "landmarks/space/ringed-planet.glb", scale: 1.3 },
+  "deep-space": { file: "landmarks/deep-space/gas-giant.glb", scale: 1.4 },
+};
+
 /**
  * The biome prop registry: one entry per canonical band, in band order. Built from
  * `biomeBands` so a band that exists in biomes.json but lacks props surfaces loudly
@@ -129,7 +145,13 @@ export const biomePropRegistry: BiomePropSet[] = biomeBands.map((band) => {
       `biomePropRegistry: no shelf defined for biome band "${band.name}" — add one to SHELVES.`,
     );
   }
-  return { band: band.name, props: PROP_FILES[band.name] ?? [], shelf };
+  const landmark = LANDMARK_FILES[band.name];
+  if (!landmark) {
+    throw new Error(
+      `biomePropRegistry: no landmark defined for biome band "${band.name}" — add one to LANDMARK_FILES.`,
+    );
+  }
+  return { band: band.name, props: PROP_FILES[band.name] ?? [], shelf, landmark };
 });
 
 /** Lookup the prop set for a canonical band name. Returns undefined for unknown bands. */
@@ -146,8 +168,9 @@ export function propSetForBand(bandName: string): BiomePropSet | undefined {
  * vertical wrap-column height (taller column ⇒ slower apparent vertical scroll ⇒ feels distant).
  */
 export interface ParallaxLayer {
-  /** Layer id, for keys/labels. */
-  id: "far" | "mid" | "near";
+  /** Layer id, for keys/labels. The `landmark` layer renders the band's single hero structure
+   *  (not the prop pool) — see BiomeScenicProps. */
+  id: "far" | "mid" | "near" | "landmark";
   /** [min, max] world-X placement range. Near layers stay tighter so their fast-drifting accents
    *  don't spend most of their time off-screen (their tiny frustum at close z). */
   xRange: [number, number];
@@ -201,6 +224,19 @@ export const parallaxLayers: ParallaxLayer[] = [
     driftScale: 1.8,
     column: 70,
     opacity: 0.9,
+  },
+  // Landmark: the band's single hero structure, set FAR back and off to one side, drifting very
+  // slowly past (tall column) so it reads as a distant monument anchoring the band rather than
+  // clutter. count 1 = one visible at a time; large scale; slightly hazy like the far layer.
+  {
+    id: "landmark",
+    xRange: [-30, 30],
+    zRange: [-78, -64],
+    count: 1,
+    scale: 4.0,
+    driftScale: 0.2,
+    column: 240,
+    opacity: 0.78,
   },
 ];
 
@@ -280,6 +316,7 @@ export const biomeAmbience: BiomeAmbience[] = biomeBands.map((band) => {
 });
 
 /** Every GLB file referenced by the registry — used for preloading. */
-export const allBiomePropFiles: string[] = biomePropRegistry.flatMap((set) =>
-  set.props.map((p) => p.file),
-);
+export const allBiomePropFiles: string[] = biomePropRegistry.flatMap((set) => [
+  ...set.props.map((p) => p.file),
+  set.landmark.file,
+]);

@@ -12,9 +12,10 @@ import { biomeBands } from "../biomes";
 /** The GLBs that actually exist on disk, enumerated by Vite at import time. Keyed by path
  *  relative to the models dir (e.g. "biomes/ground/cactus-tall.glb") to match registry files. */
 const onDiskGlbs = new Set(
-  Object.keys(
-    import.meta.glob("../../../public/assets/models/biomes/**/*.glb", { eager: false }),
-  ).map((p) => p.replace(/^.*\/assets\/models\//, "")),
+  Object.keys({
+    ...import.meta.glob("../../../public/assets/models/biomes/**/*.glb", { eager: false }),
+    ...import.meta.glob("../../../public/assets/models/landmarks/**/*.glb", { eager: false }),
+  }).map((p) => p.replace(/^.*\/assets\/models\//, "")),
 );
 
 describe("biomePropRegistry", () => {
@@ -53,10 +54,38 @@ describe("biomePropRegistry", () => {
     }
   });
 
-  it("aggregates every prop file for preloading with no duplicates across bands", () => {
+  it("aggregates every prop + landmark file for preloading with no duplicates across bands", () => {
     expect(new Set(allBiomePropFiles).size).toBe(allBiomePropFiles.length);
-    const flat = biomePropRegistry.flatMap((s) => s.props.map((p) => p.file));
+    // allBiomePropFiles preloads each band's props followed by its landmark, in band order.
+    const flat = biomePropRegistry.flatMap((s) => [...s.props.map((p) => p.file), s.landmark.file]);
     expect(allBiomePropFiles).toEqual(flat);
+  });
+
+  it("gives every band a single hero LANDMARK under its own landmarks/ subdir with a positive scale", () => {
+    for (const set of biomePropRegistry) {
+      expect(set.landmark, `${set.band} landmark`).toBeDefined();
+      expect(set.landmark.file, `${set.band} landmark path`).toBe(
+        `landmarks/${set.band}/${set.landmark.file.split("/").pop()}`,
+      );
+      expect(set.landmark.file.endsWith(".glb"), `${set.landmark.file} is a glb`).toBe(true);
+      expect(set.landmark.scale).toBeGreaterThan(0);
+      // A landmark must not also be in the band's regular prop pool (it's a distinct hero asset).
+      expect(set.props.map((p) => p.file)).not.toContain(set.landmark.file);
+    }
+  });
+
+  it("exposes a dedicated sparse landmark parallax layer (one monument at a time, far + slow)", () => {
+    const landmark = parallaxLayers.find((l) => l.id === "landmark");
+    expect(landmark, "a landmark parallax layer").toBeDefined();
+    if (!landmark) return;
+    expect(landmark.count, "landmark is sparse (one visible)").toBe(1);
+    // Sits behind the far layer and scrolls slower (taller column) so it reads as a distant monument.
+    const far = parallaxLayers.find((l) => l.id === "far");
+    if (far) {
+      expect(landmark.zRange[1]).toBeLessThanOrEqual(far.zRange[0]); // further back than far
+      expect(landmark.column).toBeGreaterThan(far.column); // scrolls slower
+    }
+    expect(landmark.scale).toBeGreaterThan(1);
   });
 
   it("resolves a known band and returns undefined for an unknown one", () => {
@@ -123,8 +152,8 @@ describe("biomeAmbience", () => {
 });
 
 describe("parallaxLayers", () => {
-  it("defines the far/mid/near depth layers exactly once each", () => {
-    expect(parallaxLayers.map((l) => l.id)).toEqual(["far", "mid", "near"]);
+  it("defines the far/mid/near depth layers + the landmark layer exactly once each", () => {
+    expect(parallaxLayers.map((l) => l.id)).toEqual(["far", "mid", "near", "landmark"]);
   });
 
   it("orders layers front-to-back so depth, drift, and scale form a real parallax gradient", () => {
