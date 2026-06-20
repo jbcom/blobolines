@@ -5,6 +5,7 @@ import { motion, useReducedMotion } from "motion/react";
 import { useEffect, useRef, useState } from "react";
 import { playRecord, startMusic, stopMusic } from "@/audio";
 import type { BlobSkin } from "@/core/types";
+import { NotificationType, notify } from "@/platform";
 import { achievementById } from "@/sim/achievements";
 import { DAILY_NS, dailyStanding, runHash } from "@/sim/daily";
 import { comboMultiplier } from "@/sim/launch";
@@ -211,14 +212,18 @@ export function GameOver() {
   };
 
   // Distinct celebratory chime exactly once when a record card appears (a ref guard so
-  // re-renders while isRecord stays true can't replay it).
-  const chimedRef = useRef(false);
+  // re-renders while isRecord stays true can't replay it). A game-over PEAK — a new record OR a
+  // freshly-extended streak — also fires a one-shot success haptic, matching the in-run celebration
+  // buzzes (max combo / perfect release / treasure). Gated on the haptics setting; web no-ops.
+  const celebratedRef = useRef(false);
   useEffect(() => {
-    if (isRecord && !chimedRef.current) {
-      chimedRef.current = true;
-      playRecord();
+    const peak = isRecord || streakExtended > 0;
+    if (peak && !celebratedRef.current) {
+      celebratedRef.current = true;
+      if (isRecord) playRecord();
+      if (useGameStore.getState().settings.haptics) void notify(NotificationType.Success);
     }
-  }, [isRecord]);
+  }, [isRecord, streakExtended]);
 
   return (
     <motion.div
