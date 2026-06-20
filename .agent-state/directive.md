@@ -1255,6 +1255,12 @@ N23). The rebalance keeps it BALANCE-CONSERVATIVE, not score-inflating.
       bounded 800–1300, monotonic per-level steps); launch/score assertions re-derived from the new
       config; a BLAZING badge fixture. 547 unit / 141 browser green; typecheck + pinned lint clean.
 
+- [ ] [WAIT-REVIEW] PR #93 (N25 higher combo ceiling) — babysit. Review FOLDED: rebalance confirmed
+      sound (math, all MAX_COMBO consumers wired, golden-path unaffected); proactively fixed the
+      comboHeat VFX ramp-slowdown (decoupled to HEAT_FULL_COMBO=8) before the reviewer returned; folded
+      its 2 findings (full-range monotonic test + the stale GAME-DESIGN.md combo row). 0 threads; ci.yml
+      run forced for the exact HEAD (coalescing trap hit). Wait CI green → squash-merge → sync main.
+
 ## Notes
 - This is a living plan. After every stage, backward+forward sweep and edit the queue.
 - Next candidate milestones (surface, don't pre-commit): a "best daily this week" mini-summary (needs
