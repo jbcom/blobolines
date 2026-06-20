@@ -1114,11 +1114,35 @@ uniquely suited to.
       external URIs, ≤920 faces — headless-WebGL safe) and confirmed served 200 + loading without
       console errors on the live dev server. 134 browser / 530 unit green; typecheck + pinned lint clean.
 
-- [ ] [WAIT-CI-REVIEW] PR #87 (N19 off-route obstacles) — babysit: a local comprehensive-review is
-      running over the branch diff (the key risk it checks: an obstacle slipping BETWEEN discrete
-      golden-arc samples — sample spacing ~0.6m over a ~15m arc vs ROUTE_CLEARANCE 6.5, so covered,
-      but confirm). Wait CI green for HEAD, fold any review/CodeRabbit/gemini findings forward, resolve
-      threads, squash-merge. Then cut the next milestone branch.
+- [x] PR #87 (N19 off-route obstacles) MERGED (squash f290262). Local review confirmed the
+      climbability invariant holds; folded its dispose fix + a CI unit-timeout fix + 2 gemini HIGH
+      findings (bounce-latch on shell entry, no-silent-fallback throws). All threads resolved, fully
+      green.
+
+## Queue — Milestone: N20 (next corner — SURVEY first, branch feat/next-milestone-survey)
+
+Two candidate corners surfaced after N19. SURVEY both before committing (the survey-first discipline
+has paid off every milestone — most corners turn out saturated). The chosen one becomes the N20+
+milestone; the other defers.
+
+### N20 Architecture
+- [x] N20.1 SURVEY DONE. (A) per-biome MUSIC = SATURATED: all 6 bands have distinct music loops +
+      ambient beds in audio.json, crossfading live via setMusicBand/setAmbientBand/setMusicAltitude
+      (validated, no gaps). (B) daily/leaderboard = real LOCAL gaps: dailyStanding + GameOver "Today's
+      tower" + the Hall-of-Fame leaderboard already shipped, but NO streak, NO share-card image, NO
+      historical-daily view. DECISION (recorded): build the DAILY STREAK system — it directly drives the
+      repeat-daily-engagement loop the daily challenge exists for, is zero-asset-risk (pure data + a HUD
+      badge), and is the highest player-value-per-risk of the gaps.
+- [x] N20.2 DAILY STREAK DONE. Pure src/sim/daily: nextDailyStreak(prevStreak, lastKey, todayKey) →
+      {streak, extended, brokeStreak} (extends next-day, unchanged same-day, resets after a gap) +
+      daysBetweenKeys (UTC-day diff, month/year/leap-safe, pure Date.UTC). PlayerProgress += dailyStreak
+      + lastDailyKey (persisted in playerProgressSchema, optional/back-compat). commitBestHeight advances
+      it ONLY on a daily run. GameOver shows a Flame "N-day streak" badge in the Today's-tower section.
+      Tests: 6 nextDailyStreak + 3 daysBetweenKeys unit tests, store commit-gate test (daily-only +
+      same-day-no-inflate), 2 persistence round-trip tests (survives reload + loads legacy saves), 2
+      GameOver streak-badge browser fixtures. 541 unit / 137 browser green; typecheck + pinned lint clean.
+      NOTE: survey also flagged GameOver setDailyRun(false) lets a player replay today's tower unlimited
+      times — that's acceptable as practice runs (the streak only counts the first daily/day), left as-is.
 
 ## Notes
 - This is a living plan. After every stage, backward+forward sweep and edit the queue.

@@ -191,6 +191,12 @@ export interface PlayerProgress {
   unlockedAchievements: string[];
   /** Local high scores of the player's top 5 climbs of all time. */
   highScores?: HighScoreEntry[];
+  /** Daily-challenge streak: consecutive UTC days the player has completed a daily run. Advanced by
+   *  nextDailyStreak on each daily-run commit (extends on a next-day play, resets after a missed day).
+   *  Optional for back-compat with persisted progress predating the streak feature. */
+  dailyStreak?: number;
+  /** UTC YYYY-MM-DD key of the last daily the player completed — the streak's continuity anchor. */
+  lastDailyKey?: string;
 }
 
 /** User-tunable settings. */

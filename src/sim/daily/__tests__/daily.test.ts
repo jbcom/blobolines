@@ -4,6 +4,8 @@ import {
   dailySeed,
   dailySeedPhrase,
   dailyStanding,
+  daysBetweenKeys,
+  nextDailyStreak,
   runHash,
   type SeededScore,
 } from "../daily";
@@ -111,5 +113,58 @@ describe("dailyStanding", () => {
     expect(s.attemptsToday).toBe(1);
     expect(s.rank).toBe(1);
     expect(s.isFirstAttempt).toBe(true);
+  });
+});
+
+describe("daysBetweenKeys", () => {
+  it("counts whole UTC days between two YYYY-MM-DD keys", () => {
+    expect(daysBetweenKeys("2026-06-16", "2026-06-17")).toBe(1);
+    expect(daysBetweenKeys("2026-06-16", "2026-06-16")).toBe(0);
+    expect(daysBetweenKeys("2026-06-16", "2026-06-20")).toBe(4);
+    expect(daysBetweenKeys("2026-06-17", "2026-06-16")).toBe(-1); // later→earlier is negative
+  });
+
+  it("spans month + year boundaries correctly", () => {
+    expect(daysBetweenKeys("2026-06-30", "2026-07-01")).toBe(1);
+    expect(daysBetweenKeys("2026-12-31", "2027-01-01")).toBe(1);
+    expect(daysBetweenKeys("2024-02-28", "2024-03-01")).toBe(2); // 2024 leap year (Feb 29)
+  });
+});
+
+describe("nextDailyStreak", () => {
+  it("starts a streak at 1 on the first ever daily (no prior key)", () => {
+    const u = nextDailyStreak(0, undefined, "2026-06-20");
+    expect(u).toEqual({ streak: 1, extended: false, brokeStreak: false });
+  });
+
+  it("EXTENDS the streak when the last daily was yesterday", () => {
+    const u = nextDailyStreak(3, "2026-06-19", "2026-06-20");
+    expect(u).toEqual({ streak: 4, extended: true, brokeStreak: false });
+  });
+
+  it("leaves the streak unchanged when replaying TODAY (already counted)", () => {
+    const u = nextDailyStreak(4, "2026-06-20", "2026-06-20");
+    expect(u).toEqual({ streak: 4, extended: false, brokeStreak: false });
+  });
+
+  it("RESETS to 1 and flags brokeStreak when a day was missed", () => {
+    const u = nextDailyStreak(5, "2026-06-17", "2026-06-20"); // 3-day gap
+    expect(u).toEqual({ streak: 1, extended: false, brokeStreak: true });
+  });
+
+  it("resets to 1 WITHOUT brokeStreak when there was no real streak to break", () => {
+    const u = nextDailyStreak(1, "2026-06-17", "2026-06-20");
+    expect(u).toEqual({ streak: 1, extended: false, brokeStreak: false });
+  });
+
+  it("never returns a streak below 1 even from a corrupt 0 prev on a same-day replay", () => {
+    expect(nextDailyStreak(0, "2026-06-20", "2026-06-20").streak).toBe(1);
+  });
+
+  it("treats a FUTURE lastKey (forward clock skew) as a missed day — resets, no inflated streak", () => {
+    // lastKey is days AHEAD of today (a player set the clock forward, played, then corrected it). The
+    // streak must NOT be preserved (that would lock them out of extending until wall-clock catches up).
+    const u = nextDailyStreak(5, "2026-06-25", "2026-06-20"); // gap = -5
+    expect(u).toEqual({ streak: 1, extended: false, brokeStreak: true });
   });
 });

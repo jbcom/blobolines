@@ -43,6 +43,10 @@ export const playerProgressSchema = z.object({
   tutorialSeen: z.boolean().catch(false),
   unlockedAchievements: z.array(z.string()).catch([]),
   highScores: z.array(highScoreEntrySchema).catch([]),
+  // Daily-challenge streak — persisted so it survives reloads (the whole point of a streak). Optional
+  // + tolerant so progress saved before this feature loads cleanly (undefined → no streak yet).
+  dailyStreak: z.number().optional().catch(undefined),
+  lastDailyKey: z.string().optional().catch(undefined),
 });
 
 const persistedSettingsSchema = z.object({
