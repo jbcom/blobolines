@@ -5,7 +5,7 @@ import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { Color, type Group, type Mesh, type Object3D } from "three";
 import { playThump } from "@/audio";
 import { biomeBandAt } from "@/config";
-import { getBlobDiagnostics, reportObstacleBounce, useWorldStore } from "@/state";
+import { getBlobDiagnostics, reportObstacleBounce, useGameStore, useWorldStore } from "@/state";
 import { hex, palette } from "@/styles/tokens";
 import type { ObstacleSpec } from "@/world";
 
@@ -94,6 +94,10 @@ function ObstacleModel({ band, radius }: { band: string; radius: number }) {
 function ObstacleBody({ spec }: { spec: ObstacleSpec }) {
   const bodyRef = useRef<RapierRigidBody>(null);
   const visualRef = useRef<Group>(null);
+  /** Accumulated bob clock (seeded at the spec phase). Advanced by dt only while PLAYING — so the
+   *  bob FREEZES on pause (matching the frozen sim) and never teleports on resume / after a
+   *  backgrounded-tab clock jump (which using state.clock.elapsedTime directly would cause). */
+  const bobTime = useRef(spec.bob.phase);
   /** Seconds since the last bounce pulse, or null when idle. */
   const pulse = useRef<number | null>(null);
   /** Whether the blob is currently inside the contact shell — the bounce fires ONCE on ENTRY and
@@ -107,7 +111,7 @@ function ObstacleBody({ spec }: { spec: ObstacleSpec }) {
   const baseColor = useMemo(() => new Color(hex(colorHex)), [colorHex]);
   const [cx, cy, cz] = spec.position;
 
-  useFrame((state, delta) => {
+  useFrame((_state, delta) => {
     const visual = visualRef.current;
     if (!visual) return;
     const dt = Math.min(delta, 1 / 30);
@@ -115,9 +119,10 @@ function ObstacleBody({ spec }: { spec: ObstacleSpec }) {
     // VERTICAL BOB: the obstacle drifts up/down a small amount around its rest center. Driven on the
     // KINEMATIC body so Rapier resolves the bounce against the moving collider (a fixed body wouldn't
     // impart the bob). The bob travel was verified clear of the route at generation, so this can never
-    // intrude on the climb. The live Y feeds the contact check + the visual, all from one source.
-    const obsY =
-      cy + Math.sin(state.clock.elapsedTime * spec.bob.speed + spec.bob.phase) * spec.bob.amplitude;
+    // intrude on the climb. Time is ACCUMULATED via dt only while playing (not the raw render clock),
+    // so the bob freezes on pause + never teleports on resume / after a backgrounded-tab clock jump.
+    if (useGameStore.getState().phase === "playing") bobTime.current += dt * spec.bob.speed;
+    const obsY = cy + Math.sin(bobTime.current) * spec.bob.amplitude;
     bodyRef.current?.setNextKinematicTranslation({ x: cx, y: obsY, z: cz });
 
     // Cosmetic contact pulse: when the blob ENTERS the shell fast, fire a quick scale POP on the
