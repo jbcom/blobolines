@@ -104,6 +104,13 @@ export async function renderShareCard(stats: ShareCardStats): Promise<Blob | nul
   ctx.fillText("jbcom.github.io/blobolines", W / 2, 578);
 
   return new Promise<Blob | null>((resolve) => {
-    canvas.toBlob((blob) => resolve(blob), "image/png");
+    canvas.toBlob((blob) => {
+      // Release the ~3 MB (1200×630×4) backing store immediately — on a low-RAM mid-tier Android
+      // (the render-budget target) GC may lag a per-press allocation otherwise. The canvas was never
+      // in the DOM, so zeroing it just frees the pixels early.
+      canvas.width = 0;
+      canvas.height = 0;
+      resolve(blob);
+    }, "image/png");
   });
 }
