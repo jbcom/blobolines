@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.1.14](https://github.com/jbcom/blobolines/compare/blobolines-v0.1.13...blobolines-v0.1.14) (2026-06-20)
+
+
+### Features
+
+* **daily:** celebrate streak extensions on the game-over card ([#97](https://github.com/jbcom/blobolines/issues/97)) ([68d7b13](https://github.com/jbcom/blobolines/commit/68d7b138db32617205ca2c97d90ff61b5b5151c1))
+* **daily:** streak achievements, aurora skin, and at-risk menu nudge ([#95](https://github.com/jbcom/blobolines/issues/95)) ([027e132](https://github.com/jbcom/blobolines/commit/027e132dcb007fe7855b6609ca01f26f4e89a9cd))
+* **feel:** equip + purchase feedback in the goo customizer ([#100](https://github.com/jbcom/blobolines/issues/100)) ([a1dc364](https://github.com/jbcom/blobolines/commit/a1dc3646af5ed6579e9041ac810c9b5939e0afb3))
+* **feel:** punctuate the death splat and the clutch shield-save ([#99](https://github.com/jbcom/blobolines/issues/99)) ([22cceaf](https://github.com/jbcom/blobolines/commit/22cceaf22afcc4377d47e98f2c356ae3c4e64639))
+* **feel:** tap sound on the menu's primary buttons ([#101](https://github.com/jbcom/blobolines/issues/101)) ([ff361f1](https://github.com/jbcom/blobolines/commit/ff361f14d14bc045e4c9c7b478a7bf41c022e1a1))
+* **haptics:** celebration success-buzz on every peak moment ([#98](https://github.com/jbcom/blobolines/issues/98)) ([32d5f78](https://github.com/jbcom/blobolines/commit/32d5f78f2f314632b1f5e38daa98ea0abf36db23))
+
 ## [0.1.13](https://github.com/jbcom/blobolines/compare/blobolines-v0.1.12...blobolines-v0.1.13) (2026-06-20)
 
 
