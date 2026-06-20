@@ -70,6 +70,7 @@ export function BlobCustomizer({
     // Achievement-gated skins can't be bought — they're earned by meeting their achievement.
     if (SKIN_ACHIEVEMENT[id]) return;
     const cost = SKIN_COST[id];
+    if (cost === undefined) return; // not a crystal-buyable skin (shouldn't reach here)
     if (crystals >= cost) {
       addCrystals(-cost);
       unlockSkin(id);
@@ -108,12 +109,14 @@ export function BlobCustomizer({
         {SKINS.map((s, i) => {
           const isUnlocked = unlocked.includes(s.id);
           const isEquipped = equipped === s.id;
-          const cost = SKIN_COST[s.id];
-          const affordable = crystals >= cost;
           // Achievement-gated skins are earned, not bought — show the achievement to earn instead
           // of a crystal price, and never let them be clicked-to-buy.
           const gateId = SKIN_ACHIEVEMENT[s.id];
           const gatedAchievement = gateId ? achievementById(gateId) : undefined;
+          // Crystal cost is undefined for achievement-gated skins; only the non-gated branch reads
+          // it. Default to 0 so the unrelated `affordable`/width math stays finite for those tiles.
+          const cost = SKIN_COST[s.id] ?? 0;
+          const affordable = crystals >= cost;
           return (
             <button
               key={s.id}

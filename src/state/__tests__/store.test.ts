@@ -195,9 +195,13 @@ describe("useGameStore", () => {
     expect(skins.filter((s) => s === "ghost").length).toBe(1);
   });
 
-  it("SKIN_COST keeps the warm Mango base free", () => {
+  it("SKIN_COST keeps the warm Mango base free and excludes achievement-gated skins", () => {
     expect(SKIN_COST.blue).toBe(0);
     expect(SKIN_COST.slime).toBe(15);
+    // ghost + ink are EARNED via achievements, never crystal-buyable — no cost entry exists, so a
+    // future SKIN_COST reader can't accidentally treat them as purchasable.
+    expect(SKIN_COST.ghost).toBeUndefined();
+    expect(SKIN_COST.ink).toBeUndefined();
   });
 
   it("equippedSkinColor returns token hex", () => {
