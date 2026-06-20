@@ -59,7 +59,7 @@ public surface; modules stay small and single-responsibility — no monolithic s
 | `app/scene` | ✓ | composes small scene components inside `<Canvas>` |
 | `app/scene/blob` | ✓ | `<PlayerBlob>` (Rapier body + diagnostics bridge), `<GooCsg>` (three-bvh-csg merged goo), `<BlobActor>` (menu hero), `<BlobEyes>`, `<SplatChunks>`, `<TrajectoryPreview>` |
 | `app/scene/trampoline` | ✓ | cloud-pad renderer behind compatibility `<Trampoline>`, `<TrampolineField>` imports |
-| `app/scene/world` | ✓ | `<SkyDome>`, `<Lighting>`, `<BiomeProps>` (procedural strata: clouds/stars + per-band particle motes), `<BiomeScenicProps>` (registry-driven GLB scenery across far/mid/near **parallax depth layers** per biome band), `<CrystalField>` (instanced tiered crystals incl. treasure), `<TreasureChests>` (chest GLB beneath rare treasure gems), `<BlobFollowLight>`, `<PowerUpField>`, `<GoldenRoutePreview>` |
+| `app/scene/world` | ✓ | `<SkyDome>`, `<Lighting>`, `<BiomeGeometry>`, `<BiomeProps>` (procedural strata: clouds/stars + per-band particle motes), `<BiomeScenicProps>` (registry-driven GLB scenery across far/mid/near **parallax depth layers** per biome band), `<CrystalField>` (instanced tiered crystals incl. treasure), `<TreasureChests>` (chest GLB beneath rare treasure gems), `<PowerUpField>`, `<RouteGateField>`, `<GoldenRoutePreview>`, `<LaunchRing>`, `<BlobFollowLight>`, `<BlobShadow>`, `<BlobCaustic>` (the full set exported from `app/scene/world/index.ts`) |
 | `app/scene/postfx` | ✓ | `<PostFX>` (N8AO ambient occlusion, bloom, vignette, speed-reactive chromatic) |
 | `app/views` | ✓ | DOM overlay: `<HudOverlay>`, `<MainMenu>`, `<GameOver>`, modals |
 | `app/components/ui` | ✓ | shadcn primitives (button, dialog, slider, switch, tabs, tooltip, progress) |
