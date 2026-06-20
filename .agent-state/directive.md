@@ -248,14 +248,16 @@ star sparkles in space, cosmic shimmer in deep space. Data-driven via biomeBandA
 points; determinism + mid-tier budget; no silent fallback.
 
 ### G0 Architecture
-- [ ] G0.1 Read BiomeProps (the existing mote layer) + biomeAmbience; decide whether per-biome
-      particles extend the mote system (shape/behaviour per band) or a new instanced layer.
-      Record decision.
+- [x] G0.1 Decided (decisions.ndjson): per-biome particles EXTEND the mote ambience layer — add
+      per-band size + drift to biomeAmbience, applied to the existing single instanced mote mesh
+      via biomeAmbienceAt. No new draw layer.
 
 ### G1 Implementation
-- [ ] G1.1 Per-band particle config (count/size/color/drift/shape) keyed off biomeBandAt; render
-      cheap instanced particles that crossfade across band crossings. Visual-verify (screenshot).
-- [ ] G1.2 Tests: particle config tests + render/browser test per the visual gate.
+- [x] G1.1 BiomeAmbience gains size + drift per band; BiomeProps mote useFrame eases them across
+      band crossings (ref-lerp) so each biome's particles read distinct (large lazy warm dust low
+      → tiny quick cosmic shimmer high). Live-app screenshot verified (warm ground grain, no errors).
+- [x] G1.2 Config tests for size/drift fields + the grain gradient. 439 unit + 108 browser +
+      e2e (4 pass/1 skip, after one perf flake retry). Reviewer (a301e4) dispatched.
 
 ### G2 PR cutting point
 - [ ] G2.1 Verify (typecheck+lint+test+test:browser+e2e) + screenshot; open PR; babysit to
