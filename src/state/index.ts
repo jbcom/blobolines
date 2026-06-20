@@ -9,6 +9,13 @@ export {
   routeProfile,
   TARGET_ABOVE_GROUND,
 } from "@/world";
+export {
+  type AchievementToast,
+  clearAchievementToast,
+  getAchievementToast,
+  reportAchievementToast,
+  subscribeAchievementToast,
+} from "./achievementToastBridge";
 export { type BlobDiagnostics, getBlobDiagnostics, setBlobDiagnostics } from "./diagnostics";
 export {
   consumeFlash,
@@ -21,6 +28,7 @@ export {
   type BlobFaceFocusTarget,
   type BlobSplitEvent,
   type CloudAdherenceRequest,
+  consumeAirNudge,
   consumeBlobSplits,
   consumeCloudAdherence,
   consumeImpact,
@@ -45,6 +53,7 @@ export {
   reportLaunchBurst,
   reportRouteGateHit,
   reportSplat,
+  requestAirNudge,
   requestLaunch,
   requestMidAirBounce,
   resetBridges,

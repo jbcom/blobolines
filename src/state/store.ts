@@ -10,6 +10,7 @@ import type {
 import { type AchievementStats, newlyUnlocked } from "@/sim/achievements";
 import { computeScore } from "@/sim/score";
 import { palette } from "@/styles/tokens";
+import { reportAchievementToast } from "./achievementToastBridge";
 import { useWorldStore } from "./worldStore";
 
 /**
@@ -35,6 +36,8 @@ export interface RunStats {
   stylePoints: number;
   /** Points this run beat the PREVIOUS best SCORE by (0 if not a score record). */
   scoreDelta: number;
+  /** Achievements unlocked during this run. */
+  unlockedAchievements: string[];
 }
 
 export interface GameState {
@@ -99,7 +102,47 @@ const EMPTY_RUN: RunStats = {
   score: 0,
   stylePoints: 0,
   scoreDelta: 0,
+  unlockedAchievements: [],
 };
+
+/**
+ * Pure helper function to check and unlock achievements in real-time.
+ */
+function checkAndUnlock(
+  progress: PlayerProgress,
+  run: RunStats,
+): { progress: PlayerProgress; run: RunStats; fresh: string[] } {
+  const stats: AchievementStats = {
+    bestHeight: Math.max(progress.bestHeight, Math.floor(run.height)),
+    bestScore: progress.bestScore,
+    lifetimeCrystals: progress.crystals,
+    runHeight: Math.floor(run.height),
+    runMaxCombo: run.maxCombo,
+    runCrystals: run.crystals,
+  };
+
+  const fresh = newlyUnlocked(stats, progress.unlockedAchievements);
+  if (fresh.length === 0) {
+    return { progress, run, fresh };
+  }
+
+  // Toast each newly unlocked achievement!
+  for (const id of fresh) {
+    reportAchievementToast(id);
+  }
+
+  return {
+    progress: {
+      ...progress,
+      unlockedAchievements: [...progress.unlockedAchievements, ...fresh],
+    },
+    run: {
+      ...run,
+      unlockedAchievements: [...(run.unlockedAchievements || []), ...fresh],
+    },
+    fresh,
+  };
+}
 
 export const useGameStore = create<GameState>((set) => ({
   phase: "menu",
@@ -115,7 +158,12 @@ export const useGameStore = create<GameState>((set) => ({
 
   updateSettings: (patch) => set((s) => ({ settings: { ...s.settings, ...patch } })),
 
-  setRun: (patch) => set((s) => ({ run: { ...s.run, ...patch } })),
+  setRun: (patch) =>
+    set((s) => {
+      const nextRun = { ...s.run, ...patch };
+      const { progress, run } = checkAndUnlock(s.progress, nextRun);
+      return { progress, run };
+    }),
 
   resetRun: () => set({ run: { ...EMPTY_RUN } }),
 
@@ -130,16 +178,26 @@ export const useGameStore = create<GameState>((set) => ({
           ...s.progress,
           unlockedAchievements: [...s.progress.unlockedAchievements, ...fresh],
         },
+        run: {
+          ...s.run,
+          unlockedAchievements: [...(s.run.unlockedAchievements || []), ...fresh],
+        },
       }));
+      // Toast each newly unlocked achievement!
+      for (const id of fresh) {
+        reportAchievementToast(id);
+      }
     }
     return fresh;
   },
 
   addCrystals: (n) =>
-    set((s) => ({
-      run: { ...s.run, crystals: s.run.crystals + n },
-      progress: { ...s.progress, crystals: s.progress.crystals + n },
-    })),
+    set((s) => {
+      const nextRun = { ...s.run, crystals: s.run.crystals + n };
+      const nextProgress = { ...s.progress, crystals: s.progress.crystals + n };
+      const { progress, run } = checkAndUnlock(nextProgress, nextRun);
+      return { progress, run };
+    }),
 
   commitBestHeight: (height) =>
     set((s) => {
@@ -172,15 +230,21 @@ export const useGameStore = create<GameState>((set) => ({
         .sort((a, b) => b.score - a.score)
         .slice(0, 5);
 
-      return {
-        run: { ...s.run, recordDelta, score: runScore, scoreDelta },
-        progress: {
-          ...s.progress,
-          bestHeight: Math.max(s.progress.bestHeight, h),
-          bestScore: Math.max(s.progress.bestScore, runScore),
-          highScores: updatedScores,
-        },
+      const nextRun: RunStats = {
+        ...s.run,
+        recordDelta,
+        score: runScore,
+        scoreDelta,
       };
+      const nextProgress: PlayerProgress = {
+        ...s.progress,
+        bestHeight: Math.max(s.progress.bestHeight, h),
+        bestScore: Math.max(s.progress.bestScore, runScore),
+        highScores: updatedScores,
+      };
+
+      const { progress, run } = checkAndUnlock(nextProgress, nextRun);
+      return { progress, run };
     }),
 
   resetProgress: () => set({ progress: { ...DEFAULT_PROGRESS } }),

@@ -9,6 +9,7 @@ import {
   getBlobDiagnostics,
   getViewControls,
   isBlobScreenTarget,
+  requestAirNudge,
   requestLaunch,
   requestMidAirBounce,
   rotateView,
@@ -32,6 +33,7 @@ const CANCEL_DRAG_PX = 118;
 interface PointerInfo {
   x: number;
   y: number;
+  time: number;
 }
 
 interface GestureState {
@@ -298,8 +300,8 @@ export function LaunchInput() {
   const onPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
     e.preventDefault();
     e.currentTarget.setPointerCapture(e.pointerId);
-    pointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
     const now = performance.now();
+    pointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY, time: now });
     if (pointers.current.size >= 2) {
       gesture.current.mode = "pinch";
       gesture.current.pinchDistance = pointerDistance();
@@ -334,8 +336,14 @@ export function LaunchInput() {
     const pointer = pointers.current.get(e.pointerId);
     if (!pointer) return;
     e.preventDefault();
+    const now = performance.now();
+    const dx = e.clientX - pointer.x;
+    const dy = e.clientY - pointer.y;
+    const dt = now - pointer.time;
+
     pointer.x = e.clientX;
     pointer.y = e.clientY;
+    pointer.time = now;
 
     if (gesture.current.mode === "pinch" && pointers.current.size >= 2) {
       setViewZoom((pointerDistance() / gesture.current.pinchDistance) * gesture.current.pinchZoom);
@@ -343,21 +351,40 @@ export function LaunchInput() {
     }
 
     if (gesture.current.mode === "view") {
-      const dx = e.clientX - gesture.current.lastX;
-      const dy = e.clientY - gesture.current.lastY;
+      const dxView = e.clientX - gesture.current.lastX;
+      const dyView = e.clientY - gesture.current.lastY;
       gesture.current.lastX = e.clientX;
       gesture.current.lastY = e.clientY;
       if (Math.hypot(e.clientX - gesture.current.startX, e.clientY - gesture.current.startY) > 4) {
         gesture.current.moved = true;
       }
-      rotateView(dx, dy);
+      rotateView(dxView, dyView);
       setAim(null);
       setAirSteer(0, 0);
       hideAirReticle();
       return;
     }
 
-    updateGameGesture(e.clientX, e.clientY, true, false, performance.now());
+    // Process rapid swipe / touch flick redirect
+    if (gesture.current.mode === "game" && getBlobDiagnostics().airborne) {
+      const distFromStart = Math.hypot(
+        e.clientX - gesture.current.startX,
+        e.clientY - gesture.current.startY,
+      );
+      if (dt > 0 && distFromStart > 15) {
+        const speed = Math.hypot(dx, dy) / dt;
+        if (speed > 1.8) {
+          const deltaLen = Math.hypot(dx, dy);
+          if (deltaLen > 0.01) {
+            const nx = dx / deltaLen;
+            const nz = dy / deltaLen;
+            requestAirNudge(nx, nz);
+          }
+        }
+      }
+    }
+
+    updateGameGesture(e.clientX, e.clientY, true, false, now);
   };
 
   const onPointerUp = (e: React.PointerEvent<HTMLDivElement>) => {

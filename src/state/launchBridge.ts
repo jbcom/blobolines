@@ -133,7 +133,7 @@ export function consumeSplats(): SplatBurst[] {
  *  hold-release launch pop (blue, blooms from small); "land" is the impact ring on touchdown
  *  (gold, sized by impact). `charge` [0,1] scales the ring's size + brightness. Reported by
  *  the blob, drained by the LaunchRing VFX. */
-export type GroundRingKind = "launch" | "land";
+export type GroundRingKind = "launch" | "land" | "nudge";
 export interface LaunchBurstEvent {
   position: readonly [number, number, number];
   charge: number;
@@ -242,6 +242,19 @@ export function consumeCloudAdherence(): CloudAdherenceRequest | null {
   return req;
 }
 
+/** Mid-air redirect / nudge direction [x, z]. Set by user flick/Shift key, consumed once by blob. */
+let pendingNudge: readonly [number, number] | null = null;
+
+export function requestAirNudge(x: number, z: number): void {
+  pendingNudge = [x, z];
+}
+
+export function consumeAirNudge(): readonly [number, number] | null {
+  const n = pendingNudge;
+  pendingNudge = null;
+  return n;
+}
+
 /**
  * Clear ALL pending bridge state. Called on run end (menu/gameover) so a value reported in
  * the last frame before the run ended can't fire on the next run's first frame. (powerups
@@ -260,6 +273,7 @@ export function resetBridges(): void {
   landingImpact = 0;
   landing = null;
   midAirBounce = false;
+  pendingNudge = null;
   setRouteProofTarget(null);
   clearRouteLandingFeedback();
 }

@@ -34,6 +34,8 @@ export interface BlobDiagnostics {
   bubbleActive?: boolean;
   /** Remaining duration of the bubble powerup in seconds. */
   bubbleRemaining?: number;
+  /** Whether the player has a mid-air redirect/nudge charge available to use. */
+  nudgeAvailable?: boolean;
 }
 
 let snapshot: BlobDiagnostics = {
@@ -49,6 +51,7 @@ let snapshot: BlobDiagnostics = {
   excitement: 0,
   bubbleActive: false,
   bubbleRemaining: 0,
+  nudgeAvailable: true,
 };
 
 export function setBlobDiagnostics(d: BlobDiagnostics): void {

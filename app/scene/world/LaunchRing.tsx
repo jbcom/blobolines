@@ -29,6 +29,7 @@ const MAX_GROW = 5.5; // extra radius a full-charge ring expands to
 const KIND_COLOR: Record<GroundRingKind, Color> = {
   launch: new Color(hex(palette.blob.blue)),
   land: new Color(hex(palette.tramp.gold)),
+  nudge: new Color(hex(palette.cloud.bubble)),
 };
 
 interface RingSlot {

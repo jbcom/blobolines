@@ -3,6 +3,7 @@ export {
   type Droplet,
   type SplashConfig,
   spawnLaunchBurst,
+  spawnNudgeBurst,
   spawnSplash,
   spawnTrailDroplet,
   stepDroplet,

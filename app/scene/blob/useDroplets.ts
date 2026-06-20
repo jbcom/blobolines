@@ -5,6 +5,7 @@ import type { Vec3 } from "@/core/types";
 import {
   type Droplet,
   spawnLaunchBurst,
+  spawnNudgeBurst,
   spawnSplash,
   spawnTrailDroplet,
   stepDroplet,
@@ -26,6 +27,7 @@ const TRAIL_SPACING = 0.9;
 export function useDroplets(seed = 1): {
   splash: (origin: Vec3, strength: number) => void;
   launchBurst: (origin: Vec3, charge: number) => void;
+  nudgeBurst: (origin: Vec3, nudgeDir: readonly [number, number, number]) => void;
   trail: (origin: Vec3, dir: Vec3, speed: number) => void;
   reset: () => void;
   get: () => readonly Droplet[];
@@ -80,6 +82,13 @@ export function useDroplets(seed = 1): {
     [push],
   );
 
+  const nudgeBurst = useCallback(
+    (origin: Vec3, nudgeDir: readonly [number, number, number]) => {
+      for (const d of spawnNudgeBurst(origin, nudgeDir, rng.current)) push(d);
+    },
+    [push],
+  );
+
   const trail = useCallback(
     (origin: Vec3, dir: Vec3, speed: number) => {
       const last = lastTrailPos.current;
@@ -107,5 +116,5 @@ export function useDroplets(seed = 1): {
 
   const get = useCallback(() => droplets.current, []);
 
-  return { splash, launchBurst, trail, reset, get };
+  return { splash, launchBurst, nudgeBurst, trail, reset, get };
 }

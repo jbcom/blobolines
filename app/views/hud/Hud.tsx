@@ -1,3 +1,5 @@
+import { AchievementToast } from "./AchievementToast";
+import { AirNudgeIndicator } from "./AirNudgeIndicator";
 import { Altimeter } from "./Altimeter";
 import { ComboBadge } from "./ComboBadge";
 import { CrystalCounter } from "./CrystalCounter";
@@ -30,8 +32,11 @@ export function Hud() {
       <ScreenFlash />
       {/* route landing quality callout, fed by the certified golden-path scorer */}
       <RouteLandingToast />
+      {/* active achievement unlock notification, fed by the real-time checker */}
+      <AchievementToast />
       {/* radial motion streaks that fade in at high blob speed */}
       <SpeedLines />
+
       {/* first-run drag-to-launch coachmark (until the first launch) */}
       <Onboarding />
       {/* Readouts are ANCHORED to the safe-area corners, NOT stretched across the row. On a
@@ -67,6 +72,7 @@ export function Hud() {
         >
           <ComboBadge />
           <PowerUpBadges />
+          <AirNudgeIndicator />
         </div>
         {/* top-right: crystals */}
         <div
