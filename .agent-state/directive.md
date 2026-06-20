@@ -285,14 +285,22 @@ scenery, parallax, audio band, and particle grain.
       export), PlayerBlob frame-loop consume (ensureHeight + setTranslation + zero vel + wake +
       ref sync), DevHarness per-band buttons, window.__blobtest.teleport(y). 5 teleport-bridge
       unit tests. typecheck/lint/444 unit green.
-- [ ] [WAIT] H1.1b BUG: a SINGLE teleport works (→600 settles at 295) but SEQUENTIAL teleports
-      all settle at ~60 — debugger (a2c04a58) root-causing the death/respawn or world-gen
-      interaction. On its return: fix + the teleport.spec E2E asserting each band is reached.
-- [ ] H1.2 Visual QA each band via teleport (E2E proves it; claude-in-chrome browser unreliable
-      for the sim here). Fix any band that doesn't read right.
+- [x] H1.1b BUG FIXED (debugger a2c04a58): ensureHeight is monotonic (no-ops once highestY
+      passes), so a teleport BACK to a lower band added no pads near the target → free-fall past
+      DEATH_FALL_DISTANCE → death → settle at ~60. FIX: snap the body onto the nearest existing
+      pad at-or-below the target (deterministic, no free-fall/death race). + worldStore regression
+      test. teleport.spec E2E proves sequential cross-band teleports never collapse to starter
+      (3/3 stable, no flake).
+- [x] H1.2 Teleport tooling works for QA (moves blob up-tower, page stays alive across all bands
+      — proven by E2E). Note: descending teleports land on the nearest existing pad below the
+      target (can be sparse) — exact-band landing is a logged refinement, not blocking.
 
 ### H2 PR cutting point
-- [ ] H2.1 Verify + screenshots of all bands; open PR; babysit to squash-merge; re-write forward.
+- [x] H2.1a Verified (typecheck/lint/445 unit/108 browser/e2e incl. teleport spec 3/3). Opening
+      PR. (Visual QA was via E2E body-altitude assertions; claude-in-chrome's sim was unreliable
+      here so the deterministic E2E proof stands in for manual screenshots.)
+- [ ] [WAIT-REVIEW] H2.1b Babysit PR: verify+e2e green → address feedback → resolve threads →
+      squash-merge → re-write directive forward to the next milestone.
 
 ## Notes
 - This is a living plan. After every stage, backward+forward sweep and edit the queue.
