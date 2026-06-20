@@ -171,6 +171,13 @@ function activeSet(band: string): BiomePropSet | null {
   return set && set.props.length > 0 ? set : null;
 }
 
+/** The registry set for a band, irrespective of prop count — the landmark layer renders the band's
+ *  hero structure even on a (hypothetical) propless band, so it must not go through activeSet's
+ *  props.length guard. Returns null only for an unknown band. */
+function landmarkSetForBand(band: string): BiomePropSet | null {
+  return biomePropRegistry.find((s) => s.band === band) ?? null;
+}
+
 /** One scenery instance. Mounts ONLY the current band's prop (not all six) and swaps it via
  *  React state when the wrapped altitude crosses into a new band — so the scene graph holds
  *  one model per instance instead of one per band. `useGLTF` caches the loaded GLBs, so a
@@ -281,10 +288,11 @@ function ScenicInstance({ spec }: { spec: PropSpec }) {
     }
   });
 
-  const set = activeSet(band);
   const isLandmark = spec.layer.id === "landmark";
-  // The landmark layer renders the band's single hero structure; every other layer draws a varied
-  // prop from the band's pool (deterministic pick).
+  // The landmark layer renders the band's single hero structure, resolved DIRECTLY from the registry
+  // (not via activeSet, whose props.length>0 guard is irrelevant to the landmark — it must show even
+  // if a band's prop pool were empty). Every other layer draws a varied prop from the pool.
+  const set = isLandmark ? landmarkSetForBand(band) : activeSet(band);
   const model =
     set && (isLandmark ? set.landmark : set.props[spec.pick[set.band] % set.props.length]);
 

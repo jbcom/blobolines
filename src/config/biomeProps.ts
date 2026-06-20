@@ -151,7 +151,16 @@ export const biomePropRegistry: BiomePropSet[] = biomeBands.map((band) => {
       `biomePropRegistry: no landmark defined for biome band "${band.name}" — add one to LANDMARK_FILES.`,
     );
   }
-  return { band: band.name, props: PROP_FILES[band.name] ?? [], shelf, landmark };
+  // No silent fallback: a band that exists in biomes.json must have a non-empty prop set, else the
+  // scenery (and the landmark, which used to be gated on props.length via activeSet) would render
+  // nothing for it. Surface the gap loudly instead of an empty `?? []`.
+  const props = PROP_FILES[band.name];
+  if (!props || props.length === 0) {
+    throw new Error(
+      `biomePropRegistry: no props defined for biome band "${band.name}" — add an entry to PROP_FILES.`,
+    );
+  }
+  return { band: band.name, props, shelf, landmark };
 });
 
 /** Lookup the prop set for a canonical band name. Returns undefined for unknown bands. */

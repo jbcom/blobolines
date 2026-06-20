@@ -664,8 +664,21 @@ QA shows a band reads empty/flat.)
       reviewer to dispatch.
 
 ### N7.4 PR cutting point
-- [ ] N7.4 Commit, dispatch reviewer, fold findings forward, open PR, babysit to squash-merge,
-      sync main, re-write directive forward.
+- [x] N7.4a Committed (6ae689a), dispatched reviewer (background, focused on the render branch +
+      heavy planet GLBs), pushed, opened PR #75. Monitor armed. Ran `npx biome ci .` before push.
+      KNOWN to fold: reviewer flagged a latent coupling — the landmark uses activeSet(band) which
+      returns null when props.length===0, so a propless band would skip its landmark; fix by
+      looking the set up directly for the landmark path (all bands have props today, so latent).
+- [ ] [WAIT-REVIEW] N7.4b Babysit PR #75: wait CI green, fold reviewer + gemini/CodeRabbit findings
+      forward (incl. the activeSet/landmark decoupling), resolve threads, squash-merge once green,
+      sync main, then start N8.
+
+### N8 Next milestone (surface after #75 merges)
+- [ ] [WAIT-MERGE] N8.1 Pick the next polish unit (don't pre-commit). The biome visual identity is
+      now deep (scenery + parallax + landmarks + audio + particles + reactions). Candidates to SHIFT
+      toward: per-biome MUSIC layers (needs new owned audio via the itch pipeline), a gameplay/feel
+      system (combo/score juice, new pad behaviors), or docs refresh (5+ feature PRs since the last
+      docs pass). Enumerate use cases first; read own spec docs.
 
 ## Queue — Milestone: Daily-challenge results polish (branch feat/daily-results, NEXT)
 
