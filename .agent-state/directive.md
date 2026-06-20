@@ -105,8 +105,10 @@ re-write directive forward → next.
       pass. (BiomeProps is the procedural strata layer; per-band visibility verified by test.)
 
 ### C2 PR cutting point
-- [ ] C2.1 Open the PR for the whole branch (nudge/achievements + biome scenery + ambience);
-      address ALL feedback, resolve threads, squash-merge; re-write directive forward.
+- [x] C2.1a PR #59 opened for the whole branch (nudge/achievements + biome scenery +
+      ambience). Pushed, build green locally.
+- [ ] [WAIT-REVIEW] C2.1b Babysit PR #59: wait CI green → address ALL feedback (CodeRabbit +
+      human) → resolve threads → squash-merge → re-write directive forward to next milestone.
 
 ## Notes
 - This is a living plan. After every stage, backward+forward sweep and edit the queue.
