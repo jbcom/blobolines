@@ -192,6 +192,64 @@ test("a near-layer prop reacts (leans/pops) when the blob rushes past it", async
   );
 });
 
+test("a near prop FLYBY PULSE spikes its scale as the blob passes closest", async () => {
+  let sceneRoot: Group | null = null;
+  setAltitude(50);
+
+  const screen = await render(
+    <FixtureStage testId="pulse-fixture" cameraDistance={40}>
+      <CaptureScene onScene={(s) => (sceneRoot = s as Group)} />
+      <BiomeScenicProps />
+    </FixtureStage>,
+  );
+  await expect.element(screen.getByTestId("pulse-fixture")).toBeInTheDocument();
+
+  const nearGroups = () => {
+    const out: Object3D[] = [];
+    (sceneRoot as unknown as Object3D | null)?.traverse((o: Object3D) => {
+      if (o.renderOrder === 2) out.push(o);
+    });
+    return out;
+  };
+
+  await vi.waitFor(() => expect(nearGroups().length).toBeGreaterThan(0), {
+    timeout: 10000,
+    interval: 100,
+  });
+
+  const target = nearGroups()[0];
+  target.getWorldPosition(_tmp);
+  const propX = _tmp.x;
+  const propY = _tmp.y;
+
+  // Drive the blob through the prop: BELOW it (approaching), AT it (closest = peak), then ABOVE
+  // it (receding). The rising→falling influence edge must fire the pulse, spiking the scale beyond
+  // the steady proximity pop. We sample the peak scale across the pass.
+  let peakScale = 1;
+  const sweep = [-3, -1.5, -0.5, 0, 0.5, 1.5, 3]; // Y offsets from the prop, low → high
+  for (const off of sweep) {
+    setBlobDiagnostics({
+      position: [propX + 0.4, propY + off, 0],
+      velocity: [0, 40, 0],
+      speed: 40,
+      airborne: true,
+      expression: "idle",
+      squash: 1,
+      maxHeight: propY,
+      groundY: 0,
+    });
+    // Let a few frames advance so the envelope steps.
+    await new Promise((r) => setTimeout(r, 60));
+    peakScale = Math.max(peakScale, target.scale.x);
+  }
+
+  // The flyby pulse adds up to ~0.16 on top of the ≤0.12 proximity pop, so a real pulse drives the
+  // scale clearly past what proximity alone (≤1.12) could reach.
+  expect(peakScale, "the flyby pulse should spike the prop's scale past its steady pop").toBeGreaterThan(
+    1.13,
+  );
+});
+
 const _tmp = new Vector3();
 
 test("BiomeProps mounts and resolves ambience across every band without throwing", async () => {

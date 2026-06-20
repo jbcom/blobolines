@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vitest";
 import type { Vec3 } from "@/core/types";
-import { DEFAULT_SCENERY_REACTION, sceneryReaction } from "../sceneryReaction";
+import {
+  DEFAULT_FLYBY_PULSE,
+  DEFAULT_SCENERY_REACTION,
+  flybyPeaked,
+  sceneryReaction,
+  stepFlybyPulse,
+} from "../sceneryReaction";
 
 const FAST: Vec3 = [0, 40, 0]; // well above fullSpeed → speedScale clamps to 1
 const STILL: Vec3 = [0, 0, 0];
@@ -65,5 +71,53 @@ describe("sceneryReaction", () => {
     const b = sceneryReaction(STILL, FAST, deepZ);
     expect(b.influence).toBeCloseTo(a.influence, 10);
     expect(b.lean).toBeCloseTo(a.lean, 10);
+  });
+});
+
+describe("flybyPeaked", () => {
+  it("fires when influence was rising and starts to fall (a strong-enough local peak)", () => {
+    // prev 0.6 → now 0.5: just past closest approach → peak.
+    expect(flybyPeaked(0.6, 0.5)).toBe(true);
+  });
+
+  it("does NOT fire while the blob is still approaching (influence rising)", () => {
+    expect(flybyPeaked(0.3, 0.6)).toBe(false);
+  });
+
+  it("does NOT fire on a faint graze below the minimum peak influence", () => {
+    // Falling, but the peak (prev) never reached minPeakInfluence → no flourish for a far edge.
+    expect(flybyPeaked(0.05, 0.04)).toBe(false);
+    expect(DEFAULT_FLYBY_PULSE.minPeakInfluence).toBeGreaterThan(0.05);
+  });
+
+  it("does NOT fire on a flat/plateau (equal frames are not a peak)", () => {
+    expect(flybyPeaked(0.4, 0.4)).toBe(false);
+  });
+});
+
+describe("stepFlybyPulse", () => {
+  it("snaps up to the peak strength on a trigger (fast attack)", () => {
+    const v = stepFlybyPulse(0, true, 0.8, 1 / 60);
+    expect(v).toBeCloseTo(0.8, 5); // a fresh peak of 0.8 → envelope ~0.8 (minus a frame of decay)
+  });
+
+  it("decays toward zero over time when not retriggered (slow decay)", () => {
+    let v = stepFlybyPulse(0, true, 1, 1 / 60); // fire at full
+    const afterAttack = v;
+    for (let i = 0; i < 60; i++) v = stepFlybyPulse(v, false, 0, 1 / 60); // ~1s of decay
+    expect(v).toBeLessThan(afterAttack);
+    expect(v).toBeLessThan(0.05); // mostly gone after a second at decay 6
+    expect(v).toBeGreaterThanOrEqual(0); // never negative
+  });
+
+  it("never lifts the envelope ABOVE a peak that is weaker than the current value", () => {
+    // Current envelope 0.9 from a recent strong flyby; a new WEAK peak (0.2) must not pull it down.
+    const v = stepFlybyPulse(0.9, true, 0.2, 1 / 60);
+    expect(v).toBeGreaterThan(0.8); // stays near 0.9 (decayed a frame), not dragged to 0.2
+  });
+
+  it("clamps the attack to 1 even for an over-unity peak strength", () => {
+    const v = stepFlybyPulse(0, true, 5, 1 / 60);
+    expect(v).toBeLessThanOrEqual(1);
   });
 });

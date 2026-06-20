@@ -509,13 +509,23 @@ whooshes past, distinct from the continuous lean (which tracks proximity). The l
 is near"; the pulse says "the blob just shot past THIS prop" — a discrete acknowledgement that makes
 a fast climb feel kinetic. No new assets; pure extension of sceneryReaction + ScenicInstance.
 
-### N4 Architecture
-- [ ] N4.1 Enumerate the pulse trigger (read sceneryReaction + the ScenicInstance reaction block).
-      Decide: detect closest-approach (influence crossing its local peak / passing the prop on the
-      travel axis) as a discrete edge, fire a decaying pulse envelope (fast attack, slow decay) ON
-      TOP of the continuous lean/pop, deterministic + near-layer only. Record decision; then N4.2
-      implement (extend the pure helper with a pulse-envelope step + a peak-detector, unit-test,
-      wire, browser fixture, visual-verify), N4.3 PR.
+### N4 Architecture + Implementation
+- [x] N4.1 ENUMERATED + DECIDED: detect closest-approach as a rising→falling edge on the prop's
+      influence (held frame-to-frame in the ScenicInstance ref), fire a fast-attack/slow-decay
+      envelope ON TOP of the continuous lean/pop. Pure helpers so the envelope math is testable.
+- [x] N4.2 DONE. Extended src/render/vfx/sceneryReaction.ts with pure `flybyPeaked(prev, now)`
+      (rising→falling edge gated by minPeakInfluence — no flourish on faint far grazes) +
+      `stepFlybyPulse(current, triggered, peakStrength, dt)` (e^(-decay·dt) decay, fast attack that
+      never pulls the envelope DOWN, clamped to 1). Wired into ScenicInstance near-layer block:
+      tracks prevInfluence + pulse in the ref, adds pulse·DEFAULT_FLYBY_PULSE_POP (0.16) to the
+      scale on top of the proximity pop. 8 new unit tests (peak edge cases, attack, decay-to-zero,
+      no-downward-drag, clamp) + a browser fixture sweeping the blob through a near prop and
+      asserting the scale spikes past the steady-pop ceiling. 494 unit + 119 browser green;
+      typecheck + lint clean. Committed; reviewer to be dispatched.
+
+### N4.3 PR cutting point
+- [ ] N4.3 Commit, dispatch reviewer, fold findings forward, open PR, babysit to squash-merge,
+      sync main, re-write directive forward.
 
 ## Queue — Milestone: Daily-challenge results polish (branch feat/daily-results, NEXT)
 
