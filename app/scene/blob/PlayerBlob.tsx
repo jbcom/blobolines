@@ -726,8 +726,14 @@ export function PlayerBlob() {
         body.setLinvel({ x: 0, y: blob.shield.reboundVelocity, z: 0 }, true);
         flash("blue", 1);
         playPowerup();
+        // A shield save is a clutch relief moment — a success buzz, like the celebratory peaks.
+        if (useGameStore.getState().settings.haptics) void notify(NotificationType.Success);
       } else {
         dead.current = true;
+        // The death is the climactic "Splat!" — punctuate it with a full goo-splat burst + a heavy
+        // impact haptic, so the most dramatic moment lands as hard as the celebratory peaks do.
+        reportSplat({ position: [p.x, p.y - BLOB.radius, p.z], strength: 1 });
+        if (useGameStore.getState().settings.haptics) void impact_(ImpactStyle.Heavy);
         playSplat();
         playDeath();
         commitBestHeight(runHeightFromWorldY(maxY.current));
