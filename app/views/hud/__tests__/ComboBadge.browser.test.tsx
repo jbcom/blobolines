@@ -27,8 +27,16 @@ test("escalates to 'ON FIRE' at 5×", async () => {
   await expect.element(screen.getByText("ON FIRE", { exact: true })).toBeInTheDocument();
 });
 
-test("escalates to the top 'BLAZING' tier at 10× (the raised combo ceiling)", async () => {
-  useGameStore.setState((s) => ({ run: { ...s.run, combo: 11 } }));
-  const screen = await render(<ComboBadge />);
-  await expect.element(screen.getByText("BLAZING", { exact: true })).toBeInTheDocument();
+test("the top 'BLAZING' tier kicks in EXACTLY at the 10× threshold, not at 9×", async () => {
+  // 9× is still the prior "ON FIRE" tier; 10× is the BLAZING boundary (the new top tier the raised
+  // combo ceiling unlocks). Test the exact boundary, not an interior value.
+  useGameStore.setState((s) => ({ run: { ...s.run, combo: 9 } }));
+  const below = await render(<ComboBadge />);
+  await expect.element(below.getByText("ON FIRE", { exact: true })).toBeInTheDocument();
+  await expect.element(below.getByText("BLAZING", { exact: true }).query()).not.toBeInTheDocument();
+  cleanup();
+
+  useGameStore.setState((s) => ({ run: { ...s.run, combo: 10 } }));
+  const at = await render(<ComboBadge />);
+  await expect.element(at.getByText("BLAZING", { exact: true })).toBeInTheDocument();
 });
