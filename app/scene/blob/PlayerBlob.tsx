@@ -407,7 +407,6 @@ export function PlayerBlob() {
       if (useGameStore.getState().settings.haptics) {
         vibrate(18);
       }
-      v = body.linvel();
     }
 
     const gateHit = consumeRouteGateHit();
