@@ -375,12 +375,36 @@ rather than letting end-of-project catch-up accrue).
       lint + typecheck + 455 unit green.
 
 ### K2 PR cutting point
-- [x] K2.1a Opening PR.
-- [ ] [WAIT-REVIEW] K2.1b Babysit PR: gates green → address feedback → squash-merge → re-write
+- [x] K2.1b PR #68 SQUASH-MERGED (c37d950, 2026-06-20). gemini (crystalTier row) + CodeRabbit
+      (full app/scene/world component list) addressed. Docs now match the code.
+  NOTE: biome-reactive blob tinting is ALREADY shipped (GooCsg uEnvTint via biomeSkyAt) — don't
+  redo it.
+
+## Queue — Milestone: Test-coverage hardening on the session's new systems (branch test/harden-new-systems)
+
+The mandate explicitly includes improving tests. 9 feature PRs shipped this session; some new
+pure/logic surfaces have thin or no DIRECT unit coverage (covered only incidentally). Harden the
+critical ones with focused, real-assertion tests — protecting the new systems and surfacing any
+latent edge bugs. No new behavior; pure test additions (+ tiny fixes if a test reveals a real bug).
+
+### L0 Audit
+- [ ] L0.1 Run `pnpm test:coverage` (or vitest --coverage) over the session's new modules
+      (crystalTier, biomeProps registry/ambience/parallax helpers, launchBridge teleport,
+      crystalCollectBridge, achievements SKIN maps, store achievement-skin grant, ambient band
+      resolution). Identify the thinnest-covered logic with real branches worth pinning. Record the
+      gap list.
+
+### L1 Implementation
+- [ ] L1.1 Add focused unit tests for the identified gaps — real assertions on branch behavior +
+      edge cases (boundary altitudes, empty/edge inputs, determinism), not coverage-padding. Fix
+      any real bug a new test reveals (forward commit).
+
+### L2 PR cutting point
+- [ ] L2.1 Verify (typecheck+lint+test+browser+e2e); open PR; babysit to squash-merge; re-write
       directive forward.
 
 ## Notes
 - This is a living plan. After every stage, backward+forward sweep and edit the queue.
-- Next candidate milestones (surface, don't pre-commit): per-biome music layers, denser
-  interactive props that react to the blob, biome-reactive blob tinting, USE the teleport tool to
-  manually QA + polish each upper biome band's look, daily-challenge leaderboard polish.
+- Next candidate milestones (surface, don't pre-commit): per-biome MUSIC layers, daily-challenge
+  leaderboard polish, a test-coverage hardening pass on the session's new systems, USE the teleport
+  tool to manually QA + polish each upper biome band's look.
