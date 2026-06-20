@@ -1,6 +1,6 @@
 import { useGLTF } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
-import { useMemo, useRef } from "react";
+import { useMemo, useRef, useState } from "react";
 import type { Group } from "three";
 import {
   allBiomePropFiles,
@@ -86,12 +86,20 @@ interface PropSpec {
   bobSpeed: number;
 }
 
-/** One scenery instance: mounts every band's chosen prop, shows the one for the current
- *  wrapped altitude's band. Band selection is `biomeBandAt` — the single source of truth. */
+/** Pick the registry set for a band that actually has props, or null. */
+function activeSet(band: string): BiomePropSet | null {
+  const set = biomePropRegistry.find((s) => s.band === band);
+  return set && set.props.length > 0 ? set : null;
+}
+
+/** One scenery instance. Mounts ONLY the current band's prop (not all six) and swaps it via
+ *  React state when the wrapped altitude crosses into a new band — so the scene graph holds
+ *  one model per instance instead of one per band. `useGLTF` caches the loaded GLBs, so a
+ *  band crossing remounts from cache with no refetch. Band selection is `biomeBandAt` — the
+ *  single source of truth. */
 function ScenicInstance({ spec }: { spec: PropSpec }) {
   const groupRef = useRef<Group>(null);
-  // One band-group ref per registry band, keyed by band name.
-  const bandRefs = useRef<Record<string, Group | null>>({});
+  const [band, setBand] = useState(() => biomeBandAt(wrapY(spec.yFrac, 0)));
 
   useFrame((state) => {
     const group = groupRef.current;
@@ -101,21 +109,16 @@ function ScenicInstance({ spec }: { spec: PropSpec }) {
     const t = state.clock.elapsedTime;
 
     const y = wrapY(spec.yFrac, h);
-    const activeBand = biomeBandAt(y);
+    const nextBand = biomeBandAt(y);
+    if (nextBand !== band) setBand(nextBand); // only re-renders on a band crossing (rare)
 
     // Continuous floating/bobbing animation.
     const bob = Math.sin(t * spec.bobSpeed + spec.phase) * spec.bobAmplitude;
     group.position.set(spec.x, y + bob, spec.z);
 
-    // Show only the active band's prop group.
-    for (const set of biomePropRegistry) {
-      const ref = bandRefs.current[set.band];
-      if (ref) ref.visible = set.band === activeBand;
-    }
-
     // Cosmic bands tumble in 3D; atmospheric bands spin gently about Y only.
     group.rotation.y = spec.rotY + t * spec.rotSpeed;
-    if (activeBand === "space" || activeBand === "deep-space") {
+    if (nextBand === "space" || nextBand === "deep-space") {
       group.rotation.x = t * spec.rotSpeed * 0.5;
       group.rotation.z = t * spec.rotSpeed * 0.3;
     } else {
@@ -124,24 +127,19 @@ function ScenicInstance({ spec }: { spec: PropSpec }) {
     }
   });
 
+  const set = activeSet(band);
+
   return (
     <group ref={groupRef}>
-      {biomePropRegistry.map((set: BiomePropSet) => {
-        if (set.props.length === 0) return null;
-        const prop = set.props[spec.pick[set.band] % set.props.length];
-        return (
-          <group
-            key={set.band}
-            ref={(g) => {
-              bandRefs.current[set.band] = g;
-            }}
-            visible={false}
-          >
-            <PropModel file={prop.file} scale={spec.scale * prop.scale} />
-            <Shelf shelf={set.shelf} />
-          </group>
-        );
-      })}
+      {set && (
+        <>
+          <PropModel
+            file={set.props[spec.pick[set.band] % set.props.length].file}
+            scale={spec.scale * set.props[spec.pick[set.band] % set.props.length].scale}
+          />
+          <Shelf shelf={set.shelf} />
+        </>
+      )}
     </group>
   );
 }
