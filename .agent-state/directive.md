@@ -635,10 +635,23 @@ teleport bridge + claude-in-chrome, READ each screenshot, and fix any real look 
 not feature-bolting. (Branch named for landmarks but the QA pass leads; landmark props only if the
 QA shows a band reads empty/flat.)
 
-### N7 QA pass
-- [ ] N7.1 Teleport through ground→sky→upper-atmosphere→stratosphere→space→deep-space; screenshot +
-      READ each; note concrete look issues (named per band). Then fix the highest-value ones
-      (config/tuning edits + any needed prop scale fixes), re-verify by screenshot, PR.
+### N7 QA pass → pivot
+- [x] N7.1 BLOCKED + PIVOTED. Live teleport QA is NOT achievable headless: the claude-in-chrome tab
+      is backgrounded (document.hidden=true), so rAF is throttled and `__blobtest.teleport(y)` never
+      moves the body (the teleport consume runs in PlayerBlob's rAF-driven useFrame; altitude stays
+      0). Saved to memory [[blobolines-headless-raf-gating]]. The deterministic browser fixture is
+      the authoritative upper-band visual check. PIVOT N7 to the branch's namesake — per-band hero
+      LANDMARK props — a concrete feature verifiable via the fixture, and a real richness win: each
+      band currently has only scattered small accents with no signature anchor.
+
+### N7 Architecture — per-band hero landmarks
+- [ ] N7.2 Enumerate: read BiomeScenicProps (the parallax-instance system) + the registry. Decide
+      how a LANDMARK differs from a regular prop: ONE large signature structure per band, placed on
+      a dedicated far/back layer, sparse (one visible at a time, wide vertical spacing) so it reads
+      as a monument not clutter. Curate 6 distinctive 3DLowPoly landmark GLBs (one per band) from
+      the NAS (vet with scripts/vet-biome-glbs.mjs). Decide data shape (extend the registry with an
+      optional per-band `landmark` + a landmark layer in parallaxLayers, OR a separate component).
+      Record decision; then N7.3 implement + fixture + PR.
 
 ## Queue — Milestone: Daily-challenge results polish (branch feat/daily-results, NEXT)
 
