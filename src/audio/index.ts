@@ -7,6 +7,7 @@ export {
   duckMusic,
   initAudio,
   isAudioInitialized,
+  milestoneTierFor,
   playBounce,
   playChime,
   playComboBlip,

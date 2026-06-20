@@ -754,11 +754,19 @@ mandate explicitly includes keeping docs aligned (no end-of-project catch-up).
       `milestoneTierFor(height)` (a tiny pure helper with explicit thresholds — throws/falls to the
       lowest tier deliberately, documented); MilestoneBanner already has the height at fire time.
       Keep playRecord (personal-best) distinct. Owned casual/celebratory audio only (audio-identity).
-- [ ] N10.2 Implement: vet+promote 4 tier stingers into public/assets/audio/sfx/milestones/; add a
-      milestoneTiers map + pure milestoneTierFor(height) (src/sim or src/audio); playMilestone takes
-      an optional height → tier stinger; MilestoneBanner passes the milestone height. Tests: tier
-      thresholds (boundaries + below-first + very-high) + audio no-throw across tiers. typecheck/
-      biome-ci/unit/browser; PR.
+- [x] N10.2 DONE. Promoted 4 owned victory stingers → public/assets/audio/sfx/milestones/
+      (tier1-bright/tier2-triumph/tier3-epic/tier4-mega). audio.json: 4 sfx keys + a milestoneTiers
+      threshold map (0/500/1000/2000). Pure `milestoneTierFor(h): SfxId` in howler.ts (scans
+      descending thresholds, falls to the lowest tier — every non-neg height covered); playMilestone
+      takes an optional height; MilestoneBanner passes the milestone height (the other callers —
+      treasure/difficulty — keep the no-arg lowest tier). Tests: milestoneTierFor boundaries
+      (100/500/1000/2000/very-high + 0/-50) + no-throw across tiers + audioAmbient milestone-tier
+      config coverage (ascending thresholds, every tier a real distinct sfx file). 513 unit + 120
+      browser green; typecheck + biome ci + build clean. Committed; reviewer to dispatch.
+
+### N10.3 PR cutting point
+- [ ] N10.3 Commit, dispatch reviewer, fold findings forward, open PR, babysit to squash-merge,
+      sync main, re-write directive forward to N11.
 
 ### N9 Next milestone (surface after #76 merges)
 - [ ] [WAIT-MERGE] N9.1 Pick the next polish unit (don't pre-commit). Biome identity + docs are now

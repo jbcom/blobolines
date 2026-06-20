@@ -53,3 +53,30 @@ describe("per-band music coverage", () => {
     expect(new Set(tracks).size, "each band should have its own track").toBe(tracks.length);
   });
 });
+
+/**
+ * Escalating milestone stingers — playMilestone(height) resolves a tier via thresholds in
+ * `milestoneTiers`, each pointing at an `sfx` key. Guard the config: ascending thresholds, the
+ * lowest covers 0, every tier's sfx key exists in the sfx map, and every tier is a distinct sound.
+ */
+describe("milestone tier coverage", () => {
+  const tiers = audioCfg.milestoneTiers as Array<{ minHeight: number; sfx: string }>;
+  const sfx = audioCfg.sfx as Record<string, string>;
+
+  it("has a lowest tier covering height 0 and ascending thresholds", () => {
+    expect(tiers.length).toBeGreaterThanOrEqual(2);
+    expect(tiers[0].minHeight).toBe(0);
+    for (let i = 1; i < tiers.length; i++) {
+      expect(tiers[i].minHeight, "thresholds ascend").toBeGreaterThan(tiers[i - 1].minHeight);
+    }
+  });
+
+  it("points every tier at a real sfx key with a distinct file (a true escalation)", () => {
+    for (const t of tiers) {
+      expect(sfx[t.sfx], `tier sfx "${t.sfx}" must exist in the sfx map`).toBeTruthy();
+      expect(sfx[t.sfx]).toMatch(/^assets\/audio\/sfx\/.+\.mp3$/);
+    }
+    const files = tiers.map((t) => sfx[t.sfx]);
+    expect(new Set(files).size, "each tier is a distinct stinger").toBe(files.length);
+  });
+});

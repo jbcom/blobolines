@@ -32,8 +32,9 @@ export function MilestoneBanner() {
     if (milestone > lastMilestone.current) {
       lastMilestone.current = milestone;
       if (milestone > 0) {
-        setShown(milestone * MILESTONE_STEP);
-        playMilestone();
+        const milestoneHeight = milestone * MILESTONE_STEP;
+        setShown(milestoneHeight);
+        playMilestone(milestoneHeight); // escalating stinger — higher milestones sound grander
         duckMusic(700); // sidechain so the milestone stinger reads over the music
       }
     }

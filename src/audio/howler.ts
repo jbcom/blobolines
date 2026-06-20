@@ -233,9 +233,29 @@ export function playPowerdown(): void {
 export function playComboFanfare(): void {
   playSfx("milestone", { rate: 1.25, volume: 0.9 });
 }
-/** Bright arcade stinger when the blob crosses a 100m milestone. */
-export function playMilestone(): void {
-  playSfx("milestone");
+interface MilestoneTier {
+  minHeight: number;
+  sfx: SfxId;
+}
+const milestoneTiers = audioCfg.milestoneTiers as MilestoneTier[];
+
+/** The milestone-stinger SFX key for a crossing at world height `h` — escalates with altitude so a
+ *  higher milestone sounds grander (bright → triumph → epic → mega). Pure: scans the descending
+ *  thresholds and returns the highest tier whose minHeight is met. Falls to the FIRST tier below the
+ *  lowest threshold (the lowest tier's minHeight is 0, so every non-negative height is covered).
+ *  Exported for unit testing the tier boundaries. */
+export function milestoneTierFor(h: number): SfxId {
+  for (let i = milestoneTiers.length - 1; i >= 0; i--) {
+    if (h >= milestoneTiers[i].minHeight) return milestoneTiers[i].sfx;
+  }
+  return milestoneTiers[0].sfx;
+}
+
+/** Celebratory arcade stinger when the blob crosses a 100m milestone — ESCALATES with the
+ *  milestone height (a higher climb earns a grander fanfare). `height` is the milestone just
+ *  crossed; omitted falls to the lowest tier (e.g. a non-altitude milestone like a treasure pickup). */
+export function playMilestone(height = 0): void {
+  playSfx(milestoneTierFor(height));
 }
 /** Gold "new record" fanfare on a personal best. */
 export function playRecord(): void {
