@@ -3,7 +3,9 @@ import { describe, expect, it } from "vitest";
 import {
   duckMusic,
   isAudioInitialized,
+  MILESTONE_TIER_COUNT,
   milestoneTierFor,
+  milestoneTierIndex,
   playBounce,
   playChime,
   playComboBlip,
@@ -327,5 +329,22 @@ describe("milestone stinger tiers", () => {
       expect(() => playMilestone(h)).not.toThrow();
     }
     expect(() => playMilestone()).not.toThrow(); // no-arg → lowest tier
+  });
+
+  it("milestoneTierIndex is the SHARED 0-based tier source (audio + visual key off it)", () => {
+    // The index escalates 0→last and aligns with the sfx tiers (the visual banner uses this index).
+    expect(milestoneTierIndex(0)).toBe(0);
+    expect(milestoneTierIndex(100)).toBe(0);
+    expect(milestoneTierIndex(500)).toBe(1);
+    expect(milestoneTierIndex(1000)).toBe(2);
+    expect(milestoneTierIndex(2000)).toBe(3);
+    expect(milestoneTierIndex(99999)).toBe(MILESTONE_TIER_COUNT - 1); // caps at the top tier
+    expect(milestoneTierIndex(-50)).toBe(0); // floor
+  });
+
+  it("milestoneTierFor is exactly the sfx of milestoneTierIndex's tier (no separate threshold list)", () => {
+    for (const h of [0, 250, 500, 1200, 2500]) {
+      expect(milestoneTierFor(h)).toBe(`milestone-tier${milestoneTierIndex(h) + 1}`);
+    }
   });
 });

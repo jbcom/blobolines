@@ -793,12 +793,20 @@ milestones, so a 2000m crossing LOOKS as grand as it sounds.
       layer (or a tokens-driven table). MilestoneBanner reads the index from the milestone height,
       shows the tier label ("NEW HEIGHT!" → "TRIUMPH!" → "EPIC!" → "MEGA!"), flashes gold scaled by
       tier, and pops bigger at higher tiers. Determinism: pure index from height; no new RNG.
-- [ ] N11.2 Implement: shared milestoneTierIndex (single threshold source) + refactor
-      milestoneTierFor to use it; milestoneVisualTier table; wire MilestoneBanner (label/flash/scale
-      by tier); tests (index boundaries shared with audio; visual-tier table coverage; a banner
-      browser fixture asserting a high milestone shows the escalated label). typecheck/biome-ci/
-      unit/browser; PR.
-      Enumerate use cases first; read own spec docs.
+- [x] N11.2 DONE. Extracted the shared pure `milestoneTierIndex(h): 0..3` in howler.ts (the SINGLE
+      threshold source) + `MILESTONE_TIER_COUNT`; milestoneTierFor is now just
+      `milestoneTiers[milestoneTierIndex(h)].sfx`. New pure `milestoneVisual(tierIndex)` table in
+      app/views/hud (label/flash/scale per tier — throws at load if its count ≠ the audio tier
+      count, no silent mismatch; clamps out-of-range). MilestoneBanner reads the tier index from the
+      milestone height → escalated label ("New height!" → "Triumph!" → "Epic climb!" → "Mega
+      height!"), a gold flash scaled by tier, and a bigger pop. Tests: milestoneTierIndex boundaries
+      + the milestoneTierFor==index contract (audio sfx test) + milestoneVisual table coverage/
+      escalation/clamp + a MilestoneBanner browser fixture asserting 2000m shows "Mega height!".
+      518 unit + 121 browser green; typecheck + biome ci + build clean. Committed; reviewer to dispatch.
+
+### N11.3 PR cutting point
+- [ ] N11.3 Commit, dispatch reviewer, fold findings forward, open PR, babysit to squash-merge,
+      sync main, re-write directive forward to N12.
 
 ### N9 Next milestone (surface after #76 merges)
 - [ ] [WAIT-MERGE] N9.1 Pick the next polish unit (don't pre-commit). Biome identity + docs are now
