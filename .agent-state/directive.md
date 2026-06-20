@@ -110,8 +110,17 @@ re-write directive forward → next.
       code-quality (dead linvel read), gemini HIGH (toast overwrite → FIFO queue) + 2 MEDIUM
       (nudge dedup, impure mutator). 5 threads resolved, 0 unresolved. Fixes in 809d2ca +
       3dd921f with new tests (430 unit pass).
-- [ ] [WAIT] C2.1c Wait final CI green on 3dd921f (UNSTABLE→CLEAN), then squash-merge PR #59
-      and re-write directive forward to next milestone (monitor armed as wake signal).
+- [x] C2.1c CI FAILED on 3dd921f — Playwright E2E timeouts (perf.spec frame budget +
+      cascade page-close). Root cause: the 24 biome GLBs add load/decode cost; 3 (CubeWorld
+      mushroom-giant/gem-spire/crystal-shard) have embedded bitmap textures that fail to
+      decode in headless Chromium ("Couldn't load texture blob:") — extra cost + error noise.
+      All 5 E2E pass LOCALLY (slower CI runner tips the budget).
+- [x] C2.1d Fixed CI (01e72ee): replaced the 3 embedded-bitmap GLBs with vertex-color
+      equivalents (zero "Couldn't load texture" errors now) AND refactored BiomeScenicProps
+      to mount only the active band's prop (96→16 mounted models). 5 E2E pass locally, 430
+      unit + 107 browser green. Pushed.
+- [ ] [WAIT] C2.1e Wait CI green on 01e72ee, then squash-merge PR #59 and re-write directive
+      forward to the next milestone (per-biome ambient audio aligned to canonical bands).
 
 ## Notes
 - This is a living plan. After every stage, backward+forward sweep and edit the queue.
