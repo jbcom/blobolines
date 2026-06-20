@@ -207,12 +207,33 @@ re-write directive forward → next.
       Addressed gemini HIGH (redundant startRun masking the card remount). Fixes in 6a07f82 +
       34a7ccd: fixed-frame-count perf sampling + skip route-proof (dev-tooling) in CI. CI=true
       runs 4 specs/58s, local 5/5.
-- [ ] [WAIT-REVIEW] E2.1c Babysit PR #62: confirm both verify + e2e gates GREEN in real CI →
-      resolve any new threads → squash-merge → re-write directive forward.
+- [x] E2.1c PR #62 SQUASH-MERGED (6e842c2, 2026-06-20). Both verify + e2e gates GREEN in real
+      CI — E2E coverage restored to the merge gate after being broken on main for 5+ releases.
+
+## Queue — Milestone: Parallax depth layers (branch feat/parallax-depth)
+
+Enrich the climb's visual depth: the scenery sits on one background plane (z −26..−10). Add
+multiple parallax depth layers that scroll at different rates with the climb so the world reads
+as deep, not flat — the mandate's "richer and more fun". Reuse the biome scenery system + NAS
+assets; keep determinism + mid-tier budget.
+
+### F0 Architecture
+- [ ] F0.1 Enumerate depth-layer use cases (far backdrop silhouettes / mid scenery / near
+      foreground accents); read BiomeProps + BiomeScenicProps + camera setup; decide whether
+      parallax is per-instance depth-scaled drift or discrete layers. Record decision.
+
+### F1 Implementation
+- [ ] F1.1 Implement parallax depth layers (deterministic placement, biome-band-aware, wrap
+      logic intact). Far layers drift slower; near layers faster. Visual-verify against a
+      named reference (read the screenshot).
+- [ ] F1.2 Tests: layer/parallax unit + render/browser test per the visual gate.
+
+### F2 PR cutting point
+- [ ] F2.1 Verify (typecheck + lint + test + test:browser + e2e) + app-runs screenshot; open
+      PR; address feedback; resolve threads; squash-merge; re-write directive forward.
 
 ## Notes
 - This is a living plan. After every stage, backward+forward sweep and edit the queue.
-- Next candidate milestones (surface, don't pre-commit): per-biome ambient audio beds,
-  collectible pickups along the climb, parallax depth layers, blob trail/cosmetic unlocks,
-  DevHarness blob-altitude TELEPORT (move the Rapier body, not score) for visual QA across
-  bands, denser/multi-depth scenery layers, biome-specific particle ambience.
+- Next candidate milestones (surface, don't pre-commit): collectible pickups along the climb,
+  blob trail/cosmetic unlocks, DevHarness blob-altitude TELEPORT (move the Rapier body, not
+  score) for visual QA across bands, biome-specific particle ambience, per-biome music layers.
