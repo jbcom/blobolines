@@ -1232,6 +1232,12 @@ route at generation. (Also surveyed raising MAX_COMBO: comboStyleBonus is geomet
       green (kinematic bodies don't disrupt physics); typecheck + pinned lint clean. Live-confirmed 9
       obstacles each carry a distinct bob (amp/speed/phase).
 
+- [ ] [WAIT-REVIEW] PR #92 (N24 bobbing obstacles) — babysit. Review FOLDED: no real bugs; proactively
+      hardened the bob route-clearance to an airtight inflated-clearance (center vs ROUTE_CLEARANCE +
+      amplitude, triangle-inequality proof) before the reviewer returned; folded gemini's 3-thread fix
+      (freeze the bob on pause via dt-accumulation, not the raw render clock). All threads resolved, CI
+      run confirmed for the exact HEAD. Wait CI green → squash-merge → sync main → next corner.
+
 ## Notes
 - This is a living plan. After every stage, backward+forward sweep and edit the queue.
 - Next candidate milestones (surface, don't pre-commit): a "best daily this week" mini-summary (needs
