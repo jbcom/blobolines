@@ -138,13 +138,16 @@ re-write directive forward → next.
       local E2E green.
 - [x] C3.1b shm fix did NOT resolve it — identical "Target page closed" at perf.spec:26.
       3rd wrong hypothesis (textures, model-count, shm). STOPPED guessing per debug-loop rule.
-- [ ] [WAIT] C3.2 DIAGNOSTIC run pushed (66b1c4b): e2e/fixtures.ts prints page
-      console/pageerror/crash/close to CI stdout + trace artifact upload. Read the actual
-      crash reason from the next CI log, THEN fix the real cause. Strong fallback hypothesis:
-      dev-server-specific (rolldown-vite `pnpm dev` instability / preserveDrawingBuffer gated
-      to DEV) — candidate fix = run E2E against `vite preview` of a prod build.
-- [ ] [WAIT] C3.3 Once CI is green, squash-merge PR #59, then re-write directive forward to
-      the per-biome ambient-audio milestone (D0, fresh branch).
+- [x] C3.2 DIAGNOSTIC RESOLVED THE MYSTERY: the fixture's listeners showed NO pageerror/crash
+      — the page stays LIVE the whole time. The debugger's "instant OOM crash" theory was WRONG.
+      Real cause: under SwiftShader the app takes ~19s just to reach Rapier-WASM init then keeps
+      working until Playwright's 45s test timeout closes the page. Plain slowness, not a crash —
+      only fails in CI's software GL, never on a local GPU. (shm flags + observability kept as
+      genuine improvements.)
+- [x] C3.3 FIX (bdf4dcc): tripled CI E2E budgets (global 45→90s, perf 45→90s, expect 5→20s);
+      local keeps tight values. Verified locally with CI=true (2 passed). Pushed.
+- [ ] [WAIT] C3.4 Once CI is green on bdf4dcc, squash-merge PR #59, then re-write directive
+      forward to the per-biome ambient-audio milestone (D0, fresh branch).
 
 ## Notes
 - This is a living plan. After every stage, backward+forward sweep and edit the queue.
