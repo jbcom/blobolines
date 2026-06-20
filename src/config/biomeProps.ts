@@ -136,6 +136,9 @@ export function propSetForBand(bandName: string): BiomePropSet | undefined {
 export interface ParallaxLayer {
   /** Layer id, for keys/labels. */
   id: "far" | "mid" | "near";
+  /** [min, max] world-X placement range. Near layers stay tighter so their fast-drifting accents
+   *  don't spend most of their time off-screen (their tiny frustum at close z). */
+  xRange: [number, number];
   /** [min, max] world-Z placement range (more negative = further behind the playfield). */
   zRange: [number, number];
   /** Number of prop instances in this layer. */
@@ -151,9 +154,11 @@ export interface ParallaxLayer {
 }
 
 export const parallaxLayers: ParallaxLayer[] = [
-  // Far backdrop: big, sparse, slow, hazy silhouettes set well behind everything.
+  // Far backdrop: big, sparse, slow, hazy silhouettes set well behind everything (wide x — its
+  // large frustum at far z keeps them on-screen).
   {
     id: "far",
+    xRange: [-24, 24],
     zRange: [-62, -42],
     count: 8,
     scale: 2.6,
@@ -161,10 +166,30 @@ export const parallaxLayers: ParallaxLayer[] = [
     column: 150,
     opacity: 0.6,
   },
-  // Mid: the detailed scenery layer (the original BiomeScenicProps placement/feel).
-  { id: "mid", zRange: [-26, -10], count: 16, scale: 1.0, driftScale: 1.0, column: 95, opacity: 1 },
-  // Near: sparse accents close to the camera that sweep past fast for depth.
-  { id: "near", zRange: [-6, 1], count: 5, scale: 0.7, driftScale: 1.8, column: 70, opacity: 0.9 },
+  // Mid: the detailed scenery layer that carries the bulk of the biome read (seed 444 — its own
+  // independent layout; not pinned to any specific pre-refactor arrangement).
+  {
+    id: "mid",
+    xRange: [-24, 24],
+    zRange: [-26, -10],
+    count: 16,
+    scale: 1.0,
+    driftScale: 1.0,
+    column: 95,
+    opacity: 1,
+  },
+  // Near: sparse accents close to the camera that sweep past fast — kept in a tight x range so
+  // they frame the playfield rather than drifting in from far off-screen.
+  {
+    id: "near",
+    xRange: [-9, 9],
+    zRange: [-6, 1],
+    count: 5,
+    scale: 0.7,
+    driftScale: 1.8,
+    column: 70,
+    opacity: 0.9,
+  },
 ];
 
 /** Atmospheric ambience per band — the drifting ambient-mote tint + opacity that gives each

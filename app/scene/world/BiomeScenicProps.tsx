@@ -1,7 +1,7 @@
 import { useGLTF } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
-import { useMemo, useRef, useState } from "react";
-import type { Group } from "three";
+import { useEffect, useMemo, useRef, useState } from "react";
+import type { Group, Object3D } from "three";
 import {
   allBiomePropFiles,
   type BiomePropSet,
@@ -37,12 +37,16 @@ function wrapY(yFrac: number, h: number, column: number): number {
 const url = (file: string) => `${import.meta.env.BASE_URL}assets/models/${file}`;
 
 /** Generic GLB prop. Clones the loaded scene so each instance is independent. When `opacity` is
- *  below 1 (far parallax layers read hazier), the cloned materials are made transparent so the
- *  layer recedes — materials are cloned too so this never mutates the shared cached GLB. */
+ *  below 1 (far/near parallax layers read hazier), each material is cloned + made transparent so
+ *  the layer recedes without mutating the shared cached GLB — and the clones are DISPOSED on
+ *  unmount/dep-change (band crossings unmount this often), so they don't leak GPU memory. */
 function PropModel({ file, scale, opacity }: { file: string; scale: number; opacity: number }) {
   const { scene } = useGLTF(url(file));
-  const model = useMemo(() => {
+  const [model, setModel] = useState<Object3D | null>(null);
+
+  useEffect(() => {
     const clone = scene.clone(true);
+    const clonedMaterials: MeshMaterial[] = [];
     if (opacity < 1) {
       clone.traverse((obj) => {
         const mesh = obj as { material?: MeshMaterial };
@@ -52,11 +56,17 @@ function PropModel({ file, scale, opacity }: { file: string; scale: number; opac
           m.opacity = opacity;
           m.depthWrite = false;
           mesh.material = m;
+          clonedMaterials.push(m);
         }
       });
     }
-    return clone;
+    setModel(clone);
+    return () => {
+      for (const m of clonedMaterials) m.dispose();
+    };
   }, [scene, opacity]);
+
+  if (!model) return null;
   return <primitive object={model} scale={scale} />;
 }
 
@@ -65,6 +75,7 @@ interface MeshMaterial {
   opacity: number;
   depthWrite: boolean;
   clone(): MeshMaterial;
+  dispose(): void;
 }
 
 /** Soft decorative seat beneath a prop — a translucent disc on atmospheric bands or a
@@ -161,7 +172,10 @@ function ScenicInstance({ spec }: { spec: PropSpec }) {
   const set = activeSet(band);
 
   return (
-    <group ref={groupRef}>
+    // Explicit renderOrder so the transparent (depthWrite:false) far/near layers paint in depth
+    // order regardless of three's per-object bounding-sphere sort: far behind (1), near in front
+    // (2), opaque mid (0) writes depth normally.
+    <group ref={groupRef} renderOrder={LAYER_RENDER_ORDER[spec.layer.id]}>
       {set && (
         <>
           <PropModel
@@ -181,6 +195,10 @@ function ScenicInstance({ spec }: { spec: PropSpec }) {
  *  others (each layer draws from its own RNG streams, by index). */
 const LAYER_SEED: Record<ParallaxLayer["id"], number> = { far: 440, mid: 444, near: 448 };
 
+/** Paint order for the transparent layers: opaque mid writes depth (0), far behind it (1), near
+ *  in front (2) — keeps far/near from sort-flipping when their bounding spheres overlap. */
+const LAYER_RENDER_ORDER: Record<ParallaxLayer["id"], number> = { mid: 0, far: 1, near: 2 };
+
 export function BiomeScenicProps() {
   const specs = useMemo<PropSpec[]>(() => {
     const out: PropSpec[] = [];
@@ -192,7 +210,7 @@ export function BiomeScenicProps() {
       for (let i = 0; i < layer.count; i++) {
         const spec: PropSpec = {
           id: `${layer.id}-${i}`,
-          x: layoutRng.range(-24, 24),
+          x: layoutRng.range(layer.xRange[0], layer.xRange[1]),
           z: layoutRng.range(layer.zRange[0], layer.zRange[1]),
           yFrac: layoutRng.next(),
           scale: layoutRng.range(0.8, 1.3) * layer.scale,
