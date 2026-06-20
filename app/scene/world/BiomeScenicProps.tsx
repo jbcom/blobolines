@@ -12,7 +12,7 @@ import {
 } from "@/config/biomeProps";
 import { biomeBandAt } from "@/config/biomes";
 import { createRng } from "@/core/math";
-import { sceneryReaction } from "@/render/vfx";
+import { flybyPeaked, sceneryReaction, stepFlybyPulse } from "@/render/vfx";
 import { getBlobDiagnostics } from "@/state";
 
 /**
@@ -36,6 +36,10 @@ function wrapY(yFrac: number, h: number, column: number): number {
 }
 
 const url = (file: string) => `${import.meta.env.BASE_URL}assets/models/${file}`;
+
+/** Extra scale a full flyby pulse adds on top of the continuous proximity pop — the discrete
+ *  "whoosh past" flourish. Kept small so it reads as a quick beat, not a jarring jump. */
+const DEFAULT_FLYBY_PULSE_POP = 0.16;
 
 /** Generic GLB prop. Clones the loaded scene so each instance is independent. When `opacity` is
  *  below 1 (far/near parallax layers read hazier), each material is cloned + made transparent so
@@ -150,7 +154,7 @@ function ScenicInstance({ spec }: { spec: PropSpec }) {
   // Eased blob-reaction state (near layer only): the prop springs toward the computed lean/pop
   // when the blob rushes past and eases back to rest when it leaves. Refs, not state — this must
   // never trigger a React re-render. The propPos buffer is reused each frame (no per-frame alloc).
-  const reactRef = useRef({ lean: 0, pop: 0 });
+  const reactRef = useRef({ lean: 0, pop: 0, prevPrevInfluence: 0, prevInfluence: 0, pulse: 0 });
   const propPosRef = useRef<[number, number, number]>([0, 0, 0]);
   const isNear = spec.layer.id === "near";
 
@@ -198,7 +202,20 @@ function ScenicInstance({ spec }: { spec: PropSpec }) {
       r.lean += (target.lean - r.lean) * k;
       r.pop += (target.pop - r.pop) * k;
       group.rotation.z += r.lean;
-      const s = 1 + r.pop;
+
+      // Discrete FLYBY PULSE: a peak in influence (the blob at closest approach) fires a fast
+      // attack/slow decay envelope ON TOP of the continuous pop, so a whoosh-past reads kinetically
+      // distinct from the smooth proximity ramp. The peak strength scales the pop the prop gives.
+      // 3-point local-peak detection (prevPrev < prev > now): fires on the SINGLE frame at closest
+      // approach, not every frame of the recession. The first two frames have prevPrev==prev==0, so
+      // a 0<0 rising test never fires — which also covers the "prop the blob starts near" case (no
+      // spurious frame-0 pulse) without a separate seeded flag.
+      const peaked = flybyPeaked(r.prevPrevInfluence, r.prevInfluence, target.influence);
+      r.pulse = stepFlybyPulse(r.pulse, peaked, r.prevInfluence, delta);
+      r.prevPrevInfluence = r.prevInfluence;
+      r.prevInfluence = target.influence;
+
+      const s = 1 + r.pop + r.pulse * DEFAULT_FLYBY_PULSE_POP;
       group.scale.set(s, s, s);
     }
   });

@@ -491,14 +491,55 @@ ignore the blob entirely. Make the NEAR layer come alive when the blob rushes pa
 - [x] N3.1a Committed (9dcebad), dispatched comprehensive reviewer (background), pushed, opened
       PR #71. Monitor armed on #71 CI. (Lesson from #70: do NOT push extra state commits to the
       branch — each push restarts the CI gate clock; let CI settle on the current HEAD.)
-- [ ] [WAIT-REVIEW] N3.1b Babysit PR #71: wait CI green, fold reviewer + gemini/CodeRabbit
-      findings forward, resolve threads, squash-merge once green, sync main, then start N4.
+- [x] N3.1b-feedback Folded the reviewer's findings forward (acbd40b): FIXED the real bug — the
+      lean SIGN was inverted (three.js +z is CCW, so a rightward tip is −z); props were tipping
+      TOWARD the blob, not away. Also delta-compensated the springback ease (frame-rate
+      independent) + hoisted the per-frame propPos array to a ref (no hot-path alloc). Test updated
+      to assert the correct direction. 486 unit + 118 browser green.
+- [x] N3.1c PR #71 SQUASH-MERGED (21468f9, 2026-06-20). CLEAN, 0 unresolved threads — gemini's
+      two frame-rate-easing threads were already addressed by the acbd40b delta-comp fix
+      (reasoned-replied + resolved; one was outdated). Local main synced. Blob-reactive scenery
+      shipped. Cut fresh branch feat/scenery-flyby-pulse for N4.
 
-### N4 Next milestone (surface after #71 merges)
-- [ ] [WAIT-MERGE] N4.1 Pick the next polish unit (don't pre-commit): candidates — per-biome
-      MUSIC layers (needs new owned audio via the itch pipeline), a FLYBY-PULSE extension of the
-      scenery reaction (glint/sparkle on closest approach), or QA + polish each upper biome band's
-      look using the teleport tool. Enumerate use cases first, read own spec docs, then build.
+## Queue — Milestone: Scenery flyby-pulse (branch feat/scenery-flyby-pulse)
+
+Extend the just-shipped near-prop reaction with the missing third use case from N2.1's enumeration:
+a FLYBY PULSE — a quick scale-pop + brightness glint at the MOMENT of closest approach as the blob
+whooshes past, distinct from the continuous lean (which tracks proximity). The lean says "the blob
+is near"; the pulse says "the blob just shot past THIS prop" — a discrete acknowledgement that makes
+a fast climb feel kinetic. No new assets; pure extension of sceneryReaction + ScenicInstance.
+
+### N4 Architecture + Implementation
+- [x] N4.1 ENUMERATED + DECIDED: detect closest-approach as a rising→falling edge on the prop's
+      influence (held frame-to-frame in the ScenicInstance ref), fire a fast-attack/slow-decay
+      envelope ON TOP of the continuous lean/pop. Pure helpers so the envelope math is testable.
+- [x] N4.2 DONE. Extended src/render/vfx/sceneryReaction.ts with pure `flybyPeaked(prev, now)`
+      (rising→falling edge gated by minPeakInfluence — no flourish on faint far grazes) +
+      `stepFlybyPulse(current, triggered, peakStrength, dt)` (e^(-decay·dt) decay, fast attack that
+      never pulls the envelope DOWN, clamped to 1). Wired into ScenicInstance near-layer block:
+      tracks prevInfluence + pulse in the ref, adds pulse·DEFAULT_FLYBY_PULSE_POP (0.16) to the
+      scale on top of the proximity pop. 8 new unit tests (peak edge cases, attack, decay-to-zero,
+      no-downward-drag, clamp) + a browser fixture sweeping the blob through a near prop and
+      asserting the scale spikes past the steady-pop ceiling. 494 unit + 119 browser green;
+      typecheck + lint clean. Committed; reviewer to be dispatched.
+
+### N4.3 PR cutting point
+- [x] N4.3a Committed (a29f622), dispatched comprehensive reviewer (background), pushed, opened
+      PR #72. Monitor armed on #72 CI. (Do NOT push extra state commits — let CI settle on HEAD.)
+- [x] N4.3b-feedback Folded forward (77716c1): (1) CI `biome ci` is STRICTER than local
+      `biome check` — caught a format diff in the new fixture; `biome format --write` fixed it.
+      LESSON: run `npx biome ci .` (not just `pnpm lint`) before pushing. (2) Reviewer found a real
+      frame-0 false positive — flyby pulse could fire spuriously on frame 2 for a prop the blob
+      STARTS near (prevInfluence seeds at 0); fixed by seeding prevInfluence on the first observed
+      frame + a `seeded` gate. 494 unit + 119 browser green.
+- [ ] [WAIT-REVIEW] N4.3c Wait CI green on 77716c1, address any gemini/CodeRabbit threads,
+      squash-merge PR #72 once green, sync main, then start N5.
+
+### N5 Next milestone (surface after #72 merges)
+- [ ] [WAIT-MERGE] N5.1 Pick the next polish unit (don't pre-commit): strong candidates — extend
+      the flyby pulse to a brightness/emissive GLINT (not just scale) on the prop material at peak;
+      per-biome MUSIC layers (needs new owned audio via the itch pipeline); or teleport-driven QA +
+      polish of each upper biome band's look. Enumerate use cases first, read own spec docs.
 
 ## Queue — Milestone: Daily-challenge results polish (branch feat/daily-results, NEXT)
 
