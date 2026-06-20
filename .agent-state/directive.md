@@ -365,15 +365,19 @@ them so the docs match the code (the mandate explicitly includes improving docs;
 rather than letting end-of-project catch-up accrue).
 
 ### K0 Pass
-- [ ] K0.1 Update docs/STATE.md (done/next/active), docs/ARCHITECTURE.md (new components:
-      TreasureChests, the parallax layers, particle ambience, teleport bridge, crystalCollectBridge;
-      config: biomeProps registry/ambience/parallax, treasure tier), docs/DESIGN.md or GAME-DESIGN
-      (treasure jackpot + achievement-gated cosmetics as design features). Bump frontmatter `updated`.
-- [ ] K0.2 Verify docs reference real files/symbols (no stale citations); typecheck/lint/test stay
-      green (docs-only, but run to be safe). Frontmatter valid.
+- [x] K0.1 STATE.md rewritten (dropped stale Phase-2/feat-goo-polish framing; current systems +
+      the session's biome/progression richness); ARCHITECTURE.md updated (parallaxLayers/
+      biomeAmbience/treasure config, launchBridge-teleport + crystalCollectBridge, TreasureChests +
+      parallax + particle scene components); GAME-DESIGN.md gained a Rewards & progression section.
+      Frontmatter dates bumped to 2026-06-20.
+- [x] K0.2 All cited symbols verified to exist on disk (biomeBandAt/parallaxLayers/biomeAmbience/
+      crystalTier/TreasureChests/crystalCollectBridge/SKIN_ACHIEVEMENT/requestTeleport/__blobtest).
+      lint + typecheck + 455 unit green.
 
 ### K2 PR cutting point
-- [ ] K2.1 Open PR; babysit to squash-merge; re-write directive forward.
+- [x] K2.1a Opening PR.
+- [ ] [WAIT-REVIEW] K2.1b Babysit PR: gates green → address feedback → squash-merge → re-write
+      directive forward.
 
 ## Notes
 - This is a living plan. After every stage, backward+forward sweep and edit the queue.
