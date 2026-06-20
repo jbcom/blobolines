@@ -532,14 +532,36 @@ a fast climb feel kinetic. No new assets; pure extension of sceneryReaction + Sc
       frame-0 false positive — flyby pulse could fire spuriously on frame 2 for a prop the blob
       STARTS near (prevInfluence seeds at 0); fixed by seeding prevInfluence on the first observed
       frame + a `seeded` gate. 494 unit + 119 browser green.
-- [ ] [WAIT-REVIEW] N4.3c Wait CI green on 77716c1, address any gemini/CodeRabbit threads,
-      squash-merge PR #72 once green, sync main, then start N5.
+- [x] N4.3c-feedback gemini HIGH (real bug): the 2-point flybyPeaked fired on EVERY recession
+      frame (now<prev holds the whole way down), re-snapping the envelope continuously. Fixed in
+      4c7b016 with 3-point local-peak detection (prevPrev<prev && now<prev) + a mid-recession
+      regression test; this also subsumed the frame-0 fix (first two frames prevPrev==prev==0).
+      4 threads replied + resolved. 495 unit + 119 browser green.
+- [x] N4.3d PR #72 SQUASH-MERGED (8d5e875, 2026-06-20). CLEAN, 0 threads. Flyby pulse shipped.
+      Local main synced; cut feat/scenery-glint for N5. (Three feature PRs this session: banner+
+      daily #70, reactive scenery #71, flyby pulse #72.)
 
-### N5 Next milestone (surface after #72 merges)
-- [ ] [WAIT-MERGE] N5.1 Pick the next polish unit (don't pre-commit): strong candidates — extend
-      the flyby pulse to a brightness/emissive GLINT (not just scale) on the prop material at peak;
-      per-biome MUSIC layers (needs new owned audio via the itch pipeline); or teleport-driven QA +
-      polish of each upper biome band's look. Enumerate use cases first, read own spec docs.
+## Queue — Milestone: Scenery flyby GLINT (branch feat/scenery-glint)
+
+Extend the flyby pulse one more sensory step: at the moment of closest approach, the near prop
+doesn't just scale-pop — it briefly BRIGHTENS (emissive glint), like catching the light as the blob
+whooshes past. Reuses the existing pulse envelope (r.pulse) — no new trigger logic, just a second
+visual channel. No new assets.
+
+### N5 Architecture
+- [x] N5.1 ENUMERATED + DECIDED (read PropModel + the ScenicInstance pulse block). The pulse
+      envelope lives in ScenicInstance (parent group); the material lives in PropModel (child,
+      remounts on band crossings). DECISION: PropModel clones its mesh materials for NEAR props
+      (today it only clones for opacity<1 hazy layers) and registers them via an onMaterials
+      callback ref; ScinicInstance drives each material's emissiveIntensity (+ a warm emissive
+      tint) from r.pulse each frame, restoring the original emissive on dispose. Glint is
+      near-layer only, deterministic (pure function of r.pulse), and reuses the existing 3-point
+      peak → envelope (no new detector). Materials must be CLONED (never mutate the shared cached
+      GLB material) + disposed on unmount, mirroring the existing haze-clone discipline.
+- [ ] N5.2 Implement: PropModel near-clone + onMaterials ref; a pure `glintEmissive(pulse)` helper
+      (intensity + tint) in src/render/vfx; wire ScenicInstance to drive emissive from r.pulse;
+      unit-test the helper; browser fixture asserting a near prop's material emissiveIntensity
+      spikes on a flyby; visual-verify; PR.
 
 ## Queue — Milestone: Daily-challenge results polish (branch feat/daily-results, NEXT)
 
