@@ -12,3 +12,4 @@ export { type NextPadGuidance, NextPadRadar, nextPadGuidance } from "./NextPadRa
 export { Onboarding } from "./Onboarding";
 export { RouteLandingToast } from "./RouteLandingToast";
 export { ScreenFlash } from "./ScreenFlash";
+export { SteerCoachmark } from "./SteerCoachmark";

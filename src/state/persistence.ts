@@ -41,6 +41,9 @@ export const playerProgressSchema = z.object({
   skin: blobSkinSchema.catch("blue"),
   unlockedSkins: z.array(blobSkinSchema).catch(["blue"]),
   tutorialSeen: z.boolean().catch(false),
+  // First-airborne steer coachmark — optional + tolerant so progress saved before this feature loads
+  // cleanly (undefined → not yet seen → the cue will show on the next airborne moment).
+  steerTutorialSeen: z.boolean().optional().catch(undefined),
   unlockedAchievements: z.array(z.string()).catch([]),
   highScores: z.array(highScoreEntrySchema).catch([]),
   // Daily-challenge streak — persisted so it survives reloads (the whole point of a streak). Optional

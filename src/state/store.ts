@@ -77,6 +77,8 @@ export interface GameState {
   addCrystals: (n: number) => void;
   commitBestHeight: (height: number) => void;
   markTutorialSeen: () => void;
+  /** Mark the first-airborne "drag to steer" coachmark seen (persisted), so it shows only once. */
+  markSteerTutorialSeen: () => void;
   /** Evaluate achievements against the given stats snapshot, persist any newly-unlocked, and
    *  return the freshly-unlocked ids (for the unlock toast). */
   unlockAchievements: (stats: AchievementStats) => string[];
@@ -105,6 +107,7 @@ export const DEFAULT_PROGRESS: PlayerProgress = {
   skin: "blue",
   unlockedSkins: ["blue"],
   tutorialSeen: false,
+  steerTutorialSeen: false,
   unlockedAchievements: [],
   highScores: [],
 };
@@ -228,6 +231,11 @@ export const useGameStore = create<GameState>((set) => ({
 
   markTutorialSeen: () =>
     set((s) => (s.progress.tutorialSeen ? s : { progress: { ...s.progress, tutorialSeen: true } })),
+
+  markSteerTutorialSeen: () =>
+    set((s) =>
+      s.progress.steerTutorialSeen ? s : { progress: { ...s.progress, steerTutorialSeen: true } },
+    ),
 
   unlockAchievements: (stats) => {
     // Compute `fresh` INSIDE the set() updater so the read of the current unlocked set and the

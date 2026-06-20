@@ -258,6 +258,16 @@ describe("useGameStore", () => {
     expect(useGameStore.getState().run.streakExtended).toBe(0);
   });
 
+  it("markSteerTutorialSeen sets the flag once and is idempotent", () => {
+    expect(useGameStore.getState().progress.steerTutorialSeen).toBe(false);
+    useGameStore.getState().markSteerTutorialSeen();
+    expect(useGameStore.getState().progress.steerTutorialSeen).toBe(true);
+    // Idempotent: a second call returns the same state object (no needless re-render/churn).
+    const before = useGameStore.getState().progress;
+    useGameStore.getState().markSteerTutorialSeen();
+    expect(useGameStore.getState().progress).toBe(before);
+  });
+
   it("unlockAchievements persists newly-met ids once and returns only the fresh ones", () => {
     // A 100m best unlocks "height-100"; the action returns it and stores it.
     const fresh = useGameStore.getState().unlockAchievements({
@@ -507,6 +517,14 @@ describe("useGameStore", () => {
         expect(parsed.data.lastDailyKey).toBe("2026-06-20");
         expect(parsed.data.dailyBests).toEqual({ "2026-06-20": 1500, "2026-06-19": 900 });
       }
+    });
+
+    it("round-trips the steer-coachmark flag and treats a pre-feature save as not-yet-seen", () => {
+      const seen = playerProgressSchema.safeParse({ bestHeight: 1, steerTutorialSeen: true });
+      expect(seen.success && seen.data.steerTutorialSeen).toBe(true);
+      // A save from before the steer coachmark → undefined → the cue will show on next airborne.
+      const legacy = playerProgressSchema.safeParse({ bestHeight: 1 });
+      expect(legacy.success && legacy.data.steerTutorialSeen).toBeUndefined();
     });
 
     it("loads progress saved BEFORE the streak feature without error (undefined streak)", () => {

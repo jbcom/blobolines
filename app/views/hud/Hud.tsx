@@ -15,6 +15,7 @@ import { PowerUpBadges } from "./PowerUpBadges";
 import { RouteLandingToast } from "./RouteLandingToast";
 import { ScreenFlash } from "./ScreenFlash";
 import { SpeedLines } from "./SpeedLines";
+import { SteerCoachmark } from "./SteerCoachmark";
 
 /**
  * In-game HUD layout. Top row: altimeter (left), combo (center), crystals (right),
@@ -43,6 +44,8 @@ export function Hud() {
 
       {/* first-run drag-to-launch coachmark (until the first launch) */}
       <Onboarding />
+      {/* second first-run coachmark: drag-to-steer, the first time airborne (until the first steer) */}
+      <SteerCoachmark />
       {/* Readouts are ANCHORED to the safe-area corners, NOT stretched across the row. On a
           wide landscape/desktop screen a flex justify-between would fling the altimeter and
           crystals to opposite edges of a 2560px monitor (and float the combo far from both);
