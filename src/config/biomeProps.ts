@@ -125,6 +125,48 @@ export function propSetForBand(bandName: string): BiomePropSet | undefined {
   return biomePropRegistry.find((set) => set.band === bandName);
 }
 
+/**
+ * Parallax depth layers for the biome scenery. The climb is rendered in depth bands that drift
+ * at different rates so the world reads deep instead of flat: a FAR backdrop of large, slow,
+ * sparse silhouettes; the MID layer of detailed props; and a NEAR layer of fast, sparse accents
+ * that sweep past the camera. Each layer reuses the same per-band prop registry + biomeBandAt; it
+ * only varies depth (z), how fast it drifts sideways with the climb, scale, density, and the
+ * vertical wrap-column height (taller column ⇒ slower apparent vertical scroll ⇒ feels distant).
+ */
+export interface ParallaxLayer {
+  /** Layer id, for keys/labels. */
+  id: "far" | "mid" | "near";
+  /** [min, max] world-Z placement range (more negative = further behind the playfield). */
+  zRange: [number, number];
+  /** Number of prop instances in this layer. */
+  count: number;
+  /** Base scale multiplier applied on top of each prop's own scale (far props read large). */
+  scale: number;
+  /** Sideways drift speed multiplier (near layers sweep faster for a stronger parallax cue). */
+  driftScale: number;
+  /** Vertical wrap-column height (m); taller ⇒ the layer scrolls past more slowly. */
+  column: number;
+  /** Opacity multiplier — far silhouettes sit back hazier, near accents read solid. */
+  opacity: number;
+}
+
+export const parallaxLayers: ParallaxLayer[] = [
+  // Far backdrop: big, sparse, slow, hazy silhouettes set well behind everything.
+  {
+    id: "far",
+    zRange: [-62, -42],
+    count: 8,
+    scale: 2.6,
+    driftScale: 0.35,
+    column: 150,
+    opacity: 0.6,
+  },
+  // Mid: the detailed scenery layer (the original BiomeScenicProps placement/feel).
+  { id: "mid", zRange: [-26, -10], count: 16, scale: 1.0, driftScale: 1.0, column: 95, opacity: 1 },
+  // Near: sparse accents close to the camera that sweep past fast for depth.
+  { id: "near", zRange: [-6, 1], count: 5, scale: 0.7, driftScale: 1.8, column: 70, opacity: 0.9 },
+];
+
 /** Atmospheric ambience per band — the drifting ambient-mote tint + opacity that gives each
  *  stratum its own air. Keyed by canonical band name and resolved via `biomeBandAt`, so the
  *  recolor shares the single-source-of-truth band logic instead of drifted height magic. */

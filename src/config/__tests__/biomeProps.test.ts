@@ -4,6 +4,7 @@ import {
   biomeAmbience,
   biomeAmbienceAt,
   biomePropRegistry,
+  parallaxLayers,
   propSetForBand,
 } from "../biomeProps";
 import { biomeBands } from "../biomes";
@@ -102,6 +103,40 @@ describe("biomeAmbience", () => {
     // The whole point of per-band ambience: no two neighbours share a tint.
     for (let i = 0; i < biomeAmbience.length - 1; i++) {
       expect(biomeAmbience[i].mote).not.toBe(biomeAmbience[i + 1].mote);
+    }
+  });
+});
+
+describe("parallaxLayers", () => {
+  it("defines the far/mid/near depth layers exactly once each", () => {
+    expect(parallaxLayers.map((l) => l.id)).toEqual(["far", "mid", "near"]);
+  });
+
+  it("orders layers front-to-back so depth, drift, and scale form a real parallax gradient", () => {
+    const far = parallaxLayers.find((l) => l.id === "far");
+    const mid = parallaxLayers.find((l) => l.id === "mid");
+    const near = parallaxLayers.find((l) => l.id === "near");
+    if (!far || !mid || !near) throw new Error("missing a parallax layer");
+    // Far sits furthest behind, near closest to the camera (z increases front-to-back).
+    expect(far.zRange[1]).toBeLessThan(mid.zRange[0]);
+    expect(mid.zRange[1]).toBeLessThan(near.zRange[0]);
+    // Far drifts slowest, near fastest — the parallax cue.
+    expect(far.driftScale).toBeLessThan(mid.driftScale);
+    expect(mid.driftScale).toBeLessThan(near.driftScale);
+    // Far has the tallest wrap column (slowest apparent vertical scroll).
+    expect(far.column).toBeGreaterThan(mid.column);
+    // Far reads largest (distant silhouettes), and hazier than the solid mid layer.
+    expect(far.scale).toBeGreaterThan(mid.scale);
+    expect(far.opacity).toBeLessThan(mid.opacity);
+  });
+
+  it("gives every layer a positive instance count and sane ranges", () => {
+    for (const l of parallaxLayers) {
+      expect(l.count).toBeGreaterThan(0);
+      expect(l.zRange[0]).toBeLessThan(l.zRange[1]);
+      expect(l.column).toBeGreaterThan(0);
+      expect(l.opacity).toBeGreaterThan(0);
+      expect(l.opacity).toBeLessThanOrEqual(1);
     }
   });
 });
