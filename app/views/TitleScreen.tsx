@@ -1,6 +1,7 @@
 import { Button, buttonVariants, Dialog } from "@app/components/ui";
 import {
   CalendarDays,
+  Check,
   Gauge,
   HelpCircle,
   Palette,
@@ -15,7 +16,7 @@ import { initAudio, startMenuMusic, startMusic } from "@/audio";
 import { canonicalSeedPhrase, createSeedPhrase } from "@/core/math";
 import type { WorldDifficulty } from "@/core/types";
 import { cn } from "@/lib/utils";
-import { dailySeedPhrase } from "@/sim/daily";
+import { dailyKey, dailySeedPhrase, dailyStreakStatus } from "@/sim/daily";
 import { useGameStore, useWorldStore } from "@/state";
 import { ROUTE_DIFFICULTIES, ROUTE_PROFILES } from "@/world";
 
@@ -53,6 +54,11 @@ export function TitleScreen() {
   const resetWorld = useWorldStore((s) => s.reset);
   const difficulty = useWorldStore((s) => s.difficulty);
   const best = useGameStore((s) => s.progress.bestHeight);
+  // Daily-streak read for the Daily Challenge CTA. The pure status math is date-injected; reading the
+  // clock in this UI layer is fine (only src/sim & src/engine must stay clock-free for determinism).
+  const dailyStreakCount = useGameStore((s) => s.progress.dailyStreak) ?? 0;
+  const lastDailyKey = useGameStore((s) => s.progress.lastDailyKey);
+  const streakStatus = dailyStreakStatus(dailyStreakCount, lastDailyKey, dailyKey(new Date()));
   const reduced = useReducedMotion();
   const [customizing, setCustomizing] = useState(false);
   const [achievementsOpen, setAchievementsOpen] = useState(false);
@@ -150,13 +156,41 @@ export function TitleScreen() {
       </motion.button>
 
       {/* Daily Challenge — same tower for everyone today (date-seeded); the game-over card
-          shows a shareable run hash. A quieter secondary CTA below the main Play. */}
+          shows a shareable run hash. A quieter secondary CTA below the main Play. When the player
+          has a live daily streak it carries a flame badge; an at-risk streak (alive but today not
+          yet played) glows warm to nudge a return-play, and a secured one shows a check. */}
       <button
         type="button"
         onClick={playDaily}
-        className="-mt-1 flex min-h-11 items-center gap-2 rounded-xl border border-border px-4 py-2 font-ui text-sm font-semibold text-fg-muted hover:text-cream"
+        className={cn(
+          "-mt-1 flex min-h-11 flex-col items-center gap-0.5 rounded-xl border px-4 py-2 font-ui text-sm font-semibold transition-colors",
+          streakStatus.state === "atRisk"
+            ? "border-tramp-gold/70 text-cream hover:border-tramp-gold"
+            : "border-border text-fg-muted hover:text-cream",
+        )}
       >
-        <CalendarDays className="size-4" aria-hidden /> Daily Challenge
+        <span className="flex items-center gap-2">
+          <CalendarDays className="size-4" aria-hidden /> Daily Challenge
+          {streakStatus.state !== "none" && streakStatus.state !== "expired" && (
+            <span className="flex items-center gap-0.5 font-bold text-tramp-gold">
+              <span aria-hidden>🔥{streakStatus.streak}</span>
+              {streakStatus.state === "secured" && (
+                <Check className="size-3.5" strokeWidth={3} aria-hidden />
+              )}
+              {/* The accessible streak description lives in a visually-hidden span (a11y rules
+                  reject aria-label on a plain span); the flame/check above are decorative. */}
+              <span className="sr-only">
+                {streakStatus.streak}-day streak
+                {streakStatus.state === "secured" ? ", secured today" : ", play today to keep it"}
+              </span>
+            </span>
+          )}
+        </span>
+        {streakStatus.state === "atRisk" && (
+          <span aria-hidden className="font-ui text-[11px] font-medium text-tramp-gold/90">
+            Play today to keep your streak!
+          </span>
+        )}
       </button>
 
       <div className="flex items-center gap-5">
