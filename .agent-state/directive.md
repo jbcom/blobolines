@@ -402,12 +402,38 @@ latent edge bugs. No new behavior; pure test additions (+ tiny fixes if a test r
       designed.
 
 ### L2 PR cutting point
-- [x] L2.1a Verified (typecheck+lint+466 unit+e2e 5/1-skip); PR #69 opened.
-- [ ] [WAIT-REVIEW] L2.1b Babysit PR #69: gates green → address feedback → squash-merge → re-write
-      directive forward.
+- [x] L2.1b PR #69 SQUASH-MERGED (406a342, 2026-06-20). gemini's 5 test-quality findings folded
+      in (full bridge coverage, exact queue assertion, fixed nudge description, expanded reset).
+      launchBridge now has direct coverage.
+
+## Queue — Milestone: Biome-band banner (branch feat/biome-banner)
+
+Surface the biome progression to the player: a brief "Entering the <Biome>" HUD banner when the
+climb crosses into a new canonical biome band — mirroring the existing DifficultyBanner but with a
+softer cue (the difficulty banner owns the loud gold-flash/stinger; the biome banner is a gentle
+arrival note). Ties the four-dimension biome work to player-facing feedback. No new assets; reuses
+biomeBandAt + the banner pattern.
+
+### M0 Architecture
+- [ ] M0.1 Read DifficultyBanner (the pattern) + biomeBandAt + the band names. Decide friendly
+      band labels (ground→"The Ground", upper-atmosphere→"Upper Atmosphere", …) and the cue
+      (subtle: a brief blue flash + a soft chime, NOT the difficulty-up gold/stinger). Fire only on
+      an UPWARD crossing into a higher band. Record decision.
+
+### M1 Implementation
+- [ ] M1.1 BiomeBanner component (mirrors DifficultyBanner: watches run.height → biomeBandAt,
+      shows on a new higher band, auto-hides, soft cue), mounted in the HUD. Visual-verify via the
+      teleport tool (jump across bands → banner shows).
+
+### M1.2 Tests
+- [ ] M1.2 Band-label mapping unit test (every band has a friendly label) + a HUD browser fixture
+      for the banner. typecheck + lint + test (+ test:browser per the UI gate).
+
+### M2 PR cutting point
+- [ ] M2.1 Verify + screenshot; open PR; babysit to squash-merge; re-write directive forward.
 
 ## Notes
 - This is a living plan. After every stage, backward+forward sweep and edit the queue.
-- Next candidate milestones (surface, don't pre-commit): per-biome MUSIC layers, daily-challenge
-  leaderboard polish, a test-coverage hardening pass on the session's new systems, USE the teleport
-  tool to manually QA + polish each upper biome band's look.
+- Next candidate milestones (surface, don't pre-commit): per-biome MUSIC layers (needs new audio
+  assets), daily-challenge leaderboard polish, interactive scenery, USE the teleport tool to QA +
+  polish each upper biome band's look.
