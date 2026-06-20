@@ -1368,6 +1368,18 @@ drop most days). A 7-day daily-best trend in the Hall-of-Fame.
       off, + the empty state). 565 unit / 153 browser green; typecheck + pinned lint clean. The
       in-frame PlayerBlob/CrystalField haptics are fire-and-forget side effects like the existing
       impact_/vibrate calls (the codebase deliberately doesn't unit-test those — juice, not load-bearing).
+- [x] N30 local review (comprehensive-review:code-reviewer, scoped to 43fb1bb): CLEAN — fresh-state
+      gating (getState, no stale closure), fire-once semantics (combo edge-cross guard + per-toast
+      effect), no unhandled-rejection (notify swallows), override accurate. Nothing to fold.
+- [x] N30b: extended the celebration haptic to the GAME-OVER peaks (new record + freshly-extended
+      streak), folded into the existing record-chime effect with one celebratedRef guard. Same gating;
+      no visual change (existing GameOver record/streak tests render the new path). 565/153 green.
+
+### Cutting point: PR for the celebration-haptics theme
+- [ ] [WAIT-CI] PR #98 (feat/feel-polish: N30 in-run haptics + N30b game-over haptics + audit-trail,
+      4 commits, HEAD da2e166). Babysit CI green (ci-coalescing guard armed: confirm ci.yml run for
+      HEAD before merge) + bot threads, resolve, squash-merge, reset main, live-verify. Then fresh
+      branch; next theme = another genuinely-delightful feel/polish gap (survey first, no bloat).
 
 ## Notes
 - This is a living plan. After every stage, backward+forward sweep and edit the queue.
