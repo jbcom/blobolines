@@ -691,7 +691,39 @@ mandate explicitly includes keeping docs aligned (no end-of-project catch-up).
       layer. All cited symbols verified on disk; biome ci + typecheck clean.
 
 ### N8.2 PR cutting point
-- [ ] N8.2 Commit, open PR, babysit to squash-merge, sync main, re-write directive forward to N9.
+- [x] N8.2a Committed (3688da9), pushed, opened PR #76 (docs-only — no code reviewer needed; CI
+      validates). Monitor armed.
+- [x] N8.2b PR #76 SQUASH-MERGED (ff32bc6, 2026-06-20). gemini's lone nit was a truncated paren in
+      an AUTO-GENERATED decisions.ndjson audit entry from a prior commit — reasoned-resolved (editing
+      the append-only audit log retroactively would corrupt the trail). 0 unresolved. Docs current.
+      SEVEN PRs this session (#70–#76). Local main synced; cut feat/feel-survey → renamed
+      feat/per-biome-music (see N9).
+
+## Queue — Milestone: Per-biome music layers (branch feat/per-biome-music)
+
+### N9 Architecture
+- [x] N9.1 SURVEY + DECISION. Surveyed the feel/audio surface: combo/score/style/golden-path
+      landing-quality + RouteLandingToast + camera-shake + blob-trail + speed-lines + power-ups are
+      ALL already built — reinventing them is waste. The real gap: MUSIC switches binary (ingame ↔
+      highspace at a single 600m threshold) for 6 bands, while AMBIENT already follows biomeBandAt.
+      KEY FINDING: the OWNED "gameloops-vol2-casualupbeat" itch pack (already extracted in
+      raw-assets/) has 10 distinct upbeat MP3 loops — enough to give each band its own track with
+      ZERO new fetching. DECISION: map music to the 6 canonical bands via biomeBandAt (the
+      single-source pattern), promoting 6 casual-upbeat loops (NOT the retro-combat "Battle/Dungeon"
+      tracks — memory blobolines-audio-identity warns against borrowed RPG music). audio.json grows
+      a per-band `bandMusic` map; setMusicAltitude crossfades the band track via biomeBandAt;
+      setMusicTrack throws on an unmapped band (no silent fallback). Keep menu track separate.
+- [ ] N9.2 Implement: promote the 6 loops into public/assets/audio/music/biomes/<band>.mp3; add
+      bandMusic to audio.json; refactor setMusicAltitude to biomeBandAt→track (crossfade, throw on
+      unmapped); extend the sfx/audio tests (every canonical band maps to a real track, crossfade
+      on band cross); typecheck/biome-ci/unit/browser; PR.
+
+### N9 Next milestone (surface after #76 merges)
+- [ ] [WAIT-MERGE] N9.1 Pick the next polish unit (don't pre-commit). Biome identity + docs are now
+      current. Strong candidates: per-biome MUSIC layers (needs new owned audio via the itch
+      pipeline — scripts/), or a gameplay/FEEL system (combo/score juice, a new pad behaviour/hazard
+      that fits the climber, richer launch/landing feedback). Enumerate use cases first; read own
+      spec docs (esp. the reachability invariant + audio-identity memory before touching pads/audio).
 
 ## Queue — Milestone: Daily-challenge results polish (branch feat/daily-results, NEXT)
 
