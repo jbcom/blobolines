@@ -5,6 +5,7 @@ import { AdditiveBlending, Color, DoubleSide, Matrix4, Quaternion, Vector3 } fro
 import { playChime, playMilestone } from "@/audio";
 import { world as worldCfg } from "@/config";
 import type { CrystalTier } from "@/core/types";
+import { NotificationType, notify } from "@/platform";
 import { stepCrystal } from "@/sim/collect";
 import {
   flash,
@@ -173,6 +174,8 @@ export function CrystalField() {
       if (treasureHit) {
         flash("gold", 0.9);
         playMilestone();
+        // Tactile reward for the jackpot, mirroring the combo/perfect-release celebration haptics.
+        if (useGameStore.getState().settings.haptics) void notify(NotificationType.Success);
       } else {
         playChime();
       }

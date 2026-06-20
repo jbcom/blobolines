@@ -2,11 +2,13 @@ import { Trophy } from "lucide-react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { useEffect, useState, useSyncExternalStore } from "react";
 import { playChime } from "@/audio";
+import { NotificationType, notify } from "@/platform";
 import {
   type AchievementToast as AchievementToastData,
   clearAchievementToast,
   getAchievementToast,
   subscribeAchievementToast,
+  useGameStore,
 } from "@/state";
 
 const TOAST_DURATION_MS = 2500;
@@ -26,8 +28,10 @@ export function AchievementToast() {
       return;
     }
 
-    // Play celebratory chime sound on new toast
+    // Play celebratory chime sound on new toast, plus a success-haptic so an unlock lands on mobile
+    // too (gated on the haptics setting; notify() no-ops where unsupported).
     playChime();
+    if (useGameStore.getState().settings.haptics) void notify(NotificationType.Success);
 
     setShown(toastData);
 

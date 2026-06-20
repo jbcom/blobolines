@@ -1352,10 +1352,22 @@ drop most days). A 7-day daily-best trend in the Hall-of-Fame.
       95c3228 (2 store tests, both assert streakExtended===0). 565 unit green.
 
 ### Cutting point: PR for the streak-extension-celebration polish
-- [ ] [WAIT-CI] Open ONE PR for feat/post-95-polish (docs(state) refresh + N29 celebration + its
-      test-hardening — 3 commits). Push, open PR, babysit CI green + bot threads, resolve, squash-
-      merge, reset main, live-verify. Then fresh branch; next theme = gameplay FEEL or another
-      genuinely-delightful polish (the daily payoff arc menu→play→celebrate is now complete).
+- [x] PR #97 (feat/post-95-polish: docs(state) + N29 celebration + test-hardening, 3 commits) MERGED
+      (squash 68d7b13). 9/9 CI green incl. full ci.yml for HEAD d2596f6; CodeRabbit+Q clean, 0 threads.
+      cd.yml deployed on the main push; LIVE-VERIFIED the site loads healthy at jonbogaty.com.
+      Accumulating into release PR #96 (0.1.14, which already lists #95's daily features).
+
+### N30 celebration HAPTICS — wire the unused notify() success buzz to the peaks (gameplay FEEL)
+- [x] N30: `notify()` (Capacitor success-haptic) was DEFINED + exported but NEVER called — the
+      celebratory peak moments fired audio + visual flashes with no tactile reward (a real mobile-feel
+      gap, since this is mobile-first). Wired a settings-gated success buzz to the genuine peaks: max
+      combo reached + perfect-charge release (PlayerBlob via a `celebrateHaptic()` helper), treasure
+      jackpot (CrystalField), and achievement unlock (AchievementToast). All gated on settings.haptics
+      (matching the existing impact_/vibrate sites); notify() no-ops on web. Tests: 3 AchievementToast
+      browser tests (new — the component had none; covers the haptic effect path with haptics on AND
+      off, + the empty state). 565 unit / 153 browser green; typecheck + pinned lint clean. The
+      in-frame PlayerBlob/CrystalField haptics are fire-and-forget side effects like the existing
+      impact_/vibrate calls (the codebase deliberately doesn't unit-test those — juice, not load-bearing).
 
 ## Notes
 - This is a living plan. After every stage, backward+forward sweep and edit the queue.
