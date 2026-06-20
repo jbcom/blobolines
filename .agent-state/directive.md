@@ -1315,6 +1315,19 @@ drop most days). A 7-day daily-best trend in the Hall-of-Fame.
       (at-risk nudge / secured / none). 561 unit / 148 browser green; typecheck + pinned lint clean
       (hit + fixed the aria-label-on-span a11y rule again — sr-only span, not aria-label).
       VISUAL-VERIFIED: the at-risk CTA renders "🔥4 · Play today to keep your streak!" with a gold border.
+- [x] N28 local review (comprehensive-review:code-reviewer, scoped to 4d78fff): found 2 REAL issues —
+      (1) Medium: the badge computed dailyKey(new Date()) once at render, going stale across a UTC
+      midnight; (2) Low: the `secured` browser test had two independent new Date() reads that could
+      flake at UTC midnight. Both FOLDED FORWARD in e5bb717: todayKey is now state refreshed on
+      visibilitychange + a 60s heartbeat; streak tests pin the clock (fake Date only) + a new test
+      proves the badge clears after a 2-day clock jump. 561 unit / 149 browser green.
+- Banked lesson: aria-label on a plain span fails biome a11y → [[blobolines-aria-label-on-span]].
+
+### Cutting point: PR for the daily-streak progression theme
+- [ ] [WAIT-CI] Open ONE PR for the cohesive daily-streak theme (N27 achievements+aurora, N28 menu
+      presence, N28-fix midnight-correctness — 3 commits on feat/post-013-polish). Push, open PR,
+      babysit CI green + CodeRabbit threads, resolve, squash-merge, reset main. Then fresh branch for
+      the next theme (gameplay/feel polish — NOT more daily meta; the daily system is saturated).
 
 ## Notes
 - This is a living plan. After every stage, backward+forward sweep and edit the queue.
