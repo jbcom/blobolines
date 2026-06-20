@@ -526,8 +526,14 @@ a fast climb feel kinetic. No new assets; pure extension of sceneryReaction + Sc
 ### N4.3 PR cutting point
 - [x] N4.3a Committed (a29f622), dispatched comprehensive reviewer (background), pushed, opened
       PR #72. Monitor armed on #72 CI. (Do NOT push extra state commits — let CI settle on HEAD.)
-- [ ] [WAIT-REVIEW] N4.3b Babysit PR #72: wait CI green, fold reviewer + gemini/CodeRabbit findings
-      forward, resolve threads, squash-merge once green, sync main, then start N5.
+- [x] N4.3b-feedback Folded forward (77716c1): (1) CI `biome ci` is STRICTER than local
+      `biome check` — caught a format diff in the new fixture; `biome format --write` fixed it.
+      LESSON: run `npx biome ci .` (not just `pnpm lint`) before pushing. (2) Reviewer found a real
+      frame-0 false positive — flyby pulse could fire spuriously on frame 2 for a prop the blob
+      STARTS near (prevInfluence seeds at 0); fixed by seeding prevInfluence on the first observed
+      frame + a `seeded` gate. 494 unit + 119 browser green.
+- [ ] [WAIT-REVIEW] N4.3c Wait CI green on 77716c1, address any gemini/CodeRabbit threads,
+      squash-merge PR #72 once green, sync main, then start N5.
 
 ### N5 Next milestone (surface after #72 merges)
 - [ ] [WAIT-MERGE] N5.1 Pick the next polish unit (don't pre-commit): strong candidates — extend

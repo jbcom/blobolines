@@ -94,16 +94,24 @@ export const DEFAULT_FLYBY_PULSE: FlybyPulseConfig = {
 };
 
 /**
- * True at the frame the blob is closest to the prop — influence was rising and has now started to
- * fall (a local peak), and the peak is strong enough to be worth a flourish. `prevInfluence` /
- * `influence` are this prop's last-two-frame influences (the caller holds prevInfluence in a ref).
+ * True ONLY at the single frame the blob is closest to the prop — a genuine LOCAL peak: influence
+ * was rising (prevPrev < prev) and has just started to fall (now < prev), and the peak is strong
+ * enough to be worth a flourish. Three points of history are required: a two-point `now < prev`
+ * test would be true on EVERY frame of the recession (monotonic decrease), re-firing the pulse the
+ * whole way down. The caller holds prevPrev + prev in a ref. (A plateau at the peak — now == prev —
+ * is not a peak, so a blob that stops dead on a prop never fires; correct.)
  */
 export function flybyPeaked(
+  prevPrevInfluence: number,
   prevInfluence: number,
   influence: number,
   cfg: FlybyPulseConfig = DEFAULT_FLYBY_PULSE,
 ): boolean {
-  return influence < prevInfluence && prevInfluence >= cfg.minPeakInfluence;
+  return (
+    prevPrevInfluence < prevInfluence &&
+    influence < prevInfluence &&
+    prevInfluence >= cfg.minPeakInfluence
+  );
 }
 
 /**

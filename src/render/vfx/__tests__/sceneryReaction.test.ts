@@ -75,23 +75,29 @@ describe("sceneryReaction", () => {
 });
 
 describe("flybyPeaked", () => {
-  it("fires when influence was rising and starts to fall (a strong-enough local peak)", () => {
-    // prev 0.6 → now 0.5: just past closest approach → peak.
-    expect(flybyPeaked(0.6, 0.5)).toBe(true);
+  it("fires once at the local peak (rising prevPrev<prev, then falling now<prev)", () => {
+    // 0.3 → 0.6 → 0.5: just past closest approach → peak.
+    expect(flybyPeaked(0.3, 0.6, 0.5)).toBe(true);
   });
 
   it("does NOT fire while the blob is still approaching (influence rising)", () => {
-    expect(flybyPeaked(0.3, 0.6)).toBe(false);
+    expect(flybyPeaked(0.1, 0.3, 0.6)).toBe(false);
+  });
+
+  it("does NOT fire on EVERY recession frame — only the peak (the 2-point bug)", () => {
+    // Monotonic decline 0.6 → 0.5 → 0.4: prevPrev(0.6) is NOT < prev(0.5), so this mid-recession
+    // frame is not a peak. A 2-point `now<prev` test would have wrongly fired here every frame.
+    expect(flybyPeaked(0.6, 0.5, 0.4)).toBe(false);
   });
 
   it("does NOT fire on a faint graze below the minimum peak influence", () => {
-    // Falling, but the peak (prev) never reached minPeakInfluence → no flourish for a far edge.
-    expect(flybyPeaked(0.05, 0.04)).toBe(false);
+    // A real rise→fall, but the peak (prev) never reached minPeakInfluence → no far-edge flourish.
+    expect(flybyPeaked(0.03, 0.05, 0.04)).toBe(false);
     expect(DEFAULT_FLYBY_PULSE.minPeakInfluence).toBeGreaterThan(0.05);
   });
 
   it("does NOT fire on a flat/plateau (equal frames are not a peak)", () => {
-    expect(flybyPeaked(0.4, 0.4)).toBe(false);
+    expect(flybyPeaked(0.4, 0.4, 0.4)).toBe(false);
   });
 });
 

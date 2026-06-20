@@ -154,7 +154,7 @@ function ScenicInstance({ spec }: { spec: PropSpec }) {
   // Eased blob-reaction state (near layer only): the prop springs toward the computed lean/pop
   // when the blob rushes past and eases back to rest when it leaves. Refs, not state — this must
   // never trigger a React re-render. The propPos buffer is reused each frame (no per-frame alloc).
-  const reactRef = useRef({ lean: 0, pop: 0, prevInfluence: 0, pulse: 0, seeded: false });
+  const reactRef = useRef({ lean: 0, pop: 0, prevPrevInfluence: 0, prevInfluence: 0, pulse: 0 });
   const propPosRef = useRef<[number, number, number]>([0, 0, 0]);
   const isNear = spec.layer.id === "near";
 
@@ -206,12 +206,13 @@ function ScenicInstance({ spec }: { spec: PropSpec }) {
       // Discrete FLYBY PULSE: a peak in influence (the blob at closest approach) fires a fast
       // attack/slow decay envelope ON TOP of the continuous pop, so a whoosh-past reads kinetically
       // distinct from the smooth proximity ramp. The peak strength scales the pop the prop gives.
-      // Skip detection on the FIRST observed frame: prevInfluence starts at 0, so a prop the blob
-      // happens to START near (influence already high) would otherwise spuriously "peak" the next
-      // frame as the world scrolls it away — without any real approach. Seed prev, then detect.
-      const peaked = r.seeded && flybyPeaked(r.prevInfluence, target.influence);
-      r.seeded = true;
+      // 3-point local-peak detection (prevPrev < prev > now): fires on the SINGLE frame at closest
+      // approach, not every frame of the recession. The first two frames have prevPrev==prev==0, so
+      // a 0<0 rising test never fires — which also covers the "prop the blob starts near" case (no
+      // spurious frame-0 pulse) without a separate seeded flag.
+      const peaked = flybyPeaked(r.prevPrevInfluence, r.prevInfluence, target.influence);
       r.pulse = stepFlybyPulse(r.pulse, peaked, r.prevInfluence, delta);
+      r.prevPrevInfluence = r.prevInfluence;
       r.prevInfluence = target.influence;
 
       const s = 1 + r.pop + r.pulse * DEFAULT_FLYBY_PULSE_POP;
