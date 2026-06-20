@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it } from "vitest";
+import { dailyKey, dailySeedPhrase } from "@/sim/daily";
 import { playerProgressSchema } from "../persistence";
 import {
   DEFAULT_PROGRESS,
@@ -7,6 +8,7 @@ import {
   SKIN_COST,
   useGameStore,
 } from "../store";
+import { useWorldStore } from "../worldStore";
 
 beforeEach(() => {
   useGameStore.setState({
@@ -98,24 +100,57 @@ describe("useGameStore", () => {
     expect(useGameStore.getState().dailyRun).toBe(false);
   });
 
-  it("commitBestHeight advances the daily streak ONLY on a daily run", () => {
+  it("commitBestHeight advances the daily streak ONLY on TODAY'S daily run", () => {
     // A non-daily run must not touch the streak.
     useGameStore.getState().setDailyRun(false);
     useGameStore.getState().commitBestHeight(200);
     expect(useGameStore.getState().progress.dailyStreak ?? 0).toBe(0);
     expect(useGameStore.getState().progress.lastDailyKey).toBeUndefined();
 
-    // A daily run starts the streak at 1 and stamps today's key. (The day-to-day progression is
-    // covered by the pure nextDailyStreak unit tests; here we lock the store wiring + the daily gate.)
+    // A daily run on TODAY'S daily tower starts the streak at 1 and stamps today's key. The streak
+    // gate requires the run's seed to be today's daily seed, not merely the dailyRun flag — so set
+    // the world seed accordingly. (Day-to-day progression is covered by the nextDailyStreak units.)
     useGameStore.getState().setDailyRun(true);
+    useWorldStore.setState({ seedPhrase: dailySeedPhrase(new Date()) });
     useGameStore.getState().commitBestHeight(300);
     const p = useGameStore.getState().progress;
     expect(p.dailyStreak).toBe(1);
-    expect(p.lastDailyKey).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    expect(p.lastDailyKey).toBe(dailyKey(new Date()));
 
     // Replaying the SAME day's daily must NOT inflate the streak (still 1).
     useGameStore.getState().commitBestHeight(350);
     expect(useGameStore.getState().progress.dailyStreak).toBe(1);
+  });
+
+  it("replaying a PAST day's daily does NOT advance the streak (it's not today's challenge)", () => {
+    // Establish a streak by playing today's daily.
+    useGameStore.getState().setDailyRun(true);
+    useWorldStore.setState({ seedPhrase: dailySeedPhrase(new Date()) });
+    useGameStore.getState().commitBestHeight(300);
+    expect(useGameStore.getState().progress.dailyStreak).toBe(1);
+    const anchor = useGameStore.getState().progress.lastDailyKey;
+
+    // Now replay an OLD daily tower (a past-date daily seed) — still a dailyRun, but NOT today's
+    // shared challenge. The streak + anchor must be untouched.
+    useWorldStore.setState({ seedPhrase: "blobolines-daily-2000-01-01" });
+    useGameStore.getState().commitBestHeight(400);
+    expect(useGameStore.getState().progress.dailyStreak).toBe(1);
+    expect(useGameStore.getState().progress.lastDailyKey).toBe(anchor);
+  });
+
+  it("replaySeed regenerates the tower, starts playing, and flags daily iff a daily seed", () => {
+    // A normal seed replays as a non-daily run.
+    useGameStore.getState().setDailyRun(true); // stale flag from a prior run
+    useGameStore.getState().replaySeed("bouncy-bright-blob", "ready");
+    expect(useGameStore.getState().phase).toBe("playing");
+    expect(useGameStore.getState().dailyRun).toBe(false);
+    expect(useWorldStore.getState().seedPhrase).toBe("bouncy-bright-blob");
+
+    // A daily seed replays as a DAILY run (so the game-over daily framing shows).
+    useGameStore.getState().replaySeed("blobolines-daily-2026-06-20", "hard");
+    expect(useGameStore.getState().dailyRun).toBe(true);
+    expect(useWorldStore.getState().seedPhrase).toBe("blobolines-daily-2026-06-20");
+    expect(useWorldStore.getState().difficulty).toBe("hard");
   });
 
   it("never moves the streak anchor BACKWARD (backward-clock exploit guard)", () => {

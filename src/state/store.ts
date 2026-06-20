@@ -6,11 +6,13 @@ import type {
   GameSettings,
   HighScoreEntry,
   PlayerProgress,
+  WorldDifficulty,
 } from "@/core/types";
 import { ACHIEVEMENT_SKIN, type AchievementStats, newlyUnlocked } from "@/sim/achievements";
-import { dailyKey, nextDailyStreak } from "@/sim/daily";
+import { DAILY_NS, dailyKey, nextDailyStreak } from "@/sim/daily";
 import { computeScore } from "@/sim/score";
 import { palette } from "@/styles/tokens";
+import { ROUTE_DIFFICULTIES } from "@/world";
 import { reportAchievementToast, resetAchievementToasts } from "./achievementToastBridge";
 import { useWorldStore } from "./worldStore";
 
@@ -59,6 +61,11 @@ export interface GameState {
   togglePause: () => void;
   setCustomizerIntent: (open: boolean) => void;
   setDailyRun: (daily: boolean) => void;
+  /** Replay an exact tower: reset the run + regenerate the world from `seedPhrase` at `difficulty`,
+   *  flag it daily iff the phrase is a daily seed, and jump straight into playing. Used by the
+   *  Hall-of-Fame "replay this tower" button. `difficulty` is the raw stored value (HighScoreEntry
+   *  persists it as a plain string); an unrecognized one falls back to the easiest tier. */
+  replaySeed: (seedPhrase: string, difficulty: string) => void;
   updateSettings: (patch: Partial<GameSettings>) => void;
   setRun: (patch: Partial<RunStats>) => void;
   resetRun: () => void;
@@ -193,6 +200,25 @@ export const useGameStore = create<GameState>((set) => ({
     set({ run: { ...EMPTY_RUN } });
   },
 
+  replaySeed: (seedPhrase, difficulty) => {
+    resetAchievementToasts();
+    // Validate the stored (untrusted) difficulty string against the real tiers — a corrupt/legacy
+    // value falls back to the easiest tier rather than feeding garbage into world-gen.
+    const safeDifficulty: WorldDifficulty = ROUTE_DIFFICULTIES.includes(
+      difficulty as WorldDifficulty,
+    )
+      ? (difficulty as WorldDifficulty)
+      : "ready";
+    // Regenerate the exact tower from the phrase. A daily seed ("blobolines-daily-…") replays as a
+    // DAILY run so the game-over card shows the daily standing/streak/tag, not a free-climb framing.
+    useWorldStore.getState().reset(seedPhrase, safeDifficulty);
+    set({
+      run: { ...EMPTY_RUN },
+      dailyRun: seedPhrase.startsWith(`${DAILY_NS}-`),
+      phase: "playing",
+    });
+  },
+
   markTutorialSeen: () =>
     set((s) => (s.progress.tutorialSeen ? s : { progress: { ...s.progress, tutorialSeen: true } })),
 
@@ -280,12 +306,17 @@ export const useGameStore = create<GameState>((set) => ({
         score: runScore,
         scoreDelta,
       };
-      // Daily-challenge streak: only a DAILY run advances it. nextDailyStreak extends it on a
+      // Daily-challenge streak: only TODAY'S daily run advances it. nextDailyStreak extends it on a
       // next-day play, leaves it on a same-day replay, and resets it after a missed day. A non-daily
-      // run leaves the streak untouched, so the clock is only read for daily runs. (commitBestHeight
-      // is the state layer, so reading the clock here is fine — the PURE streak math is date-injected.)
+      // run — OR a replay of a PAST day's daily tower (from the Hall-of-Fame Replay button) — leaves
+      // the streak untouched: the streak rewards playing TODAY'S shared challenge, not re-climbing an
+      // old one. We gate on the run's seed BEING today's daily seed (blobolines-daily-<todayKey>), not
+      // merely on dailyRun. (commitBestHeight is the state layer, so reading the clock here is fine —
+      // the PURE streak math is date-injected.)
       const todayKey = s.dailyRun ? dailyKey(new Date()) : null;
-      const streak = todayKey
+      const isTodaysDaily =
+        todayKey !== null && worldState.seedPhrase === `${DAILY_NS}-${todayKey}`;
+      const streak = isTodaysDaily
         ? nextDailyStreak(s.progress.dailyStreak ?? 0, s.progress.lastDailyKey, todayKey)
         : null;
       // Anti-exploit: NEVER move the streak anchor BACKWARD. A backward clock skew yields a todayKey

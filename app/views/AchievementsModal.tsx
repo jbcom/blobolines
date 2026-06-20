@@ -15,12 +15,14 @@ import {
   Flame,
   Gem,
   Lock,
+  Play,
   Rocket,
   Sparkles,
   Star,
   Trophy,
   Zap,
 } from "lucide-react";
+import type { HighScoreEntry } from "@/core/types";
 import { ACHIEVEMENTS, type AchievementStats, achievementProgress } from "@/sim/achievements";
 import { useGameStore } from "@/state";
 
@@ -47,8 +49,16 @@ export function AchievementsModal({
   onOpenChange: (open: boolean) => void;
 }) {
   const progress = useGameStore((s) => s.progress);
+  const replaySeed = useGameStore((s) => s.replaySeed);
   const highScores = progress.highScores ?? [];
   const unlockedAchievements = progress.unlockedAchievements ?? [];
+
+  // Replay a Hall-of-Fame entry's exact tower: regenerate from its seed + difficulty and jump into
+  // the run, closing this modal. Turns the displayed seed into a one-tap re-climb (no copy/paste).
+  const replay = (seedPhrase: string, difficulty: HighScoreEntry["difficulty"]) => {
+    onOpenChange(false);
+    replaySeed(seedPhrase, difficulty);
+  };
 
   // All-time stats snapshot for the LOCKED-achievement progress bars. The modal opens from the menu,
   // so there's no live run — the per-run axes (a run's combo/crystals) read 0, and the all-time axes
@@ -296,10 +306,21 @@ export function AchievementsModal({
                             <span className="font-mono text-fg-muted">{score.seedPhrase}</span>
                           </span>
                         </div>
-                        <span className="flex shrink-0 items-center gap-1">
-                          <CalendarDays className="size-3" />
-                          {formatDate(score.date)}
-                        </span>
+                        <div className="flex shrink-0 items-center gap-2">
+                          <span className="flex items-center gap-1">
+                            <CalendarDays className="size-3" />
+                            {formatDate(score.date)}
+                          </span>
+                          {/* One-tap re-climb of this exact tower (no copy/paste of the seed). */}
+                          <button
+                            type="button"
+                            onClick={() => replay(score.seedPhrase, score.difficulty)}
+                            aria-label={`Replay this tower (seed ${score.seedPhrase})`}
+                            className="pointer-events-auto flex items-center gap-1 rounded-md border border-border/40 bg-bg/50 px-1.5 py-0.5 font-ui text-[10px] font-semibold text-cream/85 transition-colors hover:bg-bg/75"
+                          >
+                            <Play className="size-2.5" aria-hidden /> Replay
+                          </button>
+                        </div>
                       </div>
                     </div>
                   );
