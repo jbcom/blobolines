@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 import { motion, useReducedMotion } from "motion/react";
 import { lazy, Suspense, useEffect, useState } from "react";
-import { initAudio, startMenuMusic, startMusic } from "@/audio";
+import { initAudio, playUi, startMenuMusic, startMusic } from "@/audio";
 import { canonicalSeedPhrase, createSeedPhrase } from "@/core/math";
 import type { WorldDifficulty } from "@/core/types";
 import { cn } from "@/lib/utils";
@@ -119,12 +119,21 @@ export function TitleScreen() {
     setNewGameOpen(false);
   };
   const chooseRun = (daily: boolean) => {
+    playUi("click");
     setPendingDaily(daily);
     setPendingSeedPhrase(daily ? dailySeedPhrase(new Date()) : createSeedPhrase());
     setNewGameOpen(true);
   };
   const play = () => chooseRun(false);
   const playDaily = () => chooseRun(true);
+  // Open a menu modal with a UI tap sound. The menu's primary buttons are raw <button>/<motion.button>
+  // (for the spring-squish), so they bypass the shared <Button>'s built-in click sound — this gives
+  // them the same audible tap the modal buttons already have. (Audio is silent until the AudioContext
+  // unlocks on the first Play gesture, same as everywhere else; no-op before then.)
+  const openModal = (open: () => void) => {
+    playUi("click");
+    open();
+  };
 
   return (
     <motion.div
@@ -213,28 +222,28 @@ export function TitleScreen() {
       <div className="flex items-center gap-5">
         <button
           type="button"
-          onClick={() => setCustomizing(true)}
+          onClick={() => openModal(() => setCustomizing(true))}
           className="-my-2 flex min-h-11 items-center gap-2 py-2 font-ui text-sm font-semibold text-fg-muted hover:text-cream"
         >
           <Palette className="size-4" aria-hidden /> Customize
         </button>
         <button
           type="button"
-          onClick={() => setAchievementsOpen(true)}
+          onClick={() => openModal(() => setAchievementsOpen(true))}
           className="-my-2 flex min-h-11 items-center gap-2 py-2 font-ui text-sm font-semibold text-fg-muted hover:text-cream"
         >
           <Trophy className="size-4" aria-hidden /> Achievements
         </button>
         <button
           type="button"
-          onClick={() => setSettingsOpen(true)}
+          onClick={() => openModal(() => setSettingsOpen(true))}
           className="-my-2 flex min-h-11 items-center gap-2 py-2 font-ui text-sm font-semibold text-fg-muted hover:text-cream"
         >
           <Settings className="size-4" aria-hidden /> Settings
         </button>
         <button
           type="button"
-          onClick={() => setManualOpen(true)}
+          onClick={() => openModal(() => setManualOpen(true))}
           className="-my-2 flex min-h-11 items-center gap-2 py-2 font-ui text-sm font-semibold text-fg-muted hover:text-cream"
         >
           <HelpCircle className="size-4" aria-hidden /> How to play

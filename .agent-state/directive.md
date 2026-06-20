@@ -1407,8 +1407,25 @@ drop most days). A 7-day daily-best trend in the Hall-of-Fame.
       155 browser green; typecheck + pinned lint clean.
 
 ### Cutting point: PR for the customizer feedback
-- [ ] [WAIT-CI] PR for feat/customizer-feel (N32). Push, open PR, babysit CI green (ci-coalescing
-      guard) + bot threads, resolve, squash-merge, reset main. Then keep surveying for feel gaps.
+- [x] PR #100 (N32 customizer equip/purchase feedback) MERGED (squash a1dc364). 9/9 CI green;
+      ci-coalescing guard confirmed ci.yml for HEAD 8e55d03 success; review CLEAN; bots clean, 0
+      threads. cd.yml deployed on main push. Release PR #96 (0.1.14) re-accumulated it.
+
+### N33 menu-button tap sounds (the LAST silent feel surface)
+- [x] N33: The shared <Button> already plays playUi("click")/("hover"), but the TitleScreen menu's
+      6 PRIMARY buttons (Play, Daily, + the 4 nav links Customize/Achievements/Settings/How-to-play)
+      are raw <button>/<motion.button> (for the spring-squish) — they BYPASSED the Button audio and
+      were silent. Wired playUi("click") via chooseRun() (Play/Daily) + a small openModal() helper
+      (the 4 nav buttons), so the menu's most-pressed buttons get the same tap the modal buttons have.
+      (Audio is AudioContext-gated → silent until the first Play gesture, same as everywhere; no-op
+      before then.) Tests: +2 browser (Customize/Achievements nav buttons still open through the
+      audio-wrapped handler). 566 unit / 157 browser green; typecheck + pinned lint clean.
+
+### Cutting point: PR for the menu-button audio
+- [ ] [WAIT-CI] PR for feat/menu-button-audio (N33). Push, open PR, babysit CI green (ci-coalescing
+      guard) + bot threads, resolve, squash-merge, reset main. The audio+visual+haptic feedback layer
+      is now COMPLETE across every surface (peaks, death/save, customizer, menu). Next: survey a NEW
+      axis (not feedback) — a fresh feel/visual/gameplay gap, or a docs/test-quality pass.
 
 ## Notes
 - This is a living plan. After every stage, backward+forward sweep and edit the queue.

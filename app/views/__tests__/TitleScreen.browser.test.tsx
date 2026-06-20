@@ -126,3 +126,17 @@ test("opening Settings lazy-loads + shows the modal through the Suspense boundar
   // The modal's lazy chunk resolves and its heading appears (it isn't mounted until opened).
   await expect.element(screen.getByRole("heading", { name: "Settings" })).toBeInTheDocument();
 });
+
+test("the Customize nav button (now audio-wrapped via openModal) still opens the customizer", async () => {
+  const screen = await render(<TitleScreen />);
+  await screen.getByRole("button", { name: /Customize/ }).click();
+  // openModal plays a UI tap (no-op in the test env) then opens — the modal must still appear.
+  await expect.element(screen.getByRole("heading", { name: /Goo Customizer/ })).toBeInTheDocument();
+});
+
+test("the Achievements nav button (audio-wrapped) still opens the achievements modal", async () => {
+  const screen = await render(<TitleScreen />);
+  await screen.getByRole("button", { name: /Achievements/ }).click();
+  // The modal's heading is "Hall of Fame"; opening still works through the audio-wrapped handler.
+  await expect.element(screen.getByRole("heading", { name: /Hall of Fame/ })).toBeInTheDocument();
+});
