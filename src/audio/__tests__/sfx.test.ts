@@ -6,6 +6,7 @@ import {
   MILESTONE_TIER_COUNT,
   milestoneTierFor,
   milestoneTierIndex,
+  pauseMusic,
   playBounce,
   playChime,
   playComboBlip,
@@ -20,6 +21,7 @@ import {
   playThump,
   playUi,
   preloadSfx,
+  resumeMusic,
   setAmbientVolume,
   setMusicAltitude,
   setMusicEnabled,
@@ -166,6 +168,40 @@ describe("music + ambient lifecycle", () => {
     expect(() => duckMusic(600)).not.toThrow(); // overlapping duck resets the hold
     stopMusic();
     expect(() => duckMusic()).not.toThrow(); // after stop, no live bed
+  });
+
+  it("pause/resumeMusic hold an indefinite duck and restore it without throwing", () => {
+    // The live looping music bed, if any.
+    const liveBed = () => {
+      const hs = (
+        Howler as unknown as { _howls: Array<{ _loop: boolean; volume(): number }> }
+      )._howls;
+      return hs.find((h) => h._loop);
+    };
+
+    expect(() => pauseMusic()).not.toThrow(); // no live bed yet → no-op
+    expect(() => resumeMusic()).not.toThrow(); // not paused → no-op
+
+    startMusic();
+    const bed = liveBed();
+    expect(bed, "music bed is live after startMusic").toBeTruthy();
+
+    // Pause holds the bed ducked (fades toward 25% of target); resume lifts it. Both must be safe,
+    // and resume must clear the paused flag so a subsequent pause works again (no stuck-duck).
+    expect(() => pauseMusic()).not.toThrow();
+    expect(() => pauseMusic()).not.toThrow(); // idempotent re-pause
+    expect(() => resumeMusic()).not.toThrow();
+    expect(() => resumeMusic()).not.toThrow(); // idempotent re-resume (flag cleared → no-op)
+
+    // A timed duck started DURING a pause must not auto-restore the bed while still paused: the
+    // unduck timer bails on the musicPaused flag. Exercise that interleaving for no-throw.
+    pauseMusic();
+    duckMusic(50);
+    expect(() => resumeMusic()).not.toThrow();
+
+    stopMusic();
+    // After stop the paused flag is irrelevant; resume is a safe no-op.
+    expect(() => resumeMusic()).not.toThrow();
   });
 
   it("survives rapid altitude band crossings without throwing", () => {

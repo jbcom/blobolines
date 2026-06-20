@@ -1,6 +1,6 @@
 import { Pause } from "lucide-react";
 import { useEffect } from "react";
-import { duckMusic } from "@/audio";
+import { pauseMusic, resumeMusic } from "@/audio";
 import { useGameStore } from "@/state";
 
 /**
@@ -20,7 +20,9 @@ export function PauseButton() {
       const p = useGameStore.getState().phase;
       if (p !== "playing" && p !== "paused") return;
       e.preventDefault();
-      if (p === "playing") duckMusic(400);
+      // Hold the music ducked while paused, restore it on resume — Escape/P toggles both ways.
+      if (p === "playing") pauseMusic();
+      else resumeMusic();
       togglePause();
     };
     window.addEventListener("keydown", onKey);
@@ -34,7 +36,7 @@ export function PauseButton() {
     <button
       type="button"
       onClick={() => {
-        duckMusic(400);
+        pauseMusic();
         togglePause();
       }}
       aria-label="Pause"

@@ -7,8 +7,11 @@ import type { BlobSkin, TrampType } from "@/styles/tokens";
 
 export type { BlobSkin, TrampType } from "@/styles/tokens";
 
-/** High-level game lifecycle. */
-export type GamePhase = "menu" | "playing" | "paused" | "gameover";
+/** High-level game lifecycle. `paused` freezes the run mid-climb (sim clock stops, scene stays
+ *  rendered) — see PhysicsStepDriver + PauseOverlay. `GamePhase` is DERIVED from `GAME_PHASES` so
+ *  the runtime list and the type can never drift apart (the const is the single source). */
+export const GAME_PHASES = ["menu", "playing", "paused", "gameover"] as const;
+export type GamePhase = (typeof GAME_PHASES)[number];
 
 /** A 3D vector as a plain tuple (sim-friendly, serializable). */
 export type Vec3 = readonly [x: number, y: number, z: number];
@@ -252,5 +255,4 @@ export interface TrampolineSpec {
   goldenPath?: GoldenPathProof;
 }
 
-export const GAME_PHASES = ["menu", "playing", "gameover"] as const;
 export const EYE_EXPRESSIONS = ["idle", "blink", "squint", "wide", "tear"] as const;

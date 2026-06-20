@@ -12,7 +12,7 @@ import {
 
 describe("domain types", () => {
   it("GAME_PHASES covers all phases", () => {
-    expect(GAME_PHASES).toEqual(["menu", "playing", "gameover"]);
+    expect(GAME_PHASES).toEqual(["menu", "playing", "paused", "gameover"]);
   });
 
   it("POWERUP_TYPES covers all powerups", () => {

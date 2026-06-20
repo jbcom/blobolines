@@ -2,7 +2,7 @@ import { Button } from "@app/components/ui";
 import { Play, RotateCcw, Settings as SettingsIcon } from "lucide-react";
 import { motion } from "motion/react";
 import { lazy, Suspense, useEffect, useRef, useState } from "react";
-import { startMenuMusic, stopMusic } from "@/audio";
+import { resumeMusic, startMenuMusic, stopMusic } from "@/audio";
 import { useGameStore } from "@/state";
 
 const SettingsModal = lazy(() =>
@@ -27,8 +27,15 @@ export function PauseOverlay() {
     resumeRef.current?.focus();
   }, []);
 
+  // Resume returns to the climb AND lifts the pause music-duck (the bed fades back to full).
+  const resume = () => {
+    resumeMusic();
+    togglePause();
+  };
+
   const quitToMenu = () => {
     resetRun();
+    resumeMusic(); // clear the pause-duck hold before swapping beds, so menu music starts at full
     stopMusic();
     startMenuMusic();
     setPhase("menu");
@@ -39,6 +46,7 @@ export function PauseOverlay() {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       role="dialog"
+      aria-modal="true"
       aria-label="Paused"
       className="pointer-events-auto absolute inset-0 flex flex-col items-center justify-center gap-6 bg-bg/60 backdrop-blur-sm"
       style={{
@@ -53,7 +61,7 @@ export function PauseOverlay() {
         className="flex w-full max-w-xs flex-col items-center gap-4 rounded-xl border border-border bg-surface p-6 text-center"
       >
         <h2 className="font-display text-2xl font-bold text-cream">Paused</h2>
-        <Button ref={resumeRef} cta size="lg" onClick={togglePause} className="w-full">
+        <Button ref={resumeRef} cta size="lg" onClick={resume} className="w-full">
           <Play className="size-4" aria-hidden /> Resume
         </Button>
         <Button
