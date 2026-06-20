@@ -1,4 +1,4 @@
-import { expect, test } from "./fixtures";
+import { expect, launchUp, startRun, test } from "./fixtures";
 
 // Software-GL (SwiftShader) CI is far slower to load + WASM-init than a real GPU; give the
 // scripted-climb sampling window generous headroom there, keep it tight locally.
@@ -14,17 +14,14 @@ test.setTimeout(process.env.CI ? 90_000 : 45_000);
  */
 test("frame-time stays within budget over a scripted climb", async ({ page }) => {
   await page.goto("/?dev");
-  await page.getByRole("button", { name: "DEV" }).click();
-  await page.getByRole("button", { name: /start run/ }).click();
+  await startRun(page);
   await page.waitForTimeout(1500); // Rapier WASM init + settle
 
-  // Climb: a few mega launches with time to arc, so the sampled window covers real flight +
+  // Climb: a few launches with time to arc, so the sampled window covers real flight +
   // world extension + the full VFX/postfx stack under load (the worst-case per-frame cost).
+  // Drive via the test bridge (store calls), not synthetic clicks that stall under software GL.
   for (let i = 0; i < 4; i++) {
-    await page
-      .getByRole("button", { name: /launch up|mega/i })
-      .first()
-      .click();
+    await launchUp(page);
     await page.waitForTimeout(700);
   }
 

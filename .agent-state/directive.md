@@ -187,14 +187,17 @@ re-write directive forward → next.
 ### D2 PR cutting point
 - [x] D2.1a PR #61 opened (biome-ambient-audio: alignment + shared-bed review fix, 2 commits).
       Local-reviewed (found+fixed the shared-bed double-play). Pushed.
-- [ ] [WAIT-REVIEW] D2.1b Babysit PR #61: wait verify gate green → address ALL feedback
-      (CodeRabbit/gemini/human) → resolve threads → squash-merge → re-write directive forward.
+- [x] D2.1b PR #61 SQUASH-MERGED (4811d44, 2026-06-20). Verify gate green, 0 threads, no
+      CHANGES_REQUESTED. Ambient audio aligned to all 6 canonical bands + shared-bed fix landed.
 
-### E0 Follow-up (post-merge, not a blocker) — harden E2E off harness clicks
-- [ ] E0.1 The E2E flakiness under SwiftShader is synthetic-click-on-saturated-thread. Expose a
-      minimal test bridge on window (launch/start via store) so perf/playable/scenarios drive the
-      game without UI pointer events, making the e2e job reliably green. Then it can rejoin the
-      required gate.
+### E0 Milestone — harden E2E off harness clicks (branch feat/e2e-test-bridge)
+- [ ] E0.1 IN PROGRESS: app/testBridge.ts exposes window.__blobtest (startRun/launchUp/
+      gameOver/altitude/phase) calling the store/launch-bridge directly — gated to DEV. Mount
+      it at app entry. Rewrite perf/playable/scenarios to drive via page.evaluate(window.__blobtest.*)
+      instead of synthetic harness clicks (the SwiftShader-stalling path). Keep route-proof on
+      the harness (it tests the capture pipeline).
+- [ ] E0.2 Verify E2E locally (CI=true) + push; once the e2e job is reliably green, fold it
+      back into the required verify gate. Tests + typecheck + lint green.
 
 ## Notes
 - This is a living plan. After every stage, backward+forward sweep and edit the queue.

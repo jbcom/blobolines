@@ -58,16 +58,14 @@ jobs:
           if-no-files-found: ignore
           retention-days: 14
 
-  # Playwright E2E runs in its own job. Headless Chromium on SwiftShader (software GL) drives
-  # the real R3F/Rapier game, and synthetic clicks on a GPU-saturated main thread are inherently
-  # flaky there in a way they are not on a real GPU (the whole reason this was historically red on
-  # main while the unit + browser-fixture gate above stayed green). Keeping it a SEPARATE job means
-  # the real correctness gate (lint/typecheck/unit/build/browser-fixtures) is not blocked by
-  # SwiftShader flakiness, while the E2E signal stays visible and its trace artifacts are uploaded
-  # for diagnosis. This is NOT continue-on-error — the job reports its true status; it just is not
-  # a required merge check.
+  # Playwright E2E runs in its own job (parallel with verify/android). It drives the real
+  # R3F/Rapier game in headless Chromium on SwiftShader. It was historically flaky because the
+  # specs clicked DevHarness buttons and synthetic pointer events stall on a GPU-saturated
+  # software-GL main thread; the specs now drive the game through the dev `window.__blobtest`
+  # bridge (store/launch-bridge calls, no synthetic clicks), which is reliable under SwiftShader,
+  # so this is once again a real correctness gate. Trace artifacts are uploaded for diagnosis.
   e2e:
-    name: Playwright E2E (non-blocking)
+    name: Playwright E2E
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
