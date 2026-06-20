@@ -1422,10 +1422,30 @@ drop most days). A 7-day daily-best trend in the Hall-of-Fame.
       audio-wrapped handler). 566 unit / 157 browser green; typecheck + pinned lint clean.
 
 ### Cutting point: PR for the menu-button audio
-- [ ] [WAIT-CI] PR for feat/menu-button-audio (N33). Push, open PR, babysit CI green (ci-coalescing
-      guard) + bot threads, resolve, squash-merge, reset main. The audio+visual+haptic feedback layer
-      is now COMPLETE across every surface (peaks, death/save, customizer, menu). Next: survey a NEW
-      axis (not feedback) — a fresh feel/visual/gameplay gap, or a docs/test-quality pass.
+- [x] PR #101 (N33 menu-button tap sounds) MERGED (squash ff361f1). 9/9 CI green; ci-coalescing guard
+      confirmed; bots clean. The audio+visual+haptic feedback layer is now COMPLETE across every
+      surface (peaks, death/save, customizer, menu).
+
+### RELEASE 0.1.14 cut (six features)
+- [x] Release-please PR #96 (0.1.14: 6 features — daily-streak progression #95/#97, feedback layer
+      #98/#99/#100/#101) MERGED (squash d71f170). Analyze/CodeQL green; tag blobolines-v0.1.14 created
+      → Release workflow (artifacts + Android APK) completed/success → cd.yml deployed. Version 0.1.14.
+
+### N34 mid-air STEERING coachmark (new axis: onboarding/teaching, not feedback)
+- [x] N34: The in-game onboarding (Onboarding.tsx) only taught the LAUNCH and dismissed on first
+      fling — a new player never learned MID-AIR STEERING (the 2nd core skill; only the Manual covered
+      it, which nobody opens mid-run). Added a 2nd coachmark (SteerCoachmark.tsx): "Drag to steer",
+      shown the first time the blob is airborne AFTER the launch cue is done, dismissed (persisted) on
+      the first mid-air aim drag or a 2.6s auto-timeout. New steerTutorialSeen flag (parallel to
+      tutorialSeen) + markSteerTutorialSeen action + persistence (optional/tolerant, back-compat).
+      Tests: 5 SteerCoachmark browser (shows-when-airborne, gated-by-launch-cue, hidden-when-seen,
+      dismiss-on-steer) + a markSteerTutorialSeen idempotency unit + a persistence round-trip + back-
+      compat. 568 unit / 162 browser green; typecheck + pinned lint clean. (rAF-gated for headless
+      visual QA; the 5 deterministic tests cover all states; styling mirrors the launch cue.)
+
+### Cutting point: PR for the steer coachmark
+- [ ] [WAIT-CI] PR for feat/steer-coachmark (N34). Push, open PR, babysit CI green (ci-coalescing
+      guard) + bot threads, resolve, squash-merge, reset main. Then keep surveying for genuine gaps.
 
 ## Notes
 - This is a living plan. After every stage, backward+forward sweep and edit the queue.

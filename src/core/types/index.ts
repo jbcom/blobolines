@@ -186,6 +186,11 @@ export interface PlayerProgress {
   unlockedSkins: BlobSkin[];
   /** Has the player seen the first-run hold-to-launch coachmark? Set true on first launch. */
   tutorialSeen: boolean;
+  /** Has the player seen the first-airborne "drag to steer" coachmark? Set true the first time they
+   *  steer mid-air (or the cue auto-dismisses). Separate from tutorialSeen so the second core skill
+   *  (mid-air steering) gets its own one-time teach, not bundled with the launch cue. Optional for
+   *  back-compat with progress saved before this coachmark. */
+  steerTutorialSeen?: boolean;
   /** Ids of unlocked achievements (src/sim/achievements). Persisted; keyed by id so adding or
    *  reordering achievements never disturbs existing unlocks. */
   unlockedAchievements: string[];
