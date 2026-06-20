@@ -171,6 +171,13 @@ function activeSet(band: string): BiomePropSet | null {
   return set && set.props.length > 0 ? set : null;
 }
 
+/** The registry set for a band, irrespective of prop count — the landmark layer renders the band's
+ *  hero structure even on a (hypothetical) propless band, so it must not go through activeSet's
+ *  props.length guard. Returns null only for an unknown band. */
+function landmarkSetForBand(band: string): BiomePropSet | null {
+  return biomePropRegistry.find((s) => s.band === band) ?? null;
+}
+
 /** One scenery instance. Mounts ONLY the current band's prop (not all six) and swaps it via
  *  React state when the wrapped altitude crosses into a new band — so the scene graph holds
  *  one model per instance instead of one per band. `useGLTF` caches the loaded GLBs, so a
@@ -281,23 +288,29 @@ function ScenicInstance({ spec }: { spec: PropSpec }) {
     }
   });
 
-  const set = activeSet(band);
+  const isLandmark = spec.layer.id === "landmark";
+  // The landmark layer renders the band's single hero structure, resolved DIRECTLY from the registry
+  // (not via activeSet, whose props.length>0 guard is irrelevant to the landmark — it must show even
+  // if a band's prop pool were empty). Every other layer draws a varied prop from the pool.
+  const set = isLandmark ? landmarkSetForBand(band) : activeSet(band);
+  const model =
+    set && (isLandmark ? set.landmark : set.props[spec.pick[set.band] % set.props.length]);
 
   return (
-    // Explicit renderOrder so the transparent (depthWrite:false) far/near layers paint in depth
-    // order regardless of three's per-object bounding-sphere sort: far behind (1), near in front
-    // (2), opaque mid (0) writes depth normally.
+    // Explicit renderOrder so the transparent (depthWrite:false) far/near/landmark layers paint in
+    // depth order regardless of three's per-object bounding-sphere sort: landmark furthest back (1),
+    // far behind (1), near in front (2), opaque mid (0) writes depth normally.
     <group ref={groupRef} renderOrder={LAYER_RENDER_ORDER[spec.layer.id]}>
-      {set && (
+      {model && (
         <>
           <PropModel
-            file={set.props[spec.pick[set.band] % set.props.length].file}
-            scale={spec.scale * set.props[spec.pick[set.band] % set.props.length].scale}
+            file={model.file}
+            scale={spec.scale * model.scale}
             opacity={spec.layer.opacity}
             glint={isNear}
             onMaterials={isNear ? onGlintMaterials : undefined}
           />
-          {/* Only the mid layer plants a shelf; far silhouettes + near accents float free. */}
+          {/* Only the mid layer plants a shelf; far silhouettes + near accents + landmarks float free. */}
           {spec.layer.id === "mid" && <Shelf shelf={set.shelf} />}
         </>
       )}
@@ -307,11 +320,22 @@ function ScenicInstance({ spec }: { spec: PropSpec }) {
 
 /** Deterministic per-layer seeds so adding/removing one parallax layer never reshuffles the
  *  others (each layer draws from its own RNG streams, by index). */
-const LAYER_SEED: Record<ParallaxLayer["id"], number> = { far: 440, mid: 444, near: 448 };
+const LAYER_SEED: Record<ParallaxLayer["id"], number> = {
+  far: 440,
+  mid: 444,
+  near: 448,
+  landmark: 452,
+};
 
 /** Paint order for the transparent layers: opaque mid writes depth (0), far behind it (1), near
- *  in front (2) — keeps far/near from sort-flipping when their bounding spheres overlap. */
-const LAYER_RENDER_ORDER: Record<ParallaxLayer["id"], number> = { mid: 0, far: 1, near: 2 };
+ *  in front (2) — keeps far/near from sort-flipping when their bounding spheres overlap. The
+ *  landmark sits furthest back (1, same as far — it lives behind the far layer's z-range). */
+const LAYER_RENDER_ORDER: Record<ParallaxLayer["id"], number> = {
+  mid: 0,
+  far: 1,
+  near: 2,
+  landmark: 1,
+};
 
 export function BiomeScenicProps() {
   const specs = useMemo<PropSpec[]>(() => {

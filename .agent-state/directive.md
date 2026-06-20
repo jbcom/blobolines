@@ -618,14 +618,67 @@ visibly. ENRICH per-band variety by curating MORE 3DLowPoly props from the NAS a
       armed. (Verified no test asserts a specific prop pick/layout — the props.length 4→6 reshuffle
       of which decorative model shows where is cosmetic + uncontested; parallax positions stay
       seeded-stable.) Ran `npx biome ci .` before push per the lesson.
-- [ ] [WAIT-REVIEW] N6.3b Babysit PR #74: wait CI green, fold reviewer + gemini/CodeRabbit findings
-      forward, resolve threads, squash-merge once green, sync main, then start N7.
+- [x] N6.3b-feedback Folded forward: my reviewer flagged a vet-script false positive (data: PNG
+      URI mis-classed external) → fixed 66c6707. gemini's 3 MEDIUM (bounds-check + JSON-chunk verify,
+      spec-driven external detection, non-indexed face fallback) → hardened in e056598; re-vetted
+      every biome prop clean. All threads resolved.
+- [x] N6.3c PR #74 SQUASH-MERGED (3a2597a, 2026-06-20). CLEAN, 0 threads. Prop variety shipped.
+      Local main synced; cut feat/biome-landmarks. FIVE feature PRs this session (#70–#74).
 
-### N7 Next milestone (surface after #74 merges)
-- [ ] [WAIT-MERGE] N7.1 Pick the next polish unit (don't pre-commit). Candidates: continue prop
-      variety (more per band / per-band hero LANDMARK props), per-biome MUSIC layers (needs new
-      owned audio via the itch pipeline), or teleport-driven QA + polish of each upper biome band's
-      look + sky/fog tuning. Enumerate use cases first; read own spec docs.
+## Queue — Milestone: Upper-biome visual QA + polish (branch feat/biome-landmarks)
+
+The upper bands (stratosphere/space/deep-space) have only ever been verified via the browser
+fixture — never visually inspected LIVE at altitude. The mandate explicitly says "use the teleport
+tool to QA + polish each upper biome band's look." Drive the blob up through every band with the
+teleport bridge + claude-in-chrome, READ each screenshot, and fix any real look problems surfaced
+(sky/fog tuning, prop scale/density, scenery composition) before adding more. Polish-from-observation,
+not feature-bolting. (Branch named for landmarks but the QA pass leads; landmark props only if the
+QA shows a band reads empty/flat.)
+
+### N7 QA pass → pivot
+- [x] N7.1 BLOCKED + PIVOTED. Live teleport QA is NOT achievable headless: the claude-in-chrome tab
+      is backgrounded (document.hidden=true), so rAF is throttled and `__blobtest.teleport(y)` never
+      moves the body (the teleport consume runs in PlayerBlob's rAF-driven useFrame; altitude stays
+      0). Saved to memory [[blobolines-headless-raf-gating]]. The deterministic browser fixture is
+      the authoritative upper-band visual check. PIVOT N7 to the branch's namesake — per-band hero
+      LANDMARK props — a concrete feature verifiable via the fixture, and a real richness win: each
+      band currently has only scattered small accents with no signature anchor.
+
+### N7 Architecture — per-band hero landmarks
+- [x] N7.2 DONE (decision in commit body). 6 landmark GLBs curated + vetted clean into
+      public/assets/models/landmarks/<band>/ (obelisk/great-pine/ice-spire/monolith-spire/
+      ringed-planet/gas-giant). Data shape: a per-band `landmark` BiomePropSpec on the registry +
+      a "landmark" ParallaxLayer (count 1, big scale, far z, tall column = slow monument scroll);
+      ScenicInstance renders the band's landmark file when its layer is the landmark layer.
+
+### N7.3 Implementation
+- [x] N7.3 DONE. Added `landmark` BiomePropSpec to BiomePropSet + LANDMARK_FILES (throws on a
+      missing band — no silent fallback); a "landmark" ParallaxLayer (count 1, scale 4, z −78..−64
+      behind far, column 240 = slow monument scroll, opacity 0.78); ScenicInstance renders the
+      band's landmark file when its layer is the landmark layer (else the prop pool). allBiomePropFiles
+      preloads landmarks too; LAYER_SEED/RENDER_ORDER gained the landmark id. Tests: landmark
+      path/scale/not-in-pool + the sparse-far-slow layer invariants + updated the layer-id + preload
+      + on-disk glob (now scans landmarks/). 503 unit + 120 browser green; typecheck + biome ci +
+      build clean. (Visual: deterministic browser fixture mounts every band incl. the landmark layer
+      in real WebGL — the authoritative check, since live teleport QA is headless-blocked.) Committed;
+      reviewer to dispatch.
+
+### N7.4 PR cutting point
+- [x] N7.4a Committed (6ae689a), dispatched reviewer (background, focused on the render branch +
+      heavy planet GLBs), pushed, opened PR #75. Monitor armed. Ran `npx biome ci .` before push.
+      KNOWN to fold: reviewer flagged a latent coupling — the landmark uses activeSet(band) which
+      returns null when props.length===0, so a propless band would skip its landmark; fix by
+      looking the set up directly for the landmark path (all bands have props today, so latent).
+- [ ] [WAIT-REVIEW] N7.4b Babysit PR #75: wait CI green, fold reviewer + gemini/CodeRabbit findings
+      forward (incl. the activeSet/landmark decoupling), resolve threads, squash-merge once green,
+      sync main, then start N8.
+
+### N8 Next milestone (surface after #75 merges)
+- [ ] [WAIT-MERGE] N8.1 Pick the next polish unit (don't pre-commit). The biome visual identity is
+      now deep (scenery + parallax + landmarks + audio + particles + reactions). Candidates to SHIFT
+      toward: per-biome MUSIC layers (needs new owned audio via the itch pipeline), a gameplay/feel
+      system (combo/score juice, new pad behaviors), or docs refresh (5+ feature PRs since the last
+      docs pass). Enumerate use cases first; read own spec docs.
 
 ## Queue — Milestone: Daily-challenge results polish (branch feat/daily-results, NEXT)
 
