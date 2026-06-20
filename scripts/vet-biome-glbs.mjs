@@ -16,8 +16,18 @@ function parseGlb(path) {
   const jsonLen = buf.readUInt32LE(12);
   const json = JSON.parse(buf.subarray(20, 20 + jsonLen).toString("utf8"));
   const images = json.images ?? [];
-  const external = images.filter((im) => typeof im.uri === "string" && /\.(png|jpe?g|webp)$/i.test(im.uri));
-  const embedded = images.filter((im) => im.bufferView !== undefined || (im.uri ?? "").startsWith("data:"));
+  // External = a uri pointing at a separate image FILE. A `data:` URI is self-contained (embedded),
+  // so it's excluded even though its mime can contain ".png" — otherwise a base64 PNG data URI would
+  // be a false positive.
+  const external = images.filter(
+    (im) =>
+      typeof im.uri === "string" &&
+      !im.uri.startsWith("data:") &&
+      /\.(png|jpe?g|webp)$/i.test(im.uri),
+  );
+  const embedded = images.filter(
+    (im) => im.bufferView !== undefined || (im.uri ?? "").startsWith("data:"),
+  );
   let faces = 0;
   for (const m of json.meshes ?? [])
     for (const p of m.primitives ?? []) {

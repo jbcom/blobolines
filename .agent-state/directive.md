@@ -601,9 +601,31 @@ visibly. ENRICH per-band variety by curating MORE 3DLowPoly props from the NAS a
       NO external colormap.png refs, per the C2.1d lesson). Keep one visual style (3DLowPoly, not
       PSX). Per-band thematic fit: ground=flora/rocks, sky=clouds/birds, upper-atmosphere=crystals,
       stratosphere=fungal/spires, space=asteroids/satellites, deep-space=cosmic shards/stars.
-- [ ] N6.2 Curate + copy the new GLBs (asset-library search → vet faces/textures → copy_asset into
-      the band dirs), extend PROP_FILES, verify each loads with NO texture errors (the on-disk glob
-      test + a browser render pass), update the biomeProps on-disk count test, PR.
+- [x] N6.2 DONE. Curated + copied 12 props (2/band → all bands now 6) from the NAS 3DLowPoly
+      library: ground (cactus-barrel, desert-shrub), sky (round-pine, tall-pine), upper-atmosphere
+      (ice-gem, frost-gem), stratosphere (spore-bush, glow-spore), space (space-rock,
+      distant-planet), deep-space (cosmic-shard-pink/blue). Wrote scripts/vet-biome-glbs.mjs which
+      parses each GLB's glTF JSON and REJECTS any external image URI (it caught TowerDefense
+      detail-crystal referencing Textures/colormap.png — the exact C2.1d failure mode); ALL 12
+      copied are emb=0 material-colored, no external/embedded bitmaps, ≤1320 faces. Extended
+      PROP_FILES, strengthened the biomeProps "varied set" test to ≥6/band. on-disk glob test
+      confirms every file exists + the browser render fixture mounts every band's props in real
+      WebGL with no texture errors. 501 unit + 120 browser green; typecheck + biome ci clean; live
+      dev render clean. Committed; reviewer to dispatch.
+
+### N6.3 PR cutting point
+- [x] N6.3a Committed (2e7d9a5), dispatched reviewer (background), pushed, opened PR #74. Monitor
+      armed. (Verified no test asserts a specific prop pick/layout — the props.length 4→6 reshuffle
+      of which decorative model shows where is cosmetic + uncontested; parallax positions stay
+      seeded-stable.) Ran `npx biome ci .` before push per the lesson.
+- [ ] [WAIT-REVIEW] N6.3b Babysit PR #74: wait CI green, fold reviewer + gemini/CodeRabbit findings
+      forward, resolve threads, squash-merge once green, sync main, then start N7.
+
+### N7 Next milestone (surface after #74 merges)
+- [ ] [WAIT-MERGE] N7.1 Pick the next polish unit (don't pre-commit). Candidates: continue prop
+      variety (more per band / per-band hero LANDMARK props), per-biome MUSIC layers (needs new
+      owned audio via the itch pipeline), or teleport-driven QA + polish of each upper biome band's
+      look + sky/fog tuning. Enumerate use cases first; read own spec docs.
 
 ## Queue — Milestone: Daily-challenge results polish (branch feat/daily-results, NEXT)
 
