@@ -3,6 +3,7 @@ import {
   getBlobDiagnostics,
   type LaunchRequest,
   requestLaunch,
+  requestTeleport,
   useGameStore,
   useWorldStore,
 } from "@/state";
@@ -29,6 +30,9 @@ export interface BlobTestBridge {
   altitude(): number;
   /** Current game phase. */
   phase(): string;
+  /** Teleport the blob to a target altitude (extends world-gen, places + settles the body).
+   *  For visual QA of each biome band across the full climb without playing up to it. */
+  teleport(y: number): void;
 }
 
 function launchWhenReady(req: LaunchRequest, attempt = 0): Promise<void> {
@@ -66,6 +70,9 @@ export function installTestBridge(): void {
     },
     phase() {
       return useGameStore.getState().phase;
+    },
+    teleport(y) {
+      requestTeleport(y);
     },
   };
   (window as unknown as { __blobtest: BlobTestBridge }).__blobtest = bridge;

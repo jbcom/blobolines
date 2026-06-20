@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { biomeBands } from "@/config/biomes";
 import type { BlobSkin } from "@/core/types";
 import { STARTER_BLOB_Y } from "@/sim/physics";
 import {
@@ -6,6 +7,7 @@ import {
   getRouteProofTarget,
   type LaunchRequest,
   requestLaunch,
+  requestTeleport,
   routeDifficultyProgress,
   routeProfile,
   setAim,
@@ -239,6 +241,22 @@ export function DevHarness() {
           >
             + 50m altitude 📸
           </button>
+          <div className="mt-1 text-[10px] text-white/50">teleport to biome band (📸)</div>
+          <div className="flex flex-wrap gap-1">
+            {biomeBands.map((band) => (
+              <button
+                key={band.name}
+                type="button"
+                className={btn}
+                onClick={() =>
+                  // Jump a little above the band's lower edge so the blob lands inside it.
+                  fire(`teleport-${band.name}`, () => requestTeleport(band.minHeight + 8))
+                }
+              >
+                {band.name} {band.minHeight}m
+              </button>
+            ))}
+          </div>
           <button
             type="button"
             className={btn}

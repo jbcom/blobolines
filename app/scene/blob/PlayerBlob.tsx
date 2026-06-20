@@ -14,6 +14,7 @@ import {
   setMusicAltitude,
 } from "@/audio";
 import { blob } from "@/config";
+import type { TrampolineSpec } from "@/core/types";
 import { ImpactStyle, impact as impact_, vibrate } from "@/platform";
 import { classifyExpression, stepIdlePatience } from "@/sim/blob";
 import { MAX_COMBO } from "@/sim/combo";
@@ -38,6 +39,7 @@ import {
   consumeMidAirBounce,
   consumeRouteGateHit,
   consumeShield,
+  consumeTeleport,
   flash,
   getAim,
   getAirSteer,
@@ -357,6 +359,41 @@ export function PlayerBlob() {
     let p = body.translation();
     let v = body.linvel();
     let airborne = Math.abs(v.y) > 0.5;
+
+    // Dev teleport: jump the body to a target altitude (DevHarness / test bridge). Extend
+    // world-gen there first so pads + scenery exist, then place the body, zero its velocity, wake
+    // it, and resync the climb/death tracking refs so a mid-fall teleport doesn't read as a death.
+    const teleY = consumeTeleport();
+    if (teleY !== null) {
+      ensureHeight(teleY + 40);
+      // ensureHeight short-circuits once highestY passes a target (it's a monotonic
+      // high-water mark), so a SECOND teleport to any band already below highestY adds no
+      // pads near the new target. Don't free-drop the body at teleY into a possibly-padless
+      // band — it would fall past DEATH_FALL_DISTANCE before hitting anything and trip the
+      // death/gameover path, leaving the body resting on the highest *real* pad (~60) instead
+      // of the target. Instead snap onto the nearest existing pad at-or-below the target so
+      // every teleport lands deterministically and safeY tracks a real footing.
+      const pads = useWorldStore.getState().trampolines;
+      let landingPad: TrampolineSpec | null = null;
+      for (const pad of pads) {
+        if (pad.position[1] > teleY) continue;
+        if (!landingPad || pad.position[1] > landingPad.position[1]) landingPad = pad;
+      }
+      const restY = landingPad ? landingPad.position[1] + BLOB.radius : teleY;
+      const restX = landingPad ? landingPad.position[0] : 0;
+      const restZ = landingPad ? landingPad.position[2] : 0;
+      body.setTranslation({ x: restX, y: restY, z: restZ }, true);
+      body.setLinvel({ x: 0, y: 0, z: 0 }, true);
+      body.wakeUp();
+      maxY.current = Math.max(maxY.current, restY);
+      safeY.current = restY;
+      prevY.current = restY;
+      lastEnsureY.current = restY;
+      dead.current = false;
+      p = body.translation();
+      v = body.linvel();
+      airborne = false;
+    }
 
     if (bubbleRemaining.current > 0) {
       bubbleRemaining.current -= dt;

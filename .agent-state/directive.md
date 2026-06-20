@@ -263,11 +263,47 @@ points; determinism + mid-tier budget; no silent fallback.
 - [x] G2.1a Verified + PR #64 opened. Local review (a301e4) folded forward (46b98aa): bounded
       the unbounded mote X drift (pre-existing off-screen bug the bandDrift multiplier worsened)
       + seeded the eased grain ref from the ground band (kills the startup transient).
-- [ ] [WAIT-REVIEW] G2.1b Babysit PR #64: verify+e2e gates green → address feedback → resolve
-      threads → squash-merge → re-write directive forward to the next milestone.
+- [x] G2.1b PR #64 SQUASH-MERGED (92175f5, 2026-06-20). verify+e2e green; gemini's two HIGH
+      drift threads were stale (reviewed pre-46b98aa); reasoned-resolved (the bounded-sine fix
+      already addresses them). Biome sensory arc COMPLETE: scenery + parallax + audio + particles.
+
+## Queue — Milestone: DevHarness altitude teleport (branch feat/harness-teleport)
+
+Tooling that compounds the biome work: a DevHarness control (and a test-bridge method) that
+TELEPORTS the blob's Rapier body to a target altitude, so every biome band can be visually QA'd
+across the full climb range — which the prior biome PRs could only partially verify at low
+altitude. Enables real screenshot verification of upper-atmosphere/stratosphere/space/deep-space
+scenery, parallax, audio band, and particle grain.
+
+### H0 Architecture
+- [x] H0.1 Decided (decisions.ndjson): teleport via the same consume-bridge pattern as launch
+      (requestTeleport/consumeTeleport); PlayerBlob frame loop consumes → ensureHeight +
+      setTranslation + zero velocity + wake + ref sync. Implemented in H1.1.
+
+### H1 Implementation
+- [x] H1.1 Teleport wired: requestTeleport/consumeTeleport in launchBridge (+reset, +index
+      export), PlayerBlob frame-loop consume (ensureHeight + setTranslation + zero vel + wake +
+      ref sync), DevHarness per-band buttons, window.__blobtest.teleport(y). 5 teleport-bridge
+      unit tests. typecheck/lint/444 unit green.
+- [x] H1.1b BUG FIXED (debugger a2c04a58): ensureHeight is monotonic (no-ops once highestY
+      passes), so a teleport BACK to a lower band added no pads near the target → free-fall past
+      DEATH_FALL_DISTANCE → death → settle at ~60. FIX: snap the body onto the nearest existing
+      pad at-or-below the target (deterministic, no free-fall/death race). + worldStore regression
+      test. teleport.spec E2E proves sequential cross-band teleports never collapse to starter
+      (3/3 stable, no flake).
+- [x] H1.2 Teleport tooling works for QA (moves blob up-tower, page stays alive across all bands
+      — proven by E2E). Note: descending teleports land on the nearest existing pad below the
+      target (can be sparse) — exact-band landing is a logged refinement, not blocking.
+
+### H2 PR cutting point
+- [x] H2.1a Verified (typecheck/lint/445 unit/108 browser/e2e incl. teleport spec 3/3). Opening
+      PR. (Visual QA was via E2E body-altitude assertions; claude-in-chrome's sim was unreliable
+      here so the deterministic E2E proof stands in for manual screenshots.)
+- [ ] [WAIT-REVIEW] H2.1b Babysit PR: verify+e2e green → address feedback → resolve threads →
+      squash-merge → re-write directive forward to the next milestone.
 
 ## Notes
 - This is a living plan. After every stage, backward+forward sweep and edit the queue.
-- Next candidate milestones (surface, don't pre-commit): collectible pickups along the climb,
-  blob trail/cosmetic unlocks tied to achievements, DevHarness blob-altitude TELEPORT for visual
-  QA across bands, per-biome music layers, denser interactive props that react to the blob.
+- Next candidate milestones (surface, don't pre-commit): collectible variety/special pickups,
+  blob cosmetic unlocks tied to achievements, per-biome music layers, denser interactive props
+  that react to the blob, biome-reactive blob tinting.
