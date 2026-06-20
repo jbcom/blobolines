@@ -402,7 +402,8 @@ latent edge bugs. No new behavior; pure test additions (+ tiny fixes if a test r
       designed.
 
 ### L2 PR cutting point
-- [ ] L2.1 Verify (typecheck+lint+test+browser+e2e); open PR; babysit to squash-merge; re-write
+- [x] L2.1a Verified (typecheck+lint+466 unit+e2e 5/1-skip); PR #69 opened.
+- [ ] [WAIT-REVIEW] L2.1b Babysit PR #69: gates green → address feedback → squash-merge → re-write
       directive forward.
 
 ## Notes
