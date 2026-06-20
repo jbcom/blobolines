@@ -10,6 +10,13 @@ export {
   routeProfile,
 } from "./difficulty";
 export { type GeneratedChunk, generateUpTo, type PowerUpSpec, starterPad } from "./generator";
+export {
+  clearOfRoute,
+  generateObstacles,
+  type ObstacleSpec,
+  PAD_CLEARANCE,
+  ROUTE_CLEARANCE,
+} from "./obstacles";
 export { padTypeWeights, pickPadType } from "./padType";
 export { CLIMB_SPEED, canReach, PAD_SURFACE_Y, reaches } from "./reachable";
 export {
