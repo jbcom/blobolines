@@ -353,8 +353,27 @@ audio + (optionally) achievement systems. Data-driven rarity; deterministic spaw
 
 ### J2 PR cutting point
 - [x] J2.1a Verified + reviewed (2 bugs fixed); opening PR.
-- [ ] [WAIT-REVIEW] J2.1b Babysit PR: verify+e2e green → address feedback → resolve threads →
-      squash-merge → re-write directive forward.
+- [x] J2.1b PR #67 SQUASH-MERGED (4dee63f, 2026-06-20). verify+e2e green, 0 review threads.
+      Treasure jackpot pickup shipped.
+
+## Queue — Milestone: Docs refresh (branch docs/refresh-after-session)
+
+8 feature PRs shipped this session (biome scenery/parallax/audio/particles, achievement-gated
+cosmetics, treasure jackpot, E2E-infra + teleport QA). The docs have drifted — STATE.md is dated
+2026-06-16 and NO doc mentions treasure/teleport/parallax/particles/achievement-skins. Refresh
+them so the docs match the code (the mandate explicitly includes improving docs; keep them aligned
+rather than letting end-of-project catch-up accrue).
+
+### K0 Pass
+- [ ] K0.1 Update docs/STATE.md (done/next/active), docs/ARCHITECTURE.md (new components:
+      TreasureChests, the parallax layers, particle ambience, teleport bridge, crystalCollectBridge;
+      config: biomeProps registry/ambience/parallax, treasure tier), docs/DESIGN.md or GAME-DESIGN
+      (treasure jackpot + achievement-gated cosmetics as design features). Bump frontmatter `updated`.
+- [ ] K0.2 Verify docs reference real files/symbols (no stale citations); typecheck/lint/test stay
+      green (docs-only, but run to be safe). Frontmatter valid.
+
+### K2 PR cutting point
+- [ ] K2.1 Open PR; babysit to squash-merge; re-write directive forward.
 
 ## Notes
 - This is a living plan. After every stage, backward+forward sweep and edit the queue.
