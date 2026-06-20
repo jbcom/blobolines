@@ -28,6 +28,23 @@ the harder it gets — smaller clouds, faster layers, trickier cloud types, long
 The whole game serves making that climb feel amazing: juicy goo, squash-stretch,
 expressive eyes, splats.
 
+## Onboarding (teaching the two core skills)
+
+The two core skills — **hold-to-launch** and **mid-air steering** — are each taught once, in
+context, by a one-time coachmark over the play surface (no tutorial wall, no Manual gate):
+
+- **Launch cue** (`app/views/hud/Onboarding.tsx`): a pulsing hold dot + "Hold & release to fling",
+  shown on the first run until the player's first launch. Persisted via `tutorialSeen`.
+- **Steer cue** (`app/views/hud/SteerCoachmark.tsx`): a side-sweeping dot + "Drag to steer", shown
+  the first time the blob is airborne *after* the launch cue is done. It dismisses (persisted via
+  `steerTutorialSeen`) on the first mid-air steer or a 2.6s safety-net timeout. Crucially, a short
+  first hop (landing before steering) does **not** burn the teach — the cue re-arms for the next
+  airborne moment, so the steering lesson always lands.
+
+Each skill has its own one-time flag so they teach independently; both honor reduced motion and are
+back-compatible with progress saved before the cue existed (a missing flag reads as not-yet-seen).
+The Manual (How to play) remains the full reference for players who want it.
+
 ## Rewards & progression
 
 - **Crystals** float along the climb in four rarity tiers (`src/world/crystalTier.ts`): common,

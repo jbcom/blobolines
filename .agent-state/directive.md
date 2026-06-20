@@ -1444,8 +1444,24 @@ drop most days). A 7-day daily-best trend in the Hall-of-Fame.
       visual QA; the 5 deterministic tests cover all states; styling mirrors the launch cue.)
 
 ### Cutting point: PR for the steer coachmark
-- [ ] [WAIT-CI] PR for feat/steer-coachmark (N34). Push, open PR, babysit CI green (ci-coalescing
-      guard) + bot threads, resolve, squash-merge, reset main. Then keep surveying for genuine gaps.
+- [x] PR #102 (N34 steer coachmark) MERGED (squash c91cd8a). TWO review rounds folded forward:
+      (1) local reviewer — single-fire finish() guard + an auto-timeout test; (2) CodeRabbit caught a
+      REAL bug — landing persisted steerTutorialSeen, so a short first hop would permanently burn the
+      steering teach; fixed so a no-steer landing re-arms the cue instead (+ regression test), resolved
+      the thread. 9/9 CI green on the corrected HEAD; ci-coalescing guard confirmed. cd.yml deployed
+      (completed/success); onboarding now teaches BOTH core skills live.
+
+### N35 docs currency pass (keep design docs aligned with shipped behavior)
+- [x] N35: GAME-DESIGN.md had NO onboarding section despite the launch + steer coachmarks shipping;
+      added one documenting the two-skill teaching system (flags, dismissal, short-hop re-arm).
+      STATE.md updated with the complete feel-feedback layer (0.1.14) + the two-skill onboarding.
+      Docs-only; lint clean. (Standard-repo requires docs stay aligned with code — they had drifted.)
+
+### Forward sweep — what's next
+- Progression (daily streak), feedback (audio+visual+haptic everywhere), and onboarding (launch +
+  steer) are all COMPLETE + shipped in 0.1.14. The game is deeply built. Next survey should find a
+  genuinely NEW gap (a fresh gameplay/visual axis, an accessibility option, or a test/perf-quality
+  pass) — NOT more of the saturated systems. Survey empirically; don't manufacture marginal churn.
 
 ## Notes
 - This is a living plan. After every stage, backward+forward sweep and edit the queue.
