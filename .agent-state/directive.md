@@ -185,7 +185,10 @@ re-write directive forward → next.
       canonical band mapped, no non-canonical names). typecheck + lint clean, 434 tests pass.
 
 ### D2 PR cutting point
-- [ ] D2.1 Open PR; address feedback; resolve threads; squash-merge; re-write directive forward.
+- [x] D2.1a PR #61 opened (biome-ambient-audio: alignment + shared-bed review fix, 2 commits).
+      Local-reviewed (found+fixed the shared-bed double-play). Pushed.
+- [ ] [WAIT-REVIEW] D2.1b Babysit PR #61: wait verify gate green → address ALL feedback
+      (CodeRabbit/gemini/human) → resolve threads → squash-merge → re-write directive forward.
 
 ### E0 Follow-up (post-merge, not a blocker) — harden E2E off harness clicks
 - [ ] E0.1 The E2E flakiness under SwiftShader is synthetic-click-on-saturated-thread. Expose a
