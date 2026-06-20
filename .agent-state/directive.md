@@ -311,10 +311,9 @@ path. Surfaces the achievement→cosmetic loop the toast already hints at. Data-
 assets needed (uses the 4 existing skins + adds the gating data).
 
 ### I0 Architecture
-- [ ] I0.1 Read the skins (BlobSkin, unlockedSkins, unlockSkin, crystal cost in world.json) +
-      achievements (newlyUnlocked, the unlock/persist flow in store.ts) + the customizer UI.
-      Decide the gating data shape (achievement id → skin it unlocks) + where the unlock fires
-      (when an achievement is newly met). Record decision.
+- [x] I0.1 Decided (decisions.ndjson): SKIN_ACHIEVEMENT map (skin→achievement) in the pure
+      achievements sim; checkAndUnlock grants the tied skin in its pure pass; 2 skins
+      achievement-exclusive (ghost←score-25k, ink←height-1000), removed from crystal path.
 
 ### I1 Implementation
 - [x] I1.1 SKIN_ACHIEVEMENT/ACHIEVEMENT_SKIN maps (ghost←score-25k, ink←height-1000); both store
