@@ -123,14 +123,13 @@ export function generateObstacles(
     const candidate: Vec3 = [cx, cy, cz];
     const amplitude = MIN_BOB + rng.next() * (MAX_BOB - MIN_BOB);
 
-    // Clear the WHOLE bob travel from the route: the center AND both vertical extremes
-    // (cy ± amplitude) must stay outside the corridor, so the obstacle can never drift into a
-    // certified reach over its oscillation. (Pad/obstacle spacing checks the center — pads are wide
-    // and the bob is small, so the small vertical wiggle can't crowd a pad it already cleared.)
-    const top: Vec3 = [cx, cy + amplitude, cz];
-    const bottom: Vec3 = [cx, cy - amplitude, cz];
-    if (!clearOfRoute(candidate, pads)) continue;
-    if (!clearOfRoute(top, pads) || !clearOfRoute(bottom, pads)) continue;
+    // Clear the WHOLE bob travel from the route. The obstacle oscillates along the vertical segment
+    // [cy-amplitude, cy+amplitude] at fixed (cx,cz); EVERY point on it is within `amplitude` of the
+    // center, so if the center clears the route by ROUTE_CLEARANCE + amplitude then (triangle
+    // inequality) every bob position clears it by at least ROUTE_CLEARANCE. Checking the center
+    // against the inflated clearance is airtight — unlike sampling just the two endpoints, which
+    // could miss an interior point of the segment that passes closest to an off-height arc sample.
+    if (!clearOfRoute(candidate, pads, ROUTE_CLEARANCE + amplitude)) continue;
     if (!clearOfPads(candidate, pads)) continue;
     // Keep obstacles apart from each other.
     const sep2 = OBSTACLE_SEPARATION * OBSTACLE_SEPARATION;
