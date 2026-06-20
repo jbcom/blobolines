@@ -191,13 +191,15 @@ re-write directive forward → next.
       CHANGES_REQUESTED. Ambient audio aligned to all 6 canonical bands + shared-bed fix landed.
 
 ### E0 Milestone — harden E2E off harness clicks (branch feat/e2e-test-bridge)
-- [ ] E0.1 IN PROGRESS: app/testBridge.ts exposes window.__blobtest (startRun/launchUp/
-      gameOver/altitude/phase) calling the store/launch-bridge directly — gated to DEV. Mount
-      it at app entry. Rewrite perf/playable/scenarios to drive via page.evaluate(window.__blobtest.*)
-      instead of synthetic harness clicks (the SwiftShader-stalling path). Keep route-proof on
-      the harness (it tests the capture pipeline).
-- [ ] E0.2 Verify E2E locally (CI=true) + push; once the e2e job is reliably green, fold it
-      back into the required verify gate. Tests + typecheck + lint green.
+- [x] E0.1 app/testBridge.ts exposes window.__blobtest (startRun/launchUp/gameOver/altitude/
+      phase) via store/launch-bridge calls, DEV-gated + mounted at app entry, tree-shaken from
+      prod (verified absent from dist). perf/playable/scenarios rewritten to page.evaluate the
+      bridge; route-proof + the GameOver "Climb again" card click kept as real UI.
+- [x] E0.2 All 5 E2E pass under CI=true (~1.3m, was ~17m flaky). CI e2e job renamed from
+      "(non-blocking)" — it's a real gate again. typecheck + lint + 435 unit + build green.
+
+### E2 PR cutting point
+- [ ] E2.1 Open PR; address feedback; resolve threads; squash-merge; re-write directive forward.
 
 ## Notes
 - This is a living plan. After every stage, backward+forward sweep and edit the queue.
