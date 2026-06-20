@@ -55,7 +55,17 @@ leaderboard + achievements gallery, and real-time air-nudge + achievement toasts
 - **Treasure jackpot** — a rare top crystal tier (`treasure`) worth a crystal burst with a
   celebratory gold-flash collect + a chest GLB (`TreasureChests`).
 - **Achievement-gated cosmetics** — earning an achievement unlocks an exclusive skin
-  (`SKIN_ACHIEVEMENT`); the customizer shows "Earn: <achievement>" tiles.
+  (`SKIN_ACHIEVEMENT`); the customizer shows "Earn: <achievement>" tiles. Earned skins: ghost
+  (Apex Ascent / 25k), ink (Deep Space / 1000m), nebula (Voyager / 2000m), **aurora** (Faithful /
+  7-day daily streak — a cool dawn-teal that fills the warm palette's one gap).
+- **Daily-streak progression** — *Daily Devotee* (3-day) and *Faithful* (7-day) achievements reward
+  consecutive-day daily play (the streak only advances on TODAY'S tower, never a replay). The streak
+  is surfaced on the menu's Daily Challenge CTA via the pure `dailyStreakStatus` selector: a 🔥N
+  flame badge when alive, a gold "keep your streak!" nudge when AT-RISK (played yesterday, not yet
+  today), a check when SECURED. The badge refreshes across a UTC-midnight rollover (visibility +
+  heartbeat) so it never goes stale.
+- **This-week daily summary** — a 7-day bar chart of daily bests (`weeklyDailySummary`) in the
+  Achievements modal, with the week-best day flagged.
 - **Dev teleport** — jump the Rapier body to any altitude (`requestTeleport` / DevHarness /
   `window.__blobtest.teleport`) for QA across the whole climb.
 - **E2E reliability** — specs drive the game via the `window.__blobtest` test bridge (store

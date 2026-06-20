@@ -1324,10 +1324,19 @@ drop most days). A 7-day daily-best trend in the Hall-of-Fame.
 - Banked lesson: aria-label on a plain span fails biome a11y → [[blobolines-aria-label-on-span]].
 
 ### Cutting point: PR for the daily-streak progression theme
-- [ ] [WAIT-CI] Open ONE PR for the cohesive daily-streak theme (N27 achievements+aurora, N28 menu
-      presence, N28-fix midnight-correctness — 3 commits on feat/post-013-polish). Push, open PR,
-      babysit CI green + CodeRabbit threads, resolve, squash-merge, reset main. Then fresh branch for
-      the next theme (gameplay/feel polish — NOT more daily meta; the daily system is saturated).
+- [x] PR #95 (daily-streak theme: N27 achievements+aurora, N28 menu presence, N28-fix midnight-
+      correctness — 3 commits) MERGED (squash 027e132). All 9 CI checks green incl. the full ci.yml
+      run (Lint·Typecheck·Test·Build + E2E + Android APK) for HEAD c3f07cd — no coalescing false-green;
+      CodeRabbit + Amazon Q clean, 0 review threads. cd.yml deployed on the main push (every main push
+      deploys Pages); LIVE-VERIFIED: the Aurora teal skin tile (Earn/Faithful) shows in the production
+      customizer at jonbogaty.com/blobolines/. Note: 0.1.14 will cut when the next release-please PR
+      merges; the features are already live (cd.yml deploys main, release.yml only versions/tags).
+
+## Next theme (post-#95) — gameplay/feel polish, on feat/post-95-polish
+- Daily/progression meta is SATURATED (standing+streak+achievements+aurora+share+replay+weekly+menu
+  presence). Pivot to gameplay FEEL or codebase/test quality — do NOT keep stacking daily-system UI.
+- Candidates to survey (not pre-committed): a juicier cloud-catch feedback beat, a new pad behaviour
+  variant, an asset-server scenery/prop enrichment for a sparse band, a settings/accessibility option.
 
 ## Notes
 - This is a living plan. After every stage, backward+forward sweep and edit the queue.
