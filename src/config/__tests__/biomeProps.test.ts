@@ -79,13 +79,24 @@ describe("biomePropRegistry", () => {
 });
 
 describe("biomeAmbience", () => {
-  it("defines ambience for every canonical band with a valid color and opacity", () => {
+  it("defines ambience for every canonical band with valid color, opacity, size and drift", () => {
     expect(biomeAmbience).toHaveLength(biomeBands.length);
     for (const a of biomeAmbience) {
       expect(a.mote, "mote color").toMatch(/^#[0-9a-fA-F]{6}$/);
       expect(a.opacity).toBeGreaterThan(0);
       expect(a.opacity).toBeLessThanOrEqual(1);
+      // Per-band particle grain: positive size + drift multipliers give each biome its own feel.
+      expect(a.size, "mote size multiplier").toBeGreaterThan(0);
+      expect(a.drift, "mote drift multiplier").toBeGreaterThan(0);
     }
+  });
+
+  it("gives the particles a distinct grain per biome — heavy slow dust low, fine quick sparkle high", () => {
+    const ground = biomeAmbience[0];
+    const deepSpace = biomeAmbience[biomeAmbience.length - 1];
+    // Ground motes read large + lazy; deep-space motes read tiny + quick.
+    expect(ground.size).toBeGreaterThan(deepSpace.size);
+    expect(ground.drift).toBeLessThan(deepSpace.drift);
   });
 
   it("resolves ambience at a representative altitude for each band, matching band order", () => {

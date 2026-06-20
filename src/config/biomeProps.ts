@@ -200,21 +200,51 @@ export interface BiomeAmbience {
   mote: string;
   /** Ambient mote opacity for this band. */
   opacity: number;
+  /** Per-band mote size multiplier — heavy warm dust low, fine sparkle high — so each biome's
+   *  particles read with a distinct grain, not just a recolor. */
+  size: number;
+  /** Per-band sideways drift-speed multiplier — lazy drift on the ground, brisk cosmic shimmer. */
+  drift: number;
 }
 
 const AMBIENCE: Record<string, BiomeAmbience> = {
-  // Warm petals drift over the sunny ground.
-  ground: { mote: mixHex(palette.goo.flame, palette.cream, 0.4), opacity: 0.5 },
-  // Icy-cream wind motes through the daylight sky.
-  sky: { mote: palette.cream, opacity: 0.5 },
-  // Golden pollen haze in the upper atmosphere.
-  "upper-atmosphere": { mote: mixHex(palette.tramp.ice, palette.cream, 0.3), opacity: 0.48 },
-  // Mystical blush spores in the fungal stratosphere.
-  stratosphere: { mote: mixHex(palette.cloud.blush, palette.cream, 0.25), opacity: 0.46 },
-  // Nebula-violet dust as the sky gives way to space.
-  space: { mote: mixHex(palette.tramp.violet, palette.cream, 0.35), opacity: 0.5 },
-  // Cold cosmic glimmer in deep space.
-  "deep-space": { mote: mixHex(palette.cloud.bubble, palette.cloud.vortex, 0.45), opacity: 0.52 },
+  // Warm petals drift over the sunny ground — large, lazy, heavy dust.
+  ground: {
+    mote: mixHex(palette.goo.flame, palette.cream, 0.4),
+    opacity: 0.5,
+    size: 1.5,
+    drift: 0.7,
+  },
+  // Icy-cream wind motes through the daylight sky — medium, breezier.
+  sky: { mote: palette.cream, opacity: 0.5, size: 1.1, drift: 1.1 },
+  // Golden pollen glints in the upper atmosphere — fine, drifting.
+  "upper-atmosphere": {
+    mote: mixHex(palette.tramp.ice, palette.cream, 0.3),
+    opacity: 0.48,
+    size: 0.9,
+    drift: 1.0,
+  },
+  // Mystical blush spores in the fungal stratosphere — puffier, slow-floating.
+  stratosphere: {
+    mote: mixHex(palette.cloud.blush, palette.cream, 0.25),
+    opacity: 0.46,
+    size: 1.3,
+    drift: 0.6,
+  },
+  // Nebula-violet dust as the sky gives way to space — fine, faster.
+  space: {
+    mote: mixHex(palette.tramp.violet, palette.cream, 0.35),
+    opacity: 0.5,
+    size: 0.8,
+    drift: 1.4,
+  },
+  // Cold cosmic glimmer in deep space — tiny, quick sparkle.
+  "deep-space": {
+    mote: mixHex(palette.cloud.bubble, palette.cloud.vortex, 0.45),
+    opacity: 0.52,
+    size: 0.65,
+    drift: 1.6,
+  },
 };
 
 /** Ambient-mote ambience for the band containing world height `h`. Throws if the band has

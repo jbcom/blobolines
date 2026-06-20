@@ -44,6 +44,10 @@ export function BiomeProps() {
   const cloudRef = useRef<InstancedMesh>(null);
   const starRef = useRef<InstancedMesh>(null);
   const moteRef = useRef<InstancedMesh>(null);
+  // Eased per-band mote size + drift so they crossfade across band edges (not a hard pop). Seed
+  // from the ground band (where every run starts) so the first second shows the right grain
+  // instead of easing in from a neutral 1.0.
+  const eased = useRef({ size: biomeAmbienceAt(0).size, drift: biomeAmbienceAt(0).drift });
 
   // Deterministic offsets for each instance (placement within the column).
   const clouds = useMemo(() => {
@@ -131,13 +135,24 @@ export function BiomeProps() {
       const ambience = biomeAmbienceAt(h);
       m.color.lerp(tmpColor.set(ambience.mote), 0.05); // ease the recolor across band crossings
       m.opacity = ambience.opacity;
+      // Ease the per-band size + drift so each biome's particles take on their own grain (heavy
+      // slow dust low → fine quick sparkle high) without a hard pop at a band edge.
+      eased.current.size += (ambience.size - eased.current.size) * 0.05;
+      eased.current.drift += (ambience.drift - eased.current.drift) * 0.05;
+      const bandSize = eased.current.size;
+      const bandDrift = eased.current.drift;
       motes.forEach((mo, i) => {
+        // Sideways motion is two BOUNDED sine sways (a fast small wobble + a slower wider drift)
+        // scaled by the band's drift feel — NOT a `t * driftX` accumulation, which grew without
+        // bound and walked motes permanently off-screen over a long session.
+        const sway =
+          Math.sin(t * 0.5 + mo.phase) * 2 + Math.sin(t * mo.driftX * 0.15 + mo.phase + 1.3) * 3;
         tmpPos.set(
-          mo.x + Math.sin(t * 0.5 + mo.phase) * 2 + t * mo.driftX * 0.4,
+          mo.x + sway * bandDrift,
           wrapY(mo.yFrac, h) + Math.sin(t * 0.7 + mo.phase) * 1.5,
           mo.z,
         );
-        tmpScale.setScalar(mo.s);
+        tmpScale.setScalar(mo.s * bandSize);
         tmpMat.compose(tmpPos, tmpQuat, tmpScale);
         mote.setMatrixAt(i, tmpMat);
       });
