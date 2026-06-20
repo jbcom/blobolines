@@ -14,6 +14,7 @@ export {
   clearAchievementToast,
   getAchievementToast,
   reportAchievementToast,
+  resetAchievementToasts,
   subscribeAchievementToast,
 } from "./achievementToastBridge";
 export { type BlobDiagnostics, getBlobDiagnostics, setBlobDiagnostics } from "./diagnostics";

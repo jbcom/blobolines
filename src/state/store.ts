@@ -10,7 +10,7 @@ import type {
 import { type AchievementStats, newlyUnlocked } from "@/sim/achievements";
 import { computeScore } from "@/sim/score";
 import { palette } from "@/styles/tokens";
-import { reportAchievementToast } from "./achievementToastBridge";
+import { reportAchievementToast, resetAchievementToasts } from "./achievementToastBridge";
 import { useWorldStore } from "./worldStore";
 
 /**
@@ -126,11 +126,6 @@ function checkAndUnlock(
     return { progress, run, fresh };
   }
 
-  // Toast each newly unlocked achievement!
-  for (const id of fresh) {
-    reportAchievementToast(id);
-  }
-
   return {
     progress: {
       ...progress,
@@ -158,14 +153,25 @@ export const useGameStore = create<GameState>((set) => ({
 
   updateSettings: (patch) => set((s) => ({ settings: { ...s.settings, ...patch } })),
 
-  setRun: (patch) =>
+  setRun: (patch) => {
+    // The set() updater stays pure (no side effects); collect freshly-unlocked ids and fire
+    // the toast side effect afterwards so the Zustand mutator isn't doing I/O mid-mutation.
+    let unlocked: string[] = [];
     set((s) => {
       const nextRun = { ...s.run, ...patch };
-      const { progress, run } = checkAndUnlock(s.progress, nextRun);
+      const { progress, run, fresh } = checkAndUnlock(s.progress, nextRun);
+      unlocked = fresh;
       return { progress, run };
-    }),
+    });
+    for (const id of unlocked) {
+      reportAchievementToast(id);
+    }
+  },
 
-  resetRun: () => set({ run: { ...EMPTY_RUN } }),
+  resetRun: () => {
+    resetAchievementToasts(); // drop any queued toasts so they don't fire on the next run
+    set({ run: { ...EMPTY_RUN } });
+  },
 
   markTutorialSeen: () =>
     set((s) => (s.progress.tutorialSeen ? s : { progress: { ...s.progress, tutorialSeen: true } })),
