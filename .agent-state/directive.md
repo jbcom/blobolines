@@ -491,14 +491,31 @@ ignore the blob entirely. Make the NEAR layer come alive when the blob rushes pa
 - [x] N3.1a Committed (9dcebad), dispatched comprehensive reviewer (background), pushed, opened
       PR #71. Monitor armed on #71 CI. (Lesson from #70: do NOT push extra state commits to the
       branch — each push restarts the CI gate clock; let CI settle on the current HEAD.)
-- [ ] [WAIT-REVIEW] N3.1b Babysit PR #71: wait CI green, fold reviewer + gemini/CodeRabbit
-      findings forward, resolve threads, squash-merge once green, sync main, then start N4.
+- [x] N3.1b-feedback Folded the reviewer's findings forward (acbd40b): FIXED the real bug — the
+      lean SIGN was inverted (three.js +z is CCW, so a rightward tip is −z); props were tipping
+      TOWARD the blob, not away. Also delta-compensated the springback ease (frame-rate
+      independent) + hoisted the per-frame propPos array to a ref (no hot-path alloc). Test updated
+      to assert the correct direction. 486 unit + 118 browser green.
+- [x] N3.1c PR #71 SQUASH-MERGED (21468f9, 2026-06-20). CLEAN, 0 unresolved threads — gemini's
+      two frame-rate-easing threads were already addressed by the acbd40b delta-comp fix
+      (reasoned-replied + resolved; one was outdated). Local main synced. Blob-reactive scenery
+      shipped. Cut fresh branch feat/scenery-flyby-pulse for N4.
 
-### N4 Next milestone (surface after #71 merges)
-- [ ] [WAIT-MERGE] N4.1 Pick the next polish unit (don't pre-commit): candidates — per-biome
-      MUSIC layers (needs new owned audio via the itch pipeline), a FLYBY-PULSE extension of the
-      scenery reaction (glint/sparkle on closest approach), or QA + polish each upper biome band's
-      look using the teleport tool. Enumerate use cases first, read own spec docs, then build.
+## Queue — Milestone: Scenery flyby-pulse (branch feat/scenery-flyby-pulse)
+
+Extend the just-shipped near-prop reaction with the missing third use case from N2.1's enumeration:
+a FLYBY PULSE — a quick scale-pop + brightness glint at the MOMENT of closest approach as the blob
+whooshes past, distinct from the continuous lean (which tracks proximity). The lean says "the blob
+is near"; the pulse says "the blob just shot past THIS prop" — a discrete acknowledgement that makes
+a fast climb feel kinetic. No new assets; pure extension of sceneryReaction + ScenicInstance.
+
+### N4 Architecture
+- [ ] N4.1 Enumerate the pulse trigger (read sceneryReaction + the ScenicInstance reaction block).
+      Decide: detect closest-approach (influence crossing its local peak / passing the prop on the
+      travel axis) as a discrete edge, fire a decaying pulse envelope (fast attack, slow decay) ON
+      TOP of the continuous lean/pop, deterministic + near-layer only. Record decision; then N4.2
+      implement (extend the pure helper with a pulse-envelope step + a peak-detector, unit-test,
+      wire, browser fixture, visual-verify), N4.3 PR.
 
 ## Queue — Milestone: Daily-challenge results polish (branch feat/daily-results, NEXT)
 
