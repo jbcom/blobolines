@@ -812,16 +812,45 @@ milestones, so a 2000m crossing LOOKS as grand as it sounds.
       behavior-identical (tests confirm), no circular import (audio one-directional), the load-time
       count guard is real, the clamp is correct, React 18 batching eliminates the setShown/setTier
       stale-tier risk, coincident gold flash resolves winner-takes-all. No forward fixes.
-- [ ] [WAIT-REVIEW] N11.3c Wait CI green + any gemini/CodeRabbit threads on PR #79, squash-merge,
-      sync main, start N12.
+- [x] N11.3c-feedback gemini (4 threads, one simplification): the `tier` state was redundant —
+      derive the visual from `shown` at render. Removed the useState/setTier; compute visual once
+      in the render (dd392e4). 4 threads resolved. 518 unit + 121 browser green; banner fixtures
+      still pass.
+- [x] N11.3d PR #79 SQUASH-MERGED (3317158, 2026-06-20). CLEAN, 0 threads. Milestone visual tiers
+      shipped. Local main synced; cut docs/refresh-audio-rewards. TEN PRs this session (#70–#79).
 
-### N12 Next milestone (surface after #79 merges)
-- [ ] [WAIT-MERGE] N12.1 Pick the next polish unit (don't pre-commit). The reward-moment loop
-      (milestone audio+visual tiers, record fanfare, biome banner) and biome identity are now deep.
-      Strong candidates to SHIFT axis toward GAMEPLAY: a new climber-fitting pad behaviour/hazard
-      (read [[blobolines-reachability-invariant]] FIRST — must stay constructively climbable via
-      reaches()), richer mid-air steer/nudge feedback, or a power-up variety pass. Enumerate use
-      cases first; read own spec docs + reachability/navigability memories before touching pads.
+## Queue — Milestone: Docs refresh after the audio + reward-tier arc (branch docs/refresh-audio-rewards)
+
+### N12 Survey + docs
+- [x] N12.1 SURVEYED the gameplay/feel surface for a fresh ADD: pads (11 types: standard/booster/
+      moving/fragile/super/ice/canted/wobbler/storm/vortex/bubble), combo (comboTier + comboHeat +
+      blip/fanfare), score (style + golden-path landing-quality), feedback (toasts/banners/shake/
+      trail/speedlines/powerups) are ALL deeply built + tiered — a 12th pad type risks the
+      reachability invariant for marginal value. The real gap is DOCS: 4 audio/reward PRs (#76–#79)
+      shipped since the last docs pass (#76) — STATE.md mentions "stingers" generically but not
+      per-biome MUSIC, escalating milestone tiers, or the shared milestoneTierIndex; ARCHITECTURE.md
+      has no bandMusic/milestoneTier at all. Refresh both (mandate explicitly includes docs).
+- [x] N12.2 DONE. STATE.md "Recently shipped" gained per-biome music (setMusicBand/bandMusic) +
+      escalating reward moments (shared milestoneTierIndex → audio stinger + milestoneVisual banner
+      tiers + the difficulty-up escalation). ARCHITECTURE.md src/audio row now documents the biome-
+      band music/ambient resolvers + the milestone tier resolver as the single threshold source. All
+      cited symbols verified on disk; biome ci clean; frontmatter already current.
+
+### N12.3 PR cutting point
+- [x] N12.3a Committed (c7aae5b), pushed, opened PR #80 (docs-only). Monitor armed.
+- [ ] [WAIT-REVIEW] N12.3b Babysit PR #80: wait CI green, address any CodeRabbit doc nits, squash-
+      merge once green, sync main, then start N13.
+
+### N13 Next milestone (surface after #80 merges)
+- [ ] [WAIT-MERGE] N13.1 Pick the next polish unit. The game is now comprehensively built across
+      visuals (biome scenery/parallax/landmarks/reactions/banner), audio (per-biome music/ambient/
+      tiered stingers), feel (11 pad types, tiered combo, scoring, shake/trail/speedlines/powerups),
+      and progression (achievements/skins/daily/leaderboard). Per the mandate, KEEP ADDING — look
+      for a fresh POLISH beat or a small NEW system that genuinely doesn't exist yet (NOT a
+      reinvention; the prior surveys ruled out new pad types / combo / scenery / audio as saturated).
+      Candidates to probe: GameOver share-card richness, a settings/accessibility option gap, a
+      first-run onboarding polish, or a perf/quality pass. Enumerate use cases first; survey before
+      committing to avoid reinventing a built system.
 
 ### N9 Next milestone (surface after #76 merges)
 - [ ] [WAIT-MERGE] N9.1 Pick the next polish unit (don't pre-commit). Biome identity + docs are now

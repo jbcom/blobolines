@@ -41,6 +41,13 @@ leaderboard + achievements gallery, and real-time air-nudge + achievement toasts
 - **Daily "Today's tower" standing** — the GameOver card shows a daily run's placement among the
   player's own prior attempts at today's seed (first climb / "#N of M" / new personal daily best),
   via the pure `dailyStanding` selector in `src/sim/daily/`.
+- **Per-biome music** — each canonical band has its OWN upbeat track, resolved by `biomeBandAt` and
+  crossfaded like the ambient beds (`setMusicBand` in `src/audio/howler.ts`), so the climb has real
+  sonic progression instead of the old binary `ingame`↔`highspace` threshold.
+- **Escalating reward moments** — a milestone fanfare now climbs with altitude (bright → triumph →
+  epic → mega) off a shared pure `milestoneTierIndex(height)` (the single threshold source for both
+  audio + visual), and the `MilestoneBanner` matches it with a tier-scaled label, gold flash, and
+  pop (`milestoneVisual`). The difficulty-up stinger escalates by altitude too.
 - **Biome-band banner** — a gentle "Entering The Stratosphere"-style note (`BiomeBanner`) on the
   first UP-crossing into a new band, with a soft cue (blue flash + collect chime) that stays
   clear of the difficulty banner's loud gold/milestone moment. Friendly labels come from
