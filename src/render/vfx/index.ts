@@ -8,4 +8,10 @@ export {
   spawnTrailDroplet,
   stepDroplet,
 } from "./droplets";
+export {
+  DEFAULT_SCENERY_REACTION,
+  type SceneryReaction,
+  type SceneryReactionConfig,
+  sceneryReaction,
+} from "./sceneryReaction";
 export { createSplatCanvas, type SplatCanvas } from "./splat";

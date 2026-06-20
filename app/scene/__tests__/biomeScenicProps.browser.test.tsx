@@ -136,6 +136,62 @@ test("BiomeScenicProps renders props across multiple parallax depth layers", asy
   );
 });
 
+test("a near-layer prop reacts (leans/pops) when the blob rushes past it", async () => {
+  let sceneRoot: Group | null = null;
+  setAltitude(50);
+
+  const screen = await render(
+    <FixtureStage testId="reactive-fixture" cameraDistance={40}>
+      <CaptureScene onScene={(s) => (sceneRoot = s as Group)} />
+      <BiomeScenicProps />
+    </FixtureStage>,
+  );
+  await expect.element(screen.getByTestId("reactive-fixture")).toBeInTheDocument();
+
+  // Near-layer prop groups are tagged renderOrder === 2 (mid 0 / far 1 / near 2).
+  const nearGroups = () => {
+    const out: Object3D[] = [];
+    (sceneRoot as unknown as Object3D | null)?.traverse((o: Object3D) => {
+      if (o.renderOrder === 2) out.push(o);
+    });
+    return out;
+  };
+
+  // Wait for the GLBs to load + near groups to exist, then aim the blob at one of them.
+  await vi.waitFor(
+    () => {
+      expect(nearGroups().length).toBeGreaterThan(0);
+    },
+    { timeout: 10000, interval: 100 },
+  );
+
+  // Park the blob at a near prop's live world X/Y with a high velocity → the reaction should
+  // ease the prop's rotation.z (lean) and scale (pop) away from rest over the next frames.
+  const target = nearGroups()[0];
+  target.getWorldPosition(_tmp);
+  setBlobDiagnostics({
+    position: [_tmp.x + 0.5, _tmp.y, 0],
+    velocity: [0, 40, 0], // fast flyby → full-strength shove
+    speed: 40,
+    airborne: true,
+    expression: "idle",
+    squash: 1,
+    maxHeight: _tmp.y,
+    groundY: 0,
+  });
+
+  await vi.waitFor(
+    () => {
+      // SOME near prop must have leaned or popped away from rest (eased over a few frames).
+      const reacted = nearGroups().some(
+        (g) => Math.abs(g.rotation.z) > 1e-3 || Math.abs(g.scale.x - 1) > 1e-3,
+      );
+      expect(reacted, "a near prop should lean/pop toward the rushing blob").toBe(true);
+    },
+    { timeout: 4000, interval: 80 },
+  );
+});
+
 const _tmp = new Vector3();
 
 test("BiomeProps mounts and resolves ambience across every band without throwing", async () => {

@@ -12,6 +12,7 @@ import {
 } from "@/config/biomeProps";
 import { biomeBandAt } from "@/config/biomes";
 import { createRng } from "@/core/math";
+import { sceneryReaction } from "@/render/vfx";
 import { getBlobDiagnostics } from "@/state";
 
 /**
@@ -146,12 +147,19 @@ function activeSet(band: string): BiomePropSet | null {
 function ScenicInstance({ spec }: { spec: PropSpec }) {
   const groupRef = useRef<Group>(null);
   const [band, setBand] = useState(() => biomeBandAt(wrapY(spec.yFrac, 0, spec.layer.column)));
+  // Eased blob-reaction state (near layer only): the prop springs toward the computed lean/pop
+  // when the blob rushes past and eases back to rest when it leaves. Refs, not state — this must
+  // never trigger a React re-render. The propPos buffer is reused each frame (no per-frame alloc).
+  const reactRef = useRef({ lean: 0, pop: 0 });
+  const propPosRef = useRef<[number, number, number]>([0, 0, 0]);
+  const isNear = spec.layer.id === "near";
 
-  useFrame((state) => {
+  useFrame((state, delta) => {
     const group = groupRef.current;
     if (!group) return;
 
-    const h = getBlobDiagnostics().position[1];
+    const diag = getBlobDiagnostics();
+    const h = diag.position[1];
     const t = state.clock.elapsedTime;
 
     const y = wrapY(spec.yFrac, h, spec.layer.column);
@@ -161,7 +169,9 @@ function ScenicInstance({ spec }: { spec: PropSpec }) {
     // Continuous floating/bob + sideways parallax drift (faster on near layers, slow on far).
     const bob = Math.sin(t * spec.bobSpeed + spec.phase) * spec.bobAmplitude;
     const driftX = Math.sin(t * 0.18 + spec.phase) * spec.driftAmp;
-    group.position.set(spec.x + driftX, y + bob, spec.z);
+    const px = spec.x + driftX;
+    const py = y + bob;
+    group.position.set(px, py, spec.z);
 
     // Cosmic bands tumble in 3D; atmospheric bands spin gently about Y only.
     group.rotation.y = spec.rotY + t * spec.rotSpeed;
@@ -171,6 +181,25 @@ function ScenicInstance({ spec }: { spec: PropSpec }) {
     } else {
       group.rotation.x = 0;
       group.rotation.z = 0;
+    }
+
+    // Blob-reactive lean + scale-pop — NEAR layer only (far/mid stay calm backdrop). The prop
+    // tips away from the blob and pops slightly as it rushes past, then eases back to rest.
+    if (isNear) {
+      const propPos = propPosRef.current;
+      propPos[0] = px;
+      propPos[1] = py;
+      propPos[2] = spec.z;
+      const target = sceneryReaction(diag.position, diag.velocity, propPos);
+      const r = reactRef.current;
+      // Frame-rate-INDEPENDENT exponential ease: 0.18-per-frame-at-60fps converted to this frame's
+      // delta so the springback feels identical at 30/60/120fps (1 - (1-k)^(delta*60)).
+      const k = 1 - (1 - 0.18) ** (delta * 60);
+      r.lean += (target.lean - r.lean) * k;
+      r.pop += (target.pop - r.pop) * k;
+      group.rotation.z += r.lean;
+      const s = 1 + r.pop;
+      group.scale.set(s, s, s);
     }
   });
 
