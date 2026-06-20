@@ -48,16 +48,21 @@ function PropModel({ file, scale, opacity }: { file: string; scale: number; opac
     const clone = scene.clone(true);
     const clonedMaterials: MeshMaterial[] = [];
     if (opacity < 1) {
+      const haze = (src: MeshMaterial): MeshMaterial => {
+        const m = src.clone();
+        m.transparent = true;
+        m.opacity = opacity;
+        m.depthWrite = false;
+        clonedMaterials.push(m);
+        return m;
+      };
       clone.traverse((obj) => {
-        const mesh = obj as { material?: MeshMaterial };
-        if (mesh.material) {
-          const m = mesh.material.clone();
-          m.transparent = true;
-          m.opacity = opacity;
-          m.depthWrite = false;
-          mesh.material = m;
-          clonedMaterials.push(m);
-        }
+        const mesh = obj as { material?: MeshMaterial | MeshMaterial[] };
+        if (!mesh.material) return;
+        // A mesh may carry an array of materials (multi-material geometry); clone each.
+        mesh.material = Array.isArray(mesh.material)
+          ? mesh.material.map(haze)
+          : haze(mesh.material);
       });
     }
     setModel(clone);
