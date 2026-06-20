@@ -317,14 +317,18 @@ assets needed (uses the 4 existing skins + adds the gating data).
       (when an achievement is newly met). Record decision.
 
 ### I1 Implementation
-- [ ] I1.1 Add the achievement→skin gating config; when an achievement is newly unlocked, also
-      unlock its tied skin (persisted). Customizer shows achievement-locked tiles distinctly
-      (how to earn vs how much to buy). No silent fallback.
-- [ ] I1.2 Tests: gating config + unlock-on-achievement flow (store) + customizer fixture/visual
-      per the gate. typecheck + lint + test (+ test:browser).
+- [x] I1.1 SKIN_ACHIEVEMENT/ACHIEVEMENT_SKIN maps (ghost←score-25k, ink←height-1000); both store
+      achievement paths grant the tied skin (atomically, per review). Customizer shows gated tiles
+      with trophy + "Earn: <achievement>", refuses to buy them; ghost/ink removed from skinCost.
+- [x] I1.2 Tests: gating-map invariants (real achievements, exact inverse, no dup), store
+      grant-on-achievement flow, SKIN_COST exclusivity. 450 unit + 108 browser. Live customizer
+      screenshot verified the two "Earn" tiles (Apex Ascent / Deep Space). Local review folded
+      forward (9b7f726): atomic unlock + cost-type narrowing.
 
 ### I2 PR cutting point
-- [ ] I2.1 Verify + screenshot the customizer; open PR; babysit to squash-merge; re-write forward.
+- [x] I2.1a Verified + reviewed; opening PR.
+- [ ] [WAIT-REVIEW] I2.1b Babysit PR: verify+e2e green → address feedback → resolve threads →
+      squash-merge → re-write directive forward to the next milestone.
 
 ## Notes
 - This is a living plan. After every stage, backward+forward sweep and edit the queue.
