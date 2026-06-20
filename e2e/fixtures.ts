@@ -1,4 +1,40 @@
-import { test as base, expect } from "@playwright/test";
+import { test as base, expect, type Page } from "@playwright/test";
+
+declare global {
+  interface Window {
+    __blobtest: {
+      startRun(): void;
+      launchUp(): Promise<void>;
+      gameOver(): void;
+      altitude(): number;
+      phase(): string;
+    };
+  }
+}
+
+/**
+ * Drive the game through the dev-only window.__blobtest bridge (store/launch-bridge calls)
+ * instead of synthetic clicks on DevHarness buttons. Synthetic pointer events on a GPU-saturated
+ * main thread stall indefinitely under CI's SwiftShader software GL; calling the store directly
+ * via page.evaluate sidesteps that entirely. Waits for the bridge to be installed first.
+ */
+export async function startRun(page: Page): Promise<void> {
+  await page.waitForFunction(() => "__blobtest" in window);
+  await page.evaluate(() => window.__blobtest.startRun());
+}
+
+export async function launchUp(page: Page): Promise<void> {
+  await page.evaluate(() => window.__blobtest.launchUp());
+}
+
+export async function gameOver(page: Page): Promise<void> {
+  await page.evaluate(() => window.__blobtest.gameOver());
+}
+
+/** Poll the altimeter HUD readout (the same value a player sees). */
+export async function altitude(page: Page): Promise<number> {
+  return Number((await page.getByTestId("altitude-value").innerText()).trim());
+}
 
 /**
  * Shared E2E fixture that surfaces WHY a page dies. The CI failure mode is "Target page,
