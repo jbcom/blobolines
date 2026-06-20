@@ -10,29 +10,36 @@
  */
 import { readFileSync } from "node:fs";
 
+const GLB_MAGIC = 0x46546c67; // "glTF"
+const JSON_CHUNK = 0x4e4f534a; // "JSON"
+
 function parseGlb(path) {
   const buf = readFileSync(path);
-  if (buf.readUInt32LE(0) !== 0x46546c67) throw new Error(`${path}: not a GLB`);
+  // Bounds-check before every read so a truncated/garbage file throws a clear error, not a RangeError.
+  if (buf.length < 20) throw new Error(`${path}: too small to be a GLB (${buf.length} bytes)`);
+  if (buf.readUInt32LE(0) !== GLB_MAGIC) throw new Error(`${path}: bad GLB magic`);
+  if (buf.readUInt32LE(16) !== JSON_CHUNK) throw new Error(`${path}: chunk 0 is not JSON`);
   const jsonLen = buf.readUInt32LE(12);
+  if (20 + jsonLen > buf.length) throw new Error(`${path}: JSON chunk length exceeds file`);
   const json = JSON.parse(buf.subarray(20, 20 + jsonLen).toString("utf8"));
   const images = json.images ?? [];
-  // External = a uri pointing at a separate image FILE. A `data:` URI is self-contained (embedded),
-  // so it's excluded even though its mime can contain ".png" — otherwise a base64 PNG data URI would
-  // be a false positive.
-  const external = images.filter(
-    (im) =>
-      typeof im.uri === "string" &&
-      !im.uri.startsWith("data:") &&
-      /\.(png|jpe?g|webp)$/i.test(im.uri),
-  );
+  // An image is EXTERNAL (the disqualifier — fails to decode in headless SwiftShader) when it points
+  // at a separate file via `uri`. A `data:` URI is self-contained, and a `bufferView` image is
+  // embedded in the GLB's binary chunk — both are fine. So: external = has a uri that isn't a data:
+  // URI. This is spec-driven (no fragile extension/query-string guessing).
+  const external = images.filter((im) => typeof im.uri === "string" && !im.uri.startsWith("data:"));
   const embedded = images.filter(
     (im) => im.bufferView !== undefined || (im.uri ?? "").startsWith("data:"),
   );
   let faces = 0;
   for (const m of json.meshes ?? [])
     for (const p of m.primitives ?? []) {
-      const acc = json.accessors?.[p.indices];
-      if (acc) faces += Math.floor(acc.count / 3);
+      // Indexed primitives: faces = indices/3. Non-indexed: fall back to a POSITION accessor's
+      // vertex count /3 (glTF allows non-indexed geometry, where every 3 verts is a triangle).
+      const idxAcc = p.indices !== undefined ? json.accessors?.[p.indices] : undefined;
+      const posAcc = p.attributes?.POSITION !== undefined ? json.accessors?.[p.attributes.POSITION] : undefined;
+      const count = idxAcc?.count ?? posAcc?.count ?? 0;
+      faces += Math.floor(count / 3);
     }
   return { external, embedded, faces, materials: (json.materials ?? []).length };
 }
