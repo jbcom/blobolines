@@ -128,11 +128,17 @@ export function GameOver() {
       if (card && navigator.canShare) {
         const file = new File([card], "blobolines.png", { type: "image/png" });
         if (navigator.canShare({ files: [file] })) {
-          await navigator.share({ title: "Blobolines", text, url, files: [file] });
-          return;
+          try {
+            await navigator.share({ title: "Blobolines", text, url, files: [file] });
+            return;
+          } catch (err) {
+            // User cancelled → done. ANY OTHER failure (an OS-level image-share restriction) must
+            // fall through to the text share below, not abort the whole share.
+            if (err instanceof Error && err.name === "AbortError") return;
+          }
         }
       }
-      // Text share (no image support), then clipboard as the last fallback.
+      // Text share (no image support / image share failed), then clipboard as the last fallback.
       if (navigator.share) {
         await navigator.share({ title: "Blobolines", text, url });
       } else if (navigator.clipboard) {

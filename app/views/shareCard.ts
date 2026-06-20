@@ -47,6 +47,17 @@ function roundRect(
  * want to await the encode. Returns null if a 2D context isn't available (very old/headless env).
  */
 export async function renderShareCard(stats: ShareCardStats): Promise<Blob | null> {
+  // Canvas fillText uses whatever's loaded NOW — it doesn't wait for web fonts. Ensure the brand
+  // faces are active before drawing, or a first-share (fonts still streaming) would render the card
+  // in fallback system fonts and break the branding. Best-effort: ignore a load failure and draw
+  // with whatever's available rather than block the share.
+  if (typeof document !== "undefined" && document.fonts) {
+    await Promise.all([
+      document.fonts.load("700 64px 'Fredoka Variable'"),
+      document.fonts.load("600 30px 'Nunito Variable'"),
+    ]).catch(() => {});
+  }
+
   const canvas = document.createElement("canvas");
   canvas.width = W;
   canvas.height = H;
