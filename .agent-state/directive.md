@@ -805,8 +805,23 @@ milestones, so a 2000m crossing LOOKS as grand as it sounds.
       518 unit + 121 browser green; typecheck + biome ci + build clean. Committed; reviewer to dispatch.
 
 ### N11.3 PR cutting point
-- [ ] N11.3 Commit, dispatch reviewer, fold findings forward, open PR, babysit to squash-merge,
-      sync main, re-write directive forward to N12.
+- [x] N11.3a Committed (912c737), dispatched reviewer (background, focused on the milestoneTierFor
+      refactor equivalence + the setShown/setTier batching), pushed, opened PR #79. Monitor armed.
+      Ran `npx biome ci .` as the last step before push.
+- [x] N11.3b-review Background reviewer returned FULLY CLEAN: milestoneTierFor refactor is
+      behavior-identical (tests confirm), no circular import (audio one-directional), the load-time
+      count guard is real, the clamp is correct, React 18 batching eliminates the setShown/setTier
+      stale-tier risk, coincident gold flash resolves winner-takes-all. No forward fixes.
+- [ ] [WAIT-REVIEW] N11.3c Wait CI green + any gemini/CodeRabbit threads on PR #79, squash-merge,
+      sync main, start N12.
+
+### N12 Next milestone (surface after #79 merges)
+- [ ] [WAIT-MERGE] N12.1 Pick the next polish unit (don't pre-commit). The reward-moment loop
+      (milestone audio+visual tiers, record fanfare, biome banner) and biome identity are now deep.
+      Strong candidates to SHIFT axis toward GAMEPLAY: a new climber-fitting pad behaviour/hazard
+      (read [[blobolines-reachability-invariant]] FIRST — must stay constructively climbable via
+      reaches()), richer mid-air steer/nudge feedback, or a power-up variety pass. Enumerate use
+      cases first; read own spec docs + reachability/navigability memories before touching pads.
 
 ### N9 Next milestone (surface after #76 merges)
 - [ ] [WAIT-MERGE] N9.1 Pick the next polish unit (don't pre-commit). Biome identity + docs are now
