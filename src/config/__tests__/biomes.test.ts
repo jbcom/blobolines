@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { biomeBands, biomeSkyAt } from "../biomes";
+import { biomeBandAt, biomeBands, biomeSkyAt } from "../biomes";
 
 describe("biomeSkyAt", () => {
   it("returns the ground band at/below height 0", () => {
@@ -77,5 +77,31 @@ describe("biomeSkyAt", () => {
     const mid = biomeSkyAt(60); // between ground(0) and sky(120)
     expect(mid.top).not.toBe(biomeBands[0].sky.top);
     expect(mid.top).not.toBe(biomeBands[1].sky.top);
+  });
+});
+
+describe("biomeBandAt", () => {
+  it("resolves heights at/below the first band to the first band", () => {
+    expect(biomeBandAt(-100)).toBe(biomeBands[0].name);
+    expect(biomeBandAt(0)).toBe(biomeBands[0].name);
+  });
+
+  it("returns the band whose [minHeight, next) interval contains the height", () => {
+    for (let i = 0; i < biomeBands.length; i++) {
+      const band = biomeBands[i];
+      const next = biomeBands[i + 1];
+      // A height just inside this band's lower edge resolves to this band.
+      expect(biomeBandAt(band.minHeight), `at ${band.name} minHeight`).toBe(band.name);
+      if (next) {
+        const midway = (band.minHeight + next.minHeight) / 2;
+        expect(biomeBandAt(midway), `midway through ${band.name}`).toBe(band.name);
+        // Just below the next band's edge is still this band.
+        expect(biomeBandAt(next.minHeight - 0.01), `just below ${next.name}`).toBe(band.name);
+      }
+    }
+  });
+
+  it("resolves very high altitudes to the deepest band", () => {
+    expect(biomeBandAt(99999)).toBe(biomeBands[biomeBands.length - 1].name);
   });
 });
