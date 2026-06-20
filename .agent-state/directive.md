@@ -299,11 +299,35 @@ scenery, parallax, audio band, and particle grain.
 - [x] H2.1a Verified (typecheck/lint/445 unit/108 browser/e2e incl. teleport spec 3/3). Opening
       PR. (Visual QA was via E2E body-altitude assertions; claude-in-chrome's sim was unreliable
       here so the deterministic E2E proof stands in for manual screenshots.)
-- [ ] [WAIT-REVIEW] H2.1b Babysit PR: verify+e2e green → address feedback → resolve threads →
-      squash-merge → re-write directive forward to the next milestone.
+- [x] H2.1b PR #65 SQUASH-MERGED (69f09ed, 2026-06-20). verify+e2e green; gemini caught the
+      snap fix wasn't actually committed (staging slip) — landed it + stabilized the teleport
+      E2E for software-GL CI. Teleport QA tooling now available.
+
+## Queue — Milestone: Achievement-gated cosmetic unlocks (branch feat/achievement-skins)
+
+Tie the two existing reward systems together for progression depth + fun: certain skins unlock
+by EARNING a specific achievement (a milestone reward), in addition to the existing crystal-spend
+path. Surfaces the achievement→cosmetic loop the toast already hints at. Data-driven; no new
+assets needed (uses the 4 existing skins + adds the gating data).
+
+### I0 Architecture
+- [ ] I0.1 Read the skins (BlobSkin, unlockedSkins, unlockSkin, crystal cost in world.json) +
+      achievements (newlyUnlocked, the unlock/persist flow in store.ts) + the customizer UI.
+      Decide the gating data shape (achievement id → skin it unlocks) + where the unlock fires
+      (when an achievement is newly met). Record decision.
+
+### I1 Implementation
+- [ ] I1.1 Add the achievement→skin gating config; when an achievement is newly unlocked, also
+      unlock its tied skin (persisted). Customizer shows achievement-locked tiles distinctly
+      (how to earn vs how much to buy). No silent fallback.
+- [ ] I1.2 Tests: gating config + unlock-on-achievement flow (store) + customizer fixture/visual
+      per the gate. typecheck + lint + test (+ test:browser).
+
+### I2 PR cutting point
+- [ ] I2.1 Verify + screenshot the customizer; open PR; babysit to squash-merge; re-write forward.
 
 ## Notes
 - This is a living plan. After every stage, backward+forward sweep and edit the queue.
 - Next candidate milestones (surface, don't pre-commit): collectible variety/special pickups,
-  blob cosmetic unlocks tied to achievements, per-biome music layers, denser interactive props
-  that react to the blob, biome-reactive blob tinting.
+  per-biome music layers, denser interactive props that react to the blob, biome-reactive blob
+  tinting, USE the teleport tool to manually QA + polish each upper biome band's look.
