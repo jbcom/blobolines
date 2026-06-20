@@ -230,6 +230,28 @@ describe("useGameStore", () => {
     expect(useGameStore.getState().run.streakExtended).toBe(0);
   });
 
+  it("does NOT flag streakExtended on the FIRST-EVER daily (a START is not an extension)", () => {
+    // No prior streak/key → nextDailyStreak starts at 1 with extended:false. The streak begins but
+    // nothing was EXTENDED, so the card shows the calm count, not the celebration.
+    useGameStore.getState().setDailyRun(true);
+    useWorldStore.setState({ seedPhrase: dailySeedPhrase(new Date()) });
+    useGameStore.getState().commitBestHeight(300);
+    expect(useGameStore.getState().progress.dailyStreak).toBe(1);
+    expect(useGameStore.getState().run.streakExtended).toBe(0);
+  });
+
+  it("does NOT flag streakExtended on a backward-clock no-op (anti-exploit guard holds)", () => {
+    // A stored FUTURE anchor (clock was set forward, then back) makes todayKey < lastDailyKey, so
+    // advanceStreak is false — the streak isn't moved AND no celebration fires.
+    useGameStore.setState((s) => ({
+      progress: { ...s.progress, dailyStreak: 7, lastDailyKey: "3000-01-01" },
+    }));
+    useGameStore.getState().setDailyRun(true);
+    useWorldStore.setState({ seedPhrase: dailySeedPhrase(new Date()) });
+    useGameStore.getState().commitBestHeight(400);
+    expect(useGameStore.getState().run.streakExtended).toBe(0);
+  });
+
   it("does not flag streakExtended on a non-daily run", () => {
     useGameStore.getState().setDailyRun(false);
     useGameStore.getState().commitBestHeight(500);
