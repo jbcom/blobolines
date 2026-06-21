@@ -2,6 +2,7 @@ import { useGLTF } from "@react-three/drei";
 import { useMemo } from "react";
 import type { Material, Mesh, MeshStandardMaterial } from "three";
 import type { PowerUpType } from "@/core/types";
+import { emissiveForBloom } from "@/render/bloom";
 import { palette } from "@/styles/tokens";
 import { PrimitivePowerup } from "./PrimitivePowerup";
 
@@ -62,7 +63,10 @@ function GlbModel({ type }: { type: ModelledType }) {
       const cloned = mats.map((m) => {
         const cm = (m as Material).clone() as MeshStandardMaterial;
         cm.emissive?.set(spec.color);
-        if ("emissiveIntensity" in cm) cm.emissiveIntensity = 0.4;
+        // A powerup is a bloom TARGET: emit above BLOOM_THRESHOLD in the linear HDR buffer with tone
+        // mapping bypassed, so the pickup GLOWS like the primitive-shape powerups (see bloom.ts).
+        if ("emissiveIntensity" in cm) cm.emissiveIntensity = emissiveForBloom(spec.color);
+        cm.toneMapped = false;
         return cm;
       });
       mesh.material = Array.isArray(src) ? cloned : cloned[0];

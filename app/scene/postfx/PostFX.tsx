@@ -11,6 +11,7 @@ import {
 import { BlendFunction } from "postprocessing";
 import { type ReactElement, useRef, useState } from "react";
 import { Vector2 } from "three";
+import { BLOOM_THRESHOLD } from "@/render/bloom";
 import { getQuality } from "@/render/qualityBridge";
 import { getBlobDiagnostics } from "@/state";
 import { N8AO } from "./N8AO";
@@ -63,19 +64,18 @@ export function PostFX({ playing }: { playing: boolean }) {
     // grounds the goo where it meets pads and where droplets fuse into the body.
     quality.ao ? <N8AO key="ao" /> : null,
     // Bloom strength scales by tier (low devices get a softer, cheaper bloom) + lifts with the
-    // altitude grade band (soft ground → brighter glow and crisper high-altitude space). Threshold sits
-    // at 2.5 so ONLY genuinely super-bright pixels bloom — the emissive/toneMapped-off elements
-    // (crystal twinkle spikes, flame-tinted goo, additive powerup auras + rings). The lit scene is HOT:
-    // the key light (intensity ~2.25) pushes the BLOB and CLOUD diffuse well past linear 1.0, so a 1.0
-    // threshold caught the whole lit playfield and bloomed it to a milky white wash (pale blob, pads
-    // drowned out) — 2.5 clears the lit-diffuse ceiling so only true highlights glow. An
+    // altitude grade band (soft ground → brighter glow and crisper high-altitude space). The
+    // luminanceThreshold is the shared BLOOM_THRESHOLD: it sits ABOVE the lit-diffuse ceiling (the
+    // hot key light pushes the BLOB and CLOUD diffuse past linear 1.0, so a low threshold bloomed the
+    // whole lit playfield into a milky-white wash). Only genuine bloom TARGETS — the toneMapped={false}
+    // emissives sized by emissiveForBloom() (crystals, powerups, route gates) — exceed it and glow. An
     // emissive-channel-selective glow without the fragile SelectiveBloom Selection wiring (which fought
     // the EffectComposer reconciler). Bloom dropped entirely when the tier zeroes it (low).
     quality.bloom > 0 ? (
       <Bloom
         key="bloom"
         intensity={(0.4 + grade * 0.5) * quality.bloom}
-        luminanceThreshold={2.5}
+        luminanceThreshold={BLOOM_THRESHOLD}
         luminanceSmoothing={0.2}
         mipmapBlur
       />
