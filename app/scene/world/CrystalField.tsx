@@ -6,6 +6,7 @@ import { playChime, playMilestone } from "@/audio";
 import { world as worldCfg } from "@/config";
 import type { CrystalTier } from "@/core/types";
 import { NotificationType, notify } from "@/platform";
+import { BLOOM_THRESHOLD } from "@/render/bloom";
 import { stepCrystal } from "@/sim/collect";
 import {
   flash,
@@ -33,6 +34,10 @@ const tmpMat = new Matrix4();
 const tmpColor = new Color();
 const UP = new Vector3(0, 1, 0);
 const MAX_CRYSTALS = worldCfg.maxCrystals;
+/** HDR multiplier on the twinkle glint so a gem's sparkle peak clears the bloom threshold (the gems
+ *  are bloom targets — see bloom.ts). Sized off BLOOM_THRESHOLD so it tracks the threshold; the
+ *  dimmest tier color (~0.3 luminance) still peaks above it at the glint maximum. */
+const CRYSTAL_GLOW = BLOOM_THRESHOLD * 2.6;
 const POP_LIFE = 0.22; // seconds the collect-burst pop plays before the gem vanishes
 // Per-tier gem color: common reads as berry, rare as a bright jewel, radiant as a hot gold
 // prize — so rarity is legible at a glance (and matches the bigger tier scale).
@@ -145,10 +150,18 @@ export function CrystalField() {
       tmpScale.set(s, s, s);
       tmpMat.compose(tmpObj, tmpQuat, tmpScale);
       mesh.setMatrixAt(visible, tmpMat);
-      // Twinkle glint: a per-gem brightness pulse (phase-offset by id) with a sharp bright
-      // flash at the peak — a sparkle, not a smooth fade. Multiplies the tier color.
+      // Twinkle glint: a per-gem brightness pulse (phase-offset by id) with a sharp bright flash at
+      // the peak — a sparkle, not a smooth fade. Multiplies the tier color. The material is
+      // toneMapped={false}, and the scalar is pushed into HDR (×CRYSTAL_GLOW so peaks exceed the
+      // BLOOM_THRESHOLD in the linear buffer the bloom pass reads) so the gem reads as a GLOWING
+      // bloom target — a sparkle glint — not a flatly-lit shape that the high bloom threshold ignores.
       const tw = Math.sin(t * 3.2 + i * 1.7);
-      const glint = 0.85 + 0.35 * tw + 0.5 * tw ** 8; // soft pulse + sharp sparkle spike
+      // A steady base (0.55) so the gem NEVER winks fully black at the sine trough — the old
+      // 0.85+0.35·tw curve bottomed at exactly 0 at tw=-1 — plus a soft pulse and a sharp sparkle
+      // spike on the UPSWING only (tw**8 on positive tw). The base alone keeps the gem visibly lit;
+      // the spike is the moment it crosses into bloom.
+      const up = Math.max(0, tw);
+      const glint = (0.55 + 0.25 * tw + 0.5 * up ** 8) * CRYSTAL_GLOW;
       tmpColor.copy(TIER_COLOR[tier[i]]).multiplyScalar(glint);
       mesh.setColorAt(visible, tmpColor);
       tmpQuat.copy(state.camera.quaternion);

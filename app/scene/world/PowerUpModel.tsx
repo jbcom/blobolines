@@ -62,7 +62,13 @@ function GlbModel({ type }: { type: ModelledType }) {
       const cloned = mats.map((m) => {
         const cm = (m as Material).clone() as MeshStandardMaterial;
         cm.emissive?.set(spec.color);
-        if ("emissiveIntensity" in cm) cm.emissiveIntensity = 0.4;
+        // GLB pickups (magnet/rocket) keep their TEXTURED look — unlike the untextured primitive
+        // shapes, a full emissiveForBloom() here would drown the albedo/normal detail and render the
+        // model as a solid glowing blob. So tone mapping stays ON (albedo tonemaps normally) and the
+        // emissive is a modest rim glow: enough to read as a lit, faintly-glowing pickup without
+        // obliterating the model. The strong bloom-target glow is carried by the primitive-shape
+        // powerups + the crystals; the GLBs read as detailed hardware, which is the point of the GLB.
+        if ("emissiveIntensity" in cm) cm.emissiveIntensity = 0.5;
         return cm;
       });
       mesh.material = Array.isArray(src) ? cloned : cloned[0];
