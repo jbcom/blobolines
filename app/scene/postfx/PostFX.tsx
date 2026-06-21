@@ -63,17 +63,19 @@ export function PostFX({ playing }: { playing: boolean }) {
     // grounds the goo where it meets pads and where droplets fuse into the body.
     quality.ao ? <N8AO key="ao" /> : null,
     // Bloom strength scales by tier (low devices get a softer, cheaper bloom) + lifts with the
-    // altitude grade band (soft ground → brighter glow and crisper high-altitude space). Threshold raised
-    // to 1.0 so ONLY the HDR (>1) pixels bloom — i.e. the emissive/toneMapped-off elements
-    // (crystal twinkle spikes, flame-tinted goo, additive powerup auras + rings) — not merely
-    // bright diffuse surfaces like the lit sky. An emissive-channel-selective glow without the
-    // fragile SelectiveBloom Selection wiring (which fought the EffectComposer reconciler).
-    // Bloom dropped entirely when the tier zeroes it (low) — strip the pass, not just soften.
+    // altitude grade band (soft ground → brighter glow and crisper high-altitude space). Threshold sits
+    // at 2.5 so ONLY genuinely super-bright pixels bloom — the emissive/toneMapped-off elements
+    // (crystal twinkle spikes, flame-tinted goo, additive powerup auras + rings). The lit scene is HOT:
+    // the key light (intensity ~2.25) pushes the BLOB and CLOUD diffuse well past linear 1.0, so a 1.0
+    // threshold caught the whole lit playfield and bloomed it to a milky white wash (pale blob, pads
+    // drowned out) — 2.5 clears the lit-diffuse ceiling so only true highlights glow. An
+    // emissive-channel-selective glow without the fragile SelectiveBloom Selection wiring (which fought
+    // the EffectComposer reconciler). Bloom dropped entirely when the tier zeroes it (low).
     quality.bloom > 0 ? (
       <Bloom
         key="bloom"
         intensity={(0.4 + grade * 0.5) * quality.bloom}
-        luminanceThreshold={1.0}
+        luminanceThreshold={2.5}
         luminanceSmoothing={0.2}
         mipmapBlur
       />
