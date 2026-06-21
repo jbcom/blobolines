@@ -156,7 +156,12 @@ export function CrystalField() {
       // BLOOM_THRESHOLD in the linear buffer the bloom pass reads) so the gem reads as a GLOWING
       // bloom target — a sparkle glint — not a flatly-lit shape that the high bloom threshold ignores.
       const tw = Math.sin(t * 3.2 + i * 1.7);
-      const glint = (0.85 + 0.35 * tw + 0.5 * tw ** 8) * CRYSTAL_GLOW;
+      // A steady base (0.55) so the gem NEVER winks fully black at the sine trough — the old
+      // 0.85+0.35·tw curve bottomed at exactly 0 at tw=-1 — plus a soft pulse and a sharp sparkle
+      // spike on the UPSWING only (tw**8 on positive tw). The base alone keeps the gem visibly lit;
+      // the spike is the moment it crosses into bloom.
+      const up = Math.max(0, tw);
+      const glint = (0.55 + 0.25 * tw + 0.5 * up ** 8) * CRYSTAL_GLOW;
       tmpColor.copy(TIER_COLOR[tier[i]]).multiplyScalar(glint);
       mesh.setColorAt(visible, tmpColor);
       tmpQuat.copy(state.camera.quaternion);
