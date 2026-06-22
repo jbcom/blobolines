@@ -1,5 +1,22 @@
 # Changelog
 
+## [0.1.15](https://github.com/jbcom/blobolines/compare/blobolines-v0.1.14...blobolines-v0.1.15) (2026-06-22)
+
+
+### Features
+
+* **onboarding:** teach mid-air steering with a second coachmark ([#102](https://github.com/jbcom/blobolines/issues/102)) ([c91cd8a](https://github.com/jbcom/blobolines/commit/c91cd8a363de72401623b16c92b8a2175fa24865))
+
+
+### Bug Fixes
+
+* **render:** stop bloom washing the lit scene to milky white ([#105](https://github.com/jbcom/blobolines/issues/105)) ([4962602](https://github.com/jbcom/blobolines/commit/4962602b81e8043b6e26b60eecbeb19671752503))
+
+
+### Reverts
+
+* **render:** undo [#86](https://github.com/jbcom/blobolines/issues/86) height-reactive sky/lighting (fixes washed-out skybox) ([#106](https://github.com/jbcom/blobolines/issues/106)) ([669fd46](https://github.com/jbcom/blobolines/commit/669fd46480d96841cde8a56bb39c14e56a037449))
+
 ## [0.1.14](https://github.com/jbcom/blobolines/compare/blobolines-v0.1.13...blobolines-v0.1.14) (2026-06-20)
 
 
