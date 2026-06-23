@@ -1463,6 +1463,37 @@ drop most days). A 7-day daily-best trend in the Hall-of-Fame.
   genuinely NEW gap (a fresh gameplay/visual axis, an accessibility option, or a test/perf-quality
   pass) — NOT more of the saturated systems. Survey empirically; don't manufacture marginal churn.
 
+## Queue — N36 landing-as-its-own-page + predictive steering + small-phone HUD (user-reported)
+
+User play-test (2026-06-23) surfaced three real defects on real hardware:
+
+### N36-A Menu is a PHASE welded to the game canvas — promote it to its own PAGE
+- [x] N36-A1: `menu` renders inside HudOverlay on top of the ALWAYS-mounted `<Canvas>`/GameScene
+      (Game.tsx mounts the canvas unconditionally). So the landing page's DESIGNED purple
+      (`--bg:#2a1024` "deep berry-plum", tokens.css) is covered by the in-game daylight sky —
+      "starts purple then disappears immediately." Root cause is structural: the menu can't own
+      its background while fused to the game render tree. Split at the TOP level in Game.tsx:
+      `phase==="menu"` → `<LandingPage>` (DOM-only, owns the purple `--bg`, no WebGL, no game
+      world; carries TitleScreen + hero); everything else → game canvas + GameScene + HUD mounted
+      only in-run. `phase` keeps governing playing/paused/gameover; menu↔game becomes a PAGE
+      boundary. Bonus: old phones pay no WebGL cost on the menu. See [[blobolines-airsteer-is-open-loop-accel]].
+
+### N36-B Mid-air steering arc must PREDICT where the blob is heading
+- [ ] N36-B1: air-steer is open-loop accel (computeAirSteer→ v+=a·dt, no target, ~0 damping) so it
+      overshoots and never settles, and the reticle is an abstract drag-dot disconnected from the
+      real path. User: "the point of the arc is you should be able to know from the arc where it is
+      heading." Make the arc a REAL forward-integrated trajectory projection (current velocity +
+      steering accel, the same ½at² the reach proof uses) so what you see = where you land. Add a
+      gentle lateral settling so neutral drag converges. Keep the maxAirAccel cap →
+      [[blobolines-reachability-invariant]] intact. Drop the color-by-momentum idea (user rejected:
+      predictability over flash). Tests: intents.test.ts + reach proof + projection fixture.
+
+### N36-C Small/older iPhone — HUD info rectangles occlude gameplay
+- [ ] N36-C1: "all the information rectangles remain on screen, cannot really see much" on an older
+      iPhone. HUD panels don't collapse/reflow on short viewports. Add a compact responsive HUD
+      (safe-area-aware, Pixel-5a/older-iPhone class per mobile-android profile) so panels shrink or
+      tuck and never cover the play area.
+
 ## Notes
 - This is a living plan. After every stage, backward+forward sweep and edit the queue.
 - Next candidate milestones (surface, don't pre-commit): a new pad-type behaviour, a cosmetic trail,

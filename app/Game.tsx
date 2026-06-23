@@ -2,8 +2,11 @@ import type { RootState } from "@react-three/fiber";
 import { Canvas } from "@react-three/fiber";
 import { ACESFilmicToneMapping } from "three";
 import { getQuality } from "@/render/qualityBridge";
+import { useGameStore } from "@/state";
 import { GameScene } from "./scene/GameScene";
+import { DevHarness } from "./views/DevHarness";
 import { HudOverlay } from "./views/HudOverlay";
+import { LandingPage } from "./views/LandingPage";
 
 /**
  * WebGL context-loss handling. Mobile GPUs can drop the rendering context (backgrounding,
@@ -37,6 +40,21 @@ export function Game() {
   // phones pay quadratic fill cost, so mid/low clamp DPR lower and drop antialias. Read at mount
   // (these are set-once Canvas props; a later manual override applies on the next remount).
   const quality = getQuality();
+  // The menu is its OWN page, not a phase layered over the game canvas. On `menu` we mount the
+  // pure-DOM LandingPage (owns its designed purple `--bg`) and DO NOT mount the WebGL `<Canvas>`
+  // or the game world at all — so the landing page's purple is never painted over by the in-game
+  // daylight sky, and a low-end phone pays no renderer cost while sitting in the menu. The heavy
+  // game page (canvas + GameScene + HUD) mounts only once a run is entered.
+  const isMenu = useGameStore((s) => s.phase === "menu");
+  if (isMenu) {
+    return (
+      <div className="relative h-full w-full overflow-hidden">
+        <LandingPage />
+        {/* Dev tools must reach the menu too (force a run / teleport), and they're dev-only. */}
+        <DevHarness />
+      </div>
+    );
+  }
   return (
     <div className="relative h-full w-full overflow-hidden">
       <Canvas
