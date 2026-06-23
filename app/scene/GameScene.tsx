@@ -35,10 +35,12 @@ import {
 
 /**
  * Root scene composition inside <Canvas>. Composes small, single-responsibility
- * layers (per docs/ARCHITECTURE.md). In MENU it shows a calm hero blob; in PLAYING it
- * runs the Rapier world with the climbing tower and the player blob.
+ * layers (per docs/ARCHITECTURE.md). This scene mounts only in a run (playing/paused/gameover) —
+ * the MENU is a separate pure-DOM page (app/views/LandingPage) that never mounts the canvas. While
+ * PLAYING it runs the Rapier world with the climbing tower and the player blob; on GAME-OVER
+ * (`!active`) it shows a calm idle hero blob behind the game-over card.
  *
- * The sky + lighting stay mounted across phases (outside Suspense) so the canvas never
+ * The sky + lighting stay mounted across these phases (outside Suspense) so the canvas never
  * goes black while Rapier's WASM loads on the first Play.
  */
 export function GameScene() {
@@ -70,6 +72,8 @@ export function GameScene() {
             <SplatChunks skin={skin} />
           </Physics>
         ) : (
+          // GAME-OVER backdrop: a calm idle hero blob behind the game-over card (menu never
+          // reaches here — it's the pure-DOM LandingPage, which mounts no canvas).
           <group position={[0, 3.35, 0]} scale={1.14}>
             <BlobActor skin={skin} expression="idle" />
           </group>

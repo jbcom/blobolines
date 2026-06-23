@@ -11,9 +11,9 @@ responsibility — no monolithic scene file.
 
 | Path | Owns |
 |------|------|
-| `GameScene.tsx` | Root composition: lighting, sky, camera rig, world fields, and (only while playing) the `<Physics>` provider + `PlayerBlob`. The menu shows an idling fused-goo hero `BlobActor`. |
+| `GameScene.tsx` | Root composition: lighting, sky, camera rig, world fields, and (only while playing) the `<Physics>` provider + `PlayerBlob`. Mounts only in a run (`phase !== "menu"`) — the menu is a separate pure-DOM `LandingPage` that never mounts the canvas. On game-over it shows an idling fused-goo hero `BlobActor` behind the card. |
 | `CameraRig.tsx` | Follows the blob's full x/y/z position, with launch FOV warp and impact shake. |
-| `blob/` | `PlayerBlob` (the dynamic Rapier body + frame loop), `GooCsg` (world-space merged goo body + eyes), `BlobActor` (CSG idling hero + squash/stretch/wobble fixtures), `BlobEyes` (procedural expressive eyes), `useDroplets` (splash/launch-burst/trail runtime). |
+| `blob/` | `PlayerBlob` (the dynamic Rapier body + frame loop), `GooCsg` (world-space merged goo body + eyes), `BlobActor` (CSG idling hero + squash/stretch/wobble fixtures), `AirAimPreview` (live predicted-trajectory tube shown while airborne + steering), `BlobEyes` (procedural expressive eyes), `useDroplets` (splash/launch-burst/trail runtime). |
 | `trampoline/` | `Trampoline` (springy pad + membrane + goo-splat decal + impact sensor), `TrampolineField` (bounded sliding render window — see perf note). |
 | `world/` | `SkyDome`, `Lighting`, `CrystalField` (one InstancedMesh), `PowerUpField`. |
 | `postfx/` | `PostFX` — bloom + vignette + speed-reactive chromatic aberration. |

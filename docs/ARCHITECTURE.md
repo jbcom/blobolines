@@ -1,6 +1,6 @@
 ---
 title: Architecture
-updated: 2026-06-20
+updated: 2026-06-23
 status: current
 domain: technical
 ---
@@ -25,6 +25,11 @@ public surface; modules stay small and single-responsibility — no monolithic s
    `world.spawn(...)` ad hoc.
 4. **Tokens own the palette** — colors/type/space come from `src/styles/tokens.{css,ts}`.
    Raw hex literals outside `tokens.ts` are banned.
+5. **Menu is a page, not a phase overlay** — `app/Game.tsx` branches on `phase==="menu"`:
+   the menu renders as a pure-DOM `<LandingPage>` (its own purple `--bg`, no WebGL), and the
+   game `<Canvas>` + `GameScene` + `<HudOverlay>` mount ONLY in a run. So the menu owns its own
+   background (never painted over by the in-game sky) and a low-end phone pays no renderer cost
+   while in the menu. `phase` still governs the in-run states (playing/paused/gameover).
 
 ## Package map
 
@@ -40,6 +45,7 @@ public surface; modules stay small and single-responsibility — no monolithic s
 | `src/sim/cloudPad` | ✓ | pass-through cloud catch/adherence tests and footprint math |
 | `src/sim/trampoline` | ✓ | compatibility package for cloud catch spring + tilt model, type behaviors (standard/booster/moving/fragile) |
 | `src/sim/launch` | ✓ | route charge→velocity, combo/multiplier, 3D air-steer model |
+| `src/sim/trajectory` | ✓ | `projectTrajectory` (pure forward-integration of the predicted in-air path — current vel + steer accel + gravity, drawn by `<AirAimPreview>`) + `shouldSettleLateral` (the hands-off lateral-settle gate that keeps a ballistic certified hop's travel intact) |
 | `src/sim/daily` | ✓ | daily-challenge seed (date-injected `dailySeed`/`dailySeedPhrase`), run-verification `runHash`, and `dailyStanding` — the pure selector ranking a daily run among the player's own prior attempts at today's seed (drives the GameOver "Today's tower" section) |
 | `src/world` | ✓ | seeded procedural vertical generator, route difficulty profiles, certified golden-path parabolas. `crystalTier.ts` owns the crystal rarity tiers incl. the rare `treasure` jackpot (value/scale/altitude-ramped odds) |
 | `src/engine` | ✓ | fixed-timestep accumulator (`advance`/`createStepLoop`) — deterministic sim stepping |
@@ -48,8 +54,8 @@ public surface; modules stay small and single-responsibility — no monolithic s
 | `src/render/goo` | ✓ | CSG merge selection (`selectMerges`) and intrinsic body lobes feeding the three-bvh-csg goo union |
 | `src/render/vfx` | ✓ | goo splash/launch/trail droplet kinematics, splat, and the pure **scenery-reaction** helpers (`sceneryReaction` proximity lean/pop, `flybyPeaked`/`stepFlybyPulse` flyby-pulse envelope, `glintEmissive` glint) that drive the near parallax props |
 | `src/state` | ✓ | game store (menu/playing/gameover), settings, persistence; imperative bridges read each frame by the scene — `launchBridge` (launch/nudge/teleport requests), `crystalCollectBridge` (collected-crystal indices, so TreasureChests drops a gathered treasure's chest), diagnostics, flash, achievement-toast |
-| `src/platform` | ✓ | Capacitor haptics/orientation/keep-awake/preferences wrappers (web fallbacks) |
-| `src/input` | ✓ | @use-gesture unified pointer/touch + keyboard → intents |
+| `src/platform` | ✓ | Capacitor haptics/orientation/keep-awake/preferences wrappers (web fallbacks); `scale.ts` `deviceScale()` classifies phone/tablet/desktop from viewport min-dim + pointer type → `--ui-scale`. Phones scale the HUD DOWN (≤1) on the smallest screens so the corner readouts never grow into the play area — tap-target ergonomics come from per-component min sizes, NOT a global upscale |
+| `src/input` | ✓ | @use-gesture unified pointer/touch + keyboard → intents. `steerConfigForViewport(minDim)` makes the air-steer drag thresholds viewport-relative (a full lean is the same SHARE of the screen on every device; the `maxAirAccel` cap stays fixed so the climb-reach budget is unchanged) |
 | `src/styles` | — | tokens.css / tokens.ts / fonts.css / index.css |
 | `src/lib` | ✓ | framework-agnostic utils (cn lives here) |
 
@@ -58,11 +64,11 @@ public surface; modules stay small and single-responsibility — no monolithic s
 | Package | Barrel | Responsibility |
 |---------|--------|----------------|
 | `app/scene` | ✓ | composes small scene components inside `<Canvas>` |
-| `app/scene/blob` | ✓ | `<PlayerBlob>` (Rapier body + diagnostics bridge), `<GooCsg>` (three-bvh-csg merged goo), `<BlobActor>` (menu hero), `<BlobEyes>`, `<SplatChunks>`, `<TrajectoryPreview>` |
+| `app/scene/blob` | ✓ | `<PlayerBlob>` (Rapier body + diagnostics bridge), `<GooCsg>` (three-bvh-csg merged goo), `<BlobActor>` (game-over hero — the menu is a separate DOM page, so this no longer renders on the menu), `<AirAimPreview>` (live predicted-trajectory tube while airborne + steering), `<BlobEyes>`, `<SplatChunks>`, `<TrajectoryPreview>` (grounded charge aim arc) |
 | `app/scene/trampoline` | ✓ | cloud-pad renderer behind compatibility `<Trampoline>`, `<TrampolineField>` imports |
 | `app/scene/world` | ✓ | `<SkyDome>`, `<Lighting>`, `<BiomeGeometry>`, `<BiomeProps>` (procedural strata: clouds/stars + per-band particle motes), `<BiomeScenicProps>` (registry-driven GLB scenery across far/mid/near + **landmark parallax depth layers** per biome band; the NEAR props react to the blob — lean/pop/flyby-pulse/glint — via the `src/render/vfx` scenery-reaction helpers, and the landmark layer renders one per-band hero monument), `<CrystalField>` (instanced tiered crystals incl. treasure), `<TreasureChests>` (chest GLB beneath rare treasure gems), `<PowerUpField>`, `<RouteGateField>`, `<GoldenRoutePreview>`, `<LaunchRing>`, `<BlobFollowLight>`, `<BlobShadow>`, `<BlobCaustic>` (the full set exported from `app/scene/world/index.ts`) |
 | `app/scene/postfx` | ✓ | `<PostFX>` (N8AO ambient occlusion, bloom, vignette, speed-reactive chromatic) |
-| `app/views` | ✓ | DOM overlay: `<HudOverlay>`, `<MainMenu>`, `<GameOver>`, modals |
+| `app/views` | ✓ | `<LandingPage>` (the menu as its OWN pure-DOM page — owns the purple `--bg` + DOM hero blob + `<TitleScreen>`, mounts NO canvas; `app/Game.tsx` renders it on `phase==="menu"`), `<HudOverlay>` (in-run DOM overlay), `<GameOver>`, `<DevHarness>` (dev-only, Game.tsx top level), modals |
 | `app/components/ui` | ✓ | shadcn primitives (button, dialog, slider, switch, tabs, tooltip, progress) |
 | `app/hooks` | ✓ | React glue hooks (useGameLoop, useInput, useHaptics) |
 | `app/fixtures` | ✓ | `<FixtureStage>` isolated render harness for visual tests |
