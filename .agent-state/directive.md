@@ -1504,6 +1504,19 @@ aim." Both are viewport-scaling bugs, confirmed on a small Google phone + older 
       clamp tracks maxSteerDist (kills the old 42-vs-90 mismatch). maxAirAccel CAP fixed (reach
       invariant). Tested in intents.test.ts.
 
+### N36 cutting point — PR for the landing-page + aim overhaul
+- [x] All of N36 (A/B/C) shipped on feat/landing-page-and-predictive-steering (3 commits): menu is
+      its own page (LandingPage, no canvas) owning the designed purple; predictive AirAimPreview
+      arc + reachability-safe lateral settle (shouldSettleLateral gated on steeredThisFlight);
+      deviceScale no longer upscales the HUD on small phones; air-steer is viewport-relative
+      (steerConfigForViewport). Local review folded forward (DevHarness hoist, settle scope, arc
+      throttle, projection step). 585 unit + 165 browser green; typecheck + pinned lint clean.
+- Forward sweep: open the PR, babysit CI + CodeRabbit to a clean squash-merge. The in-game HUD look
+  on a real small phone is the one thing to confirm on-device (headless rAF-gating blocks live
+  in-run QA here — see [[blobolines-headless-raf-gating]]); the device-scale + viewport-aim math is
+  unit-covered. Next survey candidate after merge: a genuine NEW gap, not more of the saturated
+  systems (see prior forward sweep).
+
 ## Notes
 - This is a living plan. After every stage, backward+forward sweep and edit the queue.
 - Next candidate milestones (surface, don't pre-commit): a new pad-type behaviour, a cosmetic trail,
