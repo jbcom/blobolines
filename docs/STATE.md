@@ -1,6 +1,6 @@
 ---
 title: State
-updated: 2026-06-20
+updated: 2026-06-23
 status: current
 domain: context
 ---
@@ -24,6 +24,19 @@ leaderboard + achievements gallery, and real-time air-nudge + achievement toasts
 
 ## Recently shipped (biome + progression richness)
 
+- **Menu is its own page (#109)** — `app/Game.tsx` renders a pure-DOM `<LandingPage>` on the menu
+  phase (its own purple `--bg`, a breathing DOM hero blob, no WebGL); the game canvas + scene + HUD
+  mount only in a run. The menu now owns its background (no longer painted over by the in-game sky)
+  and costs nothing on a low-end phone.
+- **Predictive mid-air aim arc (#109)** — `<AirAimPreview>` draws a live tube of the blob's
+  predicted path (`src/sim/trajectory.projectTrajectory`: current velocity + steering accel +
+  gravity) while airborne and steering, so flight corrections are aimed, not guessed.
+- **Hands-off lateral settle (#109)** — released air-steer drift gently converges (so the arc eases
+  back to center) via a settle gated on `shouldSettleLateral` — a never-steered ballistic hop keeps
+  its full launch travel, so the climb-reach proof stays intact.
+- **Small-phone scaling fixes (#109)** — air-steer drag thresholds are now viewport-relative
+  (`steerConfigForViewport`), and `deviceScale()` no longer enlarges the HUD on small phones (≤1),
+  so the readouts stop occluding the play area and aiming is proportional on every screen.
 - **Biome identity across four sensory dimensions**, all keyed off the canonical biome bands
   (`src/config/biomes.ts` → `biomeBandAt`): data-driven per-band scenery props
   (`biomePropRegistry`, **6 props/band**), **parallax depth layers** (far/mid/near + a sparse

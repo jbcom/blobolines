@@ -1,6 +1,6 @@
 ---
 title: Game Design
-updated: 2026-06-20
+updated: 2026-06-23
 status: current
 domain: product
 ---
@@ -18,7 +18,12 @@ the harder it gets — smaller clouds, faster layers, trickier cloud types, long
 
 1. The blob rests in a cloud pad.
 2. **Hold on Blobby** to charge the route launch (a power meter fills); **release** to fly.
-3. In the air, **drag** to steer in 3D (left/right = world X, forward/back = world Z).
+3. In the air, **drag** to steer in 3D (left/right = world X, forward/back = world Z). A live
+   **trajectory arc** previews where the blob is heading under your current steering, so you aim
+   deliberately rather than by feel. The drag distance for a full lean scales with the screen
+   (viewport-relative), so aiming feels the same on a small phone as on a tablet. When you let go,
+   the lateral drift gently **settles** so the arc eases back toward center instead of coasting —
+   but a hop you never steer keeps its full launched trajectory (the climb stays reachable).
 4. Descend into a higher cloud — it adheres to Blobby, lets him puddle into the puff, and
    clean catches build your **combo** multiplier, which boosts launch power.
 5. Climb. The **altimeter** tracks your height; the **next-pad radar** points toward the
@@ -109,6 +114,9 @@ precision instead of removing the readable route instrument. Player-facing guida
 - the next-pad radar, which gives direction/distance without naming the exact catch point
 - a live aim preview while charging: every difficulty shows the dotted launch arc plus a
   pulsing endpoint reticle at the descending height crossing
+- a live **mid-air trajectory arc** while steering in flight (distinct from the grounded charge
+  arc): a soft tube traces the predicted path from the blob's current velocity + steering
+  acceleration, rebuilt ~20Hz, so late-flight corrections are aimed rather than guessed
 - Blobby himself: while charging, his eyes, mouth, and goo body bead toward the selected launch
   direction, so expert modes still get character-readable intent without a drawn route
 - a short route-quality toast after each certified landing (`Perfect route`, `Great route`,

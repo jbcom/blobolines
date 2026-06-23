@@ -1,6 +1,6 @@
 ---
 title: Testing
-updated: 2026-06-18
+updated: 2026-06-23
 status: current
 domain: quality
 ---
@@ -18,6 +18,12 @@ Lives next to the code in `__tests__/`. `app/scene/blob/__tests__/TrajectoryPrev
 locks the always-visible route parabola and endpoint reticle across every active tier.
 `src/sim/blob/__tests__/blob.test.ts` locks the first-pad idle rule: visual impatience can
 accumulate before player control, while waiting on a pad never launches for the player.
+`src/sim/trajectory/__tests__/trajectory.test.ts` locks the predicted-path projection
+(`projectTrajectory` rises/falls/bends-with-steer, clamps degenerate options) and the
+`shouldSettleLateral` invariant (settle engages ONLY hands-off-after-steering, so a ballistic
+certified hop keeps its launch travel — the climb-reach guarantee). `src/input/__tests__/intents.test.ts`
+covers `steerConfigForViewport` (viewport-relative drag thresholds, cap unchanged), and
+`src/platform/__tests__/scale.test.ts` locks that phones never scale the HUD above baseline.
 
 ## Browser fixtures — `pnpm test:browser` (Vitest browser mode, real Chromium + WebGL)
 
@@ -37,6 +43,10 @@ Render regressions that only a real GPU context catches:
   portals and slicers render in WebGL and report gameplay hit metadata
 - `app/views/hud/__tests__/LaunchInput.browser.test.tsx` — launch surface, keyboard
   steering, and air-steer reticle behavior
+- `app/scene/blob/__tests__/AirAimPreview.fixture.test.tsx` — the live mid-air predicted
+  trajectory tube renders in WebGL while airborne + steering
+- `app/views/__tests__/LandingPage.browser.test.tsx` — the menu page hosts the Play CTA and
+  owns its purple backdrop with NO canvas mounted (locks the menu-as-own-page contract)
 - `app/views/hud/__tests__/NextPadRadar.browser.test.tsx` — next-target direction,
   vertical gap, distance, and hidden state when no target exists
 - `app/views/hud/__tests__/DifficultyMeter.browser.test.tsx` — active difficulty tier,

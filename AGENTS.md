@@ -27,6 +27,8 @@ fun game.
   materials/vfx/goo, state, content. Each subpackage has a barrel `index.ts`.
 - `app/` = React entry, R3F `<Canvas>` scene (`app/scene/**`), DOM UI overlay
   (`app/views/**`, shadcn + Motion).
+- **Menu is a page, not a phase overlay:** `app/Game.tsx` renders a pure-DOM `<LandingPage>` on
+  `phase==="menu"` (no canvas); the `<Canvas>` + `GameScene` + `<HudOverlay>` mount only in a run.
 - **Boundaries:** `src/sim`/`src/engine` are pure (no DOM/three; no `Math.random()` →
   `createRng`; no `performance.now()` → clock facade). UI ↔ game only through the store
   bridge (`src/state`) — UI never touches three objects.
