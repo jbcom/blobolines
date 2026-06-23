@@ -46,47 +46,50 @@ export function Game() {
   // daylight sky, and a low-end phone pays no renderer cost while sitting in the menu. The heavy
   // game page (canvas + GameScene + HUD) mounts only once a run is entered.
   const isMenu = useGameStore((s) => s.phase === "menu");
-  if (isMenu) {
-    return (
-      <div className="relative h-full w-full overflow-hidden">
-        <LandingPage />
-        {/* Dev tools must reach the menu too (force a run / teleport), and they're dev-only. */}
-        <DevHarness />
-      </div>
-    );
-  }
   return (
     <div className="relative h-full w-full overflow-hidden">
-      <Canvas
-        className="absolute inset-0"
-        dpr={[1, quality.maxDpr]}
-        gl={{
-          antialias: quality.antialias,
-          powerPreference: "high-performance",
-          // ACES filmic tonemapping rolls the wet-goo highlights + neon-soft pads off
-          // gracefully instead of clipping to flat white (the old matte look was partly
-          // unmanaged HDR). Slightly lifted exposure keeps the daytime palette bright.
-          toneMapping: ACESFilmicToneMapping,
-          toneMappingExposure: 1.1,
-          // preserveDrawingBuffer is only needed so the dev harness can read the canvas
-          // via toDataURL(); it carries a real mobile perf cost, so keep it OUT of prod.
-          preserveDrawingBuffer: import.meta.env.DEV,
-        }}
-        // far was 200 — too tight: clipped the sky dome (scale 150) and high biome strata
-        // (to ~1400m), so the world vanished as the blob climbed. Pushed out to 2000.
-        camera={{ position: [0, 6, 12], fov: 60, near: 0.1, far: 2000 }}
-        onCreated={handleCanvasCreated}
-        // The 3D scene conveys nothing actionable a screen reader can't get from the DOM
-        // HUD; hide it so AT users don't hit an empty, unlabeled focus stop / "graphic".
-        aria-hidden
-        tabIndex={-1}
-      >
-        <GameScene />
-      </Canvas>
+      {isMenu ? (
+        // Menu page: pure DOM, owns its purple `--bg`, mounts no WebGL or game world.
+        <LandingPage />
+      ) : (
+        // Game page: the WebGL canvas + game world + in-game HUD, mounted only in a run.
+        <>
+          <Canvas
+            className="absolute inset-0"
+            dpr={[1, quality.maxDpr]}
+            gl={{
+              antialias: quality.antialias,
+              powerPreference: "high-performance",
+              // ACES filmic tonemapping rolls the wet-goo highlights + neon-soft pads off
+              // gracefully instead of clipping to flat white (the old matte look was partly
+              // unmanaged HDR). Slightly lifted exposure keeps the daytime palette bright.
+              toneMapping: ACESFilmicToneMapping,
+              toneMappingExposure: 1.1,
+              // preserveDrawingBuffer is only needed so the dev harness can read the canvas
+              // via toDataURL(); it carries a real mobile perf cost, so keep it OUT of prod.
+              preserveDrawingBuffer: import.meta.env.DEV,
+            }}
+            // far was 200 — too tight: clipped the sky dome (scale 150) and high biome strata
+            // (to ~1400m), so the world vanished as the blob climbed. Pushed out to 2000.
+            camera={{ position: [0, 6, 12], fov: 60, near: 0.1, far: 2000 }}
+            onCreated={handleCanvasCreated}
+            // The 3D scene conveys nothing actionable a screen reader can't get from the DOM
+            // HUD; hide it so AT users don't hit an empty, unlabeled focus stop / "graphic".
+            aria-hidden
+            tabIndex={-1}
+          >
+            <GameScene />
+          </Canvas>
 
-      <div className="pointer-events-none absolute inset-0 z-hud">
-        <HudOverlay />
-      </div>
+          <div className="pointer-events-none absolute inset-0 z-hud">
+            <HudOverlay />
+          </div>
+        </>
+      )}
+      {/* DevHarness is dev-only (self-gates) and must reach EVERY phase — it's how the Playwright
+          e2e bridge + in-run teleport/screenshot QA drive an active run, so it sits OUTSIDE the
+          page branch (regression guard: it must not vanish the moment a run starts). */}
+      <DevHarness />
     </div>
   );
 }

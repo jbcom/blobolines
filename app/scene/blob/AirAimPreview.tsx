@@ -9,21 +9,25 @@ import { palette } from "@/styles/tokens";
 /**
  * The mid-air AIM ARC — a live predicted trajectory so the player can READ where the blob is
  * heading (their words: "the point of the arc is you should be able to know from the arc where it
- * is heading"). Every frame it forward-integrates the blob's current position + velocity under
- * gravity plus the steering accel the player is applying, and draws that exact path as a soft tube.
- * What you see is what the physics will do — not an abstract drag indicator.
+ * is heading"). It forward-integrates the blob's current position + velocity under gravity plus the
+ * steering accel the player is applying, and draws that path as a soft tube — a close prediction of
+ * the body's motion (same model as PlayerBlob's air step; the fixed integration step is a coarser
+ * approximation of the variable frame dt, so it reads as a guide, not a frame-exact replay).
  *
  * Only shown while airborne and actively steering (a held drag), so it appears the instant you take
  * mid-air control and clears when you let go. Pure read of the diagnostics/steer bridges — never
- * touches the body.
+ * touches the body. The geometry rebuild is throttled (~20Hz) so a held steer doesn't allocate a
+ * fresh TubeGeometry every frame on a mid-tier phone — the path moves slowly enough to read smooth.
  */
 const RADIUS = 0.06;
 const MIN_POINTS = 3;
+const REBUILD_INTERVAL = 1 / 20; // seconds between geometry rebuilds while steering
 
 export function AirAimPreview() {
   const meshRef = useRef<Mesh>(null);
+  const lastBuild = useRef(-1);
 
-  useFrame(() => {
+  useFrame((state) => {
     const mesh = meshRef.current;
     if (!mesh) return;
     const diag = getBlobDiagnostics();
@@ -35,6 +39,12 @@ export function AirAimPreview() {
       return;
     }
 
+    // Throttle the (allocating) geometry rebuild; the tube stays visible between rebuilds.
+    mesh.visible = true;
+    const now = state.clock.elapsedTime;
+    if (now - lastBuild.current < REBUILD_INTERVAL) return;
+    lastBuild.current = now;
+
     const samples = projectTrajectory(
       {
         position: diag.position,
@@ -42,7 +52,7 @@ export function AirAimPreview() {
         steer: [sx, sz],
         gravity: GRAVITY,
       },
-      { step: 0.05, maxPoints: 56, maxDrop: 40 },
+      { step: 0.02, maxPoints: 96, maxDrop: 40 },
     );
     if (samples.length < MIN_POINTS) {
       mesh.visible = false;
@@ -55,7 +65,6 @@ export function AirAimPreview() {
     const previous = mesh.geometry;
     mesh.geometry = next;
     previous.dispose();
-    mesh.visible = true;
   });
 
   return (

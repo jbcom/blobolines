@@ -35,6 +35,17 @@ export interface TrajectoryOptions {
  * it has fallen `maxDrop` below the launch height or hits `maxPoints` — enough to read the apex and
  * the descending side toward the next pad without projecting an endless fall.
  */
+/**
+ * Whether the mid-air lateral SETTLE should engage this frame. The settle tidies steering-induced
+ * drift so the arc can ease back to the middle of its range — but it must NOT bleed the lateral
+ * travel of a purely BALLISTIC certified hop, or a hands-off flat-pad offset launch could undershoot
+ * its target (breaking the climb-reach guarantee in src/world/reachable). So it engages only when
+ * the player is hands-off NOW *and* has steered at least once during the current flight.
+ */
+export function shouldSettleLateral(steeringNow: boolean, steeredThisFlight: boolean): boolean {
+  return !steeringNow && steeredThisFlight;
+}
+
 export function projectTrajectory(
   input: TrajectoryInput,
   options: TrajectoryOptions = {},

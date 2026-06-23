@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { projectTrajectory } from "../trajectory";
+import { projectTrajectory, shouldSettleLateral } from "../trajectory";
 
 const G: [number, number, number] = [0, -30, 0];
 
@@ -68,5 +68,23 @@ describe("projectTrajectory", () => {
       { maxPoints: 20, maxDrop: 100000 },
     );
     expect(pts.length).toBeLessThanOrEqual(20);
+  });
+});
+
+describe("shouldSettleLateral", () => {
+  // The settle must NEVER engage on a purely ballistic hop (launched, never steered) — that would
+  // bleed the certified launch's lateral travel and could undershoot a flat-pad offset target,
+  // breaking the climb-reach guarantee. It engages ONLY when hands-off AND the player has steered.
+  it("does NOT settle a ballistic hop that has never been steered (reachability-safe)", () => {
+    expect(shouldSettleLateral(false, false)).toBe(false);
+  });
+
+  it("does NOT settle while the player is actively steering (full steer authority preserved)", () => {
+    expect(shouldSettleLateral(true, true)).toBe(false);
+    expect(shouldSettleLateral(true, false)).toBe(false);
+  });
+
+  it("settles ONLY when hands-off after having steered this flight (tidies steering drift)", () => {
+    expect(shouldSettleLateral(false, true)).toBe(true);
   });
 });
