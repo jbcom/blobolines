@@ -83,6 +83,12 @@ function celebrateHaptic(): void {
   if (useGameStore.getState().settings.haptics) void notify(NotificationType.Success);
 }
 
+/** Per-second decay applied to LATERAL velocity only while the player is NOT air-steering, so the
+ *  blob's sideways drift settles to a glide instead of coasting forever. Mild (a soft ease, not a
+ *  brake) and hands-off-only, so it never reduces the in-flight steer authority the climb-reach
+ *  proof relies on (src/world/reachable ½·a·t²). Vertical velocity is never touched. */
+const LATERAL_SETTLE_PER_SEC = 3.5;
+
 export function PlayerBlob() {
   const bodyRef = useRef<RapierRigidBody>(null);
   const skin = useGameStore((s) => s.progress.skin);
@@ -207,13 +213,33 @@ export function PlayerBlob() {
       sx *= 2.5;
       sz *= 2.5;
     }
-    if (sx !== 0 || sz !== 0) playerControlStarted.current = true;
+    const steering = sx !== 0 || sz !== 0;
+    if (steering) playerControlStarted.current = true;
     const [wx, wz] = windAt(p.y, time);
     const down = downdraftAt(p.y, time);
     const liveV = body.linvel();
-    if (sx !== 0 || sz !== 0 || wx !== 0 || wz !== 0 || down !== 0) {
+    let nextVx = liveV.x;
+    let nextVz = liveV.z;
+    // SETTLE: when the player is NOT steering, gently bleed the lateral DRIFT so the blob converges
+    // instead of coasting forever — this is what makes "ease the arc back to the middle of its
+    // range" possible (the open-loop accelerator never settled on its own). It runs only while
+    // hands-off, so it never eats the steer authority the climb proof counts on (reachable.ts
+    // ½·a·t²); the active-steer accel below is unchanged. ~3.5/s decay = a soft glide, not a brake.
+    if (!steering) {
+      const settle = Math.max(0, 1 - LATERAL_SETTLE_PER_SEC * dt);
+      nextVx *= settle;
+      nextVz *= settle;
+    }
+    if (
+      steering ||
+      wx !== 0 ||
+      wz !== 0 ||
+      down !== 0 ||
+      nextVx !== liveV.x ||
+      nextVz !== liveV.z
+    ) {
       body.setLinvel(
-        { x: liveV.x + (sx + wx) * dt, y: liveV.y - down * dt, z: liveV.z + (sz + wz) * dt },
+        { x: nextVx + (sx + wx) * dt, y: liveV.y - down * dt, z: nextVz + (sz + wz) * dt },
         true,
       );
     }

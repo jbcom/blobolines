@@ -24,14 +24,19 @@ export interface ViewportInfo {
 
 /**
  * Pure: classify the device + pick a UI scale from viewport min-dimension + pointer type.
- * Phones (narrow, touch) get a slightly LARGER UI so tap targets/readouts stay legible at
- * arm's length; tablets baseline; desktop (fine pointer, wide) baseline with a tiny bump on
- * very large screens so the HUD doesn't look lost.
+ *
+ * CRITICAL: on a PHONE the HUD must never grow into the (already tiny) play area. A small touch
+ * screen is where screen real estate is scarcest — scaling the readouts UP there is exactly
+ * backwards (it made "all the info rectangles cover the screen" on small phones). So phones scale
+ * DOWN a touch on the smallest screens and sit at baseline otherwise; thumb-sized tap targets come
+ * from per-component min sizes, NOT a global upscale. Tablets baseline; desktop baseline with a
+ * gentle bump on very large screens so the HUD doesn't look lost.
  */
 export function deviceScale({ minDim, coarsePointer }: ViewportInfo): DeviceScale {
   if (coarsePointer && minDim < 600) {
-    // Phone: scale up a touch on the smallest screens so controls stay thumb-sized.
-    const s = minDim < 380 ? 1.18 : 1.1;
+    // Phone: the smallest screens scale the HUD slightly DOWN so the readouts keep clear of the
+    // play area; mid phones stay at baseline. Never above 1 — the play area comes first.
+    const s = minDim < 380 ? 0.92 : 1;
     return { deviceClass: "phone", scale: s };
   }
   if (coarsePointer && minDim < 1024) {

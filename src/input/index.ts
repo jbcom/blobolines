@@ -14,4 +14,5 @@ export {
   keyboardSteer,
   ROUTE_AIM_Z_SCALE,
   type SteerConfig,
+  steerConfigForViewport,
 } from "./intents";

@@ -1479,20 +1479,30 @@ User play-test (2026-06-23) surfaced three real defects on real hardware:
       boundary. Bonus: old phones pay no WebGL cost on the menu. See [[blobolines-airsteer-is-open-loop-accel]].
 
 ### N36-B Mid-air steering arc must PREDICT where the blob is heading
-- [ ] N36-B1: air-steer is open-loop accel (computeAirSteer→ v+=a·dt, no target, ~0 damping) so it
-      overshoots and never settles, and the reticle is an abstract drag-dot disconnected from the
-      real path. User: "the point of the arc is you should be able to know from the arc where it is
-      heading." Make the arc a REAL forward-integrated trajectory projection (current velocity +
-      steering accel, the same ½at² the reach proof uses) so what you see = where you land. Add a
-      gentle lateral settling so neutral drag converges. Keep the maxAirAccel cap →
-      [[blobolines-reachability-invariant]] intact. Drop the color-by-momentum idea (user rejected:
-      predictability over flash). Tests: intents.test.ts + reach proof + projection fixture.
+- [x] N36-B1: air-steer was open-loop accel (overshoot, never settled) + an abstract drag-dot.
+      Fixed: (1) new src/sim/trajectory projectTrajectory() forward-integrates the blob's current
+      vel + steer accel + gravity; AirAimPreview (app/scene/blob) draws that exact path as a tube
+      while airborne+steering → the arc now shows where the blob is heading. (2) gentle lateral
+      SETTLE in PlayerBlob.stepHazards (LATERAL_SETTLE_PER_SEC=3.5, hands-off only) so drift
+      converges — never touches active-steer authority or vertical vel, so reach proof
+      ([[blobolines-reachability-invariant]]) holds. maxAirAccel cap unchanged. Color-by-momentum
+      dropped per user. 582 unit + 165 browser green (incl trajectory + AirAimPreview fixture).
 
-### N36-C Small/older iPhone — HUD info rectangles occlude gameplay
-- [ ] N36-C1: "all the information rectangles remain on screen, cannot really see much" on an older
-      iPhone. HUD panels don't collapse/reflow on short viewports. Add a compact responsive HUD
-      (safe-area-aware, Pixel-5a/older-iPhone class per mobile-android profile) so panels shrink or
-      tuck and never cover the play area.
+### N36-C Small phones — device-scale is BACKWARDS + aim px thresholds are fixed
+Root cause found (see [[blobolines-device-scale-backwards-on-small-phones]]): `deviceScale()`
+(src/platform/scale.ts) scales the HUD UP 1.18× on the SMALLEST screens, so the corner readouts
+(each `transform: scale(var(--ui-scale))`) occlude the tiny play area — "info rectangles remain on
+screen, cannot see much." AND air-steer/launch use FIXED px thresholds (maxSteerDist=90, deadzone=8,
+reticle 42) so a 90px full-steer drag is a huge fraction of a 360px phone — "almost impossible to
+aim." Both are viewport-scaling bugs, confirmed on a small Google phone + older iPhone (2026-06-23).
+- [x] N36-C1 (done in C-prep): root-caused; menu page split already removes the menu's WebGL cost.
+- [x] N36-C2: fixed deviceScale() — phones now scale the HUD DOWN (0.92) on the smallest screens
+      and baseline (1.0) otherwise; NEVER above 1, so the corner readouts can't grow into the play
+      area. Unit tests updated (small-minDim cases assert ≤1).
+- [x] N36-C3: air-steer is now VIEWPORT-RELATIVE — steerConfigForViewport(minDim) scales the px
+      drag thresholds to a fraction of min-dim (clamped 48–160px), wired into LaunchInput; reticle
+      clamp tracks maxSteerDist (kills the old 42-vs-90 mismatch). maxAirAccel CAP fixed (reach
+      invariant). Tested in intents.test.ts.
 
 ## Notes
 - This is a living plan. After every stage, backward+forward sweep and edit the queue.

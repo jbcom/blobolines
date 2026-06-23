@@ -3,6 +3,7 @@ import { Suspense } from "react";
 import { GRAVITY } from "@/sim/physics";
 import { useGameStore } from "@/state";
 import {
+  AirAimPreview,
   BlobActor,
   BlobTrail,
   PhysicsStepDriver,
@@ -91,6 +92,9 @@ export function GameScene() {
       {active && <BlobTrail skin={skin} />}
       {active && <SplitBlobEchoes skin={skin} />}
       {active && <TrajectoryPreview />}
+      {/* Mid-air aim arc: the live predicted path while steering, so the player can read where the
+          blob is heading (complements TrajectoryPreview, which is the grounded charge aim line). */}
+      {active && <AirAimPreview />}
       {active && <GoldenRoutePreview />}
 
       <PostFX playing={playing} />

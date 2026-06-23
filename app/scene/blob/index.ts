@@ -1,3 +1,4 @@
+export { AirAimPreview } from "./AirAimPreview";
 export { BlobActor } from "./BlobActor";
 export { BlobEyes } from "./BlobEyes";
 export { BlobMouth } from "./BlobMouth";

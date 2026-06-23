@@ -1,7 +1,12 @@
 import { useKeyboardSteer } from "@app/hooks";
 import { AnimatePresence, motion, useMotionValue, useReducedMotion, useSpring } from "motion/react";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { computeAirSteer, computeGroundedRouteCharge, computeRouteAim } from "@/input";
+import {
+  computeAirSteer,
+  computeGroundedRouteCharge,
+  computeRouteAim,
+  steerConfigForViewport,
+} from "@/input";
 import { isPerfectRelease } from "@/sim/launch";
 import type { LaunchRequest } from "@/state";
 import {
@@ -250,12 +255,16 @@ export function LaunchInput() {
         hideAirReticle();
         return;
       }
-      // Mid-air 3D steering: drag → continuous lateral force; release → stop.
+      // Mid-air 3D steering: drag → continuous lateral force; release → stop. The drag→accel ramp
+      // is VIEWPORT-RELATIVE (steerConfigForViewport): a full lean is the same SHARE of the screen
+      // on every device, so a 360px phone isn't asking for a 90px drag it can barely make. The
+      // reticle clamp tracks the SAME maxSteerDist so what you see matches the physics ramp.
       if (down) {
-        const [sx, sz] = computeAirSteer(mx, my);
+        const steerCfg = steerConfigForViewport(Math.min(window.innerWidth, window.innerHeight));
+        const [sx, sz] = computeAirSteer(mx, my, steerCfg);
         setAirSteer(sx, sz);
         const dist = Math.hypot(mx, my);
-        const maxOffset = 42;
+        const maxOffset = steerCfg.maxSteerDist * 0.5;
         const k = dist > maxOffset ? maxOffset / dist : 1;
         showAirReticle(gesture.current.startX, gesture.current.startY, mx * k, my * k);
       } else {
