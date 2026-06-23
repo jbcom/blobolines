@@ -50,9 +50,12 @@ export function projectTrajectory(
   input: TrajectoryInput,
   options: TrajectoryOptions = {},
 ): Array<[number, number, number]> {
-  const step = options.step ?? 0.05;
-  const maxPoints = options.maxPoints ?? 64;
-  const maxDrop = options.maxDrop ?? 60;
+  // Clamp degenerate options so a bad step/cap can never produce a runaway loop or violate the
+  // documented point-cap (step ≤ 0 would never advance; maxPoints < 1 would skip even the start).
+  const rawStep = options.step ?? 0.05;
+  const step = rawStep > 0 ? rawStep : 0.05;
+  const maxPoints = Math.max(1, Math.floor(options.maxPoints ?? 64));
+  const maxDrop = Math.max(0, options.maxDrop ?? 60);
 
   const [gx, gy, gz] = input.gravity;
   const [sx, sz] = input.steer;

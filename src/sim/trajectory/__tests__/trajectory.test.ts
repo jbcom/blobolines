@@ -69,6 +69,24 @@ describe("projectTrajectory", () => {
     );
     expect(pts.length).toBeLessThanOrEqual(20);
   });
+
+  it("clamps degenerate options instead of producing runaway/empty output", () => {
+    // step <= 0 would never advance the integration → falls back to the default step.
+    const zeroStep = projectTrajectory(
+      { position: [0, 0, 0], velocity: [0, 20, 0], steer: [0, 0], gravity: G },
+      { step: 0, maxDrop: 5 },
+    );
+    expect(zeroStep.length).toBeGreaterThan(1);
+    expect(zeroStep[1][1]).not.toBe(0); // it actually moved (default step kicked in)
+
+    // maxPoints < 1 still yields at least the start point, never a runaway or empty array.
+    const tinyCap = projectTrajectory(
+      { position: [1, 2, 3], velocity: [0, 20, 0], steer: [0, 0], gravity: G },
+      { maxPoints: 0 },
+    );
+    expect(tinyCap.length).toBeGreaterThanOrEqual(1);
+    expect(tinyCap[0]).toEqual([1, 2, 3]);
+  });
 });
 
 describe("shouldSettleLateral", () => {
