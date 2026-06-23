@@ -172,6 +172,32 @@ export const DEFAULT_STEER: SteerConfig = {
   responseCurve: 1.7,
 };
 
+/** Viewport min-dimension the DEFAULT_STEER px thresholds were authored against (a ~tablet). */
+const STEER_REFERENCE_MIN_DIM = 820;
+/** Full-steer drag as a FRACTION of the viewport min-dimension — the source of truth for the
+ *  screen-relative ramp (≈ 90px on the 820px reference). On a 360px phone this is ~40px, so a
+ *  full lean is the same SHARE of the screen everywhere instead of a fixed px count that's huge
+ *  on a small phone. */
+const STEER_FULL_FRACTION = DEFAULT_STEER.maxSteerDist / STEER_REFERENCE_MIN_DIM;
+const STEER_DEADZONE_FRACTION = DEFAULT_STEER.deadzone / STEER_REFERENCE_MIN_DIM;
+
+/**
+ * Resolve a SteerConfig whose pixel thresholds (maxSteerDist, deadzone) scale with the viewport
+ * min-dimension, so the drag distance for a full lean is the same SHARE of the screen on every
+ * device. The accel CAP and response curve are unchanged — only the px→[0,1] normalization moves,
+ * so the climb-reachability budget (src/world/reachable) is untouched. Clamped so a tiny window
+ * never makes steering hair-trigger and a huge one never makes it unreachably long.
+ */
+export function steerConfigForViewport(
+  minDim: number,
+  base: SteerConfig = DEFAULT_STEER,
+): SteerConfig {
+  const dim = Number.isFinite(minDim) && minDim > 0 ? minDim : STEER_REFERENCE_MIN_DIM;
+  const maxSteerDist = Math.max(48, Math.min(160, dim * STEER_FULL_FRACTION));
+  const deadzone = Math.max(4, Math.min(16, dim * STEER_DEADZONE_FRACTION));
+  return { ...base, maxSteerDist, deadzone };
+}
+
 /**
  * Air-steer: drag (dx,dy) → a lateral ACCELERATION on the world X (left/right) and Z
  * (fwd/back) axes (integrated by PlayerBlob as v += steer·dt). Drag up = forward (-Z),

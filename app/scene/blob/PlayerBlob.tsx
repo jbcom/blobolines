@@ -30,6 +30,7 @@ import {
   WORLD_BOUND_XZ,
 } from "@/sim/physics";
 import { goldenPathLandingBonus, goldenPathLandingQuality } from "@/sim/score";
+import { shouldSettleLateral } from "@/sim/trajectory";
 import {
   type CloudAdherenceRequest,
   consumeAirNudge,
@@ -83,6 +84,12 @@ function celebrateHaptic(): void {
   if (useGameStore.getState().settings.haptics) void notify(NotificationType.Success);
 }
 
+/** Per-second decay applied to LATERAL velocity only while the player is NOT air-steering, so the
+ *  blob's sideways drift settles to a glide instead of coasting forever. Mild (a soft ease, not a
+ *  brake) and hands-off-only, so it never reduces the in-flight steer authority the climb-reach
+ *  proof relies on (src/world/reachable ½·a·t²). Vertical velocity is never touched. */
+const LATERAL_SETTLE_PER_SEC = 3.5;
+
 export function PlayerBlob() {
   const bodyRef = useRef<RapierRigidBody>(null);
   const skin = useGameStore((s) => s.progress.skin);
@@ -135,6 +142,11 @@ export function PlayerBlob() {
   const bubbleRemaining = useRef(0);
   /** Whether the player has a mid-air redirect/nudge charge available to use. */
   const nudgeAvailable = useRef(true);
+  /** True once the player has air-steered during the CURRENT flight. Gates the lateral settle so a
+   *  purely ballistic (never-steered) hop keeps its certified launch travel intact — the settle
+   *  only tidies STEERING-induced drift, never the launch arc the reach proof relies on. Reset on
+   *  each launch and on landing so every new hop starts ballistic. */
+  const steeredThisFlight = useRef(false);
   /**
    * Dev-teleport bootstrap anchor. When a teleport places the body on a pad whose
    * Trampoline sensor may not yet be mounted (TrampolineField window is React state —
@@ -172,6 +184,7 @@ export function PlayerBlob() {
     playerControlStarted.current = false;
     bubbleRemaining.current = 0;
     nudgeAvailable.current = true;
+    steeredThisFlight.current = false;
     teleportAnchor.current = null;
     setBlobDiagnostics({
       position: [0, STARTER_BLOB_Y, 0],
@@ -207,13 +220,37 @@ export function PlayerBlob() {
       sx *= 2.5;
       sz *= 2.5;
     }
-    if (sx !== 0 || sz !== 0) playerControlStarted.current = true;
+    const steering = sx !== 0 || sz !== 0;
+    if (steering) {
+      playerControlStarted.current = true;
+      steeredThisFlight.current = true;
+    }
     const [wx, wz] = windAt(p.y, time);
     const down = downdraftAt(p.y, time);
     const liveV = body.linvel();
-    if (sx !== 0 || sz !== 0 || wx !== 0 || wz !== 0 || down !== 0) {
+    let nextVx = liveV.x;
+    let nextVz = liveV.z;
+    // SETTLE: when the player is NOT steering, gently bleed the STEERING-INDUCED lateral drift so
+    // the arc can ease back to the middle of its range (the open-loop accelerator never settled on
+    // its own). Gated on `steeredThisFlight` — a purely BALLISTIC hop (launched and never steered)
+    // keeps its lateral travel untouched, so the certified flat-pad offset reaches the climb proof
+    // guarantees (reachable.ts ½·a·t²) are never bled short. It also never runs while actively
+    // steering, and never touches vertical velocity. ~3.5/s = a soft glide, not a brake.
+    if (shouldSettleLateral(steering, steeredThisFlight.current)) {
+      const settle = Math.max(0, 1 - LATERAL_SETTLE_PER_SEC * dt);
+      nextVx *= settle;
+      nextVz *= settle;
+    }
+    if (
+      steering ||
+      wx !== 0 ||
+      wz !== 0 ||
+      down !== 0 ||
+      nextVx !== liveV.x ||
+      nextVz !== liveV.z
+    ) {
       body.setLinvel(
-        { x: liveV.x + (sx + wx) * dt, y: liveV.y - down * dt, z: liveV.z + (sz + wz) * dt },
+        { x: nextVx + (sx + wx) * dt, y: liveV.y - down * dt, z: nextVz + (sz + wz) * dt },
         true,
       );
     }
@@ -291,6 +328,7 @@ export function PlayerBlob() {
     const landed = consumeImpact();
     if (landed > 0) {
       nudgeAvailable.current = true;
+      steeredThisFlight.current = false; // a fresh hop starts ballistic — no carried steer drift
       const strength = Math.min(1, landed / MAX_IMPACT_SPEED);
       impact.current = strength;
       safeY.current = p.y;
@@ -612,6 +650,7 @@ export function PlayerBlob() {
         kind: "launch",
       });
       cloudCling.current.strength = 0;
+      steeredThisFlight.current = false; // new launch arc — settle stays off until the player steers
       teleportAnchor.current = null; // player launched — no longer resting on the teleport pad
       if (isPerfectRelease(req.charge)) {
         flash("gold", 1);

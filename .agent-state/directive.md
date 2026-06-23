@@ -1463,6 +1463,60 @@ drop most days). A 7-day daily-best trend in the Hall-of-Fame.
   genuinely NEW gap (a fresh gameplay/visual axis, an accessibility option, or a test/perf-quality
   pass) — NOT more of the saturated systems. Survey empirically; don't manufacture marginal churn.
 
+## Queue — N36 landing-as-its-own-page + predictive steering + small-phone HUD (user-reported)
+
+User play-test (2026-06-23) surfaced three real defects on real hardware:
+
+### N36-A Menu is a PHASE welded to the game canvas — promote it to its own PAGE
+- [x] N36-A1: `menu` renders inside HudOverlay on top of the ALWAYS-mounted `<Canvas>`/GameScene
+      (Game.tsx mounts the canvas unconditionally). So the landing page's DESIGNED purple
+      (`--bg:#2a1024` "deep berry-plum", tokens.css) is covered by the in-game daylight sky —
+      "starts purple then disappears immediately." Root cause is structural: the menu can't own
+      its background while fused to the game render tree. Split at the TOP level in Game.tsx:
+      `phase==="menu"` → `<LandingPage>` (DOM-only, owns the purple `--bg`, no WebGL, no game
+      world; carries TitleScreen + hero); everything else → game canvas + GameScene + HUD mounted
+      only in-run. `phase` keeps governing playing/paused/gameover; menu↔game becomes a PAGE
+      boundary. Bonus: old phones pay no WebGL cost on the menu. See [[blobolines-airsteer-is-open-loop-accel]].
+
+### N36-B Mid-air steering arc must PREDICT where the blob is heading
+- [x] N36-B1: air-steer was open-loop accel (overshoot, never settled) + an abstract drag-dot.
+      Fixed: (1) new src/sim/trajectory projectTrajectory() forward-integrates the blob's current
+      vel + steer accel + gravity; AirAimPreview (app/scene/blob) draws that exact path as a tube
+      while airborne+steering → the arc now shows where the blob is heading. (2) gentle lateral
+      SETTLE in PlayerBlob.stepHazards (LATERAL_SETTLE_PER_SEC=3.5, hands-off only) so drift
+      converges — never touches active-steer authority or vertical vel, so reach proof
+      ([[blobolines-reachability-invariant]]) holds. maxAirAccel cap unchanged. Color-by-momentum
+      dropped per user. 582 unit + 165 browser green (incl trajectory + AirAimPreview fixture).
+
+### N36-C Small phones — device-scale is BACKWARDS + aim px thresholds are fixed
+Root cause found (see [[blobolines-device-scale-backwards-on-small-phones]]): `deviceScale()`
+(src/platform/scale.ts) scales the HUD UP 1.18× on the SMALLEST screens, so the corner readouts
+(each `transform: scale(var(--ui-scale))`) occlude the tiny play area — "info rectangles remain on
+screen, cannot see much." AND air-steer/launch use FIXED px thresholds (maxSteerDist=90, deadzone=8,
+reticle 42) so a 90px full-steer drag is a huge fraction of a 360px phone — "almost impossible to
+aim." Both are viewport-scaling bugs, confirmed on a small Google phone + older iPhone (2026-06-23).
+- [x] N36-C1 (done in C-prep): root-caused; menu page split already removes the menu's WebGL cost.
+- [x] N36-C2: fixed deviceScale() — phones now scale the HUD DOWN (0.92) on the smallest screens
+      and baseline (1.0) otherwise; NEVER above 1, so the corner readouts can't grow into the play
+      area. Unit tests updated (small-minDim cases assert ≤1).
+- [x] N36-C3: air-steer is now VIEWPORT-RELATIVE — steerConfigForViewport(minDim) scales the px
+      drag thresholds to a fraction of min-dim (clamped 48–160px), wired into LaunchInput; reticle
+      clamp tracks maxSteerDist (kills the old 42-vs-90 mismatch). maxAirAccel CAP fixed (reach
+      invariant). Tested in intents.test.ts.
+
+### N36 cutting point — PR for the landing-page + aim overhaul
+- [x] All of N36 (A/B/C) shipped on feat/landing-page-and-predictive-steering (3 commits): menu is
+      its own page (LandingPage, no canvas) owning the designed purple; predictive AirAimPreview
+      arc + reachability-safe lateral settle (shouldSettleLateral gated on steeredThisFlight);
+      deviceScale no longer upscales the HUD on small phones; air-steer is viewport-relative
+      (steerConfigForViewport). Local review folded forward (DevHarness hoist, settle scope, arc
+      throttle, projection step). 585 unit + 165 browser green; typecheck + pinned lint clean.
+- Forward sweep: open the PR, babysit CI + CodeRabbit to a clean squash-merge. The in-game HUD look
+  on a real small phone is the one thing to confirm on-device (headless rAF-gating blocks live
+  in-run QA here — see [[blobolines-headless-raf-gating]]); the device-scale + viewport-aim math is
+  unit-covered. Next survey candidate after merge: a genuine NEW gap, not more of the saturated
+  systems (see prior forward sweep).
+
 ## Notes
 - This is a living plan. After every stage, backward+forward sweep and edit the queue.
 - Next candidate milestones (surface, don't pre-commit): a new pad-type behaviour, a cosmetic trail,

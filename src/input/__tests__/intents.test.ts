@@ -4,7 +4,9 @@ import {
   computeGroundedRouteCharge,
   computeHoldCharge,
   computeRouteAim,
+  DEFAULT_STEER,
   keyboardSteer,
+  steerConfigForViewport,
 } from "../intents";
 
 describe("computeAirSteer", () => {
@@ -34,6 +36,32 @@ describe("computeAirSteer", () => {
     const mid = Math.hypot(...computeAirSteer((90 - 8) * 0.5 + 8, 0, cfg));
     expect(mid).toBeLessThan(15 * 0.5);
     expect(mid).toBeGreaterThan(0);
+  });
+
+  it("a full lean is the same SHARE of the screen on a small phone as on a tablet", () => {
+    // On a 360px phone the full-steer drag must be a much SHORTER pixel distance than on an 820px
+    // tablet — so aiming is proportional, not a fixed 90px that's a huge fraction of a small phone.
+    const phone = steerConfigForViewport(360);
+    const tablet = steerConfigForViewport(820);
+    expect(phone.maxSteerDist).toBeLessThan(tablet.maxSteerDist);
+    expect(phone.deadzone).toBeLessThan(tablet.deadzone);
+    // The ACCEL cap and curve are untouched — only the px normalization scales (reach invariant).
+    expect(phone.maxAirAccel).toBe(DEFAULT_STEER.maxAirAccel);
+    expect(phone.responseCurve).toBe(DEFAULT_STEER.responseCurve);
+  });
+
+  it("clamps the steer distance so tiny/huge viewports stay playable", () => {
+    expect(steerConfigForViewport(120).maxSteerDist).toBeGreaterThanOrEqual(48);
+    expect(steerConfigForViewport(4000).maxSteerDist).toBeLessThanOrEqual(160);
+    // A degenerate (0/NaN) min-dim falls back to the reference, never 0 → no hair-trigger.
+    expect(steerConfigForViewport(0).maxSteerDist).toBeGreaterThan(0);
+    expect(steerConfigForViewport(Number.NaN).maxSteerDist).toBeGreaterThan(0);
+  });
+
+  it("reaches full accel at the viewport-resolved maxSteerDist on a small phone", () => {
+    const cfg = steerConfigForViewport(360);
+    const [x, z] = computeAirSteer(cfg.maxSteerDist, 0, cfg);
+    expect(Math.hypot(x, z)).toBeCloseTo(cfg.maxAirAccel, 5);
   });
 
   it("is monotonic — more drag never reduces the steer force", () => {
