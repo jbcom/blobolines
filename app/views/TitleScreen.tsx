@@ -219,36 +219,39 @@ export function TitleScreen() {
         )}
       </button>
 
-      <div className="flex items-center gap-5">
+      <nav
+        aria-label="Menu actions"
+        className="flex max-w-[min(100%,21rem)] flex-wrap items-center justify-center gap-x-4 gap-y-1.5 sm:max-w-none sm:gap-5"
+      >
         <button
           type="button"
           onClick={() => openModal(() => setCustomizing(true))}
-          className="-my-2 flex min-h-11 items-center gap-2 py-2 font-ui text-sm font-semibold text-fg-muted hover:text-cream"
+          className="-my-2 flex min-h-11 items-center gap-2 whitespace-nowrap py-2 font-ui text-sm font-semibold text-fg-muted hover:text-cream"
         >
           <Palette className="size-4" aria-hidden /> Customize
         </button>
         <button
           type="button"
           onClick={() => openModal(() => setAchievementsOpen(true))}
-          className="-my-2 flex min-h-11 items-center gap-2 py-2 font-ui text-sm font-semibold text-fg-muted hover:text-cream"
+          className="-my-2 flex min-h-11 items-center gap-2 whitespace-nowrap py-2 font-ui text-sm font-semibold text-fg-muted hover:text-cream"
         >
           <Trophy className="size-4" aria-hidden /> Achievements
         </button>
         <button
           type="button"
           onClick={() => openModal(() => setSettingsOpen(true))}
-          className="-my-2 flex min-h-11 items-center gap-2 py-2 font-ui text-sm font-semibold text-fg-muted hover:text-cream"
+          className="-my-2 flex min-h-11 items-center gap-2 whitespace-nowrap py-2 font-ui text-sm font-semibold text-fg-muted hover:text-cream"
         >
           <Settings className="size-4" aria-hidden /> Settings
         </button>
         <button
           type="button"
           onClick={() => openModal(() => setManualOpen(true))}
-          className="-my-2 flex min-h-11 items-center gap-2 py-2 font-ui text-sm font-semibold text-fg-muted hover:text-cream"
+          className="-my-2 flex min-h-11 items-center gap-2 whitespace-nowrap py-2 font-ui text-sm font-semibold text-fg-muted hover:text-cream"
         >
           <HelpCircle className="size-4" aria-hidden /> How to play
         </button>
-      </div>
+      </nav>
 
       {best > 0 && (
         <span className="font-ui text-xs font-semibold text-fg-subtle">

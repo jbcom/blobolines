@@ -1808,20 +1808,45 @@ current `main`; choose the highest unsaturated player-value/risk gap; implement 
 prove it locally and remotely; address every actionable PR thread/check; squash-merge; then rewrite
 this directive forward again.
 
-- [ ] N50.1 Fresh survey from `main` at/after de5cd60. Re-read current docs, directive, plans,
-      key tests, and runtime surfaces before choosing the next milestone. Do not choose by
-      momentum from the Manual/reference work.
-- [ ] N50.2 Candidate axes must be justified by fresh evidence. Start with at least: (1) first-run
+- [x] N50.1 SURVEY DONE from `main` at b11c686. Re-read current docs, directive, plans,
+      key tests, and runtime surfaces before choosing the next milestone. Findings:
+      daily/progression, post-run goals, high-altitude hazard readability, active power-up
+      badges, base cloud-pad behavior, biome identity, reduced-motion/high-contrast, and the
+      complete How-to-play reference are already deep. Fresh browser evidence at 320x700 showed
+      the TitleScreen's four secondary menu actions clipped off both viewport edges because they
+      stayed in a single non-wrapping row.
+- [x] N50.2 Candidate axes justified by fresh evidence. Start with at least: (1) first-run
       comprehension after launch/steer/manual/post-run guidance, (2) mid/late-run decision variety
       beyond readable hazards and cloud-pad adherence, (3) mobile/touch and short-viewport friction
       after the HUD/modal caps, and (4) repeat-play value not already covered by daily challenge,
       achievements, cosmetics, weekly summary, share/replay, next-climb goal, active power-up
-      badges, or the Manual. Explicitly explain why skipped axes are lower value/risk right now.
+      badges, or the Manual. DECISION: ship the small-phone menu action wrap because it affects the
+      first screen on the primary mobile platform and is the clearest unsaturated short-viewport
+      bug. Skipped new first-run reference, progression, hazards, and power-up surfaces because
+      they are already richly covered without new contrary evidence; skipped new route variety
+      because this is lower immediate risk than a visible first-screen clipping defect.
 - [ ] N50.3 For the chosen milestone, require the proof profile appropriate to the blast radius:
       focused unit/browser fixtures, `pnpm lint`, `pnpm build`, `pnpm test:e2e`, and
       browser-visible screenshot/diagnostic evidence whenever visuals, playability, or UX change.
       Then publish, address every actionable remote PR comment/thread/check, squash-merge, and
       repeat N50.1.
+
+## Queue — N51 small-phone menu action wrap
+
+- [x] N51.1 IMPLEMENTED. `TitleScreen` now renders the secondary menu actions inside a labelled
+      `Menu actions` nav with capped width, `flex-wrap`, centered rows, and no icon/label breaks.
+      The browser fixture now mounts the title screen inside a 320px phone shell and asserts
+      Customize, Achievements, Settings, and How to play all remain inside the shell while wrapping
+      to more than one row.
+- [x] N51.2 LOCAL VERIFY DONE. Passed
+      `pnpm test:browser -- app/views/__tests__/TitleScreen.browser.test.tsx` (53 browser files /
+      177 tests), `pnpm typecheck`, `pnpm lint`, `pnpm test` (62 files / 599 tests),
+      `pnpm build`, and `pnpm test:e2e` (7 passed in 1.8m). Browser-visible proof:
+      `output/playwright/title-menu-baseline-mobile.png` at 320x700 showed the old row clipped off
+      both viewport edges; `output/playwright/title-menu-actions-mobile-fixed.png` at 320x700 shows
+      the same actions as two centered rows, fully visible above the safe-area DEV button.
+- [ ] N51.3 PUBLISH/MERGE PENDING. Open the PR, address every actionable remote thread/check,
+      squash-merge, then rewrite this directive forward for the next remaining-work pass.
 
 ## Notes
 - This is a living plan. After every stage, backward+forward sweep and edit the queue.
