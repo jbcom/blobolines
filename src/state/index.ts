@@ -22,7 +22,12 @@ export {
   markCrystalCollected,
   resetCollectedCrystals,
 } from "./crystalCollectBridge";
-export { type BlobDiagnostics, getBlobDiagnostics, setBlobDiagnostics } from "./diagnostics";
+export {
+  type BlobDiagnostics,
+  getBlobDiagnostics,
+  type HazardDiagnostics,
+  setBlobDiagnostics,
+} from "./diagnostics";
 export {
   consumeFlash,
   type FlashKind,

@@ -6,6 +6,7 @@ import { ComboBadge } from "./ComboBadge";
 import { CrystalCounter } from "./CrystalCounter";
 import { DifficultyBanner } from "./DifficultyBanner";
 import { DifficultyMeter } from "./DifficultyMeter";
+import { HazardReadout } from "./HazardReadout";
 import { LaunchInput } from "./LaunchInput";
 import { MilestoneBanner } from "./MilestoneBanner";
 import { NextPadRadar } from "./NextPadRadar";
@@ -106,6 +107,19 @@ export function Hud() {
           }}
         >
           <NextPadRadar />
+        </div>
+        {/* lower-right: readable late-run forces. Wind/downdraft affect steering and descent, so
+            show them near the play edge without covering the center launch/steer affordance. */}
+        <div
+          className="absolute"
+          style={{
+            right: "calc(var(--safe-right) + 1rem)",
+            bottom: "calc(var(--safe-bottom) + 5rem)",
+            transform: "scale(var(--ui-scale))",
+            transformOrigin: "bottom right",
+          }}
+        >
+          <HazardReadout />
         </div>
       </div>
     </>

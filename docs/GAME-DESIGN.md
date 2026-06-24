@@ -171,6 +171,21 @@ meaning of the launch tool:
   certified lane. A route gate floating away from the proof path is a verifier failure, not a
   visual flourish.
 
+## High-altitude hazards
+
+The late climb adds environmental forces on top of the certified route:
+
+- **Wind gusts** ramp in through the stratosphere and push the airborne blob laterally. The force
+  is deterministic and always weaker than the player's air-steer budget, so it is a counterable
+  navigation hazard instead of an unfair shove.
+- **Downdrafts** ramp in near the space band as pulsing extra downward acceleration. They threaten
+  slow, drifting flights without changing the cloud-catch contract.
+
+Both hazards are surfaced in the HUD by the compact hazard readout. It appears only while a force is
+active, shows wind direction/strength and downdraft strength, and mirrors the exact diagnostics that
+`PlayerBlob` applies to the body. This makes high-altitude drift legible as a climb condition the
+player can react to, not invisible physics.
+
 The selected difficulty is the starting cadence, not a permanent lock. As altitude increases,
 the effective route profile advances through the later modes; the HUD flashes labels like
 `MEDIUM!!!` and `HARD!!!` when that transition happens and keeps a compact active-tier meter

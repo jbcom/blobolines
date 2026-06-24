@@ -9,6 +9,19 @@ export interface CloudAdherenceDiagnostics {
   strength: number;
 }
 
+export interface HazardDiagnostics {
+  /** Horizontal wind acceleration in world X/Z (m/s²). */
+  wind: readonly [number, number];
+  /** Magnitude of the horizontal wind acceleration (m/s²). */
+  windStrength: number;
+  /** Wind strength normalized against the tuned maximum [0,1]. */
+  windIntensity: number;
+  /** Extra downward acceleration applied to the blob (m/s²). */
+  downdraft: number;
+  /** Downdraft strength normalized against the tuned maximum [0,1]. */
+  downdraftIntensity: number;
+}
+
 /**
  * Live diagnostics snapshot of the blob + environment. PlayerBlob writes it each frame;
  * the dev harness reads it to dump before/after JSON around a fired event, so we can see
@@ -36,6 +49,8 @@ export interface BlobDiagnostics {
   bubbleRemaining?: number;
   /** Whether the player has a mid-air redirect/nudge charge available to use. */
   nudgeAvailable?: boolean;
+  /** Late-run hazard forces currently affecting the blob. */
+  hazards?: HazardDiagnostics;
 }
 
 let snapshot: BlobDiagnostics = {
