@@ -3,7 +3,10 @@ import { render } from "vitest-browser-react";
 import { DEFAULT_SETTINGS, useGameStore } from "@/state";
 import { SettingsModal } from "../SettingsModal";
 
-afterEach(() => useGameStore.setState({ settings: { ...DEFAULT_SETTINGS } }));
+afterEach(() => {
+  useGameStore.setState({ settings: { ...DEFAULT_SETTINGS } });
+  delete document.documentElement.dataset.highContrast;
+});
 
 // Guards the settings modal renders open with its controls (same Dialog-animation
 // regression class as the customizer).
@@ -31,6 +34,7 @@ test("SettingsModal controls have accessible names", async () => {
   await expect.element(screen.getByRole("slider", { name: "Charge speed" })).toBeInTheDocument();
   await expect.element(screen.getByRole("switch", { name: "Music" })).toBeInTheDocument();
   await expect.element(screen.getByRole("switch", { name: "Reduce motion" })).toBeInTheDocument();
+  await expect.element(screen.getByRole("switch", { name: "High contrast" })).toBeInTheDocument();
   // Haptics switch is intentionally gated to touch devices, so it's not asserted here.
 });
 
@@ -69,6 +73,15 @@ test("Reduce motion switch updates the app setting", async () => {
   await reduceMotion.click();
   expect(useGameStore.getState().settings.reducedMotion).toBe(true);
   await expect.element(reduceMotion).toHaveAttribute("aria-checked", "true");
+});
+
+test("High contrast switch updates the app setting", async () => {
+  const screen = await render(<SettingsModal open onOpenChange={() => {}} />);
+  const highContrast = screen.getByRole("switch", { name: "High contrast" });
+  expect(useGameStore.getState().settings.highContrast).toBe(false);
+  await highContrast.click();
+  expect(useGameStore.getState().settings.highContrast).toBe(true);
+  await expect.element(highContrast).toHaveAttribute("aria-checked", "true");
 });
 
 test("Reset progress requires a two-step confirm", async () => {

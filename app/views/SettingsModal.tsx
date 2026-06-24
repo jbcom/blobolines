@@ -160,6 +160,12 @@ export function SettingsModal({
           onChange={(on) => update({ reducedMotion: on })}
         />
 
+        <Toggle
+          label="High contrast"
+          checked={settings.highContrast}
+          onChange={(on) => update({ highContrast: on })}
+        />
+
         {/* Graphics quality: Auto lets the device + frame-rate pick the tier; the explicit tiers
             pin it (Low to save battery, High to force the heavy effects on a capable device).
             Each segment is an aria-pressed toggle labelled by its text + the visible "Graphics"
@@ -300,7 +306,7 @@ function SensitivityPreview({ sensitivity }: { sensitivity: number }) {
         setDotX(0);
       }}
     >
-      <span className="pointer-events-none absolute inset-0 flex items-center justify-center font-ui text-[10px] text-fg-subtle">
+      <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center font-ui text-[10px] text-fg-subtle">
         {dragging ? "" : "drag to test"}
       </span>
       <span

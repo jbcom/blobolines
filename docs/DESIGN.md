@@ -29,6 +29,11 @@ The single source of truth is `src/styles/tokens.css` (CSS vars) mirrored by
 - **Eyes:** sclera `#f8fbff`, bezel `#14110f`, pupil `#0a0a0c`, glint `#ffffff`, warm tear `#ffd0a6`
 - **UI surface:** deep berry-plum glass `#2a1024` / `#3a1630`; cream text; mango/berry/gold accents + danger
 
+The in-app **High contrast** setting mirrors to `:root[data-high-contrast="true"]` and swaps the
+semantic UI surface/text/border/glow tokens for darker panels and brighter cream/gold text. Keep
+this as a semantic-token override, not one-off component styling, so dialogs, HUD chrome, buttons,
+and progress surfaces remain consistent.
+
 Some CSS variable names retain historical ids such as `--blob-blue` and `--tramp-blue`
 for Tailwind class compatibility, but those tokens now carry warm foreground values. The
 sky is intentionally bright blue daylight for foreground/background separation, warmed by
