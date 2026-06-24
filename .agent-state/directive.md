@@ -1683,11 +1683,12 @@ feedback, squash-merge, then rewrite this directive forward.
       DECISION: ship post-run next-climb coaching because it improves replay comprehension without
       adding a new reward system. Skipped new mobile/late-run/progression mechanics because those
       surfaces are already deep and would be lower value without fresh contrary evidence.
-- [ ] N44.3 For the chosen milestone, require the full local proof profile appropriate to the
-      blast radius: focused unit/browser fixtures, `pnpm lint`, `pnpm build`, `pnpm test:e2e`, and
-      browser-visible screenshot/diagnostic evidence whenever visuals, playability, or UX change.
-      Then publish, address every actionable remote PR comment/thread/check, squash-merge, and
-      repeat N44.1.
+- [x] N44.3 DONE via PR #118. The chosen milestone got the full local proof profile and was
+      published, reviewed, fixed, and squash-merged to `main` at b56ba41. Remote Actions passed on
+      the final head: Lint/Typecheck/Test/Build, Playwright E2E, Android debug APK, and CodeQL.
+      Actionable remote feedback was addressed and resolved: Amazon Q requested non-mutating goal
+      sorting; Gemini requested floored locked-progress percentages. CodeRabbit was rate-limited and
+      produced no actionable code feedback.
 
 ## Queue — N45 post-run next-climb goal
 
@@ -1701,8 +1702,28 @@ feedback, squash-merge, then rewrite this directive forward.
       `pnpm lint`, `pnpm build`, and `pnpm test:e2e` (7 passed in 1.8m). Browser-visible proof:
       `output/playwright/gameover-next-climb-goal.png` at 1280x720, with the Next climb goal and
       Back to menu both visible.
-- [ ] N45.3 Publish PR, address all actionable remote feedback/checks, squash-merge, and rewrite
-      this directive forward to the next fresh survey.
+- [x] N45.3 PR #118 SQUASH-MERGED (b56ba41). Addressed the two actionable review threads with
+      commit b262981, resolved both threads, reran focused local proof, and waited for all remote
+      checks to pass before merge.
+
+## Queue — N46 all-remaining-work loop
+
+- [ ] N46.1 Fresh survey from `main` at/after b56ba41. Re-read current docs, directive, plans,
+      key tests, and runtime surfaces before choosing the next milestone. Standing goal: keep
+      identifying the highest unsaturated player-value/risk gap, implement it end to end, prove it
+      locally and remotely, address all actionable PR feedback, squash-merge, then rewrite this
+      directive forward again.
+- [ ] N46.2 Candidate axes must be justified by fresh evidence, not by continuing the last
+      milestone's momentum. Start with at least: (1) first-run comprehension after the now-complete
+      launch/steer/post-run loop, (2) mid/late-run decision variety beyond readable hazards and
+      cloud-pad adherence, (3) mobile/touch and short-viewport friction that remains after the
+      current HUD/modal caps, and (4) long-tail repeat-play surfaces that are not already covered
+      by daily challenge, achievements, cosmetics, weekly summary, share/replay, or next-climb goal.
+- [ ] N46.3 For the chosen milestone, require the proof profile appropriate to the blast radius:
+      focused unit/browser fixtures, `pnpm lint`, `pnpm build`, `pnpm test:e2e`, and
+      browser-visible screenshot/diagnostic evidence whenever visuals, playability, or UX change.
+      Then publish, address every actionable remote PR comment/thread/check, squash-merge, and
+      repeat N46.1.
 
 ## Notes
 - This is a living plan. After every stage, backward+forward sweep and edit the queue.
