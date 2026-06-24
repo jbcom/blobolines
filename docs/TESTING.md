@@ -48,6 +48,9 @@ Render regressions that only a real GPU context catches:
   trajectory tube renders in WebGL while airborne + steering
 - `app/views/__tests__/LandingPage.browser.test.tsx` — the menu page hosts the Play CTA and
   owns its purple backdrop with NO canvas mounted (locks the menu-as-own-page contract)
+- `app/views/__tests__/ManualModal.fixture.test.tsx` — the How-to-play reference covers the
+  shipped route, power-up, hazard, daily, and next-climb surfaces, and uses the capped scrollable
+  dialog shell
 - `app/views/hud/__tests__/NextPadRadar.browser.test.tsx` — next-target direction,
   vertical gap, distance, and hidden state when no target exists
 - `app/views/hud/__tests__/DifficultyMeter.browser.test.tsx` — active difficulty tier,

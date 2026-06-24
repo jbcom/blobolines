@@ -1759,26 +1759,52 @@ current `main`; choose the highest unsaturated player-value/risk gap; implement 
 prove it locally and remotely; address every actionable PR thread/check; squash-merge; then rewrite
 this directive forward again.
 
-- [ ] N48.1 Fresh survey from `main` at/after bc8b894. Re-read current docs, directive, plans,
-      key tests, and runtime surfaces before choosing the next milestone. Do not choose by
-      momentum from shield/power-up work.
-- [ ] N48.2 Candidate axes must be justified by fresh evidence. Start with at least: (1) first-run
+- [x] N48.1 SURVEY DONE from `main` at f30fe20. Re-read current docs, directive, tests, and
+      core UI/runtime surfaces before choosing the next milestone. Findings: daily/progression,
+      post-run goals, high-altitude hazard readability, active power-up badges, base cloud-pad
+      behavior, biome identity, and reduced-motion/high-contrast contracts are already deep. Fresh
+      unsaturated gap: `docs/GAME-DESIGN.md` says the Manual remains the full reference, but
+      `ManualModal` still only documented the original control slice (charge/catch/steer,
+      hyper-thrust, magnet) and omitted shipped route/radar guidance, combo, shield, slow-mo,
+      score doubler, multi-bounce, hazards, Daily Challenge, and next-climb goal.
+- [x] N48.2 Candidate axes justified by fresh evidence. Start with at least: (1) first-run
       comprehension after launch/steer/post-run guidance, (2) mid/late-run decision variety beyond
       readable hazards and cloud-pad adherence, (3) mobile/touch and short-viewport friction after
       the HUD/layout caps, and (4) repeat-play value not already covered by daily challenge,
       achievements, cosmetics, weekly summary, share/replay, next-climb goal, or active
       power-up badges. Explicitly explain why skipped axes are lower value/risk right now.
+      DECISION: ship the complete How-to-play reference. It closes a real first-run/return-player
+      comprehension mismatch without adding a new system or stacking already-rich daily, hazard,
+      power-up badge, cloud-pad, or progression surfaces.
 - [ ] N48.3 For the chosen milestone, require the proof profile appropriate to the blast radius:
       focused unit/browser fixtures, `pnpm lint`, `pnpm build`, `pnpm test:e2e`, and
       browser-visible screenshot/diagnostic evidence whenever visuals, playability, or UX change.
       Then publish, address every actionable remote PR comment/thread/check, squash-merge, and
       repeat N48.1.
 
+## Queue — N49 complete How-to-play reference
+
+- [x] N49.1 IMPLEMENTED. `ManualModal` is now a grouped compact reference covering the climb loop,
+      route/radar reading, clean-combo launches, hyper-thrust, magnet, shield, slow-mo, score
+      doubler, multi-bounce, high-altitude hazards, Daily Challenge, and next-climb goal. The
+      browser fixture now asserts the reference scope and locks the capped scrollable dialog shell.
+- [x] N49.2 LOCAL VERIFY DONE. Passed
+      `pnpm test:browser -- app/views/__tests__/ManualModal.fixture.test.tsx`
+      (53 browser files / 176 tests), `pnpm typecheck`, `pnpm lint`, `pnpm build`, and
+      `pnpm test:e2e` (7 passed in 1.8m). Browser-visible proof:
+      `output/playwright/manual-reference-mobile-prod-top.png` and
+      `output/playwright/manual-reference-mobile-prod-bottom.png` at 390x844 from production
+      preview show the expanded Manual is readable, internally scrollable, and reaches the Goals
+      section plus Got it button on a phone viewport.
+- [ ] N49.3 Publish PR, address all actionable remote feedback/checks, squash-merge, and rewrite
+      this directive forward to the next fresh survey.
+
 ## Notes
 - This is a living plan. After every stage, backward+forward sweep and edit the queue.
 - Next candidate milestones must be justified by fresh docs/tests/runtime evidence, not momentum.
   The daily-challenge system (standing + streak + share + replay + weekly), the base
   pad/obstacle/combo/skin systems, route hazards, high-altitude hazard readout, post-run goal,
-  active power-up badges, and the reduced-motion/high-contrast contracts are now richly built.
+  active power-up badges, the how-to reference, and the reduced-motion/high-contrast contracts are
+  now richly built.
 - Lesson banked this session: the pre-push lint gate is `pnpm lint` (PINNED biome 2.5.0), NOT
   `npx biome` / global biome (older, gives false-clean) — see [[blobolines-biome-ci-stricter]].
