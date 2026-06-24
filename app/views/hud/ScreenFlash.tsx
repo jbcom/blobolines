@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { consumeFlash, type FlashKind } from "@/state";
+import { consumeFlash, type FlashKind, useGameStore } from "@/state";
 import { palette } from "@/styles/tokens";
 
 /**
@@ -20,6 +20,7 @@ const COLORS: Record<FlashKind, string> = {
 
 export function ScreenFlash() {
   const ref = useRef<HTMLDivElement>(null);
+  const reducedMotion = useGameStore((s) => s.settings.reducedMotion);
   /** Current decaying flash envelope. */
   const env = useRef(0);
   const kind = useRef<FlashKind>("gold");
@@ -28,9 +29,10 @@ export function ScreenFlash() {
     // Full optional-chaining: matchMedia may be undefined (older browsers / SSR / test env),
     // so guard the whole call before reading .matches.
     const reduced =
-      typeof window !== "undefined" &&
-      typeof window.matchMedia === "function" &&
-      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      reducedMotion ||
+      (typeof window !== "undefined" &&
+        typeof window.matchMedia === "function" &&
+        window.matchMedia("(prefers-reduced-motion: reduce)").matches);
 
     let raf = 0;
     let prev = performance.now();
@@ -76,7 +78,7 @@ export function ScreenFlash() {
     };
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
-  }, []);
+  }, [reducedMotion]);
 
   return (
     <div

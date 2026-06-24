@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { getBlobDiagnostics } from "@/state";
+import { getBlobDiagnostics, useGameStore } from "@/state";
 
 /**
  * SpeedLines — a DOM overlay that fades in radial motion streaks from the screen edges when
@@ -14,13 +14,18 @@ const MAX_OPACITY = 0.5;
 
 export function SpeedLines() {
   const ref = useRef<HTMLDivElement>(null);
+  const reducedMotion = useGameStore((s) => s.settings.reducedMotion);
 
   useEffect(() => {
     const reduced =
-      typeof window !== "undefined" &&
-      typeof window.matchMedia === "function" &&
-      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (reduced) return; // streaks are pure motion — skip entirely
+      reducedMotion ||
+      (typeof window !== "undefined" &&
+        typeof window.matchMedia === "function" &&
+        window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+    if (reduced) {
+      if (ref.current) ref.current.style.opacity = "0";
+      return; // streaks are pure motion — skip entirely
+    }
 
     let raf = 0;
     let cur = 0; // smoothed opacity
@@ -52,7 +57,7 @@ export function SpeedLines() {
     };
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
-  }, []);
+  }, [reducedMotion]);
 
   return (
     <div

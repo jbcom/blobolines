@@ -1,6 +1,6 @@
 ---
 title: Design Language
-updated: 2026-06-17
+updated: 2026-06-24
 status: current
 domain: creative
 ---
@@ -21,7 +21,8 @@ The single source of truth is `src/styles/tokens.css` (CSS vars) mirrored by
 
 ### Palette
 
-- **Blobs (skins):** Mango `#ff7a3d` (starter), Berry `#ff4f7b`, Honey `#ffd95a`, Cocoa `#5a2418`
+- **Blobs (skins):** Mango `#ff7a3d` (starter), Berry `#ff4f7b`, Honey `#ffd95a`, Cocoa `#5a2418`,
+  Nebula `#a06bff`, Aurora `#2fe6c4`
 - **Cloud pads:** warm puff `#fff7d6`, honey `#ffe6a3`, blush `#ffb6a3`, gold `#ffd66b`, storm mauve `#9a6a8f`, wet white `#ffffff`
 - **Sky/atmosphere:** cloud light `#eefaff`, cheerful blue `#8fd7ff`, daylight depth `#42a8f5`; honey sun `#ffd36b`; cream light `#f3efd6`
 - **Goo:** mango splash `#ff7a3d`, warm fresnel rim `#ffe3a6`, wet sheen `#ffffff`, combo flame `#ffb238`

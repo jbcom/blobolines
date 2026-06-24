@@ -1,5 +1,5 @@
 /**
- * Shared domain types for Blobolines. Framework-agnostic — imported by sim, factories,
+ * Shared domain types for Blobolines. Framework-agnostic — imported by sim, world,
  * state, and render alike so there is one vocabulary for game concepts.
  */
 
@@ -241,7 +241,7 @@ export interface BlobSnapshot {
   squash: number;
 }
 
-/** Cloud-pad descriptor used by world-gen and factories.
+/** Cloud-pad descriptor used by world-gen, state, and render consumers.
  *  Kept as TrampolineSpec while older systems migrate off the previous mechanic name. */
 export interface TrampolineSpec {
   /** Stable unique id (the pad's generation Y, which strictly increases up the tower).

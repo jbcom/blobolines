@@ -11,7 +11,7 @@ import { advance, createStepLoop } from "@/engine";
  * `step(dt)` runs at the fixed rate (use for sim state). `interpolate(alpha)` runs once per
  * render frame with the [0,1) fraction toward the next step (use for render-only smoothing).
  * This is the engine.tick(dt) seam ARCHITECTURE.md describes; consumers (droplet system,
- * trampoline springs, ECS systems) hang off it instead of each reimplementing a dt clamp.
+ * cloud-pad springs, render bridges) hang off it instead of each reimplementing a dt clamp.
  *
  * @param priority optional useFrame priority (e.g. to run before the postprocessing pass).
  */

@@ -1182,11 +1182,11 @@ covers the daily-history gap: daily seeds are date-stamped phrases right there i
       / 140 browser green; typecheck + pinned lint clean. VISUAL-VERIFIED live: seeded two scores,
       opened Hall of Fame → Leaderboard, screenshot shows the ▶ Replay pill on each entry, well-styled.
 
-- [ ] [WAIT-REVIEW] PR #90 (N22 Hall-of-Fame replay) — babysit. Local review FOLDED: no blockers/majors;
+- [x] PR #90 (N22 Hall-of-Fame replay) MERGED (squash a73a479). Local review FOLDED: no blockers/majors;
       its one minor finding (replaying a PAST daily advanced the streak as if you played today's
       challenge) fixed — the streak now gates on the run's seed being TODAY'S daily seed, not merely the
       dailyRun flag, with a regression test. Confirmed clean: run reset, bridge clearing, no circular
-      import, button a11y. Waiting on CI green for the new HEAD → resolve any threads → squash-merge.
+      import, button a11y. CI green, 0 review threads, squash-merged.
 
 ## Queue — Milestone: N23 NEW SKIN + apex achievement (branch feat/new-skin-achievement)
 
@@ -1206,10 +1206,9 @@ apex gap is HEIGHT (uncapped): height-1000 was the top tier.
       to drift); tokens test updated to 5 skins. 545 unit / 140 browser green; typecheck + pinned lint
       clean. VISUAL-VERIFIED live: the Customizer shows the violet Nebula tile with "🏆 Earn · Voyager".
 
-- [ ] [WAIT-REVIEW] PR #91 (N23 Nebula skin + Voyager achievement) — babysit: local review + CI in
-      flight (reviewer checking enum-completeness across every BlobSkin map/schema + the brand-hex gate +
-      height-2000 reachability). Wait CI green, fold findings forward, resolve threads, squash-merge, sync
-      main. Then the next corner.
+- [x] PR #91 (N23 Nebula skin + Voyager achievement) MERGED (squash 3e7972f): local review + CI
+      checked enum-completeness across every BlobSkin map/schema + the brand-hex gate +
+      height-2000 reachability. Gemini's stale comment finding was folded, CI green, squash-merged.
 
 ## Queue — Milestone: N24 BOBBING obstacles (branch feat/drifting-obstacles)
 
@@ -1232,11 +1231,11 @@ route at generation. (Also surveyed raising MAX_COMBO: comboStyleBonus is geomet
       green (kinematic bodies don't disrupt physics); typecheck + pinned lint clean. Live-confirmed 9
       obstacles each carry a distinct bob (amp/speed/phase).
 
-- [ ] [WAIT-REVIEW] PR #92 (N24 bobbing obstacles) — babysit. Review FOLDED: no real bugs; proactively
+- [x] PR #92 (N24 bobbing obstacles) MERGED (squash cef2e27). Review FOLDED: no real bugs; proactively
       hardened the bob route-clearance to an airtight inflated-clearance (center vs ROUTE_CLEARANCE +
       amplitude, triangle-inequality proof) before the reviewer returned; folded gemini's 3-thread fix
       (freeze the bob on pause via dt-accumulation, not the raw render clock). All threads resolved, CI
-      run confirmed for the exact HEAD. Wait CI green → squash-merge → sync main → next corner.
+      run confirmed for the exact HEAD, squash-merged.
 
 ## Queue — Milestone: N25 HIGHER COMBO CEILING + rebalance (branch feat/higher-combo-ceiling)
 
@@ -1255,11 +1254,11 @@ N23). The rebalance keeps it BALANCE-CONSERVATIVE, not score-inflating.
       bounded 800–1300, monotonic per-level steps); launch/score assertions re-derived from the new
       config; a BLAZING badge fixture. 547 unit / 141 browser green; typecheck + pinned lint clean.
 
-- [ ] [WAIT-REVIEW] PR #93 (N25 higher combo ceiling) — babysit. Review FOLDED: rebalance confirmed
+- [x] PR #93 (N25 higher combo ceiling) MERGED (squash a7db0b6). Review FOLDED: rebalance confirmed
       sound (math, all MAX_COMBO consumers wired, golden-path unaffected); proactively fixed the
       comboHeat VFX ramp-slowdown (decoupled to HEAT_FULL_COMBO=8) before the reviewer returned; folded
       its 2 findings (full-range monotonic test + the stale GAME-DESIGN.md combo row). 0 threads; ci.yml
-      run forced for the exact HEAD (coalescing trap hit). Wait CI green → squash-merge → sync main.
+      run forced for the exact HEAD (coalescing trap hit), squash-merged.
 
 ## Queue — Milestone: N26 WEEKLY daily summary (branch feat/weekly-daily-summary)
 
@@ -1511,11 +1510,72 @@ aim." Both are viewport-scaling bugs, confirmed on a small Google phone + older 
       deviceScale no longer upscales the HUD on small phones; air-steer is viewport-relative
       (steerConfigForViewport). Local review folded forward (DevHarness hoist, settle scope, arc
       throttle, projection step). 585 unit + 165 browser green; typecheck + pinned lint clean.
-- Forward sweep: open the PR, babysit CI + CodeRabbit to a clean squash-merge. The in-game HUD look
-  on a real small phone is the one thing to confirm on-device (headless rAF-gating blocks live
-  in-run QA here — see [[blobolines-headless-raf-gating]]); the device-scale + viewport-aim math is
-  unit-covered. Next survey candidate after merge: a genuine NEW gap, not more of the saturated
-  systems (see prior forward sweep).
+  PR #109 SQUASH-MERGED (8287854) with CI green; PR #111 docs alignment also squash-merged
+  (bca812c) with CI green. The in-game HUD look on a real small phone remains an on-device
+  confirmation item (headless rAF-gating blocks live in-run QA here — see
+  [[blobolines-headless-raf-gating]]); the device-scale + viewport-aim math is unit-covered.
+
+## Queue — N37 milestone closeout + remaining-work goal (branch codex/milestone-closeout-review)
+
+Immediate goal: bring the N36 milestone and directive state to a locally proven, satisfactory
+close by reconciling docs/plans/tests/code with current `main`, reading remote PR feedback, and
+leaving no unresolved actionable review item.
+
+- [x] N37.1 Remote PR feedback audit: open PRs #107/#108/#110 have no inline review threads and
+      green checks; merged PRs #90/#91/#92/#93/#109/#111 have green checks and no unresolved
+      actionable review threads. Gemini/Amazon findings recorded in the directive were already
+      folded before merge; CodeRabbit/Gemini quota/rate-limit comments are non-actionable.
+- [x] N37.2 Local audit: reviewed AGENTS, README, CONTRIBUTING, STANDARDS, docs, `.full-review`
+      final report, directive/cursor/digest, test inventory, package scripts, and codebase text
+      scan. Patched stale `factories`/`ECS` wording now that the architecture is `src/world` specs
+      plus Zustand/bridges.
+- [x] N37.3 Local proof GREEN on codex/milestone-closeout-review: `pnpm typecheck`;
+      `pnpm lint` (309 files); `pnpm test` (60 files / 586 tests); `pnpm test:browser`
+      (51 files / 165 tests); `pnpm build`; `pnpm test:e2e` (7 specs / 1.9m). Known
+      upstream warnings only: THREE.Clock deprecation, Rapier init parameter deprecation,
+      WebGL ReadPixels stall warnings, and overlapping act warnings in browser fixtures.
+- [x] N37.4 Remaining-work goal SET: pursue a fresh survey milestone instead of more saturated
+      daily/progression/feedback/onboarding work. Candidate axes: a new cloud-pad behavior,
+      a cosmetic trail system, or a player-facing settings/accessibility option. First action is a
+      repo-grounded survey with docs/tests/runtime read before committing to the next feature.
+
+## Queue — N38 remaining-work survey goal
+
+Goal for all remaining work: continue Blobolines through the established loop — survey the
+unsaturated player-value axes, choose the highest value/risk slice, implement it end to end,
+verify locally with the right mix of unit/browser/E2E/live visual evidence, address remote PR
+feedback, squash-merge, then rewrite this directive forward.
+
+- [x] N38.1 SURVEY DONE. Read the current docs/tests/runtime code for all three axes:
+      (1) cloud-pad behavior is already rich in code (11 types: standard/booster/moving/fragile/
+      super/ice/canted/wobbler/storm/vortex/bubble) and the gap was mostly stale docs; (2)
+      cosmetic trails already have a continuous combo-heat ribbon, droplets, splats, and CSG
+      necks; (3) settings/accessibility had the best value/risk gap: the in-app Reduce motion
+      toggle fed MotionConfig but did NOT cover imperative rAF overlays (`SpeedLines`,
+      `ScreenFlash`), the `usePunchOnChange` hook, or CSS-only animations. DECISION: ship the
+      settings/accessibility slice first because it makes an existing user-facing control true.
+      Folded forward doc/token drift found during the survey: GAME-DESIGN cloud-pad table now
+      includes storm/vortex/bubble, DESIGN includes Nebula/Aurora, and the Aurora CSS/Tailwind
+      token mirror was added.
+
+## Queue — N39 complete the in-app reduced-motion contract
+
+### N39 Implementation
+- [x] N39.1 DONE. `App` now mirrors the persisted `settings.reducedMotion` flag onto
+      `document.documentElement.dataset.reducedMotion`, and tokens.css applies the same animation/
+      transition kill switch to `:root[data-reduced-motion="true"]` that the OS media query gets.
+      `ScreenFlash`, `SpeedLines`, and `usePunchOnChange` now honor the app setting in addition
+      to `prefers-reduced-motion`. Targeted tests added: root dataset sync, settings switch,
+      SpeedLines suppressed under app reduced motion, ScreenFlash consumes-but-does-not-display
+      flashes under app reduced motion, and punch hook suppression. Also corrected a stale App
+      comment about phone scaling.
+- [x] N39.2 VERIFIED. `pnpm typecheck`, `pnpm lint`, `pnpm test`
+      (61 files / 589 tests), `pnpm test:browser` (52 files / 168 tests),
+      `pnpm build`, and `pnpm test:e2e` (7/7, 1.8m) pass locally. The first
+      E2E attempt hit a local port collision with `/Users/jbogaty/src/jbcom/martian-trails`
+      on 5173; after stopping that server, Playwright started Blobolines and the full gate
+      passed. Remote PR feedback sweep: current branch has no PR yet; open PRs #110, #108,
+      and #107 have no review threads or comments.
 
 ## Notes
 - This is a living plan. After every stage, backward+forward sweep and edit the queue.

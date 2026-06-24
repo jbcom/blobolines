@@ -12,7 +12,8 @@ Three layers, each catching a different class of bug. All run in CI on every PR.
 ## Unit — `pnpm test` (Vitest, happy-dom)
 
 Pure logic: deterministic RNG/clock/springs, engine loop, world generator, golden-path
-parabola proofs, launch/combo/collect math, ECS traits, design tokens. Fast, no GPU.
+parabola proofs, launch/combo/collect math, state bridges, persistence schemas, design
+tokens. Fast, no GPU.
 Determinism is explicitly tested (same seed → same sequence; fixed-timestep reproducibility).
 Lives next to the code in `__tests__/`. `app/scene/blob/__tests__/TrajectoryPreview.test.ts`
 locks the always-visible route parabola and endpoint reticle across every active tier.
