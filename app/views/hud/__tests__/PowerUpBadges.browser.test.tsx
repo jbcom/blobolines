@@ -33,6 +33,15 @@ test("mounts the score-doubler badge when the 2× buff is active", async () => {
   await expect.element(screen.getByText("2× Score")).toBeInTheDocument();
 });
 
+test("mounts the shield badge while the one-shot save is held", async () => {
+  activatePowerup("shield");
+  const screen = await render(<PowerUpBadges />);
+  await expect.element(screen.getByText("Shield")).toBeInTheDocument();
+  await expect
+    .element(screen.getByRole("progressbar", { name: /shield power-up remaining/i }))
+    .toBeInTheDocument();
+});
+
 test("mounts the multi-bounce badge when charges are held", async () => {
   activatePowerup("multibounce");
   const screen = await render(<PowerUpBadges />);
