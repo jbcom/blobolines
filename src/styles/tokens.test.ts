@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { blobSkinColor, hex, palette, rgbNorm, trampColor } from "./tokens";
 
@@ -58,5 +59,12 @@ describe("design tokens", () => {
 
   it("owns the scenery glint tint as a token (not a raw RGB literal in scene code)", () => {
     expect(palette.scenery.glint).toMatch(/^#[0-9a-f]{6}$/i);
+  });
+
+  it("applies in-app reduced motion to the root element as well as descendants", () => {
+    const css = readFileSync("src/styles/tokens.css", "utf8").replace(/\s+/g, " ");
+    expect(css).toContain(
+      ':root[data-reduced-motion="true"], :root[data-reduced-motion="true"] *, :root[data-reduced-motion="true"] *::before, :root[data-reduced-motion="true"] *::after',
+    );
   });
 });
