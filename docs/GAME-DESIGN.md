@@ -48,7 +48,9 @@ context, by a one-time coachmark over the play surface (no tutorial wall, no Man
 
 Each skill has its own one-time flag so they teach independently; both honor reduced motion and are
 back-compatible with progress saved before the cue existed (a missing flag reads as not-yet-seen).
-The Manual (How to play) remains the full reference for players who want it.
+The Manual (How to play) remains the full compact reference for players who want it: it covers the
+core launch/catch/steer loop, route radar and aim arcs, clean combos, power-ups, high-altitude
+hazards, Daily Challenge, and the post-run next-climb goal.
 
 ## Rewards & progression
 
