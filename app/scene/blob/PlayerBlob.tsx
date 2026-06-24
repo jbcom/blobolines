@@ -19,7 +19,7 @@ import { ImpactStyle, impact as impact_, NotificationType, notify, vibrate } fro
 import { classifyExpression, stepIdlePatience } from "@/sim/blob";
 import { CLOUD_BODY_HALF_HEIGHT, CLOUD_SETTLE_Y } from "@/sim/cloudPad";
 import { MAX_COMBO } from "@/sim/combo";
-import { downdraftAt, windAt } from "@/sim/hazard";
+import { type HazardForces, hazardForcesAt } from "@/sim/hazard";
 import { isPerfectRelease, launchVelocity } from "@/sim/launch";
 import {
   BLOB,
@@ -140,6 +140,7 @@ export function PlayerBlob() {
   const playerControlStarted = useRef(false);
   /** Bubble duration timer in seconds. Active > 0. */
   const bubbleRemaining = useRef(0);
+  const currentHazards = useRef<HazardForces>(hazardForcesAt(0, 0));
   /** Whether the player has a mid-air redirect/nudge charge available to use. */
   const nudgeAvailable = useRef(true);
   /** True once the player has air-steered during the CURRENT flight. Gates the lateral settle so a
@@ -225,8 +226,10 @@ export function PlayerBlob() {
       playerControlStarted.current = true;
       steeredThisFlight.current = true;
     }
-    const [wx, wz] = windAt(p.y, time);
-    const down = downdraftAt(p.y, time);
+    const hazards = hazardForcesAt(p.y, time);
+    currentHazards.current = hazards;
+    const [wx, wz] = hazards.wind;
+    const down = hazards.downdraft;
     const liveV = body.linvel();
     let nextVx = liveV.x;
     let nextVz = liveV.z;
@@ -738,6 +741,7 @@ export function PlayerBlob() {
       bubbleActive: bubbleRemaining.current > 0,
       bubbleRemaining: bubbleRemaining.current,
       nudgeAvailable: nudgeAvailable.current,
+      hazards: currentHazards.current,
       cloudAdherence:
         cloudCling.current.strength > 0.01
           ? {

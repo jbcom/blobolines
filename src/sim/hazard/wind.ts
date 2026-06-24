@@ -11,7 +11,7 @@
 
 export const WIND_START = 600; // stratosphere — matches the biome band where it gets gusty
 const WIND_RAMP = 200; // metres over which the gust ramps from 0 → full
-const WIND_ACCEL = 9; // peak lateral acceleration (m/s²) — strong enough to feel, not unfair
+export const WIND_ACCEL = 9; // peak lateral acceleration (m/s²) — strong enough to feel, not unfair
 
 export function windAt(height: number, time: number): readonly [number, number] {
   if (height <= WIND_START) return [0, 0];
@@ -27,7 +27,7 @@ export function windAt(height: number, time: number): readonly [number, number] 
  *  stratosphere into space), a distinct vertical hazard from the lateral wind gust. */
 export const DOWNDRAFT_START = 950; // the space band
 const DOWNDRAFT_RAMP = 300;
-const DOWNDRAFT_ACCEL = 12; // peak extra downward pull (m/s²)
+export const DOWNDRAFT_ACCEL = 12; // peak extra downward pull (m/s²)
 
 /**
  * Downward acceleration (≥0, applied as -Y) from periodic downdrafts in the space band — a
@@ -41,4 +41,32 @@ export function downdraftAt(height: number, time: number): number {
   const ramp = Math.min(1, (height - DOWNDRAFT_START) / DOWNDRAFT_RAMP);
   const pulse = Math.sin(time * 0.9) ** 2; // 0..1, mostly low with periodic surges
   return ramp * pulse * DOWNDRAFT_ACCEL;
+}
+
+export interface HazardForces {
+  /** Horizontal wind acceleration in world X/Z (m/s²). */
+  wind: readonly [number, number];
+  /** Magnitude of the horizontal wind acceleration (m/s²). */
+  windStrength: number;
+  /** Wind strength normalized against the tuned maximum [0,1]. */
+  windIntensity: number;
+  /** Extra downward acceleration applied to the blob (m/s²). */
+  downdraft: number;
+  /** Downdraft strength normalized against the tuned maximum [0,1]. */
+  downdraftIntensity: number;
+}
+
+const clamp01 = (n: number) => Math.max(0, Math.min(1, n));
+
+export function hazardForcesAt(height: number, time: number): HazardForces {
+  const wind = windAt(height, time);
+  const windStrength = Math.hypot(wind[0], wind[1]);
+  const downdraft = downdraftAt(height, time);
+  return {
+    wind,
+    windStrength,
+    windIntensity: clamp01(windStrength / WIND_ACCEL),
+    downdraft,
+    downdraftIntensity: clamp01(downdraft / DOWNDRAFT_ACCEL),
+  };
 }

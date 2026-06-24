@@ -6,6 +6,7 @@ export { ComboBadge } from "./ComboBadge";
 export { CrystalCounter } from "./CrystalCounter";
 export { DifficultyBanner } from "./DifficultyBanner";
 export { DifficultyMeter } from "./DifficultyMeter";
+export { HazardReadout, type HazardReadoutState, hazardReadoutState } from "./HazardReadout";
 export { Hud } from "./Hud";
 export { MilestoneBanner } from "./MilestoneBanner";
 export { type NextPadGuidance, NextPadRadar, nextPadGuidance } from "./NextPadRadar";

@@ -1,5 +1,13 @@
 import { describe, expect, it } from "vitest";
-import { DOWNDRAFT_START, downdraftAt, WIND_START, windAt } from "../wind";
+import {
+  DOWNDRAFT_ACCEL,
+  DOWNDRAFT_START,
+  downdraftAt,
+  hazardForcesAt,
+  WIND_ACCEL,
+  WIND_START,
+  windAt,
+} from "../wind";
 
 const mag = (v: readonly [number, number]) => Math.hypot(v[0], v[1]);
 
@@ -70,5 +78,27 @@ describe("downdraftAt", () => {
 
   it("is deterministic", () => {
     expect(downdraftAt(1300, 7.7)).toBe(downdraftAt(1300, 7.7));
+  });
+});
+
+describe("hazardForcesAt", () => {
+  it("normalizes wind and downdraft strengths for player-facing readouts", () => {
+    const hazards = hazardForcesAt(DOWNDRAFT_START + 400, 2);
+    expect(hazards.windStrength).toBeCloseTo(mag(hazards.wind), 5);
+    expect(hazards.windIntensity).toBeCloseTo(hazards.windStrength / WIND_ACCEL, 5);
+    expect(hazards.downdraftIntensity).toBeCloseTo(hazards.downdraft / DOWNDRAFT_ACCEL, 5);
+    expect(hazards.windIntensity).toBeGreaterThanOrEqual(0);
+    expect(hazards.windIntensity).toBeLessThanOrEqual(1);
+    expect(hazards.downdraftIntensity).toBeGreaterThanOrEqual(0);
+    expect(hazards.downdraftIntensity).toBeLessThanOrEqual(1);
+  });
+
+  it("reports zero intensities before hazards begin", () => {
+    expect(hazardForcesAt(WIND_START, 12)).toMatchObject({
+      windStrength: 0,
+      windIntensity: 0,
+      downdraft: 0,
+      downdraftIntensity: 0,
+    });
   });
 });

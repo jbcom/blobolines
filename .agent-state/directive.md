@@ -1621,20 +1621,44 @@ feedback, squash-merge, then rewrite this directive forward.
 
 ## Queue — N42 all-remaining-work loop
 
-- [ ] N42.1 Fresh survey from `main` at/after 04f32d3. Re-read current docs, directive, key tests,
-      and runtime surfaces before choosing the next milestone. Treat this as the standing goal for
-      all remaining Blobolines work: identify the highest player-value gap that is not already
-      saturated, implement it end to end, prove it locally, publish it through PR review/checks,
-      squash-merge, and rewrite this directive forward again.
-- [ ] N42.2 Candidate axes must be justified by evidence, not momentum. Start with:
+- [x] N42.1 SURVEY DONE from `main` at d5486df. Re-read current docs, directive, key tests,
+      and runtime surfaces before choosing the next milestone. Findings: first-run teaching is
+      already strong (launch coachmark + steer coachmark with short-hop re-arm and browser tests);
+      mobile/touch ergonomics already has viewport-relative steering, phone HUD scale caps,
+      safe-area HUD layout, and modal cap tests; late-run variety has deep mechanics
+      (route gates, slicers, obstacles, wind/downdraft) but one player-value gap: wind/downdraft
+      forces are applied in `PlayerBlob` and unit-tested in `src/sim/hazard`, yet have no
+      player-facing readout. DECISION: ship high-altitude hazard readability before adding more
+      raw mechanics.
+- [x] N42.2 Candidate axes justified by evidence, not momentum. Start with:
       (1) first-run retention/readability outside the already-rich daily/progression surfaces,
       (2) mobile/touch ergonomics and short-viewport polish beyond the current modal caps, and
       (3) late-run variety that adds meaningful decisions rather than another base cloud-pad type.
-      Also explicitly explain why any skipped axis is lower value/risk right now.
+      Skipped first-run/mobile for now because their current code and browser tests cover the
+      obvious risk areas; chose late-run hazard readability because it converts an invisible force
+      into a counterable decision surface.
 - [ ] N42.3 For the chosen milestone, require the full local proof profile appropriate to the
       blast radius: focused unit/browser fixtures, `pnpm lint`, `pnpm build`, `pnpm test:e2e`, and
       browser-visible screenshot/diagnostic evidence whenever visuals, playability, or UX change.
       Then publish, address every remote PR comment/thread/check, squash-merge, and repeat N42.1.
+
+## Queue — N43 high-altitude hazard readout
+
+- [x] N43.1 IMPLEMENTED. Added `hazardForcesAt` with normalized wind/downdraft intensities;
+      `PlayerBlob` writes the actual applied hazard forces into the diagnostics bridge; the in-run
+      HUD mounts `<HazardReadout>` in the lower-right safe-area slot. The card stays hidden while
+      calm and shows active wind direction/strength plus downdraft strength when those late-run
+      forces are present.
+- [x] N43.2 LOCAL VERIFIED. `pnpm typecheck`, `pnpm lint`, `pnpm build`, targeted hazard unit proof
+      (`pnpm test -- src/sim/hazard/__tests__/wind.test.ts`, 61 files / 595 tests), focused
+      browser proof (`pnpm test:browser -- app/views/hud/__tests__/HazardReadout.browser.test.tsx`,
+      53 files / 173 tests), and `pnpm test:e2e` (7/7, 1.9m) pass locally. Manual browser proof
+      used the real Play -> Easy flow, teleported to the late-climb band, launched from the high
+      pad, and captured a visible active readout at ~1213m; DOM evidence reported
+      `aria-label="Climb hazards: wind pushing back left at 91%, downdraft at 85%"`; screenshot:
+      `output/playwright/hazard-readout-clean.png`.
+- [ ] N43.3 Publish PR, address all remote feedback/checks, squash-merge, and rewrite this
+      directive forward to the next fresh survey.
 
 ## Notes
 - This is a living plan. After every stage, backward+forward sweep and edit the queue.

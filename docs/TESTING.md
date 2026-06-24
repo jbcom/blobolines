@@ -54,6 +54,8 @@ Render regressions that only a real GPU context catches:
   metres to the next transition, and final-cadence state
 - `app/views/hud/__tests__/RouteLandingToast.browser.test.tsx` — route-quality toast shows
   the landing grade/style bonus and clears itself
+- `app/views/hud/__tests__/HazardReadout.browser.test.tsx` — wind/downdraft hazard force
+  formatting, live HUD visibility, and accessible labels
 - `app/scene/__tests__/physics.fixture.test.tsx` — **Rapier physics regression**: a body
   falls under gravity (guards the WASM-suspension bug where `<Physics>` never mounts)
 
