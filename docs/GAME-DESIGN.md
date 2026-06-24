@@ -65,6 +65,9 @@ The Manual (How to play) remains the full reference for players who want it.
   UTC days: *Daily Devotee* (a 3-day streak) and *Faithful* (a 7-day streak, which grants the
   aurora skin). The streak only advances on TODAY'S daily tower (not a replayed past one), so
   these reward genuine day-over-day return — the engagement loop the streak counter already drives.
+- **Next-climb goal** gives every game-over result a single follow-up milestone selected from the
+  achievement set. The recap still leads with score/height/crystals/combo, but the player leaves
+  the screen with one concrete target for the next run instead of only a retrospective summary.
 
 ## Spatial awareness
 

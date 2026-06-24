@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 import { cleanup, render } from "vitest-browser-react";
 import { dailySeedPhrase } from "@/sim/daily";
-import { useGameStore, useWorldStore } from "@/state";
+import { DEFAULT_PROGRESS, useGameStore, useWorldStore } from "@/state";
 import { GameOver } from "../GameOver";
 
 // The GameOver card derives "today" via dailySeedPhrase(new Date()) at the UI edge, so a daily
@@ -33,7 +33,7 @@ beforeEach(() => {
       streakExtended: 0,
     },
     progress: {
-      ...useGameStore.getState().progress,
+      ...DEFAULT_PROGRESS,
       bestHeight: 134,
       bestScore: 5000,
       crystals: 42,
@@ -63,8 +63,33 @@ test("shows the run recap: score headline, altitude, max combo, crystals run + l
     .toBeInTheDocument();
   // Share button present.
   await expect.element(screen.getByRole("button", { name: /share/i })).toBeInTheDocument();
+  // A single post-run goal gives the next climb a concrete target.
+  await expect.element(screen.getByTestId("next-climb-goal")).toBeInTheDocument();
+  await expect.element(screen.getByText("Next climb")).toBeInTheDocument();
+  await expect.element(screen.getByText("Unbreakable")).toBeInTheDocument();
+  await expect.element(screen.getByText("5 / 8 clean combo")).toBeInTheDocument();
   // Crystals → next-skin progress + customize jump (default Mango is unlocked; Berry is next).
   await expect.element(screen.getByText(/Customize/)).toBeInTheDocument();
+});
+
+test("the post-run goal pivots to combo when that is the nearest useful target", async () => {
+  useGameStore.setState((s) => ({
+    run: { ...s.run, maxCombo: 4 },
+    progress: {
+      ...s.progress,
+      bestHeight: 120,
+      bestScore: 1000,
+      unlockedAchievements: ["height-100"],
+    },
+  }));
+
+  const screen = await render(<GameOver />);
+  await expect.element(screen.getByTestId("next-climb-goal")).toBeInTheDocument();
+  await expect.element(screen.getByText("On a Roll")).toBeInTheDocument();
+  await expect.element(screen.getByText("4 / 5 clean combo")).toBeInTheDocument();
+  await expect
+    .element(screen.getByRole("progressbar", { name: /progress toward on a roll/i }))
+    .toBeInTheDocument();
 });
 
 test("tapping Customize requests the customizer and returns to menu", async () => {

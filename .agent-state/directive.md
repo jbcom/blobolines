@@ -1667,28 +1667,48 @@ feedback, squash-merge, then rewrite this directive forward.
 
 ## Queue — N44 all-remaining-work loop
 
-- [ ] N44.1 Fresh survey from `main` at/after f6b492f. Re-read current docs, directive, key tests,
-      and runtime surfaces before choosing the next milestone. Treat this as the standing goal for
-      all remaining Blobolines work: identify the highest player-value gap that is not already
-      saturated, implement it end to end, prove it locally, publish it through PR review/checks,
-      squash-merge, and rewrite this directive forward again.
-- [ ] N44.2 Candidate axes must be justified by evidence, not momentum. Start with at least:
+- [x] N44.1 SURVEY DONE from `main` at f89490e. Re-read current docs, directive, key tests,
+      and runtime surfaces before choosing the next milestone. Findings: first-run skill teaching
+      is already covered by launch + steer coachmarks and short-hop re-arm; mobile/touch has
+      viewport-relative steering plus HUD scale/safe-area caps; late-run hazards are now readable;
+      daily/progression has standing, streak, weekly summary, share, achievements, and cosmetics.
+      Unsaturated gap: the GameOver screen has strong recap/reward/share, but no single next-run
+      target that turns a result into a replay objective.
+- [x] N44.2 Candidate axes justified by evidence, not momentum. Start with at least:
       (1) first-run retention/readability beyond the launch/steer coachmarks, (2) mobile/touch
       ergonomics and short-viewport polish beyond the current modal/HUD caps, (3) late-run
       decision variety beyond the now-readable wind/downdraft hazards, and (4) progression/reward
       surfaces that materially improve repeat play rather than adding another cosmetic panel.
       Explicitly explain why any skipped axis is lower value/risk right now.
+      DECISION: ship post-run next-climb coaching because it improves replay comprehension without
+      adding a new reward system. Skipped new mobile/late-run/progression mechanics because those
+      surfaces are already deep and would be lower value without fresh contrary evidence.
 - [ ] N44.3 For the chosen milestone, require the full local proof profile appropriate to the
       blast radius: focused unit/browser fixtures, `pnpm lint`, `pnpm build`, `pnpm test:e2e`, and
       browser-visible screenshot/diagnostic evidence whenever visuals, playability, or UX change.
       Then publish, address every actionable remote PR comment/thread/check, squash-merge, and
       repeat N44.1.
 
+## Queue — N45 post-run next-climb goal
+
+- [x] N45.1 IMPLEMENTED. Added pure `nextClimbGoal` selection from the existing achievement set,
+      filtering already-unlocked/met milestones and picking the nearest useful incomplete target;
+      GameOver now renders a compact "Next climb" strip with the target title, description,
+      progress text, and progress bar. The GameOver card also has max-height/overflow protection so
+      the added post-run target does not clip on short viewports.
+- [x] N45.2 LOCAL VERIFY DONE. Passed `pnpm test -- app/views/__tests__/gameOverGoal.test.ts`,
+      `pnpm test:browser -- app/views/__tests__/GameOver.browser.test.tsx`, `pnpm typecheck`,
+      `pnpm lint`, `pnpm build`, and `pnpm test:e2e` (7 passed in 1.8m). Browser-visible proof:
+      `output/playwright/gameover-next-climb-goal.png` at 1280x720, with the Next climb goal and
+      Back to menu both visible.
+- [ ] N45.3 Publish PR, address all actionable remote feedback/checks, squash-merge, and rewrite
+      this directive forward to the next fresh survey.
+
 ## Notes
 - This is a living plan. After every stage, backward+forward sweep and edit the queue.
 - Next candidate milestones must be justified by fresh docs/tests/runtime evidence, not momentum.
   The daily-challenge system (standing + streak + share + replay + weekly), the base
-  pad/obstacle/combo/skin systems, route hazards, high-altitude hazard readout, and the
-  reduced-motion/high-contrast contracts are now richly built.
+  pad/obstacle/combo/skin systems, route hazards, high-altitude hazard readout, post-run goal, and
+  the reduced-motion/high-contrast contracts are now richly built.
 - Lesson banked this session: the pre-push lint gate is `pnpm lint` (PINNED biome 2.5.0), NOT
   `npx biome` / global biome (older, gives false-clean) — see [[blobolines-biome-ci-stricter]].

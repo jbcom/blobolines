@@ -56,6 +56,8 @@ Render regressions that only a real GPU context catches:
   the landing grade/style bonus and clears itself
 - `app/views/hud/__tests__/HazardReadout.browser.test.tsx` — wind/downdraft hazard force
   formatting, live HUD visibility, and accessible labels
+- `app/views/__tests__/GameOver.browser.test.tsx` — run recap, daily standing/streak/share seed,
+  achievements, and the next-climb goal on the post-run screen
 - `app/scene/__tests__/physics.fixture.test.tsx` — **Rapier physics regression**: a body
   falls under gravity (guards the WASM-suspension bug where `<Physics>` never mounts)
 

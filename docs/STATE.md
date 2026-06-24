@@ -90,6 +90,9 @@ leaderboard + achievements gallery, and real-time air-nudge + achievement toasts
 - **Readable high-altitude hazards** — wind gusts and downdrafts already affect the blob in the
   late climb; the HUD now surfaces those active forces with a compact wind/downdraft readout fed by
   the same diagnostics that `PlayerBlob` applies to the body.
+- **Post-run next-climb goal** — GameOver now selects the nearest incomplete achievement milestone
+  and shows it as a compact "Next climb" target, so a result screen turns directly into a replay
+  objective without adding another progression currency.
 - **Two-skill onboarding** — the launch coachmark plus a new mid-air **steer** coachmark
   (`SteerCoachmark`) teach both core skills once, in context; a short first hop re-arms the steer
   cue rather than burning the teach.
@@ -102,10 +105,10 @@ leaderboard + achievements gallery, and real-time air-nudge + achievement toasts
 ## Next
 
 - Next work should follow the current queue in `.agent-state/directive.md`; start with a fresh
-  remaining-work survey and avoid stacking more daily/progression, base cloud-pad, or hazard
-  readability work without new evidence. The biome visual identity (scenery + parallax + landmarks
-  + reactions + audio + particles + banner), route hazards, and the daily/progression surfaces are
-  already deep.
+  remaining-work survey and avoid stacking more daily/progression, post-run goal, base cloud-pad,
+  or hazard readability work without new evidence. The biome visual identity (scenery + parallax +
+  landmarks + reactions + audio + particles + banner), route hazards, and the daily/progression
+  surfaces are already deep.
 - Visual QA is via the **deterministic browser fixtures** (real foreground Chromium), NOT live
   teleport screenshots: the claude-in-chrome tab is backgrounded, so rAF is throttled — the
   physics teleport doesn't move the blob and DOM motion animations don't advance. `setHeight(y)`
