@@ -55,7 +55,7 @@ export function nextClimbGoal({
     return true;
   });
 
-  const chosen = candidates.sort((a, b) => {
+  const chosen = [...candidates].sort((a, b) => {
     const progressDelta = b.progress.fraction - a.progress.fraction;
     return Math.abs(progressDelta) > 0.001 ? progressDelta : a.index - b.index;
   })[0];
@@ -78,7 +78,7 @@ export function nextClimbGoal({
     title: chosen.achievement.title,
     description: chosen.achievement.description,
     progressText: text,
-    progressPct: Math.round(chosen.progress.fraction * 100),
+    progressPct: Math.floor(chosen.progress.fraction * 100),
     ariaLabel: `Next climb goal: ${chosen.achievement.title}. ${text}.`,
   };
 }

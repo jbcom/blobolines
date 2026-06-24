@@ -76,6 +76,23 @@ test("nextClimbGoal keeps daily-streak goals on daily results", () => {
   expect(goal).toMatchObject({
     title: "Daily Devotee",
     progressText: "2 / 3 day streak",
-    progressPct: 67,
+    progressPct: 66,
+  });
+});
+
+test("nextClimbGoal floors progress so a locked target never renders full", () => {
+  const goal = nextClimbGoal({
+    stats: {
+      ...baseStats,
+      bestHeight: 249,
+    },
+    unlockedAchievements: ["height-100"],
+    dailyRun: false,
+  });
+
+  expect(goal).toMatchObject({
+    title: "Stratosphere",
+    progressText: "249 / 250 m",
+    progressPct: 99,
   });
 });
