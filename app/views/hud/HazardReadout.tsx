@@ -126,7 +126,7 @@ export function HazardReadout() {
     >
       <div
         ref={windRowRef}
-        className="items-center justify-between gap-3"
+        className="flex items-center justify-between gap-3"
         style={{ display: "none" }}
       >
         <span className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-[0.16em] text-fg-subtle">
@@ -144,7 +144,7 @@ export function HazardReadout() {
       </div>
       <div
         ref={downRowRef}
-        className="items-center justify-between gap-3"
+        className="flex items-center justify-between gap-3"
         style={{ display: "none" }}
       >
         <span className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-[0.16em] text-fg-subtle">
