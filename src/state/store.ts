@@ -97,6 +97,7 @@ export const DEFAULT_SETTINGS: GameSettings = {
   chargeSensitivity: 1,
   haptics: true,
   reducedMotion: false,
+  highContrast: false,
   qualityPref: "auto",
 };
 

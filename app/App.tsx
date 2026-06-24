@@ -18,10 +18,22 @@ export function syncReducedMotionDataset(
   };
 }
 
+export function syncHighContrastDataset(
+  highContrast: boolean,
+  root: HTMLElement | null = typeof document !== "undefined" ? document.documentElement : null,
+): () => void {
+  if (!root) return () => {};
+  root.dataset.highContrast = highContrast ? "true" : "false";
+  return () => {
+    delete root.dataset.highContrast;
+  };
+}
+
 export function App() {
   // "always" forces reduced motion in-app (the settings toggle); "user" defers to the OS
   // prefers-reduced-motion. Lives here (not main.tsx) so it's reactive to the store.
   const reducedMotion = useGameStore((s) => s.settings.reducedMotion);
+  const highContrast = useGameStore((s) => s.settings.highContrast);
   // The player's render-quality preference ("auto" or a pinned tier). Synced to the render
   // bridge below so changing it in Settings re-resolves the active tier immediately.
   const qualityPref = useGameStore((s) => s.settings.qualityPref);
@@ -50,6 +62,10 @@ export function App() {
   useEffect(() => {
     return syncReducedMotionDataset(reducedMotion);
   }, [reducedMotion]);
+
+  useEffect(() => {
+    return syncHighContrastDataset(highContrast);
+  }, [highContrast]);
 
   return (
     <ErrorBoundary source="App">

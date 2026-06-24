@@ -67,4 +67,12 @@ describe("design tokens", () => {
       ':root[data-reduced-motion="true"], :root[data-reduced-motion="true"] *, :root[data-reduced-motion="true"] *::before, :root[data-reduced-motion="true"] *::after',
     );
   });
+
+  it("defines a high-contrast semantic token override", () => {
+    const css = readFileSync("src/styles/tokens.css", "utf8");
+    expect(css).toContain(':root[data-high-contrast="true"]');
+    expect(css).toContain("--surface: rgba(18, 7, 17, 0.98);");
+    expect(css).toContain("--fg: #fffdf2;");
+    expect(css).toContain("--border-strong: rgba(255, 253, 242, 0.9);");
+  });
 });

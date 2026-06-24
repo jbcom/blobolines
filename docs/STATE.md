@@ -84,6 +84,9 @@ leaderboard + achievements gallery, and real-time air-nudge + achievement toasts
   jackpot, achievement unlock, new record, streak extension); a full goo-splat + heavy haptic on
   death and a relief buzz on a shield save; coin/powerup/success feedback on a customizer purchase;
   and a tap sound on the menu's primary buttons.
+- **Accessibility settings** — Reduce motion now suppresses CSS animation, screen flashes, speed
+  lines, and punch micro-interactions; High contrast boosts semantic UI surface/text/border tokens
+  through the same persisted settings/root-dataset path.
 - **Two-skill onboarding** — the launch coachmark plus a new mid-air **steer** coachmark
   (`SteerCoachmark`) teach both core skills once, in context; a short first hop re-arms the steer
   cue rather than burning the teach.
@@ -95,10 +98,11 @@ leaderboard + achievements gallery, and real-time air-nudge + achievement toasts
 
 ## Next
 
-- Next work should start with the N38 survey instead of stacking saturated systems: compare a new
-  cloud-pad behaviour, a cosmetic trail system, and a player-facing settings/accessibility option.
-  The biome visual identity (scenery + parallax + landmarks + reactions + audio + particles +
-  banner) and the daily/progression surfaces are already deep.
+- Next work should follow the current queue in `.agent-state/directive.md` after the N41
+  high-contrast closeout; start with a fresh remaining-work survey and avoid stacking more
+  daily/progression or base cloud-pad work without new evidence. The biome visual identity
+  (scenery + parallax + landmarks + reactions + audio + particles + banner), route hazards, and
+  the daily/progression surfaces are already deep.
 - Visual QA is via the **deterministic browser fixtures** (real foreground Chromium), NOT live
   teleport screenshots: the claude-in-chrome tab is backgrounded, so rAF is throttled — the
   physics teleport doesn't move the blob and DOM motion animations don't advance. `setHeight(y)`

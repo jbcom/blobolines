@@ -1579,21 +1579,49 @@ feedback, squash-merge, then rewrite this directive forward.
       Playwright E2E, Android debug APK, CodeQL, Amazon Q, and CodeRabbit status all passed.
       Remote review sweep: Amazon Q said ready to merge; CodeRabbit only posted a quota/rate-limit
       notice; Gemini posted one late actionable follow-up after merge. That follow-up is folded
-      here: `tokens.css` now includes the root element itself in the `data-reduced-motion` CSS
-      selector, guarded by `src/styles/tokens.test.ts`.
+      in PR #113 (SQUASH-MERGED e4206bc): `tokens.css` now includes the root element itself in
+      the `data-reduced-motion` CSS selector, guarded by `src/styles/tokens.test.ts`; Gemini's
+      whitespace-hardening follow-up was committed and the stale thread resolved.
 
 ## Queue — N40 next remaining-work survey
 
-- [ ] N40.1 Start from current `main` after the N39 follow-up merges. Re-survey remaining
+- [x] N40.1 SURVEY DONE from current `main` after PR #113 merged. Re-surveyed remaining
       unsaturated player-value axes instead of reusing the stale N38 options mechanically. Compare
       at least: (1) a genuinely new cloud-pad behavior or hazard interaction, (2) player-facing
       accessibility/settings gaps beyond reduced motion, and (3) progression/readability surfaces
-      that are still weak under browser-visible proof. Record the decision before implementation.
+      that are still weak under browser-visible proof. Findings: cloud-pad/hazard is already deep
+      (11 pad types, route gates, slicers, wind/downdrafts, seed verifier, WebGL fixtures);
+      progression/readability is also deep (weekly daily summary, leaderboard replay, share card,
+      achievement/customizer/game-over fixtures). DECISION: ship the settings/accessibility gap:
+      a persisted High contrast mode that boosts semantic UI tokens through the same root-dataset
+      pattern as reduced motion.
+
+## Queue — N41 high-contrast readability setting
+
+- [x] N41.1 IMPLEMENTED. Added `settings.highContrast` to `GameSettings`, `DEFAULT_SETTINGS`, and
+      persisted settings normalization; `App` mirrors it to `document.documentElement.dataset` as
+      `data-high-contrast`; `SettingsModal` exposes a High contrast switch; `tokens.css` defines a
+      semantic high-contrast token override for UI surface/text/border/glow values. Focused tests
+      cover root dataset sync, Settings switch behavior, and token override presence. During
+      screenshot QC, fixed the charge-speed "drag to test" label so it no longer collides with the
+      preview dot.
+- [x] N41.2 LOCAL VERIFIED. `pnpm lint`, `pnpm build`, targeted unit proof
+      (`pnpm test -- app/__tests__/App.test.ts src/styles/tokens.test.ts
+      src/state/__tests__/store.test.ts`, 61 files / 593 tests), focused browser proof
+      (`pnpm test:browser -- app/views/__tests__/SettingsModal.fixture.test.tsx`, 52 files /
+      169 tests), and `pnpm test:e2e` (7/7, 1.7m) pass locally. Playwright CLI manual proof:
+      Settings -> High contrast toggles `data-high-contrast="true"` and computed tokens resolve to
+      `--fg: #fffdf2`, `--surface: rgba(18, 7, 17, 0.98)`, and
+      `--border-strong: rgba(255, 253, 242, 0.9)`; screenshot artifact:
+      `output/playwright/high-contrast-settings.png`.
+- [ ] N41.3 Publish PR, address all remote review feedback, wait for required checks, squash-merge,
+      and rewrite the directive forward to the next fresh remaining-work survey.
 
 ## Notes
 - This is a living plan. After every stage, backward+forward sweep and edit the queue.
 - Next candidate milestones must be justified by fresh docs/tests/runtime evidence, not momentum.
   The daily-challenge system (standing + streak + share + replay + weekly), the base
-  pad/obstacle/combo/skin systems, and the reduced-motion contract are now richly built.
+  pad/obstacle/combo/skin systems, route hazards, and the reduced-motion contract are now richly
+  built.
 - Lesson banked this session: the pre-push lint gate is `pnpm lint` (PINNED biome 2.5.0), NOT
   `npx biome` / global biome (older, gives false-clean) — see [[blobolines-biome-ci-stricter]].

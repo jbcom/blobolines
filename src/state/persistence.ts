@@ -65,6 +65,7 @@ const persistedSettingsSchema = z.object({
   slingshotSensitivity: z.number().optional(),
   haptics: z.boolean().optional(),
   reducedMotion: z.boolean().optional(),
+  highContrast: z.boolean().optional(),
   qualityPref: z.enum(["auto", "low", "medium", "high"]).optional(),
 });
 
@@ -80,6 +81,7 @@ function normalizeSettings(parsed: z.infer<typeof persistedSettingsSchema>): Gam
       parsed.chargeSensitivity ?? legacyCharge ?? DEFAULT_SETTINGS.chargeSensitivity,
     haptics: parsed.haptics ?? DEFAULT_SETTINGS.haptics,
     reducedMotion: parsed.reducedMotion ?? DEFAULT_SETTINGS.reducedMotion,
+    highContrast: parsed.highContrast ?? DEFAULT_SETTINGS.highContrast,
     qualityPref: parsed.qualityPref ?? DEFAULT_SETTINGS.qualityPref,
   };
 }
