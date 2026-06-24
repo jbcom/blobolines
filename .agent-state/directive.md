@@ -1876,11 +1876,13 @@ this directive forward again.
       it sits directly after the primary Play CTA and can hide a selectable mode on the primary
       mobile viewport. Skipped new progression, hazard, power-up, Manual, and route-variety work
       because those surfaces are already richly covered without new contrary evidence.
-- [ ] N52.3 For the chosen milestone, require the proof profile appropriate to the blast radius:
-      focused unit/browser fixtures, `pnpm lint`, `pnpm build`, `pnpm test:e2e`, and
-      browser-visible screenshot/diagnostic evidence whenever visuals, playability, or UX change.
-      Then publish, address every actionable remote PR comment/thread/check, squash-merge, and
-      repeat N52.1.
+- [x] N52.3 DONE via PR #126. The small-phone first-run difficulty-dialog milestone got focused
+      browser fixture proof, `pnpm typecheck`, `pnpm lint`, `pnpm test`, `pnpm build`,
+      `pnpm test:e2e`, and before/after 320px browser-visible screenshot proof before publish.
+      Remote checks passed: Lint/Typecheck/Test/Build, Playwright E2E, Android debug APK, CodeQL,
+      Amazon Q Developer, and CodeRabbit status. Remote feedback had no actionable code thread:
+      Amazon Q commented ready to merge, Gemini was quota-limited, CodeRabbit was review-limited,
+      and thread-aware review state was empty.
 
 ## Queue — N53 small-phone first-run difficulty dialog
 
@@ -1897,15 +1899,39 @@ this directive forward again.
       "Ultimate Blobmare" choice below the visible phone viewport; the fixed 320x700 screenshot
       at `output/playwright/new-game-difficulty-mobile-fixed.png` shows all six route choices,
       including Ultimate Blobmare, fully visible in the first-run dialog.
-- [ ] N53.3 PUBLISH/MERGE PENDING. Open the PR, address every actionable remote thread/check,
-      squash-merge, then rewrite this directive forward for the next remaining-work pass.
+- [x] N53.3 PR #126 SQUASH-MERGED (7513c15). The branch was marked ready, all remote checks
+      passed, no actionable review thread remained, and the milestone was squash-merged to `main`.
+
+## Queue — N54 all-remaining-work loop
+
+Standing objective: continue treating the entire remaining Blobolines backlog as the goal. Each
+pass must re-survey the docs, directive, plans, tests, codebase, and browser/runtime evidence from
+current `main`; choose the highest unsaturated player-value/risk gap; implement it end to end;
+prove it locally and remotely; address every actionable PR thread/check; squash-merge; then rewrite
+this directive forward again.
+
+- [ ] N54.1 SURVEY from current `main` after PR #126. Re-read current docs, directive, plans,
+      key tests, and runtime surfaces before choosing the next milestone. Start by checking the
+      same high-value axes: first-run comprehension, mobile/touch and short-viewport friction,
+      mid/late-run decision variety, repeat-play value, audio/visual identity, accessibility, and
+      any red or brittle test evidence.
+- [ ] N54.2 Choose the next milestone only from fresh evidence. Explicitly justify the selected
+      gap against saturated surfaces: daily challenge, achievements, cosmetics, weekly summary,
+      share/replay, next-climb goal, active power-up badges including shield, complete Manual,
+      small-phone menu action layout, first-run difficulty dialog layout, cloud pads, route
+      hazards, high-altitude hazard readout, biome identity, and reduced-motion/high-contrast.
+- [ ] N54.3 For the chosen milestone, require the proof profile appropriate to the blast radius:
+      focused unit/browser fixtures, `pnpm typecheck`, `pnpm lint`, `pnpm test`, `pnpm build`,
+      `pnpm test:e2e`, and browser-visible screenshot/diagnostic evidence whenever visuals,
+      playability, or UX change. Then publish, address every actionable remote PR comment/thread/
+      check, squash-merge, and repeat N54.1.
 
 ## Notes
 - This is a living plan. After every stage, backward+forward sweep and edit the queue.
 - Next candidate milestones must be justified by fresh docs/tests/runtime evidence, not momentum.
   The daily-challenge system (standing + streak + share + replay + weekly), the base
   pad/obstacle/combo/skin systems, route hazards, high-altitude hazard readout, post-run goal,
-  active power-up badges, the how-to reference, small-phone menu action layout, and the
-  reduced-motion/high-contrast contracts are now richly built.
+  active power-up badges, the how-to reference, small-phone menu action layout, first-run
+  difficulty dialog layout, and the reduced-motion/high-contrast contracts are now richly built.
 - Lesson banked this session: the pre-push lint gate is `pnpm lint` (PINNED biome 2.5.0), NOT
   `npx biome` / global biome (older, gives false-clean) — see [[blobolines-biome-ci-stricter]].
