@@ -1910,21 +1910,52 @@ current `main`; choose the highest unsaturated player-value/risk gap; implement 
 prove it locally and remotely; address every actionable PR thread/check; squash-merge; then rewrite
 this directive forward again.
 
-- [ ] N54.1 SURVEY from current `main` after PR #126. Re-read current docs, directive, plans,
-      key tests, and runtime surfaces before choosing the next milestone. Start by checking the
-      same high-value axes: first-run comprehension, mobile/touch and short-viewport friction,
-      mid/late-run decision variety, repeat-play value, audio/visual identity, accessibility, and
-      any red or brittle test evidence.
-- [ ] N54.2 Choose the next milestone only from fresh evidence. Explicitly justify the selected
-      gap against saturated surfaces: daily challenge, achievements, cosmetics, weekly summary,
-      share/replay, next-climb goal, active power-up badges including shield, complete Manual,
-      small-phone menu action layout, first-run difficulty dialog layout, cloud pads, route
-      hazards, high-altitude hazard readout, biome identity, and reduced-motion/high-contrast.
+- [x] N54.1 SURVEY DONE from `main` at 81f2473. Re-read current docs, directive, tests, and
+      dense menu modal/runtime surfaces before choosing the next milestone. Findings:
+      daily/progression, post-run goals, high-altitude hazard readability, active power-up badges,
+      base cloud-pad behavior, biome identity, reduced-motion/high-contrast, complete Manual,
+      small-phone menu action layout, and first-run difficulty dialog layout are already deep.
+      Fresh 320x700 touch-browser evidence with dense saved progress showed Settings pushed its
+      Done button below the visible phone viewport when haptics were enabled, and the Hall-of-Fame
+      leaderboard tab created a nested-scroll trap where the high-score list scrolled while the
+      modal's Done action sat below the initial viewport.
+- [x] N54.2 Candidate axes justified by fresh evidence. Start with at least: (1) first-run
+      comprehension after launch/steer/manual/menu/difficulty guidance, (2) mid/late-run decision
+      variety beyond readable hazards and cloud-pad adherence, (3) mobile/touch and short-viewport
+      friction after the HUD/menu/modal caps, (4) repeat-play value beyond daily challenge,
+      achievements, cosmetics, weekly summary, share/replay, next-climb goal, and active power-up
+      badges, and (5) audio/visual identity. DECISION: ship the small-phone dense modal fit for
+      Settings + Hall-of-Fame leaderboard because it is fresh, measured mobile friction on menu
+      surfaces players return to repeatedly, and it is lower risk/higher confidence than stacking
+      new progression, hazard, route-variety, or power-up mechanics onto already-rich systems.
 - [ ] N54.3 For the chosen milestone, require the proof profile appropriate to the blast radius:
       focused unit/browser fixtures, `pnpm typecheck`, `pnpm lint`, `pnpm test`, `pnpm build`,
       `pnpm test:e2e`, and browser-visible screenshot/diagnostic evidence whenever visuals,
       playability, or UX change. Then publish, address every actionable remote PR comment/thread/
       check, squash-merge, and repeat N54.1.
+
+## Queue — N55 small-phone dense modal fit
+
+- [x] N55.1 IMPLEMENTED. Settings now uses compact mobile-only control spacing and a closer Done
+      margin while preserving wider-screen spacing; the Hall-of-Fame leaderboard list now has a
+      230px phone cap (360px from `sm` upward) so the list scroll stays bounded and the modal's
+      Done action remains visible. Added focused browser assertions for the compact Settings stack
+      and leaderboard cap, plus a real Playwright e2e layout gate that seeds dense progress,
+      runs the menu at a 320x700 touch viewport, opens Settings and Leaderboard, and asserts Done
+      stays inside the viewport with no horizontal overflow.
+- [x] N55.2 LOCAL VERIFY DONE. Passed
+      `pnpm test:browser -- app/views/__tests__/SettingsModal.fixture.test.tsx app/views/__tests__/AchievementsModal.browser.test.tsx`
+      (53 browser files / 180 tests), `pnpm typecheck`, `pnpm lint`, `pnpm test` (62 files /
+      599 tests), `pnpm build`, `git diff --check`, and `pnpm test:e2e` (8 passed in 1.8m).
+      Browser-visible proof: `output/playwright/n54-settings-mobile.png` and
+      `output/playwright/n54-achievements-leaderboard-mobile.png` at 320x700 showed Done below
+      the visible phone viewport; fixed screenshots
+      `output/playwright/n54-settings-mobile-fixed.png` and
+      `output/playwright/n54-achievements-leaderboard-mobile-fixed.png` show Done visible.
+      Geometry proof: Settings Done 614-662px, Leaderboard Done 600-648px, with no horizontal
+      overflow at 320x700.
+- [ ] N55.3 PUBLISH/MERGE PENDING. Open the PR, address every actionable remote thread/check,
+      squash-merge, then rewrite this directive forward for the next remaining-work pass.
 
 ## Notes
 - This is a living plan. After every stage, backward+forward sweep and edit the queue.
@@ -1932,6 +1963,7 @@ this directive forward again.
   The daily-challenge system (standing + streak + share + replay + weekly), the base
   pad/obstacle/combo/skin systems, route hazards, high-altitude hazard readout, post-run goal,
   active power-up badges, the how-to reference, small-phone menu action layout, first-run
-  difficulty dialog layout, and the reduced-motion/high-contrast contracts are now richly built.
+  difficulty dialog layout, dense Settings/leaderboard modal layout, and the
+  reduced-motion/high-contrast contracts are now richly built.
 - Lesson banked this session: the pre-push lint gate is `pnpm lint` (PINNED biome 2.5.0), NOT
   `npx biome` / global biome (older, gives false-clean) — see [[blobolines-biome-ci-stricter]].

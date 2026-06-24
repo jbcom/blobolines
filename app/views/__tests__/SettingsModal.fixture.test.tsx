@@ -53,6 +53,16 @@ test("dialog caps its height and scrolls its panel internally", async () => {
   expect(panel?.style.maxHeight).toBe("inherit");
 });
 
+test("SettingsModal uses compact mobile spacing so the close action stays reachable", async () => {
+  const screen = await render(<SettingsModal open onOpenChange={() => {}} />);
+  await expect.element(screen.getByTestId("settings")).toBeVisible();
+
+  const controls = screen.getByTestId("settings-controls").element();
+  expect(controls.className).toContain("gap-3");
+  expect(controls.className).toContain("sm:gap-5");
+  expect(screen.getByRole("button", { name: "Done" }).element().className).toContain("mt-4");
+});
+
 test("Graphics quality picker pins the tier in settings", async () => {
   const screen = await render(<SettingsModal open onOpenChange={() => {}} />);
   await expect.element(screen.getByTestId("settings")).toBeVisible();

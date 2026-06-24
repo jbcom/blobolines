@@ -77,3 +77,26 @@ test("a Hall-of-Fame entry's Replay button re-climbs that exact tower", async ()
   expect(useGameStore.getState().phase).toBe("playing");
   expect(useGameStore.getState().dailyRun).toBe(true); // the seed is a daily seed
 });
+
+test("leaderboard list uses a smaller phone cap so Done remains reachable", async () => {
+  useGameStore.setState((s) => ({
+    progress: {
+      ...s.progress,
+      highScores: Array.from({ length: 10 }, (_, i) => ({
+        score: 65000 - i * 4200,
+        height: 1800 - i * 110,
+        crystals: 42 - i,
+        maxCombo: Math.max(2, 12 - i),
+        date: `2026-06-${String(24 - i).padStart(2, "0")}T12:00:00.000Z`,
+        seedPhrase: `metty-golden-pebble-${i + 1}`,
+        difficulty: "ready",
+      })),
+    },
+  }));
+  const screen = await render(<AchievementsModal open onOpenChange={noop} />);
+  await screen.getByRole("tab", { name: /leaderboard/i }).click();
+
+  const list = screen.getByTestId("leaderboard-list").element();
+  expect(list.className).toContain("max-h-[230px]");
+  expect(list.className).toContain("sm:max-h-[360px]");
+});
