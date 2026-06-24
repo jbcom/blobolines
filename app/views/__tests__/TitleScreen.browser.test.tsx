@@ -92,6 +92,31 @@ test("Play starts a normal run (dailyRun false even if a daily flag lingered)", 
   expect(useWorldStore.getState().seedPhrase).toMatch(/^[a-z]+-[a-z]+-[a-z]+$/);
 });
 
+test("new game difficulty dialog exposes every compact route choice", async () => {
+  const screen = await render(<TitleScreen />);
+  await screen.getByRole("button", { name: /^Play/ }).click();
+
+  const dialog = screen.getByTestId("new-game-difficulty");
+  await expect.element(dialog).toBeInTheDocument();
+  const panel = dialog.element().querySelector(".overflow-y-auto") as HTMLElement | null;
+  expect(panel?.style.maxHeight).toBe("inherit");
+
+  for (const name of [
+    "Easy",
+    "Medium",
+    "Hard",
+    "Blobmare",
+    "Ultra Blobmare",
+    "Ultimate Blobmare",
+  ]) {
+    await expect.element(screen.getByText(name, { exact: true })).toBeVisible();
+  }
+  await expect
+    .element(screen.getByText("Big clouds, slow layers, three route variants."))
+    .toBeVisible();
+  await expect.element(screen.getByText("One-path precision from launch one.")).toBeVisible();
+});
+
 test("an AT-RISK daily streak nudges 'play today to keep it' on the Daily Challenge CTA", async () => {
   // Streak alive (last played YESTERDAY) but today not yet done → the at-risk nudge shows.
   pinClock();

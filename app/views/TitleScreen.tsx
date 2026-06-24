@@ -35,12 +35,12 @@ const SettingsModal = lazy(() =>
 );
 
 const DIFFICULTY_TONE: Record<WorldDifficulty, string> = {
-  ready: "Big soft clouds, slow layers, and three forgiving route variants.",
-  medium: "Drifting clouds and tighter cloud catches without precision stacks.",
-  hard: "Wispy wobblers and faster cloud layers with sharper charge timing.",
-  blobmare: "Storm splitters, thin catch windows, and quick cloud decisions.",
-  ultraBlobmare: "Tiny cloud catches with very tight proof margins.",
-  oneWrongMove: "Ultimate one-path cloud precision from the first launch.",
+  ready: "Big clouds, slow layers, three route variants.",
+  medium: "Moving clouds and tighter catches.",
+  hard: "Wobblers and sharper charge timing.",
+  blobmare: "Storm splitters and quick decisions.",
+  ultraBlobmare: "Tiny clouds with tight proof margins.",
+  oneWrongMove: "One-path precision from launch one.",
 };
 
 /**
@@ -325,20 +325,20 @@ export function TitleScreen() {
           )}
         </div>
 
-        <div className="mt-5 grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-4 grid grid-cols-1 gap-2 sm:mt-5 sm:grid-cols-2 lg:grid-cols-3">
           {ROUTE_DIFFICULTIES.map((id) => {
             const active = id === difficulty;
             return (
               <Button
                 key={id}
                 variant={active ? "warm" : "surface"}
-                className="h-auto w-full justify-start gap-3 whitespace-normal px-4 py-3 text-left"
+                className="h-auto min-h-14 w-full justify-start gap-2 whitespace-normal px-3 py-2 text-left sm:gap-3 sm:px-4 sm:py-3"
                 onClick={() => start(pendingDaily, id)}
               >
                 <Play className="size-4 shrink-0 fill-current" aria-hidden />
                 <span className="flex min-w-0 flex-col">
                   <span className="font-display text-sm font-bold">{ROUTE_PROFILES[id].label}</span>
-                  <span className="font-ui text-xs font-medium opacity-80">
+                  <span className="font-ui text-[11px] leading-tight font-medium opacity-80 sm:text-xs">
                     {DIFFICULTY_TONE[id]}
                   </span>
                 </span>
