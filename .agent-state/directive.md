@@ -1928,11 +1928,13 @@ this directive forward again.
       Settings + Hall-of-Fame leaderboard because it is fresh, measured mobile friction on menu
       surfaces players return to repeatedly, and it is lower risk/higher confidence than stacking
       new progression, hazard, route-variety, or power-up mechanics onto already-rich systems.
-- [ ] N54.3 For the chosen milestone, require the proof profile appropriate to the blast radius:
-      focused unit/browser fixtures, `pnpm typecheck`, `pnpm lint`, `pnpm test`, `pnpm build`,
-      `pnpm test:e2e`, and browser-visible screenshot/diagnostic evidence whenever visuals,
-      playability, or UX change. Then publish, address every actionable remote PR comment/thread/
-      check, squash-merge, and repeat N54.1.
+- [x] N54.3 DONE via PR #128. The small-phone dense modal milestone got focused browser fixture
+      proof, `pnpm typecheck`, `pnpm lint`, `pnpm test`, `pnpm build`, `pnpm test:e2e`, and
+      before/after 320px browser-visible screenshot proof before publish. Remote checks passed:
+      Lint/Typecheck/Test/Build, Playwright E2E, Android debug APK, CodeQL, Amazon Q Developer,
+      and CodeRabbit status. Remote feedback had no actionable code thread: Amazon Q commented
+      production-ready, Gemini was quota-limited, CodeRabbit was review-limited, and thread-aware
+      review state was empty.
 
 ## Queue — N55 small-phone dense modal fit
 
@@ -1954,8 +1956,33 @@ this directive forward again.
       `output/playwright/n54-achievements-leaderboard-mobile-fixed.png` show Done visible.
       Geometry proof: Settings Done 614-662px, Leaderboard Done 600-648px, with no horizontal
       overflow at 320x700.
-- [ ] N55.3 PUBLISH/MERGE PENDING. Open the PR, address every actionable remote thread/check,
-      squash-merge, then rewrite this directive forward for the next remaining-work pass.
+- [x] N55.3 PR #128 SQUASH-MERGED (0f05f56). The branch was marked ready, all remote checks
+      passed, no actionable review thread remained, and the milestone was squash-merged to `main`.
+
+## Queue — N56 all-remaining-work loop
+
+Standing objective: continue treating the entire remaining Blobolines backlog as the goal. Each
+pass must re-survey the docs, directive, plans, tests, codebase, and browser/runtime evidence from
+current `main`; choose the highest unsaturated player-value/risk gap; implement it end to end;
+prove it locally and remotely; address every actionable PR thread/check; squash-merge; then rewrite
+this directive forward again.
+
+- [ ] N56.1 SURVEY from current `main` after PR #128. Re-read current docs, directive, plans,
+      key tests, and runtime surfaces before choosing the next milestone. Start by checking the
+      same high-value axes: first-run comprehension, mobile/touch and short-viewport friction,
+      mid/late-run decision variety, repeat-play value, audio/visual identity, accessibility, and
+      any red or brittle test evidence.
+- [ ] N56.2 Choose the next milestone only from fresh evidence. Explicitly justify the selected
+      gap against saturated surfaces: daily challenge, achievements, cosmetics, weekly summary,
+      share/replay, next-climb goal, active power-up badges including shield, complete Manual,
+      small-phone menu action layout, first-run difficulty dialog layout, dense Settings/
+      leaderboard modal layout, cloud pads, route hazards, high-altitude hazard readout, biome
+      identity, and reduced-motion/high-contrast.
+- [ ] N56.3 For the chosen milestone, require the proof profile appropriate to the blast radius:
+      focused unit/browser fixtures, `pnpm typecheck`, `pnpm lint`, `pnpm test`, `pnpm build`,
+      `pnpm test:e2e`, and browser-visible screenshot/diagnostic evidence whenever visuals,
+      playability, or UX change. Then publish, address every actionable remote PR comment/thread/
+      check, squash-merge, and repeat N56.1.
 
 ## Notes
 - This is a living plan. After every stage, backward+forward sweep and edit the queue.
