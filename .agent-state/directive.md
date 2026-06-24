@@ -1776,11 +1776,12 @@ this directive forward again.
       DECISION: ship the complete How-to-play reference. It closes a real first-run/return-player
       comprehension mismatch without adding a new system or stacking already-rich daily, hazard,
       power-up badge, cloud-pad, or progression surfaces.
-- [ ] N48.3 For the chosen milestone, require the proof profile appropriate to the blast radius:
-      focused unit/browser fixtures, `pnpm lint`, `pnpm build`, `pnpm test:e2e`, and
-      browser-visible screenshot/diagnostic evidence whenever visuals, playability, or UX change.
-      Then publish, address every actionable remote PR comment/thread/check, squash-merge, and
-      repeat N48.1.
+- [x] N48.3 DONE via PR #122. The complete-Manual milestone got focused browser fixture proof,
+      `pnpm typecheck`, `pnpm lint`, `pnpm build`, `pnpm test:e2e`, and production-preview mobile
+      screenshot proof before publish. Remote checks passed: Lint/Typecheck/Test/Build,
+      Playwright E2E, Android debug APK, CodeQL, Amazon Q Developer, and CodeRabbit status.
+      Remote feedback had no actionable code thread: Amazon Q commented ready to merge, Gemini was
+      quota-limited, CodeRabbit was review-limited, and review-thread state was empty.
 
 ## Queue — N49 complete How-to-play reference
 
@@ -1796,8 +1797,31 @@ this directive forward again.
       `output/playwright/manual-reference-mobile-prod-bottom.png` at 390x844 from production
       preview show the expanded Manual is readable, internally scrollable, and reaches the Goals
       section plus Got it button on a phone viewport.
-- [ ] N49.3 Publish PR, address all actionable remote feedback/checks, squash-merge, and rewrite
-      this directive forward to the next fresh survey.
+- [x] N49.3 PR #122 SQUASH-MERGED (de5cd60). The branch was marked ready, all remote checks
+      passed, no actionable review thread remained, and the milestone was squash-merged to `main`.
+
+## Queue — N50 all-remaining-work loop
+
+Standing objective: continue treating the entire remaining Blobolines backlog as the goal. Each
+pass must re-survey the docs, directive, plans, tests, codebase, and browser/runtime evidence from
+current `main`; choose the highest unsaturated player-value/risk gap; implement it end to end;
+prove it locally and remotely; address every actionable PR thread/check; squash-merge; then rewrite
+this directive forward again.
+
+- [ ] N50.1 Fresh survey from `main` at/after de5cd60. Re-read current docs, directive, plans,
+      key tests, and runtime surfaces before choosing the next milestone. Do not choose by
+      momentum from the Manual/reference work.
+- [ ] N50.2 Candidate axes must be justified by fresh evidence. Start with at least: (1) first-run
+      comprehension after launch/steer/manual/post-run guidance, (2) mid/late-run decision variety
+      beyond readable hazards and cloud-pad adherence, (3) mobile/touch and short-viewport friction
+      after the HUD/modal caps, and (4) repeat-play value not already covered by daily challenge,
+      achievements, cosmetics, weekly summary, share/replay, next-climb goal, active power-up
+      badges, or the Manual. Explicitly explain why skipped axes are lower value/risk right now.
+- [ ] N50.3 For the chosen milestone, require the proof profile appropriate to the blast radius:
+      focused unit/browser fixtures, `pnpm lint`, `pnpm build`, `pnpm test:e2e`, and
+      browser-visible screenshot/diagnostic evidence whenever visuals, playability, or UX change.
+      Then publish, address every actionable remote PR comment/thread/check, squash-merge, and
+      repeat N50.1.
 
 ## Notes
 - This is a living plan. After every stage, backward+forward sweep and edit the queue.
