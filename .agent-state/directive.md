@@ -1637,10 +1637,11 @@ feedback, squash-merge, then rewrite this directive forward.
       Skipped first-run/mobile for now because their current code and browser tests cover the
       obvious risk areas; chose late-run hazard readability because it converts an invisible force
       into a counterable decision surface.
-- [ ] N42.3 For the chosen milestone, require the full local proof profile appropriate to the
+- [x] N42.3 DONE. For the chosen milestone, require the full local proof profile appropriate to the
       blast radius: focused unit/browser fixtures, `pnpm lint`, `pnpm build`, `pnpm test:e2e`, and
       browser-visible screenshot/diagnostic evidence whenever visuals, playability, or UX change.
-      Then publish, address every remote PR comment/thread/check, squash-merge, and repeat N42.1.
+      N43 delivered that full profile, published PR #116, addressed the actionable Amazon Q and
+      Gemini review feedback, resolved the review threads, and squash-merged to `main` at f6b492f.
 
 ## Queue — N43 high-altitude hazard readout
 
@@ -1657,14 +1658,37 @@ feedback, squash-merge, then rewrite this directive forward.
       pad, and captured a visible active readout at ~1213m; DOM evidence reported
       `aria-label="Climb hazards: wind pushing back left at 91%, downdraft at 85%"`; screenshot:
       `output/playwright/hazard-readout-clean.png`.
-- [ ] N43.3 Publish PR, address all remote feedback/checks, squash-merge, and rewrite this
-      directive forward to the next fresh survey.
+- [x] N43.3 PR #116 SQUASH-MERGED (f6b492f). Remote Actions passed on the final head:
+      Lint/Typecheck/Test/Build, Playwright E2E, Android debug APK, and CodeQL. Actionable remote
+      review feedback was addressed and resolved: Amazon Q requested explicit `flex` row layout;
+      Gemini requested `origin-center` for the rotating wind arrow. CodeRabbit remained a
+      non-required in-progress context after an extended wait and had no actionable feedback before
+      merge.
+
+## Queue — N44 all-remaining-work loop
+
+- [ ] N44.1 Fresh survey from `main` at/after f6b492f. Re-read current docs, directive, key tests,
+      and runtime surfaces before choosing the next milestone. Treat this as the standing goal for
+      all remaining Blobolines work: identify the highest player-value gap that is not already
+      saturated, implement it end to end, prove it locally, publish it through PR review/checks,
+      squash-merge, and rewrite this directive forward again.
+- [ ] N44.2 Candidate axes must be justified by evidence, not momentum. Start with at least:
+      (1) first-run retention/readability beyond the launch/steer coachmarks, (2) mobile/touch
+      ergonomics and short-viewport polish beyond the current modal/HUD caps, (3) late-run
+      decision variety beyond the now-readable wind/downdraft hazards, and (4) progression/reward
+      surfaces that materially improve repeat play rather than adding another cosmetic panel.
+      Explicitly explain why any skipped axis is lower value/risk right now.
+- [ ] N44.3 For the chosen milestone, require the full local proof profile appropriate to the
+      blast radius: focused unit/browser fixtures, `pnpm lint`, `pnpm build`, `pnpm test:e2e`, and
+      browser-visible screenshot/diagnostic evidence whenever visuals, playability, or UX change.
+      Then publish, address every actionable remote PR comment/thread/check, squash-merge, and
+      repeat N44.1.
 
 ## Notes
 - This is a living plan. After every stage, backward+forward sweep and edit the queue.
 - Next candidate milestones must be justified by fresh docs/tests/runtime evidence, not momentum.
   The daily-challenge system (standing + streak + share + replay + weekly), the base
-  pad/obstacle/combo/skin systems, route hazards, and the reduced-motion contract are now richly
-  built.
+  pad/obstacle/combo/skin systems, route hazards, high-altitude hazard readout, and the
+  reduced-motion/high-contrast contracts are now richly built.
 - Lesson banked this session: the pre-push lint gate is `pnpm lint` (PINNED biome 2.5.0), NOT
   `npx biome` / global biome (older, gives false-clean) — see [[blobolines-biome-ci-stricter]].
