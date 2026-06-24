@@ -1726,11 +1726,12 @@ feedback, squash-merge, then rewrite this directive forward.
       existing power-up HUD and making badge progress bars semantically readable. Skipped daily/
       post-run/hazard/cloud-pad work because those surfaces are already marked deep without new
       contrary evidence.
-- [ ] N46.3 For the chosen milestone, require the proof profile appropriate to the blast radius:
-      focused unit/browser fixtures, `pnpm lint`, `pnpm build`, `pnpm test:e2e`, and
-      browser-visible screenshot/diagnostic evidence whenever visuals, playability, or UX change.
-      Then publish, address every actionable remote PR comment/thread/check, squash-merge, and
-      repeat N46.1.
+- [x] N46.3 DONE via PR #120. The shield-badge milestone got focused browser fixture proof,
+      `pnpm typecheck`, `pnpm lint`, `pnpm build`, `pnpm test:e2e`, and mobile browser-visible
+      screenshot proof before publish. Remote checks passed: Lint/Typecheck/Test/Build,
+      Playwright E2E, Android debug APK, CodeQL, Amazon Q Developer, and CodeRabbit status.
+      Remote feedback had no actionable code thread: Amazon Q commented ready to merge, Gemini was
+      quota-limited, CodeRabbit was review-limited, and review-thread state was empty.
 
 ## Queue — N47 shield power-up badge
 
@@ -1746,8 +1747,32 @@ feedback, squash-merge, then rewrite this directive forward.
       `output/playwright/shield-powerup-badge-mobile.png` at 390x844 shows the active Shield badge
       below the mobile corner cards without top-center crowding; the accessibility snapshot exposes
       `Shield active` and `Shield power-up remaining` progress semantics.
-- [ ] N47.3 Publish PR, address all actionable remote feedback/checks, squash-merge, and rewrite
-      this directive forward to the next fresh survey.
+- [x] N47.3 PR #120 SQUASH-MERGED (bc8b894). The branch was marked ready, CodeRabbit was
+      explicitly requested after the initial draft skip, all remote checks passed, no actionable
+      review thread remained, and the milestone was squash-merged to `main`.
+
+## Queue — N48 all-remaining-work loop
+
+Standing objective: continue treating the entire remaining Blobolines backlog as the goal. Each
+pass must re-survey the docs, directive, plans, tests, codebase, and browser/runtime evidence from
+current `main`; choose the highest unsaturated player-value/risk gap; implement it end to end;
+prove it locally and remotely; address every actionable PR thread/check; squash-merge; then rewrite
+this directive forward again.
+
+- [ ] N48.1 Fresh survey from `main` at/after bc8b894. Re-read current docs, directive, plans,
+      key tests, and runtime surfaces before choosing the next milestone. Do not choose by
+      momentum from shield/power-up work.
+- [ ] N48.2 Candidate axes must be justified by fresh evidence. Start with at least: (1) first-run
+      comprehension after launch/steer/post-run guidance, (2) mid/late-run decision variety beyond
+      readable hazards and cloud-pad adherence, (3) mobile/touch and short-viewport friction after
+      the HUD/layout caps, and (4) repeat-play value not already covered by daily challenge,
+      achievements, cosmetics, weekly summary, share/replay, next-climb goal, or active
+      power-up badges. Explicitly explain why skipped axes are lower value/risk right now.
+- [ ] N48.3 For the chosen milestone, require the proof profile appropriate to the blast radius:
+      focused unit/browser fixtures, `pnpm lint`, `pnpm build`, `pnpm test:e2e`, and
+      browser-visible screenshot/diagnostic evidence whenever visuals, playability, or UX change.
+      Then publish, address every actionable remote PR comment/thread/check, squash-merge, and
+      repeat N48.1.
 
 ## Notes
 - This is a living plan. After every stage, backward+forward sweep and edit the queue.
