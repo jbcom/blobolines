@@ -1574,13 +1574,26 @@ feedback, squash-merge, then rewrite this directive forward.
       `pnpm build`, and `pnpm test:e2e` (7/7, 1.8m) pass locally. The first
       E2E attempt hit a local port collision with `/Users/jbogaty/src/jbcom/martian-trails`
       on 5173; after stopping that server, Playwright started Blobolines and the full gate
-      passed. Remote PR feedback sweep: current branch has no PR yet; open PRs #110, #108,
-      and #107 have no review threads or comments.
+      passed.
+- [x] N39.3 PR #112 SQUASH-MERGED (9d1e137) after remote CI green: Lint/Typecheck/Test/Build,
+      Playwright E2E, Android debug APK, CodeQL, Amazon Q, and CodeRabbit status all passed.
+      Remote review sweep: Amazon Q said ready to merge; CodeRabbit only posted a quota/rate-limit
+      notice; Gemini posted one late actionable follow-up after merge. That follow-up is folded
+      here: `tokens.css` now includes the root element itself in the `data-reduced-motion` CSS
+      selector, guarded by `src/styles/tokens.test.ts`.
+
+## Queue — N40 next remaining-work survey
+
+- [ ] N40.1 Start from current `main` after the N39 follow-up merges. Re-survey remaining
+      unsaturated player-value axes instead of reusing the stale N38 options mechanically. Compare
+      at least: (1) a genuinely new cloud-pad behavior or hazard interaction, (2) player-facing
+      accessibility/settings gaps beyond reduced motion, and (3) progression/readability surfaces
+      that are still weak under browser-visible proof. Record the decision before implementation.
 
 ## Notes
 - This is a living plan. After every stage, backward+forward sweep and edit the queue.
-- Next candidate milestones (surface, don't pre-commit): a new pad-type behaviour, a cosmetic trail,
-  a settings option. The daily-challenge system (standing + streak + share + replay + weekly) and the
-  base pad/obstacle/combo/skin systems are now richly built.
+- Next candidate milestones must be justified by fresh docs/tests/runtime evidence, not momentum.
+  The daily-challenge system (standing + streak + share + replay + weekly), the base
+  pad/obstacle/combo/skin systems, and the reduced-motion contract are now richly built.
 - Lesson banked this session: the pre-push lint gate is `pnpm lint` (PINNED biome 2.5.0), NOT
   `npx biome` / global biome (older, gives false-clean) — see [[blobolines-biome-ci-stricter]].
