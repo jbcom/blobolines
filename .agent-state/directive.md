@@ -1546,10 +1546,36 @@ unsaturated player-value axes, choose the highest value/risk slice, implement it
 verify locally with the right mix of unit/browser/E2E/live visual evidence, address remote PR
 feedback, squash-merge, then rewrite this directive forward.
 
-- [ ] N38.1 Survey the three current candidate axes before picking one: (1) a new cloud-pad
-      behavior, (2) a cosmetic trail system, (3) a player-facing settings/accessibility option.
-      Read the relevant docs/tests/runtime code first, identify saturated surfaces, choose one
-      concrete milestone, and record the decision before implementation.
+- [x] N38.1 SURVEY DONE. Read the current docs/tests/runtime code for all three axes:
+      (1) cloud-pad behavior is already rich in code (11 types: standard/booster/moving/fragile/
+      super/ice/canted/wobbler/storm/vortex/bubble) and the gap was mostly stale docs; (2)
+      cosmetic trails already have a continuous combo-heat ribbon, droplets, splats, and CSG
+      necks; (3) settings/accessibility had the best value/risk gap: the in-app Reduce motion
+      toggle fed MotionConfig but did NOT cover imperative rAF overlays (`SpeedLines`,
+      `ScreenFlash`), the `usePunchOnChange` hook, or CSS-only animations. DECISION: ship the
+      settings/accessibility slice first because it makes an existing user-facing control true.
+      Folded forward doc/token drift found during the survey: GAME-DESIGN cloud-pad table now
+      includes storm/vortex/bubble, DESIGN includes Nebula/Aurora, and the Aurora CSS/Tailwind
+      token mirror was added.
+
+## Queue — N39 complete the in-app reduced-motion contract
+
+### N39 Implementation
+- [x] N39.1 DONE. `App` now mirrors the persisted `settings.reducedMotion` flag onto
+      `document.documentElement.dataset.reducedMotion`, and tokens.css applies the same animation/
+      transition kill switch to `:root[data-reduced-motion="true"]` that the OS media query gets.
+      `ScreenFlash`, `SpeedLines`, and `usePunchOnChange` now honor the app setting in addition
+      to `prefers-reduced-motion`. Targeted tests added: root dataset sync, settings switch,
+      SpeedLines suppressed under app reduced motion, ScreenFlash consumes-but-does-not-display
+      flashes under app reduced motion, and punch hook suppression. Also corrected a stale App
+      comment about phone scaling.
+- [x] N39.2 VERIFIED. `pnpm typecheck`, `pnpm lint`, `pnpm test`
+      (61 files / 589 tests), `pnpm test:browser` (52 files / 168 tests),
+      `pnpm build`, and `pnpm test:e2e` (7/7, 1.8m) pass locally. The first
+      E2E attempt hit a local port collision with `/Users/jbogaty/src/jbcom/martian-trails`
+      on 5173; after stopping that server, Playwright started Blobolines and the full gate
+      passed. Remote PR feedback sweep: current branch has no PR yet; open PRs #110, #108,
+      and #107 have no review threads or comments.
 
 ## Notes
 - This is a living plan. After every stage, backward+forward sweep and edit the queue.

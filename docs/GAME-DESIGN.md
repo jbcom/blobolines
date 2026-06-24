@@ -1,6 +1,6 @@
 ---
 title: Game Design
-updated: 2026-06-23
+updated: 2026-06-24
 status: current
 domain: product
 ---
@@ -137,6 +137,9 @@ seed and generator, but they are not mounted as normal player HUD.
 | ice | `cloud.glow` | Slick catch that breaks clean combo |
 | wobbler | `cloud.storm` | Unstable puff tilts toward off-center catches |
 | canted | `cloud.warm` | Certified angled cloud catch toward the next cloud |
+| storm | `cloud.storm` | Electric storm puff with a white flash burst on catch |
+| vortex | `cloud.vortex` | Deep portal-like puff with a slower, heavier bounce voice |
+| bubble | `cloud.bubble` | Soft soapy puff with a light, buoyant catch voice |
 
 Cloud pads are not solid platforms. Blobby can pass upward through the underside, then once he
 is descending inside the cloud footprint the cloud applies adherence: horizontal velocity is

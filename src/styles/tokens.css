@@ -12,6 +12,7 @@
   --blob-slime: #ff4f7b; /* berry glaze goo */
   --blob-ghost: #ffd95a; /* honey glow goo */
   --blob-nebula: #a06bff; /* cosmic violet goo — the 2000m Voyager reward skin */
+  --blob-aurora: #2fe6c4; /* dawn aurora teal — the 7-day Faithful reward skin */
 
   --tramp-blue: #ff6f61;
   --tramp-gold: #f2c14e;
@@ -137,4 +138,12 @@
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
+}
+
+:root[data-reduced-motion="true"] *,
+:root[data-reduced-motion="true"] *::before,
+:root[data-reduced-motion="true"] *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
 }

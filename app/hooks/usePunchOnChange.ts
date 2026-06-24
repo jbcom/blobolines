@@ -1,5 +1,6 @@
 import { animate } from "motion";
 import { type RefObject, useEffect, useRef } from "react";
+import { useGameStore } from "@/state";
 
 /**
  * Motion micro-interaction: punch an element (quick scale + rotate kick that springs back)
@@ -34,8 +35,9 @@ export function usePunchOnChange<T extends HTMLElement>(
     // Honor prefers-reduced-motion — skip the punch entirely; the underlying value still
     // updates, just without the kick.
     if (
-      typeof window !== "undefined" &&
-      window.matchMedia?.("(prefers-reduced-motion: reduce)").matches
+      useGameStore.getState().settings.reducedMotion ||
+      (typeof window !== "undefined" &&
+        window.matchMedia?.("(prefers-reduced-motion: reduce)").matches)
     ) {
       return;
     }

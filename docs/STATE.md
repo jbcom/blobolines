@@ -1,6 +1,6 @@
 ---
 title: State
-updated: 2026-06-23
+updated: 2026-06-24
 status: current
 domain: context
 ---
@@ -95,9 +95,10 @@ leaderboard + achievements gallery, and real-time air-nudge + achievement toasts
 
 ## Next
 
-- Continue richness + feel passes: per-biome **music layers** (needs new owned audio via the
-  itch pipeline), gameplay/feel systems (combo/score juice, new pad behaviours). The biome visual
-  identity (scenery + parallax + landmarks + reactions + audio + particles + banner) is now deep.
+- Next work should start with the N38 survey instead of stacking saturated systems: compare a new
+  cloud-pad behaviour, a cosmetic trail system, and a player-facing settings/accessibility option.
+  The biome visual identity (scenery + parallax + landmarks + reactions + audio + particles +
+  banner) and the daily/progression surfaces are already deep.
 - Visual QA is via the **deterministic browser fixtures** (real foreground Chromium), NOT live
   teleport screenshots: the claude-in-chrome tab is backgrounded, so rAF is throttled — the
   physics teleport doesn't move the blob and DOM motion animations don't advance. `setHeight(y)`

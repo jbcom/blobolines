@@ -1,9 +1,9 @@
 import { afterEach, expect, test } from "vitest";
 import { render } from "vitest-browser-react";
-import { useGameStore } from "@/state";
+import { DEFAULT_SETTINGS, useGameStore } from "@/state";
 import { SettingsModal } from "../SettingsModal";
 
-afterEach(() => useGameStore.getState().updateSettings({ qualityPref: "auto" }));
+afterEach(() => useGameStore.setState({ settings: { ...DEFAULT_SETTINGS } }));
 
 // Guards the settings modal renders open with its controls (same Dialog-animation
 // regression class as the customizer).
@@ -60,6 +60,15 @@ test("Graphics quality picker pins the tier in settings", async () => {
   const high = screen.getByRole("button", { name: "Graphics quality: High" });
   await high.click();
   expect(useGameStore.getState().settings.qualityPref).toBe("high");
+});
+
+test("Reduce motion switch updates the app setting", async () => {
+  const screen = await render(<SettingsModal open onOpenChange={() => {}} />);
+  const reduceMotion = screen.getByRole("switch", { name: "Reduce motion" });
+  expect(useGameStore.getState().settings.reducedMotion).toBe(false);
+  await reduceMotion.click();
+  expect(useGameStore.getState().settings.reducedMotion).toBe(true);
+  await expect.element(reduceMotion).toHaveAttribute("aria-checked", "true");
 });
 
 test("Reset progress requires a two-step confirm", async () => {

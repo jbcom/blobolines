@@ -1,10 +1,11 @@
 import { afterEach, expect, test, vi } from "vitest";
 import { cleanup, render } from "vitest-browser-react";
-import { setBlobDiagnostics } from "@/state";
+import { DEFAULT_SETTINGS, setBlobDiagnostics, useGameStore } from "@/state";
 import { SpeedLines } from "../SpeedLines";
 
 afterEach(() => {
   cleanup();
+  useGameStore.setState({ settings: { ...DEFAULT_SETTINGS } });
   setBlobDiagnostics({
     position: [0, 0, 0],
     velocity: [0, 0, 0],
@@ -61,4 +62,24 @@ test("SpeedLines fades in at high blob speed, invisible at rest", async () => {
     },
     { timeout: 2000, interval: 40 },
   );
+});
+
+test("SpeedLines stays off when in-app reduced motion is enabled", async () => {
+  useGameStore.setState({ settings: { ...DEFAULT_SETTINGS, reducedMotion: true } });
+  setBlobDiagnostics({
+    position: [0, 0, 0],
+    velocity: [0, 40, 0],
+    speed: 40,
+    airborne: true,
+    expression: "wide",
+    squash: 1,
+    maxHeight: 0,
+    groundY: 0,
+  });
+
+  const { container } = await render(<SpeedLines />);
+  const overlay = container.firstElementChild as HTMLElement;
+  expect(overlay).toBeTruthy();
+  await new Promise((resolve) => setTimeout(resolve, 120));
+  expect(Number(overlay.style.opacity)).toBe(0);
 });
