@@ -1,6 +1,6 @@
 import { Button } from "@app/components/ui";
 import { Progress } from "@app/components/ui/progress";
-import { Check, Copy, Flame, RotateCcw, Share2 } from "lucide-react";
+import { Check, Copy, Flame, RotateCcw, Share2, Target } from "lucide-react";
 import { motion, useReducedMotion } from "motion/react";
 import { useEffect, useRef, useState } from "react";
 import { playRecord, startMusic, stopMusic } from "@/audio";
@@ -11,6 +11,7 @@ import { DAILY_NS, dailyStanding, runHash } from "@/sim/daily";
 import { comboMultiplier } from "@/sim/launch";
 import { SKIN_COST, useGameStore, useWorldStore } from "@/state";
 import { ROUTE_PROFILES } from "@/world";
+import { nextClimbGoal } from "./gameOverGoal";
 import { renderShareCard } from "./shareCard";
 
 /**
@@ -26,6 +27,7 @@ export function GameOver() {
   const scoreDelta = useGameStore((s) => s.run.scoreDelta);
   const lifetimeCrystals = useGameStore((s) => s.progress.crystals);
   const unlockedSkins = useGameStore((s) => s.progress.unlockedSkins);
+  const unlockedAchievements = useGameStore((s) => s.progress.unlockedAchievements ?? []);
   const best = useGameStore((s) => s.progress.bestHeight);
   const bestScore = useGameStore((s) => s.progress.bestScore);
   const setPhase = useGameStore((s) => s.setPhase);
@@ -204,6 +206,20 @@ export function GameOver() {
   const nextSkinPct =
     nextSkin && nextSkin[1] > 0 ? Math.min(100, (lifetimeCrystals / nextSkin[1]) * 100) : 100;
 
+  const goal = nextClimbGoal({
+    stats: {
+      bestHeight: best,
+      bestScore,
+      lifetimeCrystals,
+      runHeight: height,
+      runMaxCombo: maxCombo,
+      runCrystals: crystals,
+      dailyStreak,
+    },
+    unlockedAchievements,
+    dailyRun,
+  });
+
   const toCustomizer = () => {
     setCustomizerIntent(true);
     resetRun();
@@ -244,7 +260,7 @@ export function GameOver() {
         initial={{ scale: 0.85, y: 16 }}
         animate={{ scale: 1, y: 0 }}
         transition={{ type: "spring", stiffness: 260, damping: 18 }}
-        className={`flex w-full max-w-xs flex-col items-center gap-5 rounded-xl border bg-surface p-6 text-center ${
+        className={`flex max-h-[calc(100dvh-var(--safe-top)-var(--safe-bottom)-2rem)] w-full max-w-xs flex-col items-center gap-4 overflow-y-auto rounded-xl border bg-surface p-5 text-center ${
           isRecord ? "border-tramp-gold" : "border-border"
         }`}
         // Gold glow on a record card — the climb's trophy moment.
@@ -306,6 +322,34 @@ export function GameOver() {
             className={isRecord ? "[&>div]:bg-tramp-gold" : undefined}
           />
         </div>
+
+        <section
+          data-testid="next-climb-goal"
+          aria-label={goal.ariaLabel}
+          className="flex w-full flex-col gap-2 border-border/60 border-t pt-3 text-left"
+        >
+          <div className="flex items-center gap-2">
+            <span className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-bg/40 text-tramp-gold">
+              <Target className="size-4" aria-hidden />
+            </span>
+            <div className="min-w-0">
+              <span
+                id="next-climb-goal-title"
+                className="block font-display text-[11px] font-bold uppercase tracking-wide text-fg-subtle"
+              >
+                Next climb
+              </span>
+              <span className="block truncate font-ui text-sm font-black text-cream">
+                {goal.title}
+              </span>
+            </div>
+          </div>
+          <div className="grid gap-1 font-ui text-[11px]">
+            <span className="text-fg-subtle">{goal.description}</span>
+            <span className="font-semibold text-tramp-gold tabular-nums">{goal.progressText}</span>
+          </div>
+          <Progress value={goal.progressPct} aria-label={`Progress toward ${goal.title}`} />
+        </section>
 
         {/* Crystals → next skin: progress toward affording the cheapest locked skin, tappable
             to jump straight into the customizer. Hidden once everything's unlocked. */}
