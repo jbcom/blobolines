@@ -1614,8 +1614,27 @@ feedback, squash-merge, then rewrite this directive forward.
       `--fg: #fffdf2`, `--surface: rgba(18, 7, 17, 0.98)`, and
       `--border-strong: rgba(255, 253, 242, 0.9)`; screenshot artifact:
       `output/playwright/high-contrast-settings.png`.
-- [ ] N41.3 Publish PR, address all remote review feedback, wait for required checks, squash-merge,
-      and rewrite the directive forward to the next fresh remaining-work survey.
+- [x] N41.3 PR #114 SQUASH-MERGED (04f32d3). Remote checks passed: Lint/Typecheck/Test/Build,
+      Playwright E2E, Android debug APK, CodeQL, Amazon Q, and CodeRabbit status. Remote review
+      sweep found no actionable threads: Amazon Q called the integration well-executed, Gemini had
+      no feedback, CodeRabbit only posted the usage-limit notice.
+
+## Queue — N42 all-remaining-work loop
+
+- [ ] N42.1 Fresh survey from `main` at/after 04f32d3. Re-read current docs, directive, key tests,
+      and runtime surfaces before choosing the next milestone. Treat this as the standing goal for
+      all remaining Blobolines work: identify the highest player-value gap that is not already
+      saturated, implement it end to end, prove it locally, publish it through PR review/checks,
+      squash-merge, and rewrite this directive forward again.
+- [ ] N42.2 Candidate axes must be justified by evidence, not momentum. Start with:
+      (1) first-run retention/readability outside the already-rich daily/progression surfaces,
+      (2) mobile/touch ergonomics and short-viewport polish beyond the current modal caps, and
+      (3) late-run variety that adds meaningful decisions rather than another base cloud-pad type.
+      Also explicitly explain why any skipped axis is lower value/risk right now.
+- [ ] N42.3 For the chosen milestone, require the full local proof profile appropriate to the
+      blast radius: focused unit/browser fixtures, `pnpm lint`, `pnpm build`, `pnpm test:e2e`, and
+      browser-visible screenshot/diagnostic evidence whenever visuals, playability, or UX change.
+      Then publish, address every remote PR comment/thread/check, squash-merge, and repeat N42.1.
 
 ## Notes
 - This is a living plan. After every stage, backward+forward sweep and edit the queue.
