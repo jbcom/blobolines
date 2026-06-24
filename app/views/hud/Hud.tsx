@@ -66,13 +66,12 @@ export function Hud() {
           <Altimeter />
           <DifficultyMeter />
         </div>
-        {/* top-center: combo + power-ups. Capped to the center ~40vw so a wide high-tier "ON
-            FIRE" badge (which also scales by --ui-scale) can't grow into the corner readouts on
-            a narrow phone. */}
+        {/* center stack: combo + power-ups. On phone-width viewports this drops under the corner
+            cards; the altimeter card is wider than the crystal pill, so true top-center badges can
+            collide with it. On wider screens it returns to the top-center row. */}
         <div
-          className="absolute flex max-w-[40vw] flex-col items-center"
+          className="absolute top-[calc(var(--safe-top)+8.25rem)] flex max-w-[40vw] flex-col items-center sm:top-[calc(var(--safe-top)+0.75rem)]"
           style={{
-            top: "calc(var(--safe-top) + 0.75rem)",
             left: "50%",
             transform: "translateX(-50%) scale(var(--ui-scale))",
             transformOrigin: "top center",

@@ -61,6 +61,9 @@ The Manual (How to play) remains the full reference for players who want it.
   exclusive skin. The customizer shows those tiles as "Earn: <achievement>".
 - **Achievements** evaluate at run end + in real time; newly-met ones toast and persist, and a
   local high-scores leaderboard + achievements gallery track lifetime progress.
+- **Power-up badges** sit in the top-center HUD while a modifier is active or held: magnet,
+  thruster, shield, slow-mo, score doubler, and multi-bounce all get a visible state. Timed buffs
+  drain, multi-bounce shows charges, and shield stays full until its one-shot save is consumed.
 - **Daily-streak achievements** reward returning for the shared daily challenge on consecutive
   UTC days: *Daily Devotee* (a 3-day streak) and *Faithful* (a 7-day streak, which grants the
   aurora skin). The streak only advances on TODAY'S daily tower (not a replayed past one), so

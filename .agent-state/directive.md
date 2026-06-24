@@ -1708,28 +1708,52 @@ feedback, squash-merge, then rewrite this directive forward.
 
 ## Queue — N46 all-remaining-work loop
 
-- [ ] N46.1 Fresh survey from `main` at/after b56ba41. Re-read current docs, directive, plans,
-      key tests, and runtime surfaces before choosing the next milestone. Standing goal: keep
-      identifying the highest unsaturated player-value/risk gap, implement it end to end, prove it
-      locally and remotely, address all actionable PR feedback, squash-merge, then rewrite this
-      directive forward again.
-- [ ] N46.2 Candidate axes must be justified by fresh evidence, not by continuing the last
+- [x] N46.1 SURVEY DONE from `main` at 25b78d5. Re-read current docs, directive, plans,
+      key tests, and runtime surfaces before choosing the next milestone. Findings: first-run
+      comprehension is now covered by launch/steer coachmarks plus post-run next-climb guidance;
+      daily/progression and post-run replay surfaces are deep; high-altitude hazards are readable;
+      base cloud-pad behavior is structurally done. Unsaturated gap: shield is a real generated
+      power-up and one-shot second-life mechanic, but unlike magnet/thruster/slowmo/doubler/
+      multi-bounce it had no active HUD badge, so players could not tell they were protected until
+      the save fired.
+- [x] N46.2 Candidate axes justified by fresh evidence, not by continuing the last
       milestone's momentum. Start with at least: (1) first-run comprehension after the now-complete
       launch/steer/post-run loop, (2) mid/late-run decision variety beyond readable hazards and
       cloud-pad adherence, (3) mobile/touch and short-viewport friction that remains after the
       current HUD/modal caps, and (4) long-tail repeat-play surfaces that are not already covered
       by daily challenge, achievements, cosmetics, weekly summary, share/replay, or next-climb goal.
+      DECISION: ship complete active power-up readability by adding the missing shield badge to the
+      existing power-up HUD and making badge progress bars semantically readable. Skipped daily/
+      post-run/hazard/cloud-pad work because those surfaces are already marked deep without new
+      contrary evidence.
 - [ ] N46.3 For the chosen milestone, require the proof profile appropriate to the blast radius:
       focused unit/browser fixtures, `pnpm lint`, `pnpm build`, `pnpm test:e2e`, and
       browser-visible screenshot/diagnostic evidence whenever visuals, playability, or UX change.
       Then publish, address every actionable remote PR comment/thread/check, squash-merge, and
       repeat N46.1.
 
+## Queue — N47 shield power-up badge
+
+- [x] N47.1 IMPLEMENTED. `PowerUpBadges` now includes the one-shot shield state using the existing
+      `powerupRemaining("shield")` bridge contract, renders a "Shield" badge with the ice token
+      tint, and keeps the progress bar full while the save is held. Badge progress bars now expose
+      named `progressbar` semantics and update `aria-valuenow` from the same imperative rAF loop as
+      the visual fill.
+- [x] N47.2 LOCAL VERIFY DONE. Passed
+      `pnpm test:browser -- app/views/hud/__tests__/PowerUpBadges.browser.test.tsx app/views/hud/__tests__/Hud.layout.browser.test.tsx`
+      (53 browser files / 175 tests), `pnpm typecheck`, `pnpm lint`, `pnpm build`, and
+      `pnpm test:e2e` (7 passed in 2.0m). Browser-visible proof:
+      `output/playwright/shield-powerup-badge-mobile.png` at 390x844 shows the active Shield badge
+      below the mobile corner cards without top-center crowding; the accessibility snapshot exposes
+      `Shield active` and `Shield power-up remaining` progress semantics.
+- [ ] N47.3 Publish PR, address all actionable remote feedback/checks, squash-merge, and rewrite
+      this directive forward to the next fresh survey.
+
 ## Notes
 - This is a living plan. After every stage, backward+forward sweep and edit the queue.
 - Next candidate milestones must be justified by fresh docs/tests/runtime evidence, not momentum.
   The daily-challenge system (standing + streak + share + replay + weekly), the base
-  pad/obstacle/combo/skin systems, route hazards, high-altitude hazard readout, post-run goal, and
-  the reduced-motion/high-contrast contracts are now richly built.
+  pad/obstacle/combo/skin systems, route hazards, high-altitude hazard readout, post-run goal,
+  active power-up badges, and the reduced-motion/high-contrast contracts are now richly built.
 - Lesson banked this session: the pre-push lint gate is `pnpm lint` (PINNED biome 2.5.0), NOT
   `npx biome` / global biome (older, gives false-clean) — see [[blobolines-biome-ci-stricter]].

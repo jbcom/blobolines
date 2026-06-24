@@ -1,4 +1,4 @@
-import { Hourglass, Magnet, Repeat2, Rocket, Star } from "lucide-react";
+import { Hourglass, Magnet, Repeat2, Rocket, Shield, Star } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import type React from "react";
 import { useEffect, useRef, useState } from "react";
@@ -12,7 +12,7 @@ import { MULTI_BOUNCE_CHARGES, POWERUP_DURATION, powerupRemaining } from "@/stat
  * poll — exact timing, smooth countdown, cheaper.
  *
  * `denom` is what the remaining value is divided by for the bar fraction: a buff's duration
- * for the timed ones, the full charge stack for multi-bounce (so its bar shows charges left).
+ * for the timed ones, the full charge stack for multi-bounce, and 1 for one-shot held buffs.
  */
 const TYPES = [
   {
@@ -28,6 +28,13 @@ const TYPES = [
     icon: <Rocket className="size-3.5" strokeWidth={2.5} />,
     tint: "text-accent-warm border-accent-warm/50 bg-accent-warm/15",
     denom: POWERUP_DURATION.thruster,
+  },
+  {
+    key: "shield",
+    label: "Shield",
+    icon: <Shield className="size-3.5" strokeWidth={2.5} />,
+    tint: "text-tramp-ice border-tramp-ice/70 bg-surface/80 shadow-[var(--shadow-sm)]",
+    denom: 1,
   },
   {
     key: "slowmo",
@@ -80,6 +87,7 @@ export function PowerUpBadges() {
         if (bar) {
           const frac = Math.max(0, Math.min(1, remain / denom));
           bar.style.transform = `scaleX(${frac})`;
+          bar.setAttribute("aria-valuenow", `${Math.floor(frac * 100)}`);
         }
         // Stack badges (multi-bounce) show a live "×N" charge count; timed buffs leave it blank.
         const countEl = countRefs.current[key];
@@ -98,7 +106,11 @@ export function PowerUpBadges() {
   }, []);
 
   return (
-    <div className="mt-2 flex justify-center gap-2" role="status" aria-live="polite">
+    <div
+      className="mt-2 flex max-w-full flex-wrap justify-center gap-2"
+      role="status"
+      aria-live="polite"
+    >
       <AnimatePresence>
         {TYPES.filter((t) => active[t.key]).map((t) => (
           <Badge
@@ -142,7 +154,8 @@ function Badge({
       animate={{ scale: 1, opacity: 1 }}
       exit={{ scale: 0.6, opacity: 0 }}
       transition={{ type: "spring", stiffness: 480, damping: 22 }}
-      className={`flex flex-col items-stretch gap-1 rounded-2xl border px-3 py-1 font-ui text-xs font-bold backdrop-blur-md ${tint}`}
+      aria-label={`${label} active`}
+      className={`flex shrink-0 flex-col items-stretch gap-1 rounded-2xl border px-3 py-1 font-ui text-xs font-bold backdrop-blur-md ${tint}`}
     >
       <span className="flex items-center gap-1.5">
         <span aria-hidden>{icon}</span>
@@ -154,6 +167,11 @@ function Badge({
       <div className="h-1 w-full overflow-hidden rounded-full bg-current/20">
         <div
           ref={barRef}
+          role="progressbar"
+          aria-label={`${label} power-up remaining`}
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-valuenow={100}
           className="h-full origin-left rounded-full bg-current"
           style={{ transform: "scaleX(1)" }}
         />
