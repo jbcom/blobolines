@@ -62,10 +62,9 @@ describe("design tokens", () => {
   });
 
   it("applies in-app reduced motion to the root element as well as descendants", () => {
-    const css = readFileSync("src/styles/tokens.css", "utf8");
-    expect(css).toContain(':root[data-reduced-motion="true"],');
-    expect(css).toContain(':root[data-reduced-motion="true"] *,');
-    expect(css).toContain(':root[data-reduced-motion="true"] *::before,');
-    expect(css).toContain(':root[data-reduced-motion="true"] *::after');
+    const css = readFileSync("src/styles/tokens.css", "utf8").replace(/\s+/g, " ");
+    expect(css).toContain(
+      ':root[data-reduced-motion="true"], :root[data-reduced-motion="true"] *, :root[data-reduced-motion="true"] *::before, :root[data-reduced-motion="true"] *::after',
+    );
   });
 });
