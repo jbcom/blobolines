@@ -1858,21 +1858,47 @@ current `main`; choose the highest unsaturated player-value/risk gap; implement 
 prove it locally and remotely; address every actionable PR thread/check; squash-merge; then rewrite
 this directive forward again.
 
-- [ ] N52.1 Fresh survey from `main` at/after 5a61adb. Re-read current docs, directive, plans,
-      key tests, and runtime surfaces before choosing the next milestone. Do not choose by momentum
-      from the small-phone menu action-wrap work.
-- [ ] N52.2 Candidate axes must be justified by fresh evidence. Start with at least: (1) first-run
+- [x] N52.1 SURVEY DONE from `main` at b934a17. Re-read current docs, directive, plans,
+      key tests, and runtime surfaces before choosing the next milestone. Findings:
+      daily/progression, post-run goals, high-altitude hazard readability, active power-up
+      badges, base cloud-pad behavior, biome identity, reduced-motion/high-contrast, the complete
+      How-to-play reference, and the small-phone menu action layout are already deep. Fresh browser
+      evidence at 320x700 showed the first-run New game difficulty dialog still pushed the final
+      "Ultimate Blobmare" choice below the viewport because the shared Dialog panel did not inherit
+      the safe viewport cap and the difficulty cards were too tall for a small phone.
+- [x] N52.2 Candidate axes justified by fresh evidence. Start with at least: (1) first-run
       comprehension after launch/steer/manual/post-run/menu guidance, (2) mid/late-run decision
       variety beyond readable hazards and cloud-pad adherence, (3) mobile/touch and short-viewport
       friction after the HUD/modal/menu caps, and (4) repeat-play value not already covered by
       daily challenge, achievements, cosmetics, weekly summary, share/replay, next-climb goal,
-      active power-up badges, the Manual, or the small-phone menu action layout. Explicitly explain
-      why skipped axes are lower value/risk right now.
+      active power-up badges, the Manual, or the small-phone menu action layout. DECISION: ship the
+      small-phone first-run difficulty dialog fit. It is the next highest value/risk issue because
+      it sits directly after the primary Play CTA and can hide a selectable mode on the primary
+      mobile viewport. Skipped new progression, hazard, power-up, Manual, and route-variety work
+      because those surfaces are already richly covered without new contrary evidence.
 - [ ] N52.3 For the chosen milestone, require the proof profile appropriate to the blast radius:
       focused unit/browser fixtures, `pnpm lint`, `pnpm build`, `pnpm test:e2e`, and
       browser-visible screenshot/diagnostic evidence whenever visuals, playability, or UX change.
       Then publish, address every actionable remote PR comment/thread/check, squash-merge, and
       repeat N52.1.
+
+## Queue — N53 small-phone first-run difficulty dialog
+
+- [x] N53.1 IMPLEMENTED. The shared `Dialog` primitive now clips at its safe viewport cap and
+      explicitly passes that cap to the inner scroll panel via `maxHeight: inherit`, matching its
+      intended scroll-safe contract. The New game difficulty cards now use tighter first-run copy,
+      smaller mobile spacing, and compact sublabels so all six route choices fit at 320x700.
+      Browser fixtures now assert the inherited panel cap and the compact route-choice content.
+- [x] N53.2 LOCAL VERIFY DONE. Passed
+      `pnpm test:browser -- app/views/__tests__/TitleScreen.browser.test.tsx app/views/__tests__/SettingsModal.fixture.test.tsx`
+      (53 browser files / 178 tests), `pnpm typecheck`, `pnpm lint`, `pnpm test` (62 files /
+      599 tests), `pnpm build`, and `pnpm test:e2e` (7 passed in 1.9m). Browser-visible proof:
+      `output/playwright/new-game-difficulty-mobile-baseline.png` at 320x700 showed the final
+      "Ultimate Blobmare" choice below the visible phone viewport; the fixed 320x700 screenshot
+      at `output/playwright/new-game-difficulty-mobile-fixed.png` shows all six route choices,
+      including Ultimate Blobmare, fully visible in the first-run dialog.
+- [ ] N53.3 PUBLISH/MERGE PENDING. Open the PR, address every actionable remote thread/check,
+      squash-merge, then rewrite this directive forward for the next remaining-work pass.
 
 ## Notes
 - This is a living plan. After every stage, backward+forward sweep and edit the queue.

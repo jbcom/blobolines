@@ -63,7 +63,7 @@ export function Dialog({
               style={{
                 maxHeight: "calc(100dvh - var(--safe-top) - var(--safe-bottom) - 2rem)",
               }}
-              className="fixed left-1/2 top-1/2 z-[calc(var(--z-modal)+1)] flex w-[min(90vw,480px)] -translate-x-1/2 -translate-y-1/2 flex-col focus:outline-none"
+              className="fixed left-1/2 top-1/2 z-[calc(var(--z-modal)+1)] flex w-[min(90vw,480px)] -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden focus:outline-none"
             >
               <RadixDialog.Title asChild>
                 <span className="sr-only">{ariaLabel}</span>
@@ -84,6 +84,7 @@ export function Dialog({
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 exit={{ opacity: 0, y: prefersReduced ? 0 : 16, scale: prefersReduced ? 1 : 0.97 }}
                 transition={{ duration: dur, ease: [0.22, 1, 0.36, 1] }}
+                style={{ maxHeight: "inherit" }}
                 className={cn(
                   // min-h-0 + overflow-y-auto lets the panel scroll INTERNALLY when it's
                   // taller than the capped Content (short/landscape screens); overscroll-

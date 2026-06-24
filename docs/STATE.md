@@ -103,6 +103,9 @@ leaderboard + achievements gallery, and real-time air-nudge + achievement toasts
 - **Small-phone menu action wrap** — the TitleScreen's secondary actions now live in a labelled,
   wrapping menu nav, so Customize, Achievements, Settings, and How to play stay fully visible on a
   320px-wide phone instead of clipping off the viewport edges.
+- **Small-phone first-run difficulty fit** — the Play → New game difficulty dialog now keeps all
+  six route choices visible at 320px phone width, including Ultimate Blobmare, and the shared Dialog
+  primitive truly caps/scrolls its inner panel on short safe-area viewports.
 - **Two-skill onboarding** — the launch coachmark plus a new mid-air **steer** coachmark
   (`SteerCoachmark`) teach both core skills once, in context; a short first hop re-arms the steer
   cue rather than burning the teach.
@@ -116,9 +119,10 @@ leaderboard + achievements gallery, and real-time air-nudge + achievement toasts
 
 - Next work should follow the current queue in `.agent-state/directive.md`; start with a fresh
   remaining-work survey and avoid stacking more daily/progression, post-run goal, base cloud-pad,
-  power-up badge, how-to reference, small-phone menu action layout, or hazard readability work
-  without new evidence. The biome visual identity (scenery + parallax + landmarks + reactions +
-  audio + particles + banner), route hazards, and the daily/progression surfaces are already deep.
+  power-up badge, how-to reference, small-phone menu action layout, first-run difficulty dialog
+  layout, or hazard readability work without new evidence. The biome visual identity (scenery +
+  parallax + landmarks + reactions + audio + particles + banner), route hazards, and the
+  daily/progression surfaces are already deep.
 - Visual QA is via the **deterministic browser fixtures** (real foreground Chromium), NOT live
   teleport screenshots: the claude-in-chrome tab is backgrounded, so rAF is throttled — the
   physics teleport doesn't move the blob and DOM motion animations don't advance. `setHeight(y)`

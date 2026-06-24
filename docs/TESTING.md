@@ -49,10 +49,13 @@ Render regressions that only a real GPU context catches:
 - `app/views/__tests__/LandingPage.browser.test.tsx` — the menu page hosts the Play CTA and
   owns its purple backdrop with NO canvas mounted (locks the menu-as-own-page contract)
 - `app/views/__tests__/TitleScreen.browser.test.tsx` — the menu CTA/daily flow, daily streak
-  status, modal openers, and the 320px small-phone secondary action nav wrap
+  status, modal openers, 320px small-phone secondary action nav wrap, and compact first-run
+  difficulty choices
 - `app/views/__tests__/ManualModal.fixture.test.tsx` — the How-to-play reference covers the
   shipped route, power-up, hazard, daily, and next-climb surfaces, and uses the capped scrollable
   dialog shell
+- `app/views/__tests__/SettingsModal.fixture.test.tsx` — settings controls and the shared Dialog
+  scroll-shell contract, including the inherited safe-viewport panel cap
 - `app/views/hud/__tests__/NextPadRadar.browser.test.tsx` — next-target direction,
   vertical gap, distance, and hidden state when no target exists
 - `app/views/hud/__tests__/DifficultyMeter.browser.test.tsx` — active difficulty tier,

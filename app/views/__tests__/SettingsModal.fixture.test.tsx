@@ -47,8 +47,10 @@ test("dialog caps its height and scrolls its panel internally", async () => {
   // Content carries an inline max-height cap (the calc against the safe insets).
   expect((content as HTMLElement).style.maxHeight).toMatch(/calc\(/);
   // The inner panel is the scroll container (overflow-y auto).
-  const panel = content.querySelector(".overflow-y-auto");
+  expect(content.className).toContain("overflow-hidden");
+  const panel = content.querySelector(".overflow-y-auto") as HTMLElement | null;
   expect(panel).toBeTruthy();
+  expect(panel?.style.maxHeight).toBe("inherit");
 });
 
 test("Graphics quality picker pins the tier in settings", async () => {
