@@ -1,6 +1,6 @@
 ---
 title: Testing
-updated: 2026-06-23
+updated: 2026-06-24
 status: current
 domain: quality
 ---
@@ -48,6 +48,8 @@ Render regressions that only a real GPU context catches:
   trajectory tube renders in WebGL while airborne + steering
 - `app/views/__tests__/LandingPage.browser.test.tsx` — the menu page hosts the Play CTA and
   owns its purple backdrop with NO canvas mounted (locks the menu-as-own-page contract)
+- `app/views/__tests__/TitleScreen.browser.test.tsx` — the menu CTA/daily flow, daily streak
+  status, modal openers, and the 320px small-phone secondary action nav wrap
 - `app/views/__tests__/ManualModal.fixture.test.tsx` — the How-to-play reference covers the
   shipped route, power-up, hazard, daily, and next-climb surfaces, and uses the capped scrollable
   dialog shell

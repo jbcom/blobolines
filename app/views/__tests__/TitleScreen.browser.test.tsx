@@ -35,6 +35,31 @@ test("renders the Play CTA and the Daily Challenge entry", async () => {
   await expect.element(screen.getByRole("button", { name: /Daily Challenge/ })).toBeInTheDocument();
 });
 
+test("menu action nav wraps inside a narrow phone width", async () => {
+  const screen = await render(
+    <div data-testid="phone-menu-shell" style={{ width: "320px", height: "700px" }}>
+      <TitleScreen />
+    </div>,
+  );
+  const nav = screen.getByRole("navigation", { name: /Menu actions/ });
+  await expect.element(nav).toBeInTheDocument();
+
+  const shellBox = screen.getByTestId("phone-menu-shell").element().getBoundingClientRect();
+  const actionButtons = ["Customize", "Achievements", "Settings", "How to play"].map((name) =>
+    screen.getByRole("button", { name }).element(),
+  );
+  const rowTops = new Set<number>();
+
+  for (const button of actionButtons) {
+    const box = button.getBoundingClientRect();
+    expect(box.left).toBeGreaterThanOrEqual(shellBox.left);
+    expect(box.right).toBeLessThanOrEqual(shellBox.right);
+    rowTops.add(Math.round(box.top));
+  }
+
+  expect(rowTops.size).toBeGreaterThan(1);
+});
+
 test("Daily Challenge starts a daily run (dailyRun true)", async () => {
   useGameStore.setState({ dailyRun: false });
   const screen = await render(<TitleScreen />);
