@@ -52,7 +52,10 @@ export function SettingsModal({
     <Dialog open={open} onOpenChange={onOpenChange} ariaLabel="Settings" testId="settings">
       <h2 className="font-display text-xl font-bold text-cream">Settings</h2>
 
-      <div className="mt-5 flex flex-col gap-5 font-ui text-sm text-fg-muted">
+      <div
+        data-testid="settings-controls"
+        className="mt-4 flex flex-col gap-3 font-ui text-sm text-fg-muted sm:mt-5 sm:gap-5"
+      >
         <Row label="Master volume" value={`${Math.round(settings.masterVolume * 100)}%`}>
           <Slider
             aria-label="Master volume"
@@ -199,7 +202,7 @@ export function SettingsModal({
 
         {/* Reset progress — destructive, so a two-step confirm: first tap arms ("Tap again
             to confirm"), second tap wipes best height / crystals / unlocks / skin. */}
-        <div className="flex items-center justify-between gap-3 border-border/40 border-t pt-4">
+        <div className="flex items-center justify-between gap-3 border-border/40 border-t pt-3 sm:pt-4">
           <span className="font-semibold text-fg-subtle">Reset progress</span>
           <button
             type="button"
@@ -227,7 +230,7 @@ export function SettingsModal({
           setConfirmReset(false);
           onOpenChange(false);
         }}
-        className="mt-6 w-full"
+        className="mt-4 w-full sm:mt-6"
       >
         Done
       </Button>

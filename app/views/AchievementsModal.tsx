@@ -234,7 +234,10 @@ export function AchievementsModal({
               </div>
             ) : (
               /* High Score List */
-              <div className="flex flex-col gap-2 max-h-[360px] overflow-y-auto pr-1">
+              <div
+                data-testid="leaderboard-list"
+                className="flex max-h-[230px] flex-col gap-2 overflow-y-auto pr-1 sm:max-h-[360px]"
+              >
                 {highScores.map((score, index) => {
                   const rank = index + 1;
                   const isPodium = rank <= 3;
