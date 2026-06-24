@@ -136,7 +136,7 @@ export function HazardReadout() {
         <span className="flex items-center gap-1 font-display text-sm font-black text-tramp-gold">
           <ArrowUp
             ref={windArrowRef}
-            className="size-3.5 transition-transform duration-100"
+            className="size-3.5 origin-center transition-transform duration-100"
             aria-hidden
           />
           <span ref={windValueRef} />
