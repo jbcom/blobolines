@@ -2,7 +2,7 @@ import path from "node:path";
 import react from "@vitejs/plugin-react";
 import { defineConfig } from "vitest/config";
 
-// Fast unit/integration tests in happy-dom. Pure sim, engine, factories, hooks, utils.
+// Fast unit/integration tests in happy-dom. Pure sim, engine, state, hooks, utils.
 // Visual/render and audio-graph tests live in vitest.browser.config.ts (real Chromium).
 export default defineConfig({
   plugins: [react()],

@@ -21,8 +21,9 @@ public surface; modules stay small and single-responsibility — no monolithic s
 2. **Render ≠ UI** — DOM UI (`app/views/**`, shadcn) never imports three objects.
    It reads/writes game state through the **store bridge** (`src/state`). R3F scene
    components (`app/scene/**`) render from the store/bridges; they don't own game rules.
-3. **Factories own spawning** — entities are created via `src/factories/**`, never
-   `world.spawn(...)` ad hoc.
+3. **World specs own spawning** — generated content is represented as typed specs in
+   `src/world` + `useWorldStore`; scene components render those specs and do not create
+   gameplay entities ad hoc.
 4. **Tokens own the palette** — colors/type/space come from `src/styles/tokens.{css,ts}`.
    Raw hex literals outside `tokens.ts` are banned.
 5. **Menu is a page, not a phase overlay** — `app/Game.tsx` branches on `phase==="menu"`:
