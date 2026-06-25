@@ -2010,22 +2010,35 @@ current `main`; choose the highest unsaturated player-value/risk gap; implement 
 prove it locally and remotely; address every actionable PR thread/check; squash-merge; then rewrite
 this directive forward again.
 
-- [ ] N57.1 SURVEY from current `main` after PR #130. Re-read current docs, directive, plans,
-      key tests, and runtime surfaces before choosing the next milestone. Start by checking the
-      same high-value axes: first-run comprehension, mobile/touch and short-viewport friction,
-      mid/late-run decision variety, repeat-play value, audio/visual identity, accessibility, and
-      any red or brittle test evidence.
-- [ ] N57.2 Choose the next milestone only from fresh evidence. Explicitly justify the selected
-      gap against saturated surfaces: daily challenge, achievements, cosmetics, weekly summary,
-      share/replay, next-climb goal, active power-up badges including shield, complete Manual,
-      small-phone menu action layout, first-run difficulty dialog layout, dense Settings/
-      leaderboard modal layout, dense GameOver result/action layout, cloud pads, route hazards,
-      high-altitude hazard readout, biome identity, and reduced-motion/high-contrast.
-- [ ] N57.3 For the chosen milestone, require the proof profile appropriate to the blast radius:
-      focused unit/browser fixtures, `pnpm typecheck`, `pnpm lint`, `pnpm test`, `pnpm build`,
-      `pnpm test:e2e`, and browser-visible screenshot/diagnostic evidence whenever visuals,
-      playability, or UX change. Then publish an active PR, address every actionable remote
-      comment/thread/check, squash-merge, and repeat N57.1.
+- [x] N57.1 SURVEY DONE from current `main` at 44552c2 after PR #130/#131. Re-read current docs,
+      directive, tests, and the modal/runtime surfaces before choosing the next milestone.
+      Findings: daily/progression, achievements, cosmetics, weekly summary, share/replay,
+      next-climb goal, active power-up badges, complete Manual, small-phone menu actions,
+      first-run difficulty dialog, dense portrait Settings/leaderboard layout, dense GameOver
+      result/action layout, route hazards, high-altitude hazard readout, biome identity, and
+      reduced-motion/high-contrast are already saturated. Fresh short-viewport evidence at
+      700x320 and 568x320 showed Settings and Goo Customizer were capped by the shared Dialog, but
+      their Done actions opened below the visible panel (`Customizer: y 587-634`, `Settings:
+      y 712-758` at 700x320), forcing a first-open scroll just to close the modal.
+- [x] N57.2 Candidate axes justified by fresh evidence. DECISION: ship the short-landscape menu
+      modal action reachability fix for Settings + Goo Customizer because it is the remaining
+      unsaturated mobile/touch friction after the portrait menu/difficulty/dense modal and
+      GameOver work. Skipped new progression, hazard, route-variety, Manual, power-up, and biome/
+      audio identity work because those surfaces remain rich and no fresh contrary evidence beat
+      the measured first-open action reachability failure.
+- [ ] N57.3 IMPLEMENTED LOCALLY; remote PR closeout pending. Settings and Goo Customizer now keep
+      their headers/actions fixed while only the dense body scrolls. Focused fixture coverage locks
+      the fixed action-shell structure; `e2e/menu-modals.spec.ts` adds a 700x320 short-landscape
+      touch gate for Settings and Customize. Local proof so far: `pnpm format`, `pnpm test:browser
+      -- app/views/__tests__/BlobCustomizer.fixture.test.tsx app/views/__tests__/SettingsModal.fixture.test.tsx`
+      (53 browser files / 182 tests), `pnpm test:e2e -- e2e/menu-modals.spec.ts` (full 10-test e2e
+      batch passed), `pnpm lint`, `pnpm test` (62 files / 599 tests), and `pnpm build`.
+      Browser-visible proof:
+      `output/playwright/n57-after-landscape-700x320-customizer-visible.png` and
+      `output/playwright/n57-after-landscape-700x320-settings-visible.png`; geometry after the fix
+      keeps Done visible at 700x320 (`Customizer: y 247-294`, `Settings: y 256-303`). Next: publish
+      an active PR, address every actionable remote comment/thread/check, squash-merge, then mark
+      this done and seed N58.
 
 ## Notes
 - This is a living plan. After every stage, backward+forward sweep and edit the queue.
@@ -2033,7 +2046,8 @@ this directive forward again.
   The daily-challenge system (standing + streak + share + replay + weekly), the base
   pad/obstacle/combo/skin systems, route hazards, high-altitude hazard readout, post-run goal,
   active power-up badges, the how-to reference, small-phone menu action layout, first-run
-  difficulty dialog layout, dense Settings/leaderboard modal layout, dense GameOver result/action
-  layout, and the reduced-motion/high-contrast contracts are now richly built.
+  difficulty dialog layout, dense Settings/leaderboard modal layout, short-landscape Settings/
+  Customizer action reachability, dense GameOver result/action layout, and the reduced-motion/
+  high-contrast contracts are now richly built.
 - Lesson banked this session: the pre-push lint gate is `pnpm lint` (PINNED biome 2.5.0), NOT
   `npx biome` / global biome (older, gives false-clean) — see [[blobolines-biome-ci-stricter]].

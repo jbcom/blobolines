@@ -48,16 +48,7 @@ test.use({
 });
 
 test("dense menu modals keep Done visible on a 320px phone", async ({ page }) => {
-  await page.addInitScript(
-    ({ progress, settings }) => {
-      localStorage.setItem("CapacitorStorage.blobolines.progress", JSON.stringify(progress));
-      localStorage.setItem("CapacitorStorage.blobolines.settings", JSON.stringify(settings));
-    },
-    { progress: DENSE_PROGRESS, settings: MOBILE_SETTINGS },
-  );
-
-  await page.goto("/?dev");
-  await page.getByRole("button", { name: "Play", exact: true }).waitFor();
+  await openSeededMenu(page);
 
   await page.getByRole("button", { name: "Settings", exact: true }).click();
   await expectDoneInsideViewport(page, "settings");
@@ -68,7 +59,43 @@ test("dense menu modals keep Done visible on a 320px phone", async ({ page }) =>
   await expectDoneInsideViewport(page, "achievements-modal");
 });
 
+test.describe("short landscape menu modals", () => {
+  test.use({
+    viewport: { width: 700, height: 320 },
+    isMobile: true,
+    hasTouch: true,
+  });
+
+  test("Settings and Customize keep Done visible on first open", async ({ page }) => {
+    await openSeededMenu(page);
+
+    await page.getByRole("button", { name: "Customize", exact: true }).click();
+    await expectDoneInsideViewport(page, "customizer");
+    await page.keyboard.press("Escape");
+
+    await page.getByRole("button", { name: "Settings", exact: true }).click();
+    await expectDoneInsideViewport(page, "settings");
+  });
+});
+
+async function openSeededMenu(page: import("@playwright/test").Page) {
+  await page.addInitScript(
+    ({ progress, settings }) => {
+      localStorage.setItem("CapacitorStorage.blobolines.progress", JSON.stringify(progress));
+      localStorage.setItem("CapacitorStorage.blobolines.settings", JSON.stringify(settings));
+    },
+    { progress: DENSE_PROGRESS, settings: MOBILE_SETTINGS },
+  );
+
+  await page.goto("/?dev");
+  await page.getByRole("button", { name: "Play", exact: true }).waitFor();
+}
+
 async function expectDoneInsideViewport(page: import("@playwright/test").Page, testId: string) {
+  const viewport = page.viewportSize();
+  expect(viewport).not.toBeNull();
+  const viewportWidth = viewport?.width ?? 0;
+  const viewportHeight = viewport?.height ?? 0;
   const dialog = page.getByTestId(testId);
   await expect(dialog).toBeVisible();
   const done = dialog.getByRole("button", { name: "Done" });
@@ -77,10 +104,10 @@ async function expectDoneInsideViewport(page: import("@playwright/test").Page, t
   const doneBox = await done.boundingBox();
   expect(doneBox).not.toBeNull();
   expect(doneBox?.x).toBeGreaterThanOrEqual(0);
-  expect((doneBox?.x ?? 0) + (doneBox?.width ?? 0)).toBeLessThanOrEqual(320);
+  expect((doneBox?.x ?? 0) + (doneBox?.width ?? 0)).toBeLessThanOrEqual(viewportWidth);
   expect(doneBox?.y).toBeGreaterThanOrEqual(0);
-  expect((doneBox?.y ?? 0) + (doneBox?.height ?? 0)).toBeLessThanOrEqual(700);
+  expect((doneBox?.y ?? 0) + (doneBox?.height ?? 0)).toBeLessThanOrEqual(viewportHeight);
 
   const horizontalOverflow = await page.evaluate(() => document.documentElement.scrollWidth);
-  expect(horizontalOverflow).toBeLessThanOrEqual(320);
+  expect(horizontalOverflow).toBeLessThanOrEqual(viewportWidth);
 }
