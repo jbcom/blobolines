@@ -1,5 +1,28 @@
 # Changelog
 
+## [0.1.16](https://github.com/jbcom/blobolines/compare/blobolines-v0.1.15...blobolines-v0.1.16) (2026-06-25)
+
+
+### Features
+
+* **a11y:** add high contrast setting ([04f32d3](https://github.com/jbcom/blobolines/commit/04f32d33af410b606d856d2f7c12397bed229873))
+* **a11y:** honor app reduced motion setting ([9d1e137](https://github.com/jbcom/blobolines/commit/9d1e13778b881397bc91c64713cbd5d62b1f1e40))
+* **gameover:** surface next climb goal ([b56ba41](https://github.com/jbcom/blobolines/commit/b56ba41bf870db263872864f5fa4be137ca7e933))
+* **hud:** show held shield powerup ([bc8b894](https://github.com/jbcom/blobolines/commit/bc8b894e42718bae159460cb32b0a4c76ec83937))
+* **hud:** surface high-altitude hazards ([f6b492f](https://github.com/jbcom/blobolines/commit/f6b492f6ebc78e7a8b43c6d0c56f56797eeafa0b))
+* **hud:** surface high-altitude hazards ([#116](https://github.com/jbcom/blobolines/issues/116)) ([f6b492f](https://github.com/jbcom/blobolines/commit/f6b492f6ebc78e7a8b43c6d0c56f56797eeafa0b))
+* landing page as its own page + predictive aim arc + small-phone scaling ([#109](https://github.com/jbcom/blobolines/issues/109)) ([8287854](https://github.com/jbcom/blobolines/commit/8287854f297b4921935528d96493d36e840c3de6))
+
+
+### Bug Fixes
+
+* **a11y:** include root in reduced-motion selector ([e4206bc](https://github.com/jbcom/blobolines/commit/e4206bca68f852567b1bc39e56846c9a6628485b))
+* **gameover:** keep dense phone results readable ([d563e25](https://github.com/jbcom/blobolines/commit/d563e25c43b4b79e95f09d648af9e54b9ef70469))
+* **menu:** fit difficulty dialog on phones ([7513c15](https://github.com/jbcom/blobolines/commit/7513c15a8ae13ce77cce8b0c24457d3152cb413c))
+* **menu:** keep dense modals usable on phones ([0f05f56](https://github.com/jbcom/blobolines/commit/0f05f563a151cff648bfc41fb60333732e5425cd))
+* **menu:** keep short landscape modal actions reachable ([dadac4d](https://github.com/jbcom/blobolines/commit/dadac4d9116fcf32f741cf2f79a44aca11db8bc9))
+* **menu:** wrap mobile action nav ([5a61adb](https://github.com/jbcom/blobolines/commit/5a61adb8d1b9ea283d1e67fa0370a294582d7b21))
+
 ## [0.1.15](https://github.com/jbcom/blobolines/compare/blobolines-v0.1.14...blobolines-v0.1.15) (2026-06-22)
 
 
