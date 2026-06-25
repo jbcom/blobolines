@@ -68,7 +68,8 @@ Render regressions that only a real GPU context catches:
 - `app/views/hud/__tests__/PowerUpBadges.browser.test.tsx` — active power-up HUD coverage,
   including timed buffs, held shield, score doubler, and multi-bounce charges
 - `app/views/__tests__/GameOver.browser.test.tsx` — run recap, daily standing/streak/share seed,
-  achievements, and the next-climb goal on the post-run screen
+  achievements, the next-climb goal, and dense 320px GameOver result/action layout on the post-run
+  screen
 - `app/scene/__tests__/physics.fixture.test.tsx` — **Rapier physics regression**: a body
   falls under gravity (guards the WASM-suspension bug where `<Physics>` never mounts)
 
@@ -86,6 +87,11 @@ end to end.
 `e2e/menu-modals.spec.ts` is the **small-phone dense menu modal gate**: it runs the real menu at a
 320×700 touch viewport with seeded saved progress, opens Settings and the Hall-of-Fame leaderboard,
 and asserts the Done action remains inside the visible viewport with no horizontal overflow.
+
+`e2e/gameover-mobile.spec.ts` is the **small-phone dense GameOver gate**: it mounts a dense
+daily/new-record result at 320×700, asserts the score summary starts at the top of the scroll body,
+and keeps Climb again / Share / Back to menu inside the visible action footer with no horizontal
+overflow.
 
 `e2e/route-proof.spec.ts` is the **"is the dev-only route visibly proven?" gate**:
 it drives the real DEV route-proof sequence, waits for the eight timed JSON+PNG captures,
