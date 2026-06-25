@@ -1,6 +1,6 @@
 ---
 title: Testing
-updated: 2026-06-24
+updated: 2026-06-25
 status: current
 domain: quality
 ---
@@ -55,8 +55,11 @@ Render regressions that only a real GPU context catches:
   shipped route, power-up, hazard, daily, and next-climb surfaces, and uses the capped scrollable
   dialog shell
 - `app/views/__tests__/SettingsModal.fixture.test.tsx` — settings controls and the shared Dialog
-  scroll-shell contract, including the inherited safe-viewport panel cap and compact mobile spacing
-  for the dense control stack
+  scroll-shell contract, including the inherited safe-viewport panel cap, compact mobile spacing,
+  and fixed action bar around the dense control stack
+- `app/views/__tests__/BlobCustomizer.fixture.test.tsx` — the Goo Customizer renders open, shows
+  the skin grid, and keeps its dense skin content in a scroll body separate from the fixed Done
+  action
 - `app/views/hud/__tests__/NextPadRadar.browser.test.tsx` — next-target direction,
   vertical gap, distance, and hidden state when no target exists
 - `app/views/hud/__tests__/DifficultyMeter.browser.test.tsx` — active difficulty tier,
@@ -84,9 +87,11 @@ launch the blob, assert the altimeter climbs off zero. This single flow proves P
 mounted, the body simulates, the launch impulse applied, and the height-chase updates —
 end to end.
 
-`e2e/menu-modals.spec.ts` is the **small-phone dense menu modal gate**: it runs the real menu at a
-320×700 touch viewport with seeded saved progress, opens Settings and the Hall-of-Fame leaderboard,
-and asserts the Done action remains inside the visible viewport with no horizontal overflow.
+`e2e/menu-modals.spec.ts` is the **dense menu modal gate**: it runs the real menu at a 320×700 touch
+viewport with seeded saved progress, opens Settings and the Hall-of-Fame leaderboard, and asserts
+the Done action remains inside the visible viewport with no horizontal overflow. It also runs
+Settings and Goo Customizer at a 700×320 short-landscape touch viewport so their fixed action bars
+stay visible on first open while the dense body scrolls.
 
 `e2e/gameover-mobile.spec.ts` is the **small-phone dense GameOver gate**: it mounts a dense
 daily/new-record result at 320×700, asserts the score summary starts at the top of the scroll body,

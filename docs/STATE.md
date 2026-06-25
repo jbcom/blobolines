@@ -1,6 +1,6 @@
 ---
 title: State
-updated: 2026-06-24
+updated: 2026-06-25
 status: current
 domain: context
 ---
@@ -110,6 +110,9 @@ leaderboard + achievements gallery, and real-time air-nudge + achievement toasts
   primary Done action visible on a 320px touch viewport, even with haptics enabled and a dense
   saved leaderboard. The leaderboard's score list has its own shorter phone cap so it no longer
   creates a nested-scroll trap that hides the dialog action.
+- **Short-landscape menu modal action bars** — Settings and Goo Customizer now split their dense
+  content into a scroll body with a fixed action footer, so Done remains visible on first open at
+  700x320/568x320 short landscape viewports instead of sitting below the initial scroll position.
 - **Small-phone dense game-over fit** — a dense daily/new-record result opens at the score summary
   instead of auto-scrolling down to the focused replay button, while Climb again, Share, and Back to
   menu remain visible in a fixed action footer on a 320px touch viewport. The reward/daily detail
@@ -128,10 +131,10 @@ leaderboard + achievements gallery, and real-time air-nudge + achievement toasts
 - Next work should follow the current queue in `.agent-state/directive.md`; start with a fresh
   remaining-work survey and avoid stacking more daily/progression, post-run goal, base cloud-pad,
   power-up badge, how-to reference, small-phone menu action layout, first-run difficulty dialog
-  layout, dense Settings/leaderboard modal layout, dense GameOver result/action layout, or hazard
-  readability work without new evidence. The biome visual identity (scenery + parallax + landmarks
-  + reactions + audio + particles + banner), route hazards, and the daily/progression surfaces are
-  already deep.
+  layout, dense Settings/leaderboard modal layout, short-landscape Settings/Customizer action
+  reachability, dense GameOver result/action layout, or hazard readability work without new
+  evidence. The biome visual identity (scenery + parallax + landmarks + reactions + audio +
+  particles + banner), route hazards, and the daily/progression surfaces are already deep.
 - Visual QA is via the **deterministic browser fixtures** (real foreground Chromium), NOT live
   teleport screenshots: the claude-in-chrome tab is backgrounded, so rAF is throttled — the
   physics teleport doesn't move the blob and DOM motion animations don't advance. `setHeight(y)`

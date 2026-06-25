@@ -40,17 +40,17 @@ test("SettingsModal controls have accessible names", async () => {
 
 // Short/landscape safety: the dialog caps to the safe viewport height and the inner panel
 // scrolls internally, so a tall modal never overflows off a short screen.
-test("dialog caps its height and scrolls its panel internally", async () => {
+test("dialog caps its height and scrolls only the settings body internally", async () => {
   const screen = await render(<SettingsModal open onOpenChange={() => {}} />);
   await expect.element(screen.getByTestId("settings")).toBeVisible();
   const content = screen.getByTestId("settings").element();
   // Content carries an inline max-height cap (the calc against the safe insets).
   expect((content as HTMLElement).style.maxHeight).toMatch(/calc\(/);
-  // The inner panel is the scroll container (overflow-y auto).
+  // The dialog shell clips to the safe viewport; the dense body scrolls below the fixed header.
   expect(content.className).toContain("overflow-hidden");
-  const panel = content.querySelector(".overflow-y-auto") as HTMLElement | null;
-  expect(panel).toBeTruthy();
-  expect(panel?.style.maxHeight).toBe("inherit");
+  const scrollBody = screen.getByTestId("settings-scroll-body").element();
+  expect(scrollBody.className).toContain("overflow-y-auto");
+  expect(scrollBody.className).toContain("flex-1");
 });
 
 test("SettingsModal uses compact mobile spacing so the close action stays reachable", async () => {
@@ -60,7 +60,9 @@ test("SettingsModal uses compact mobile spacing so the close action stays reacha
   const controls = screen.getByTestId("settings-controls").element();
   expect(controls.className).toContain("gap-3");
   expect(controls.className).toContain("sm:gap-5");
-  expect(screen.getByRole("button", { name: "Done" }).element().className).toContain("mt-4");
+  const scrollBody = screen.getByTestId("settings-scroll-body").element();
+  expect(scrollBody.className).toContain("pt-4");
+  expect(screen.getByRole("button", { name: "Done" }).element().className).not.toContain("mt-");
 });
 
 test("Graphics quality picker pins the tier in settings", async () => {

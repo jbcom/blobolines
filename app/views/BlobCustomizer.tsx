@@ -98,149 +98,172 @@ export function BlobCustomizer({
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange} ariaLabel="Blob customizer" testId="customizer">
-      <div className="flex items-center justify-between">
-        <h2 className="font-display text-xl font-bold text-cream">Goo Customizer</h2>
-        <span ref={gemRef} className="flex items-center gap-1 font-display text-sm text-blob-blue">
-          <Gem className="size-4" strokeWidth={2.5} aria-hidden /> {crystals}
-          <span className="sr-only"> crystals available</span>
-        </span>
-      </div>
-      <p className="mt-1 font-ui text-xs text-fg-subtle">
-        Spend crystals collected on the climb to unlock new goo.
-      </p>
-
-      {/* Empty state — no crystals AND nothing unlocked beyond the starter skin: nudge the
-          player toward the loop that earns unlocks rather than showing only locked tiles. */}
-      {crystals === 0 && unlocked.length <= 1 && (
-        <p className="mt-3 rounded-lg border border-border/60 border-dashed bg-bg/40 px-3 py-2 text-center font-ui text-xs text-fg-muted">
-          💎 Collect crystals on your climb to unlock new goo.
-        </p>
-      )}
-
-      {/* biome-ignore lint/a11y/useSemanticElements: grid wrapper for roving-tabindex skin tiles (children are buttons) */}
-      <div
-        className="mt-4 grid grid-cols-2 gap-3"
-        role="grid"
-        aria-label="Goo skins"
-        onKeyDown={onGridKey}
-      >
-        {SKINS.map((s, i) => {
-          const isUnlocked = unlocked.includes(s.id);
-          const isEquipped = equipped === s.id;
-          // Achievement-gated skins are earned, not bought — show the achievement to earn instead
-          // of a crystal price, and never let them be clicked-to-buy.
-          const gateId = SKIN_ACHIEVEMENT[s.id];
-          const gatedAchievement = gateId ? achievementById(gateId) : undefined;
-          // Crystal cost is undefined for achievement-gated skins; only the non-gated branch reads
-          // it. Default to 0 so the unrelated `affordable`/width math stays finite for those tiles.
-          const cost = SKIN_COST[s.id] ?? 0;
-          const affordable = crystals >= cost;
-          return (
-            <button
-              key={s.id}
-              ref={(el) => {
-                tileRefs.current[i] = el;
-              }}
-              type="button"
-              tabIndex={i === focusIdx ? 0 : -1}
-              onFocus={() => setFocusIdx(i)}
-              onClick={() => pick(s.id)}
-              disabled={!isUnlocked && (gateId ? true : !affordable)}
-              aria-pressed={isEquipped}
-              aria-label={`${s.name} — ${
-                isEquipped
-                  ? "equipped"
-                  : isUnlocked
-                    ? "equip"
-                    : gateId
-                      ? `locked, earn by: ${gatedAchievement?.title ?? "an achievement"}`
-                      : affordable
-                        ? `unlock for ${cost} crystals`
-                        : `locked, needs ${cost} crystals`
-              }`}
-              className={`flex flex-col items-center gap-2 rounded-xl border p-3 transition-colors ${
-                isEquipped
-                  ? "border-accent bg-accent/10"
-                  : "border-border bg-surface hover:border-border-strong"
-              } ${!isUnlocked && (gateId || !affordable) ? "opacity-50" : ""}`}
+    <Dialog
+      open={open}
+      onOpenChange={onOpenChange}
+      ariaLabel="Blob customizer"
+      testId="customizer"
+      className="overflow-hidden p-0"
+    >
+      <div className="flex max-h-[inherit] min-h-0 flex-col">
+        <div className="px-5 pt-5 sm:px-6 sm:pt-6">
+          <div className="flex items-center justify-between">
+            <h2 className="font-display text-xl font-bold text-cream">Goo Customizer</h2>
+            <span
+              ref={gemRef}
+              className="flex items-center gap-1 font-display text-sm text-blob-blue"
             >
-              {/* Wet-goo preview swatch: a radial gradient + glossy highlight that reads as
-                  a 3D goo droplet (not a flat disc), tinted to the skin — cheaper than 4
-                  live WebGL canvases on mobile but conveys the gooey material per skin.
-                  Highlight + shade derive from palette tokens (no raw hex, brand gate). */}
-              <span
-                aria-hidden
-                className="size-12 rounded-full shadow-[var(--shadow-sm)]"
-                style={{
-                  background: `radial-gradient(circle at 35% 28%, ${palette.goo.wet} 0%, ${palette.blob[s.id]} 42%, ${mixHex(palette.blob[s.id], palette.blob.ink, 0.4)} 100%)`,
-                }}
-              />
-              <span aria-hidden className="font-display text-sm font-bold text-cream">
-                {s.name}
-              </span>
-              {isEquipped ? (
-                <span
-                  aria-hidden
-                  className="flex items-center gap-1 font-ui text-[11px] font-bold text-accent"
-                >
-                  <Check className="size-3" /> Equipped
-                </span>
-              ) : isUnlocked ? (
-                <span aria-hidden className="font-ui text-[11px] font-semibold text-fg-subtle">
-                  Equip
-                </span>
-              ) : gateId ? (
-                // Achievement-gated skin: earned by the milestone, not buyable. Keyed on gateId
-                // (the gate's PRESENCE) so a mistyped/unknown achievement id still shows the Earn
-                // path rather than falling through to the crystal-purchase layout.
-                <span aria-hidden className="flex w-full flex-col items-center gap-1">
-                  <span className="flex items-center gap-1 font-ui text-[11px] font-bold text-tramp-gold">
-                    <Trophy className="size-3" /> Earn
-                  </span>
-                  <span className="text-center font-ui text-[10px] text-fg-subtle leading-tight">
-                    {gatedAchievement?.title ?? "Special achievement"}
-                  </span>
-                </span>
-              ) : (
-                <span aria-hidden className="flex w-full flex-col items-center gap-1">
-                  <span
-                    className={`flex items-center gap-1 font-ui text-[11px] font-bold ${
-                      affordable ? "text-blob-blue" : "text-fg-subtle"
-                    }`}
-                  >
-                    {affordable ? <Gem className="size-3" /> : <Lock className="size-3" />} {cost}
-                  </span>
-                  {affordable ? (
-                    <span className="font-ui text-[10px] font-semibold text-blob-blue">Unlock</span>
-                  ) : (
-                    <>
-                      {/* "need N more" + how close they are to affording it. */}
-                      <span className="font-ui text-[10px] text-fg-subtle">
-                        need {cost - crystals} more
-                      </span>
-                      <span className="h-1 w-full overflow-hidden rounded-full bg-bg/70">
-                        <span
-                          className="block h-full rounded-full bg-blob-blue/70"
-                          // Clamp both ends: negative crystals (debug/state bugs) → 0%, not
-                          // a negative width.
-                          style={{
-                            width: `${Math.max(0, Math.min(100, (crystals / cost) * 100))}%`,
-                          }}
-                        />
-                      </span>
-                    </>
-                  )}
-                </span>
-              )}
-            </button>
-          );
-        })}
-      </div>
+              <Gem className="size-4" strokeWidth={2.5} aria-hidden /> {crystals}
+              <span className="sr-only"> crystals available</span>
+            </span>
+          </div>
+          <p className="mt-1 font-ui text-xs text-fg-subtle">
+            Spend crystals collected on the climb to unlock new goo.
+          </p>
+        </div>
 
-      <Button cta size="lg" onClick={() => onOpenChange(false)} className="mt-5 w-full">
-        Done
-      </Button>
+        <div
+          data-testid="customizer-scroll-body"
+          className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 pt-4 pb-4 sm:px-6"
+        >
+          {/* Empty state — no crystals AND nothing unlocked beyond the starter skin: nudge the
+              player toward the loop that earns unlocks rather than showing only locked tiles. */}
+          {crystals === 0 && unlocked.length <= 1 && (
+            <p className="mb-3 rounded-lg border border-border/60 border-dashed bg-bg/40 px-3 py-2 text-center font-ui text-xs text-fg-muted">
+              💎 Collect crystals on your climb to unlock new goo.
+            </p>
+          )}
+
+          {/* biome-ignore lint/a11y/useSemanticElements: grid wrapper for roving-tabindex skin tiles (children are buttons) */}
+          <div
+            className="grid grid-cols-2 gap-3"
+            role="grid"
+            aria-label="Goo skins"
+            onKeyDown={onGridKey}
+          >
+            {SKINS.map((s, i) => {
+              const isUnlocked = unlocked.includes(s.id);
+              const isEquipped = equipped === s.id;
+              // Achievement-gated skins are earned, not bought — show the achievement to earn instead
+              // of a crystal price, and never let them be clicked-to-buy.
+              const gateId = SKIN_ACHIEVEMENT[s.id];
+              const gatedAchievement = gateId ? achievementById(gateId) : undefined;
+              // Crystal cost is undefined for achievement-gated skins; only the non-gated branch reads
+              // it. Default to 0 so the unrelated `affordable`/width math stays finite for those tiles.
+              const cost = SKIN_COST[s.id] ?? 0;
+              const affordable = crystals >= cost;
+              return (
+                <button
+                  key={s.id}
+                  ref={(el) => {
+                    tileRefs.current[i] = el;
+                  }}
+                  type="button"
+                  tabIndex={i === focusIdx ? 0 : -1}
+                  onFocus={() => setFocusIdx(i)}
+                  onClick={() => pick(s.id)}
+                  disabled={!isUnlocked && (gateId ? true : !affordable)}
+                  aria-pressed={isEquipped}
+                  aria-label={`${s.name} — ${
+                    isEquipped
+                      ? "equipped"
+                      : isUnlocked
+                        ? "equip"
+                        : gateId
+                          ? `locked, earn by: ${gatedAchievement?.title ?? "an achievement"}`
+                          : affordable
+                            ? `unlock for ${cost} crystals`
+                            : `locked, needs ${cost} crystals`
+                  }`}
+                  className={`flex flex-col items-center gap-2 rounded-xl border p-3 transition-colors ${
+                    isEquipped
+                      ? "border-accent bg-accent/10"
+                      : "border-border bg-surface hover:border-border-strong"
+                  } ${!isUnlocked && (gateId || !affordable) ? "opacity-50" : ""}`}
+                >
+                  {/* Wet-goo preview swatch: a radial gradient + glossy highlight that reads as
+                      a 3D goo droplet (not a flat disc), tinted to the skin — cheaper than 4
+                      live WebGL canvases on mobile but conveys the gooey material per skin.
+                      Highlight + shade derive from palette tokens (no raw hex, brand gate). */}
+                  <span
+                    aria-hidden
+                    className="size-12 rounded-full shadow-[var(--shadow-sm)]"
+                    style={{
+                      background: `radial-gradient(circle at 35% 28%, ${palette.goo.wet} 0%, ${palette.blob[s.id]} 42%, ${mixHex(palette.blob[s.id], palette.blob.ink, 0.4)} 100%)`,
+                    }}
+                  />
+                  <span aria-hidden className="font-display text-sm font-bold text-cream">
+                    {s.name}
+                  </span>
+                  {isEquipped ? (
+                    <span
+                      aria-hidden
+                      className="flex items-center gap-1 font-ui text-[11px] font-bold text-accent"
+                    >
+                      <Check className="size-3" /> Equipped
+                    </span>
+                  ) : isUnlocked ? (
+                    <span aria-hidden className="font-ui text-[11px] font-semibold text-fg-subtle">
+                      Equip
+                    </span>
+                  ) : gateId ? (
+                    // Achievement-gated skin: earned by the milestone, not buyable. Keyed on gateId
+                    // (the gate's PRESENCE) so a mistyped/unknown achievement id still shows the Earn
+                    // path rather than falling through to the crystal-purchase layout.
+                    <span aria-hidden className="flex w-full flex-col items-center gap-1">
+                      <span className="flex items-center gap-1 font-ui text-[11px] font-bold text-tramp-gold">
+                        <Trophy className="size-3" /> Earn
+                      </span>
+                      <span className="text-center font-ui text-[10px] text-fg-subtle leading-tight">
+                        {gatedAchievement?.title ?? "Special achievement"}
+                      </span>
+                    </span>
+                  ) : (
+                    <span aria-hidden className="flex w-full flex-col items-center gap-1">
+                      <span
+                        className={`flex items-center gap-1 font-ui text-[11px] font-bold ${
+                          affordable ? "text-blob-blue" : "text-fg-subtle"
+                        }`}
+                      >
+                        {affordable ? <Gem className="size-3" /> : <Lock className="size-3" />}{" "}
+                        {cost}
+                      </span>
+                      {affordable ? (
+                        <span className="font-ui text-[10px] font-semibold text-blob-blue">
+                          Unlock
+                        </span>
+                      ) : (
+                        <>
+                          {/* "need N more" + how close they are to affording it. */}
+                          <span className="font-ui text-[10px] text-fg-subtle">
+                            need {cost - crystals} more
+                          </span>
+                          <span className="h-1 w-full overflow-hidden rounded-full bg-bg/70">
+                            <span
+                              className="block h-full rounded-full bg-blob-blue/70"
+                              // Clamp both ends: negative crystals (debug/state bugs) → 0%, not
+                              // a negative width.
+                              style={{
+                                width: `${Math.max(0, Math.min(100, (crystals / cost) * 100))}%`,
+                              }}
+                            />
+                          </span>
+                        </>
+                      )}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        <div className="flex-none border-border/40 border-t bg-[var(--bg-elevated)] px-5 py-4 sm:px-6 sm:py-5">
+          <Button cta size="lg" onClick={() => onOpenChange(false)} className="w-full">
+            Done
+          </Button>
+        </div>
+      </div>
     </Dialog>
   );
 }

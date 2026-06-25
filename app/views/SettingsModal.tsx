@@ -49,191 +49,208 @@ export function SettingsModal({
   }, [open]);
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange} ariaLabel="Settings" testId="settings">
-      <h2 className="font-display text-xl font-bold text-cream">Settings</h2>
+    <Dialog
+      open={open}
+      onOpenChange={onOpenChange}
+      ariaLabel="Settings"
+      testId="settings"
+      className="overflow-hidden p-0"
+    >
+      <div className="flex max-h-[inherit] min-h-0 flex-col">
+        <div className="px-5 pt-5 sm:px-6 sm:pt-6">
+          <h2 className="font-display text-xl font-bold text-cream">Settings</h2>
+        </div>
 
-      <div
-        data-testid="settings-controls"
-        className="mt-4 flex flex-col gap-3 font-ui text-sm text-fg-muted sm:mt-5 sm:gap-5"
-      >
-        <Row label="Master volume" value={`${Math.round(settings.masterVolume * 100)}%`}>
-          <Slider
-            aria-label="Master volume"
-            min={0}
-            max={1}
-            step={0.05}
-            value={[settings.masterVolume]}
-            onValueChange={([v]) => {
-              update({ masterVolume: v });
-              setMasterVolume(v);
-            }}
-          />
-        </Row>
-
-        <Row label="SFX volume" value={`${Math.round(settings.sfxVolume * 100)}%`}>
-          <Slider
-            aria-label="SFX volume"
-            min={0}
-            max={1}
-            step={0.05}
-            value={[settings.sfxVolume]}
-            onValueChange={([v]) => {
-              update({ sfxVolume: v });
-              setSfxVolume(v);
-            }}
-          />
-        </Row>
-
-        <Row label="Music volume" value={`${Math.round(settings.musicVolume * 100)}%`}>
-          <Slider
-            aria-label="Music volume"
-            min={0}
-            max={1}
-            step={0.05}
-            value={[settings.musicVolume]}
-            onValueChange={([v]) => {
-              update({ musicVolume: v });
-              setMusicVolume(v);
-            }}
-          />
-        </Row>
-
-        <Row label="Ambience volume" value={`${Math.round(settings.ambientVolume * 100)}%`}>
-          <Slider
-            aria-label="Ambience volume"
-            min={0}
-            max={1}
-            step={0.05}
-            value={[settings.ambientVolume]}
-            onValueChange={([v]) => {
-              update({ ambientVolume: v });
-              setAmbientVolume(v);
-            }}
-          />
-        </Row>
-
-        <Toggle
-          label="Music"
-          checked={settings.musicEnabled}
-          onChange={(on) => {
-            update({ musicEnabled: on });
-            setMusicEnabled(on);
-          }}
-        />
-
-        <Row label="Charge speed" value={`${settings.chargeSensitivity.toFixed(1)}×`}>
-          <Slider
-            aria-label="Charge speed"
-            min={0.5}
-            max={2}
-            step={0.1}
-            value={[settings.chargeSensitivity]}
-            onValueChange={([v]) => update({ chargeSensitivity: v })}
-          />
-          <SensitivityPreview sensitivity={settings.chargeSensitivity} />
-        </Row>
-
-        {/* Haptics only on touch devices (a pointer-only desktop can't vibrate). When on,
-            a Test button fires a sample buzz so the player can feel the strength. */}
-        {TOUCH_CAPABLE && (
-          <div className="flex items-center justify-between">
-            <span className="font-semibold">Haptics</span>
-            <div className="flex items-center gap-3">
-              {settings.haptics && (
-                <button
-                  type="button"
-                  onClick={() => impact(ImpactStyle.Medium)}
-                  className="rounded-lg border border-border px-2.5 py-1 font-ui text-[11px] font-bold text-fg-subtle hover:text-cream"
-                >
-                  Test
-                </button>
-              )}
-              <Switch
-                checked={settings.haptics}
-                onCheckedChange={(on) => update({ haptics: on })}
-                aria-label="Haptics"
+        <div
+          data-testid="settings-scroll-body"
+          className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 pt-4 pb-4 sm:px-6 sm:pt-5 sm:pb-5"
+        >
+          <div
+            data-testid="settings-controls"
+            className="flex flex-col gap-3 font-ui text-sm text-fg-muted sm:gap-5"
+          >
+            <Row label="Master volume" value={`${Math.round(settings.masterVolume * 100)}%`}>
+              <Slider
+                aria-label="Master volume"
+                min={0}
+                max={1}
+                step={0.05}
+                value={[settings.masterVolume]}
+                onValueChange={([v]) => {
+                  update({ masterVolume: v });
+                  setMasterVolume(v);
+                }}
               />
+            </Row>
+
+            <Row label="SFX volume" value={`${Math.round(settings.sfxVolume * 100)}%`}>
+              <Slider
+                aria-label="SFX volume"
+                min={0}
+                max={1}
+                step={0.05}
+                value={[settings.sfxVolume]}
+                onValueChange={([v]) => {
+                  update({ sfxVolume: v });
+                  setSfxVolume(v);
+                }}
+              />
+            </Row>
+
+            <Row label="Music volume" value={`${Math.round(settings.musicVolume * 100)}%`}>
+              <Slider
+                aria-label="Music volume"
+                min={0}
+                max={1}
+                step={0.05}
+                value={[settings.musicVolume]}
+                onValueChange={([v]) => {
+                  update({ musicVolume: v });
+                  setMusicVolume(v);
+                }}
+              />
+            </Row>
+
+            <Row label="Ambience volume" value={`${Math.round(settings.ambientVolume * 100)}%`}>
+              <Slider
+                aria-label="Ambience volume"
+                min={0}
+                max={1}
+                step={0.05}
+                value={[settings.ambientVolume]}
+                onValueChange={([v]) => {
+                  update({ ambientVolume: v });
+                  setAmbientVolume(v);
+                }}
+              />
+            </Row>
+
+            <Toggle
+              label="Music"
+              checked={settings.musicEnabled}
+              onChange={(on) => {
+                update({ musicEnabled: on });
+                setMusicEnabled(on);
+              }}
+            />
+
+            <Row label="Charge speed" value={`${settings.chargeSensitivity.toFixed(1)}×`}>
+              <Slider
+                aria-label="Charge speed"
+                min={0.5}
+                max={2}
+                step={0.1}
+                value={[settings.chargeSensitivity]}
+                onValueChange={([v]) => update({ chargeSensitivity: v })}
+              />
+              <SensitivityPreview sensitivity={settings.chargeSensitivity} />
+            </Row>
+
+            {/* Haptics only on touch devices (a pointer-only desktop can't vibrate). When on,
+                a Test button fires a sample buzz so the player can feel the strength. */}
+            {TOUCH_CAPABLE && (
+              <div className="flex items-center justify-between">
+                <span className="font-semibold">Haptics</span>
+                <div className="flex items-center gap-3">
+                  {settings.haptics && (
+                    <button
+                      type="button"
+                      onClick={() => impact(ImpactStyle.Medium)}
+                      className="rounded-lg border border-border px-2.5 py-1 font-ui text-[11px] font-bold text-fg-subtle hover:text-cream"
+                    >
+                      Test
+                    </button>
+                  )}
+                  <Switch
+                    checked={settings.haptics}
+                    onCheckedChange={(on) => update({ haptics: on })}
+                    aria-label="Haptics"
+                  />
+                </div>
+              </div>
+            )}
+
+            <Toggle
+              label="Reduce motion"
+              checked={settings.reducedMotion}
+              onChange={(on) => update({ reducedMotion: on })}
+            />
+
+            <Toggle
+              label="High contrast"
+              checked={settings.highContrast}
+              onChange={(on) => update({ highContrast: on })}
+            />
+
+            {/* Graphics quality: Auto lets the device + frame-rate pick the tier; the explicit tiers
+                pin it (Low to save battery, High to force the heavy effects on a capable device).
+                Each segment is an aria-pressed toggle labelled by its text + the visible "Graphics"
+                heading, so no extra group role is needed. */}
+            <div className="flex items-center justify-between gap-3">
+              <span id="graphics-quality-label" className="font-semibold">
+                Graphics
+              </span>
+              <div className="flex gap-1">
+                {QUALITY_OPTIONS.map((opt) => {
+                  const active = settings.qualityPref === opt.value;
+                  return (
+                    <button
+                      key={opt.value}
+                      type="button"
+                      aria-pressed={active}
+                      aria-label={`Graphics quality: ${opt.label}`}
+                      onClick={() => update({ qualityPref: opt.value })}
+                      className={`rounded-lg border px-2.5 py-1 font-ui text-[11px] font-bold ${
+                        active
+                          ? "border-accent bg-accent/15 text-cream"
+                          : "border-border text-fg-subtle hover:text-cream"
+                      }`}
+                    >
+                      {opt.label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Reset progress — destructive, so a two-step confirm: first tap arms ("Tap again
+                to confirm"), second tap wipes best height / crystals / unlocks / skin. */}
+            <div className="flex items-center justify-between gap-3 border-border/40 border-t pt-3 sm:pt-4">
+              <span className="font-semibold text-fg-subtle">Reset progress</span>
+              <button
+                type="button"
+                onClick={() => {
+                  if (confirmReset) {
+                    resetProgress();
+                    setConfirmReset(false);
+                  } else {
+                    setConfirmReset(true);
+                  }
+                }}
+                className={`rounded-lg px-3 py-1.5 font-display text-xs font-bold uppercase tracking-wide ${
+                  confirmReset ? "bg-danger text-bg" : "border border-danger/60 text-danger"
+                }`}
+              >
+                {confirmReset ? "Tap to confirm" : "Reset"}
+              </button>
             </div>
           </div>
-        )}
-
-        <Toggle
-          label="Reduce motion"
-          checked={settings.reducedMotion}
-          onChange={(on) => update({ reducedMotion: on })}
-        />
-
-        <Toggle
-          label="High contrast"
-          checked={settings.highContrast}
-          onChange={(on) => update({ highContrast: on })}
-        />
-
-        {/* Graphics quality: Auto lets the device + frame-rate pick the tier; the explicit tiers
-            pin it (Low to save battery, High to force the heavy effects on a capable device).
-            Each segment is an aria-pressed toggle labelled by its text + the visible "Graphics"
-            heading, so no extra group role is needed. */}
-        <div className="flex items-center justify-between gap-3">
-          <span id="graphics-quality-label" className="font-semibold">
-            Graphics
-          </span>
-          <div className="flex gap-1">
-            {QUALITY_OPTIONS.map((opt) => {
-              const active = settings.qualityPref === opt.value;
-              return (
-                <button
-                  key={opt.value}
-                  type="button"
-                  aria-pressed={active}
-                  aria-label={`Graphics quality: ${opt.label}`}
-                  onClick={() => update({ qualityPref: opt.value })}
-                  className={`rounded-lg border px-2.5 py-1 font-ui text-[11px] font-bold ${
-                    active
-                      ? "border-accent bg-accent/15 text-cream"
-                      : "border-border text-fg-subtle hover:text-cream"
-                  }`}
-                >
-                  {opt.label}
-                </button>
-              );
-            })}
-          </div>
         </div>
 
-        {/* Reset progress — destructive, so a two-step confirm: first tap arms ("Tap again
-            to confirm"), second tap wipes best height / crystals / unlocks / skin. */}
-        <div className="flex items-center justify-between gap-3 border-border/40 border-t pt-3 sm:pt-4">
-          <span className="font-semibold text-fg-subtle">Reset progress</span>
-          <button
-            type="button"
+        <div className="flex-none border-border/40 border-t bg-[var(--bg-elevated)] px-5 py-4 sm:px-6 sm:py-5">
+          <Button
+            cta
+            size="lg"
             onClick={() => {
-              if (confirmReset) {
-                resetProgress();
-                setConfirmReset(false);
-              } else {
-                setConfirmReset(true);
-              }
+              setConfirmReset(false);
+              onOpenChange(false);
             }}
-            className={`rounded-lg px-3 py-1.5 font-display text-xs font-bold uppercase tracking-wide ${
-              confirmReset ? "bg-danger text-bg" : "border border-danger/60 text-danger"
-            }`}
+            className="w-full"
           >
-            {confirmReset ? "Tap to confirm" : "Reset"}
-          </button>
+            Done
+          </Button>
         </div>
       </div>
-
-      <Button
-        cta
-        size="lg"
-        onClick={() => {
-          setConfirmReset(false);
-          onOpenChange(false);
-        }}
-        className="mt-4 w-full sm:mt-6"
-      >
-        Done
-      </Button>
     </Dialog>
   );
 }

@@ -17,3 +17,14 @@ test("BlobCustomizer renders open with the skin grid visible", async () => {
   await expect.element(screen.getByText("Berry")).toBeVisible();
   await expect.element(screen.getByText("Nebula")).toBeVisible();
 });
+
+test("BlobCustomizer keeps dense skin content separate from the fixed Done action", async () => {
+  const screen = await render(<BlobCustomizer open onOpenChange={() => {}} />);
+
+  const panel = screen.getByTestId("customizer").element();
+  expect(panel.className).toContain("overflow-hidden");
+  const scrollBody = screen.getByTestId("customizer-scroll-body").element();
+  expect(scrollBody.className).toContain("overflow-y-auto");
+  expect(scrollBody.className).toContain("flex-1");
+  expect(screen.getByRole("button", { name: "Done" }).element().className).not.toContain("mt-");
+});
