@@ -1986,18 +1986,46 @@ this directive forward again.
       evidence, and is not covered by the recently saturated menu/modal work. Skipped new
       progression, hazard, route-variety, power-up, Manual, and biome/audio identity work because
       those surfaces remain richly covered without new contrary evidence.
-- [ ] N56.3 IN PROGRESS. Implementation splits GameOver into a scrollable results body plus a
-      fixed action footer, focuses Climb again without scrolling the result body, and adds focused
-      browser + E2E 320x700 regression coverage. Local proof so far: full browser fixture suite via
-      `pnpm test:browser -- app/views/__tests__/GameOver.browser.test.tsx` (53 files / 181 tests),
-      full Playwright suite via `pnpm test:e2e -- e2e/gameover-mobile.spec.ts` (9 passed),
-      `pnpm typecheck`, `pnpm lint`, `git diff --check`, `pnpm test` (62 files / 599 tests), and
-      `pnpm build`. Browser-visible proof:
+- [x] N56.3 DONE via PR #130 (d563e25). Implementation splits GameOver into a scrollable results
+      body plus a fixed action footer, focuses Climb again without scrolling the result body, and
+      adds focused browser + E2E 320x700 regression coverage. Local proof: full browser fixture suite
+      via `pnpm test:browser -- app/views/__tests__/GameOver.browser.test.tsx` (53 files /
+      181 tests), full Playwright suite via `pnpm test:e2e -- e2e/gameover-mobile.spec.ts`
+      (9 passed), `pnpm typecheck`, `pnpm lint`, `git diff --check`, `pnpm test` (62 files /
+      599 tests), and `pnpm build`. Browser-visible proof:
       `output/playwright/n56-gameover-dense-mobile-baseline.png` showed the score hidden by
       autofocus scroll; `output/playwright/n56-gameover-dense-mobile-fixed.png` shows New record,
-      score, next goal, seed, Climb again, Share, and Back to menu visible. Next: publish an active
-      PR, address every actionable remote comment/thread/check, squash-merge, then close this item
-      with the PR number and seed the next all-remaining-work loop.
+      score, next goal, seed, Climb again, Share, and Back to menu visible. Remote checks passed:
+      Lint/Typecheck/Test/Build, Playwright E2E, Android debug APK, CodeQL, Analyze (actions),
+      Analyze (java-kotlin), Analyze (javascript-typescript), Amazon Q Developer, and CodeRabbit.
+      Remote feedback had no actionable unresolved thread: Amazon Q commented no blocking defects,
+      Gemini was quota-limited, CodeRabbit posted quota/rate-limit text but completed status, and
+      thread-aware review state was empty.
+
+## Queue — N57 all-remaining-work loop
+
+Standing objective: continue treating the entire remaining Blobolines backlog as the goal. Each
+pass must re-survey the docs, directive, plans, tests, codebase, and browser/runtime evidence from
+current `main`; choose the highest unsaturated player-value/risk gap; implement it end to end;
+prove it locally and remotely; address every actionable PR thread/check; squash-merge; then rewrite
+this directive forward again.
+
+- [ ] N57.1 SURVEY from current `main` after PR #130. Re-read current docs, directive, plans,
+      key tests, and runtime surfaces before choosing the next milestone. Start by checking the
+      same high-value axes: first-run comprehension, mobile/touch and short-viewport friction,
+      mid/late-run decision variety, repeat-play value, audio/visual identity, accessibility, and
+      any red or brittle test evidence.
+- [ ] N57.2 Choose the next milestone only from fresh evidence. Explicitly justify the selected
+      gap against saturated surfaces: daily challenge, achievements, cosmetics, weekly summary,
+      share/replay, next-climb goal, active power-up badges including shield, complete Manual,
+      small-phone menu action layout, first-run difficulty dialog layout, dense Settings/
+      leaderboard modal layout, dense GameOver result/action layout, cloud pads, route hazards,
+      high-altitude hazard readout, biome identity, and reduced-motion/high-contrast.
+- [ ] N57.3 For the chosen milestone, require the proof profile appropriate to the blast radius:
+      focused unit/browser fixtures, `pnpm typecheck`, `pnpm lint`, `pnpm test`, `pnpm build`,
+      `pnpm test:e2e`, and browser-visible screenshot/diagnostic evidence whenever visuals,
+      playability, or UX change. Then publish an active PR, address every actionable remote
+      comment/thread/check, squash-merge, and repeat N57.1.
 
 ## Notes
 - This is a living plan. After every stage, backward+forward sweep and edit the queue.
