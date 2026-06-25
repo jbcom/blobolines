@@ -17,6 +17,72 @@ const dailyScore = (score: number) => ({
   difficulty: "ready",
 });
 
+function seedDenseDailyGameOverState() {
+  useWorldStore.setState({ seed: 12345, seedPhrase: todayPhrase, difficulty: "ready" });
+  useGameStore.setState((s) => ({
+    dailyRun: true,
+    run: {
+      ...s.run,
+      height: 2500,
+      crystals: 40,
+      maxCombo: 12,
+      recordDelta: 250,
+      score: 65000,
+      scoreDelta: 15000,
+      unlockedAchievements: [
+        "height-100",
+        "height-250",
+        "height-500",
+        "height-1000",
+        "height-2000",
+        "combo-5",
+        "combo-8",
+        "combo-12",
+        "crystals-run-25",
+        "score-10k",
+        "score-25k",
+        "daily-streak-3",
+        "daily-streak-7",
+      ],
+      streakExtended: 7,
+    },
+    progress: {
+      ...s.progress,
+      bestHeight: 2500,
+      bestScore: 65000,
+      crystals: 395,
+      dailyStreak: 7,
+      lastDailyKey: "2026-06-24",
+      unlockedSkins: ["blue", "slime"],
+      unlockedAchievements: [
+        "height-100",
+        "height-250",
+        "height-500",
+        "height-1000",
+        "height-2000",
+        "combo-5",
+        "combo-8",
+        "combo-12",
+        "crystals-run-25",
+        "score-10k",
+        "score-25k",
+        "daily-streak-3",
+        "daily-streak-7",
+      ],
+      highScores: [dailyScore(3000), dailyScore(12000), dailyScore(65000)],
+      dailyBests: {
+        "2026-06-18": 5000,
+        "2026-06-19": 9000,
+        "2026-06-20": 12000,
+        "2026-06-21": 18000,
+        "2026-06-22": 22000,
+        "2026-06-23": 35000,
+        "2026-06-24": 65000,
+      },
+    },
+  }));
+}
+
 beforeEach(() => {
   useGameStore.setState({
     phase: "gameover",
@@ -70,6 +136,49 @@ test("shows the run recap: score headline, altitude, max combo, crystals run + l
   await expect.element(screen.getByText("5 / 8 clean combo")).toBeInTheDocument();
   // Crystals → next-skin progress + customize jump (default Mango is unlocked; Berry is next).
   await expect.element(screen.getByText(/Customize/)).toBeInTheDocument();
+});
+
+test("dense small-phone results start at the top while replay actions stay reachable", async () => {
+  seedDenseDailyGameOverState();
+
+  const screen = await render(
+    <div
+      data-testid="phone-shell"
+      style={{ position: "relative", width: "320px", height: "700px", overflow: "hidden" }}
+    >
+      <GameOver />
+    </div>,
+  );
+
+  await expect.element(screen.getByText("New record!")).toBeVisible();
+  await expect.element(screen.getByText("65,000")).toBeVisible();
+  await expect.element(screen.getByText(/Achievements unlocked/i)).toBeInTheDocument();
+
+  const shellBox = screen.getByTestId("phone-shell").element().getBoundingClientRect();
+  const results = screen.getByTestId("gameover-results").element() as HTMLElement;
+  const actions = screen.getByTestId("gameover-actions").element();
+  const climbAgain = screen.getByRole("button", { name: /Climb again/i }).element();
+  const share = screen.getByRole("button", { name: /Share/i }).element();
+  const backToMenu = screen.getByRole("button", { name: /Back to menu/i }).element();
+
+  expect(results.scrollTop).toBe(0);
+  expect(results.scrollHeight).toBeGreaterThan(results.clientHeight);
+  expect(document.activeElement).toBe(climbAgain);
+
+  for (const element of [
+    screen.getByText("New record!").element(),
+    climbAgain,
+    share,
+    backToMenu,
+  ]) {
+    const box = element.getBoundingClientRect();
+    expect(box.top).toBeGreaterThanOrEqual(shellBox.top);
+    expect(box.bottom).toBeLessThanOrEqual(shellBox.bottom);
+    expect(box.left).toBeGreaterThanOrEqual(shellBox.left);
+    expect(box.right).toBeLessThanOrEqual(shellBox.right);
+  }
+
+  expect(actions.getBoundingClientRect().bottom).toBeLessThanOrEqual(shellBox.bottom);
 });
 
 test("the post-run goal pivots to combo when that is the nearest useful target", async () => {

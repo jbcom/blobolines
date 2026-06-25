@@ -85,7 +85,7 @@ export function GameOver() {
   // are this dialog's own buttons; asserting aria-modal without enforcing it would lie.
   // biome-ignore lint/correctness/useExhaustiveDependencies: toMenu is stable for mount lifetime
   useEffect(() => {
-    replayRef.current?.focus();
+    replayRef.current?.focus({ preventScroll: true });
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") toMenu();
     };
@@ -260,247 +260,264 @@ export function GameOver() {
         initial={{ scale: 0.85, y: 16 }}
         animate={{ scale: 1, y: 0 }}
         transition={{ type: "spring", stiffness: 260, damping: 18 }}
-        className={`flex max-h-[calc(100dvh-var(--safe-top)-var(--safe-bottom)-2rem)] w-full max-w-xs flex-col items-center gap-4 overflow-y-auto rounded-xl border bg-surface p-5 text-center ${
+        data-testid="gameover-card"
+        className={`flex max-h-[calc(100dvh-var(--safe-top)-var(--safe-bottom)-2rem)] w-full max-w-xs flex-col overflow-hidden rounded-xl border bg-surface text-center ${
           isRecord ? "border-tramp-gold" : "border-border"
         }`}
         // Gold glow on a record card — the climb's trophy moment.
         style={isRecord ? { boxShadow: "0 0 32px var(--color-tramp-gold)" } : undefined}
       >
-        <h2 id="gameover-title" className="font-display text-2xl font-bold text-cream">
-          {isRecord ? "New record!" : "Splat!"}
-        </h2>
-
-        {/* SCORE is the headline metric — big, gold on a score record, with the +over-best
-            flourish. Height/crystals/combo below are the breakdown that fed it. */}
-        <div className="flex flex-col items-center gap-0.5">
-          <span className="font-ui text-[11px] uppercase tracking-wider text-fg-subtle">Score</span>
-          <span
-            className={`font-display text-4xl font-bold tabular-nums ${
-              scoreRecord ? "text-tramp-gold" : "text-cream"
-            }`}
-          >
-            {runScore.toLocaleString()}
-          </span>
-          <span className="font-ui text-[11px] font-semibold text-fg-subtle">
-            {scoreRecord
-              ? `+${scoreDelta.toLocaleString()} over best`
-              : `best ${bestScore.toLocaleString()}`}
-          </span>
-        </div>
-
-        <div className="flex w-full flex-col gap-2 font-ui text-sm">
-          <Row label="Altitude" value={`${height} m`} accent="text-accent" />
-          <Row
-            label="Best"
-            value={`${best} m`}
-            accent="text-tramp-gold"
-            sub={
-              heightRecord
-                ? recordDelta > 0
-                  ? `+${recordDelta} m over best`
-                  : "New record!"
-                : shortBy > 0
-                  ? `${shortBy} m short`
-                  : undefined
-            }
-          />
-          <Row label="Max combo" value={comboLabel} accent="text-tramp-orange" />
-          <Row
-            label="Crystals"
-            value={`${crystals}`}
-            accent="text-blob-blue"
-            sub={`${lifetimeCrystals} lifetime`}
-          />
-        </div>
-
-        {/* Delta-vs-best bar: this run's height as a fraction of the all-time best, so the
-            gap to beat is visible at a glance (full + gold on a record). */}
-        <div className="w-full">
-          <Progress
-            value={best > 0 ? Math.min(100, (height / best) * 100) : 100}
-            aria-label="Run height as a fraction of best"
-            className={isRecord ? "[&>div]:bg-tramp-gold" : undefined}
-          />
-        </div>
-
-        <section
-          data-testid="next-climb-goal"
-          aria-label={goal.ariaLabel}
-          className="flex w-full flex-col gap-2 border-border/60 border-t pt-3 text-left"
+        <div
+          data-testid="gameover-results"
+          className="flex min-h-0 w-full flex-col items-center gap-4 overflow-y-auto p-5 pb-3"
         >
-          <div className="flex items-center gap-2">
-            <span className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-bg/40 text-tramp-gold">
-              <Target className="size-4" aria-hidden />
+          <h2 id="gameover-title" className="font-display text-2xl font-bold text-cream">
+            {isRecord ? "New record!" : "Splat!"}
+          </h2>
+
+          {/* SCORE is the headline metric — big, gold on a score record, with the +over-best
+              flourish. Height/crystals/combo below are the breakdown that fed it. */}
+          <div className="flex flex-col items-center gap-0.5">
+            <span className="font-ui text-[11px] uppercase tracking-wider text-fg-subtle">
+              Score
             </span>
-            <div className="min-w-0">
-              <span
-                id="next-climb-goal-title"
-                className="block font-display text-[11px] font-bold uppercase tracking-wide text-fg-subtle"
-              >
-                Next climb
+            <span
+              className={`font-display text-4xl font-bold tabular-nums ${
+                scoreRecord ? "text-tramp-gold" : "text-cream"
+              }`}
+            >
+              {runScore.toLocaleString()}
+            </span>
+            <span className="font-ui text-[11px] font-semibold text-fg-subtle">
+              {scoreRecord
+                ? `+${scoreDelta.toLocaleString()} over best`
+                : `best ${bestScore.toLocaleString()}`}
+            </span>
+          </div>
+
+          <div className="flex w-full flex-col gap-2 font-ui text-sm">
+            <Row label="Altitude" value={`${height} m`} accent="text-accent" />
+            <Row
+              label="Best"
+              value={`${best} m`}
+              accent="text-tramp-gold"
+              sub={
+                heightRecord
+                  ? recordDelta > 0
+                    ? `+${recordDelta} m over best`
+                    : "New record!"
+                  : shortBy > 0
+                    ? `${shortBy} m short`
+                    : undefined
+              }
+            />
+            <Row label="Max combo" value={comboLabel} accent="text-tramp-orange" />
+            <Row
+              label="Crystals"
+              value={`${crystals}`}
+              accent="text-blob-blue"
+              sub={`${lifetimeCrystals} lifetime`}
+            />
+          </div>
+
+          {/* Delta-vs-best bar: this run's height as a fraction of the all-time best, so the
+              gap to beat is visible at a glance (full + gold on a record). */}
+          <div className="w-full">
+            <Progress
+              value={best > 0 ? Math.min(100, (height / best) * 100) : 100}
+              aria-label="Run height as a fraction of best"
+              className={isRecord ? "[&>div]:bg-tramp-gold" : undefined}
+            />
+          </div>
+
+          <section
+            data-testid="next-climb-goal"
+            aria-label={goal.ariaLabel}
+            className="flex w-full flex-col gap-2 border-border/60 border-t pt-3 text-left"
+          >
+            <div className="flex items-center gap-2">
+              <span className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-bg/40 text-tramp-gold">
+                <Target className="size-4" aria-hidden />
               </span>
-              <span className="block truncate font-ui text-sm font-black text-cream">
-                {goal.title}
+              <div className="min-w-0">
+                <span
+                  id="next-climb-goal-title"
+                  className="block font-display text-[11px] font-bold uppercase tracking-wide text-fg-subtle"
+                >
+                  Next climb
+                </span>
+                <span className="block truncate font-ui text-sm font-black text-cream">
+                  {goal.title}
+                </span>
+              </div>
+            </div>
+            <div className="grid gap-1 font-ui text-[11px]">
+              <span className="text-fg-subtle">{goal.description}</span>
+              <span className="font-semibold text-tramp-gold tabular-nums">
+                {goal.progressText}
               </span>
             </div>
-          </div>
-          <div className="grid gap-1 font-ui text-[11px]">
-            <span className="text-fg-subtle">{goal.description}</span>
-            <span className="font-semibold text-tramp-gold tabular-nums">{goal.progressText}</span>
-          </div>
-          <Progress value={goal.progressPct} aria-label={`Progress toward ${goal.title}`} />
-        </section>
+            <Progress value={goal.progressPct} aria-label={`Progress toward ${goal.title}`} />
+          </section>
 
-        {/* Crystals → next skin: progress toward affording the cheapest locked skin, tappable
-            to jump straight into the customizer. Hidden once everything's unlocked. */}
-        {nextSkin && (
-          <button
-            type="button"
-            onClick={toCustomizer}
-            className="flex w-full flex-col gap-1 rounded-lg p-1 text-left hover:bg-bg/40"
-          >
-            <span className="flex items-center justify-between font-ui text-[11px] text-fg-subtle">
-              <span>
-                Next skin: {lifetimeCrystals}/{nextSkin[1]} 💎
-              </span>
-              <span className="font-semibold text-blob-blue">Customize ›</span>
-            </span>
-            <Progress value={nextSkinPct} aria-label="Crystals toward the next skin" />
-          </button>
-        )}
-
-        {runTag && (
-          <button
-            type="button"
-            onClick={copySeed}
-            // Tap the seed line to copy this run's seed — replay this exact tower or share it.
-            className="pointer-events-auto flex items-center gap-1.5 rounded-lg px-2 py-1 text-center font-ui text-xs font-semibold text-fg-subtle tabular-nums hover:bg-bg/40"
-            // The label reflects the COPIED state so a screen reader announces the confirmation, not
-            // the stale "Copy seed…". For a daily run the seed phrase is an opaque internal
-            // namespaced string, so the pre-copy label stays generic; a normal run reads its human
-            // seed (what you'd paste to replay).
-            aria-label={
-              seedCopied
-                ? "Seed copied to clipboard"
-                : dailyRun
-                  ? "Copy today's daily seed to replay this tower"
-                  : `Copy seed ${seedPhrase} to replay this tower`
-            }
-          >
-            {seedCopied ? (
-              <>
-                <Check className="size-3" aria-hidden /> Seed copied!
-              </>
-            ) : (
-              <>
-                <Copy className="size-3 opacity-70" aria-hidden /> {runTag}
-              </>
-            )}
-          </button>
-        )}
-
-        {/* Daily-only "Today's tower" standing — how this run placed among the player's own
-            attempts at today's shared seed (the daily's results payoff). */}
-        {dailyStand && (
-          <motion.div
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.15 }}
-            data-testid="daily-standing"
-            className={`flex w-full flex-col items-center gap-0.5 rounded-xl border px-3 py-2 ${
-              dailyStand.isPersonalDailyBest
-                ? "border-tramp-gold/50 bg-tramp-gold/10"
-                : "border-border/60 bg-bg/30"
-            }`}
-          >
-            <span className="font-display text-[11px] font-bold uppercase tracking-wide text-fg-subtle">
-              Today's tower
-            </span>
-            {dailyStand.isFirstAttempt ? (
-              <span className="font-ui text-xs text-cream">Your first climb on today's tower</span>
-            ) : dailyStand.isPersonalDailyBest ? (
-              <span className="font-ui text-xs font-semibold text-tramp-gold">
-                Best on today's tower yet! — {dailyStand.attemptsToday} attempts
-              </span>
-            ) : (
-              <span className="font-ui text-xs text-cream tabular-nums">
-                #{dailyStand.rank} of {dailyStand.attemptsToday} attempts today
-              </span>
-            )}
-            {/* Daily streak badge — consecutive days. Reads as a warm flame; the count grows with
-                the habit. Shown once the streak is a real run (≥1). When THIS run EXTENDED the streak
-                (yesterday → today), it celebrates the moment ("Streak extended to N!") in a brighter
-                gold with a pop; a same-day replay shows the calm "N-day streak" count. */}
-            {dailyStreak >= 1 &&
-              (streakExtended > 0 ? (
-                <motion.span
-                  data-testid="daily-streak"
-                  initial={reducedMotion ? false : { scale: 0.7, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 1 }}
-                  transition={{ type: "spring", stiffness: 420, damping: 16, delay: 0.15 }}
-                  className="mt-0.5 flex items-center gap-1 font-display text-sm font-bold tabular-nums text-tramp-gold"
-                >
-                  <Flame className="size-4" aria-hidden />
-                  Streak extended to {streakExtended}!
-                </motion.span>
-              ) : (
-                <span
-                  data-testid="daily-streak"
-                  className="mt-0.5 flex items-center gap-1 font-ui text-xs font-semibold tabular-nums text-tramp-orange"
-                >
-                  {/* The visible "N-day streak" text is the accessible name (the flame is decorative). */}
-                  <Flame className="size-3.5" aria-hidden />
-                  {dailyStreak}-day streak
+          {/* Crystals → next skin: progress toward affording the cheapest locked skin, tappable
+              to jump straight into the customizer. Hidden once everything's unlocked. */}
+          {nextSkin && (
+            <button
+              type="button"
+              onClick={toCustomizer}
+              className="flex w-full flex-col gap-1 rounded-lg p-1 text-left hover:bg-bg/40"
+            >
+              <span className="flex items-center justify-between font-ui text-[11px] text-fg-subtle">
+                <span>
+                  Next skin: {lifetimeCrystals}/{nextSkin[1]} 💎
                 </span>
-              ))}
-          </motion.div>
-        )}
-
-        {/* Newly-unlocked achievements this run — a small celebratory list. */}
-        {freshAchievements.length > 0 && (
-          <motion.div
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className="flex flex-col gap-1 rounded-xl border border-tramp-gold/40 bg-tramp-gold/10 px-3 py-2"
-          >
-            <span className="font-display text-xs font-bold text-tramp-gold uppercase tracking-wide">
-              Achievement{freshAchievements.length > 1 ? "s" : ""} unlocked
-            </span>
-            {freshAchievements.map((id) => {
-              const a = achievementById(id);
-              if (!a) return null;
-              return (
-                <span key={id} className="font-ui text-xs text-cream">
-                  <span className="font-semibold">{a.title}</span>
-                  <span className="text-fg-muted"> — {a.description}</span>
-                </span>
-              );
-            })}
-          </motion.div>
-        )}
-
-        <Button ref={replayRef} cta size="lg" onClick={replay} className="w-full">
-          <RotateCcw className="size-4" aria-hidden /> Climb again
-        </Button>
-        <Button variant="surface" cta size="lg" onClick={share} className="w-full">
-          {shared ? (
-            <>
-              <Check className="size-4" aria-hidden /> Copied!
-            </>
-          ) : (
-            <>
-              <Share2 className="size-4" aria-hidden /> Share
-            </>
+                <span className="font-semibold text-blob-blue">Customize ›</span>
+              </span>
+              <Progress value={nextSkinPct} aria-label="Crystals toward the next skin" />
+            </button>
           )}
-        </Button>
-        <button
-          type="button"
-          onClick={toMenu}
-          className="font-ui text-xs font-semibold text-fg-subtle hover:text-fg-muted"
+
+          {runTag && (
+            <button
+              type="button"
+              onClick={copySeed}
+              // Tap the seed line to copy this run's seed — replay this exact tower or share it.
+              className="pointer-events-auto flex items-center gap-1.5 rounded-lg px-2 py-1 text-center font-ui text-xs font-semibold text-fg-subtle tabular-nums hover:bg-bg/40"
+              // The label reflects the COPIED state so a screen reader announces the confirmation,
+              // not the stale "Copy seed…". For a daily run the seed phrase is an opaque internal
+              // namespaced string, so the pre-copy label stays generic; a normal run reads its human
+              // seed (what you'd paste to replay).
+              aria-label={
+                seedCopied
+                  ? "Seed copied to clipboard"
+                  : dailyRun
+                    ? "Copy today's daily seed to replay this tower"
+                    : `Copy seed ${seedPhrase} to replay this tower`
+              }
+            >
+              {seedCopied ? (
+                <>
+                  <Check className="size-3" aria-hidden /> Seed copied!
+                </>
+              ) : (
+                <>
+                  <Copy className="size-3 opacity-70" aria-hidden /> {runTag}
+                </>
+              )}
+            </button>
+          )}
+
+          {/* Daily-only "Today's tower" standing — how this run placed among the player's own
+              attempts at today's shared seed (the daily's results payoff). */}
+          {dailyStand && (
+            <motion.div
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.15 }}
+              data-testid="daily-standing"
+              className={`flex w-full flex-col items-center gap-0.5 rounded-xl border px-3 py-2 ${
+                dailyStand.isPersonalDailyBest
+                  ? "border-tramp-gold/50 bg-tramp-gold/10"
+                  : "border-border/60 bg-bg/30"
+              }`}
+            >
+              <span className="font-display text-[11px] font-bold uppercase tracking-wide text-fg-subtle">
+                Today's tower
+              </span>
+              {dailyStand.isFirstAttempt ? (
+                <span className="font-ui text-xs text-cream">
+                  Your first climb on today's tower
+                </span>
+              ) : dailyStand.isPersonalDailyBest ? (
+                <span className="font-ui text-xs font-semibold text-tramp-gold">
+                  Best on today's tower yet! — {dailyStand.attemptsToday} attempts
+                </span>
+              ) : (
+                <span className="font-ui text-xs text-cream tabular-nums">
+                  #{dailyStand.rank} of {dailyStand.attemptsToday} attempts today
+                </span>
+              )}
+              {/* Daily streak badge — consecutive days. Reads as a warm flame; the count grows with
+                  the habit. Shown once the streak is a real run (≥1). When THIS run EXTENDED the
+                  streak (yesterday → today), it celebrates the moment ("Streak extended to N!") in a
+                  brighter gold with a pop; a same-day replay shows the calm "N-day streak" count. */}
+              {dailyStreak >= 1 &&
+                (streakExtended > 0 ? (
+                  <motion.span
+                    data-testid="daily-streak"
+                    initial={reducedMotion ? false : { scale: 0.7, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ type: "spring", stiffness: 420, damping: 16, delay: 0.15 }}
+                    className="mt-0.5 flex items-center gap-1 font-display text-sm font-bold tabular-nums text-tramp-gold"
+                  >
+                    <Flame className="size-4" aria-hidden />
+                    Streak extended to {streakExtended}!
+                  </motion.span>
+                ) : (
+                  <span
+                    data-testid="daily-streak"
+                    className="mt-0.5 flex items-center gap-1 font-ui text-xs font-semibold tabular-nums text-tramp-orange"
+                  >
+                    {/* The visible "N-day streak" text is the accessible name (the flame is decorative). */}
+                    <Flame className="size-3.5" aria-hidden />
+                    {dailyStreak}-day streak
+                  </span>
+                ))}
+            </motion.div>
+          )}
+
+          {/* Newly-unlocked achievements this run — a small celebratory list. */}
+          {freshAchievements.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+              className="flex flex-col gap-1 rounded-xl border border-tramp-gold/40 bg-tramp-gold/10 px-3 py-2"
+            >
+              <span className="font-display text-xs font-bold text-tramp-gold uppercase tracking-wide">
+                Achievement{freshAchievements.length > 1 ? "s" : ""} unlocked
+              </span>
+              {freshAchievements.map((id) => {
+                const a = achievementById(id);
+                if (!a) return null;
+                return (
+                  <span key={id} className="font-ui text-xs text-cream">
+                    <span className="font-semibold">{a.title}</span>
+                    <span className="text-fg-muted"> — {a.description}</span>
+                  </span>
+                );
+              })}
+            </motion.div>
+          )}
+        </div>
+
+        <div
+          data-testid="gameover-actions"
+          className="flex w-full shrink-0 flex-col items-center gap-3 border-border/60 border-t bg-surface p-5 pt-3"
         >
-          Back to menu
-        </button>
+          <Button ref={replayRef} cta size="lg" onClick={replay} className="w-full">
+            <RotateCcw className="size-4" aria-hidden /> Climb again
+          </Button>
+          <Button variant="surface" cta size="lg" onClick={share} className="w-full">
+            {shared ? (
+              <>
+                <Check className="size-4" aria-hidden /> Copied!
+              </>
+            ) : (
+              <>
+                <Share2 className="size-4" aria-hidden /> Share
+              </>
+            )}
+          </Button>
+          <button
+            type="button"
+            onClick={toMenu}
+            className="font-ui text-xs font-semibold text-fg-subtle hover:text-fg-muted"
+          >
+            Back to menu
+          </button>
+        </div>
       </motion.div>
     </motion.div>
   );
