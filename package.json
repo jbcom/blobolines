@@ -1,7 +1,7 @@
 {
   "name": "blobolines",
   "private": true,
-  "version": "0.1.15",
+  "version": "0.1.16",
   "type": "module",
   "description": "Launch a squishy gel blob through endless soft cloud pads — a World-of-Goo-flavored vertical-launch physics arcade game.",
   "license": "MIT",
